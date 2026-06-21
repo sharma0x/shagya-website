@@ -1,6 +1,6 @@
 .PHONY: help \
         install \
-        dev dev-services dev-services-down dev-services-logs \
+        dev \
         build start \
         lint format typecheck \
         infra-up infra-down infra-logs infra-reset \
@@ -19,10 +19,13 @@ help: ## Show this help message
 	@echo "  make install          Install all dependencies"
 	@echo ""
 	@echo "Development:"
-	@echo "  make dev              Start Next.js dev server (Turbopack)"
-	@echo "  make dev-services     Start Docker dev services (PostgreSQL 18)"
-	@echo "  make dev-services-down Stop Docker dev services"
-	@echo "  make dev-services-logs View Docker dev services logs"
+	@echo "  make dev              Start Next.js dev server (Turbopack + Payload)"
+	@echo ""
+	@echo "Infrastructure:"
+	@echo "  make infra-up         Start PostgreSQL 18 (Docker)"
+	@echo "  make infra-down       Stop PostgreSQL"
+	@echo "  make infra-logs       View PostgreSQL logs"
+	@echo "  make infra-reset      Reset PostgreSQL (delete all data)"
 	@echo ""
 	@echo "Build:"
 	@echo "  make build            Production build"
@@ -32,12 +35,6 @@ help: ## Show this help message
 	@echo "  make lint             Lint all code (ESLint)"
 	@echo "  make format           Format all code (Prettier)"
 	@echo "  make typecheck        Type check (tsc)"
-	@echo ""
-	@echo "Infrastructure:"
-	@echo "  make infra-up         Start dev infrastructure (PostgreSQL 18)"
-	@echo "  make infra-down       Stop dev infrastructure"
-	@echo "  make infra-logs       View infrastructure logs"
-	@echo "  make infra-reset      Reset infrastructure (delete all data)"
 	@echo ""
 	@echo "Database:"
 	@echo "  make db-migrate       Run database migrations"
@@ -63,15 +60,6 @@ install: ## Install all dependencies
 
 dev: ## Start Next.js dev server (Turbopack + Payload)
 	pnpm dev
-
-dev-services: ## Start Docker dev services (PostgreSQL 18)
-	pnpm dev:services
-
-dev-services-down: ## Stop Docker dev services
-	pnpm dev:services:down
-
-dev-services-logs: ## View Docker dev services logs
-	docker compose -f infra/dev-services.yml logs -f
 
 # ============================================================================
 # Build
