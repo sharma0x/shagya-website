@@ -1,1 +1,46 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Next.js
+.next/
+out/
+
+# Build
+dist/
+build/
+
+# Environment
+.env
+.env*.local
+!.env.example
+
+# IDE
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+
+# OS
 .DS_Store
+Thumbs.db
+
+# Debug
+npm-debug.log*
+pnpm-debug.log*
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Testing
+coverage/
+.playwright/
+
+# Payload
+src/payload-types.ts
+/uploads/
+/media/
+
+# Misc
+*.pem
