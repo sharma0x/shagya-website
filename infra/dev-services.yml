@@ -6,13 +6,15 @@
 # Reset: docker compose -f infra/dev-services.yml down -v
 # =============================================================================
 
+name: shagya-dev
+
 services:
   # ---------------------------------------------------------------------------
   # PostgreSQL 18 — matches Neon production
   # ---------------------------------------------------------------------------
   postgres:
     image: postgres:18-alpine
-    container_name: shagya-pg
+    container_name: shagya-dev-postgres
     restart: unless-stopped
     ports:
       - '5432:5432'
@@ -36,4 +38,4 @@ services:
 
 volumes:
   pgdata:
-    name: shagya-pgdata
+    name: shagya-dev-pgdata
