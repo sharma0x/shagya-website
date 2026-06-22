@@ -111,16 +111,16 @@ export default buildConfig({
   // ---------------------------------------------------------------------------
   // CORS — allow Next.js frontend and admin
   // ---------------------------------------------------------------------------
-  cors: [
-    process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000',
-  ].filter(Boolean),
+  cors: [process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'].filter(
+    Boolean,
+  ),
 
   // ---------------------------------------------------------------------------
   // CSRF — protect admin routes
   // ---------------------------------------------------------------------------
-  csrf: [
-    process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000',
-  ].filter(Boolean),
+  csrf: [process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'].filter(
+    Boolean,
+  ),
 
   // ---------------------------------------------------------------------------
   // Image Processing

@@ -3,8 +3,10 @@
         dev \
         build start \
         lint format typecheck \
+        test test-watch test-coverage test-e2e test-all \
         infra-up infra-down infra-logs infra-reset \
         db-migrate db-migrate-create db-seed db-generate-types \
+        release \
         setup clean clean-all
 
 # ============================================================================
@@ -35,6 +37,13 @@ help: ## Show this help message
 	@echo "  make lint             Lint all code (ESLint)"
 	@echo "  make format           Format all code (Prettier)"
 	@echo "  make typecheck        Type check (tsc)"
+	@echo ""
+	@echo "Testing:"
+	@echo "  make test             Run unit + component tests (Vitest)"
+	@echo "  make test-watch       Run tests in watch mode"
+	@echo "  make test-coverage    Run tests with coverage"
+	@echo "  make test-e2e         Run E2E tests (Playwright)"
+	@echo "  make test-all         Run all tests"
 	@echo ""
 	@echo "Database:"
 	@echo "  make db-migrate       Run database migrations"
@@ -82,7 +91,29 @@ format: ## Format all code (Prettier)
 	pnpm format
 
 typecheck: ## Type check all code
-	pnpm build 2>&1 | grep -E "(✓|Failed|error)" || true
+	pnpm typecheck
+
+# ============================================================================
+# Testing
+# ============================================================================
+
+test: ## Run unit + component tests (Vitest)
+	pnpm test
+
+test-watch: ## Run tests in watch mode
+	pnpm test:watch
+
+test-coverage: ## Run tests with coverage report
+	pnpm test:coverage
+
+test-e2e: ## Run end-to-end tests (Playwright)
+	pnpm test:e2e
+
+test-e2e-install: ## Install Playwright browsers
+	pnpm test:e2e:install
+
+test-all: ## Run all tests (unit + e2e)
+	pnpm test:all
 
 # ============================================================================
 # Infrastructure (Dev Services)
@@ -119,6 +150,13 @@ db-seed: ## Seed database with sample data
 
 db-generate-types: ## Generate Payload TypeScript types from schema
 	pnpm generate:types
+
+# ============================================================================
+# Release (semantic-release)
+# ============================================================================
+
+release: ## Run semantic-release locally (requires GH_TOKEN env var)
+	pnpm release
 
 # ============================================================================
 # Utilities

@@ -41,10 +41,17 @@ make infra-up        # Start PostgreSQL 18 + MinIO (Docker)
 make infra-down      # Stop Docker services
 make infra-reset     # Nuke Docker volumes (fresh DB)
 make dev             # Start dev server (Turbopack + Payload)
-make build           # Production build (does typecheck + Next.js build)
+make build           # Production build
 make lint            # ESLint
 make format          # Prettier
-make typecheck       # Just the TypeScript check from build
+make typecheck       # TypeScript check (tsc --noEmit)
+make test            # Unit + component tests (Vitest)
+make test-watch      # Vitest in watch mode
+make test-coverage   # Vitest with coverage
+make test-e2e        # End-to-end tests (Playwright)
+make test-e2e-install  # Install Playwright browsers (one-time)
+make test-all        # Unit + E2E
+make release         # Local semantic-release (needs GH_TOKEN)
 make db-migrate      # Run Payload migrations
 make db-generate-types  # Regenerate payload-types.ts
 ```
@@ -55,10 +62,10 @@ Always use `make` targets — the pnpm scripts and docker compose paths are wire
 
 Must be running **before** `make dev`:
 
-| Service | Port | Credentials |
-|---------|------|-------------|
-| PostgreSQL 18 | 5432 | `shagya` / `shagya_dev` / `shagya` |
-| MinIO (S3) | 9000 (API), 9001 (Console) | `minioadmin` / `minioadmin` |
+| Service       | Port                       | Credentials                        |
+| ------------- | -------------------------- | ---------------------------------- |
+| PostgreSQL 18 | 5432                       | `shagya` / `shagya_dev` / `shagya` |
+| MinIO (S3)    | 9000 (API), 9001 (Console) | `minioadmin` / `minioadmin`        |
 
 `.env` defaults to Docker: `DATABASE_URL=postgres://shagya:shagya_dev@localhost:5432/shagya`. For production, switch to Neon connection string.
 
@@ -81,6 +88,7 @@ Must be running **before** `make dev`:
 The Payload admin panel (`/admin`) returns HTTP 500 during SSR. The REST API (`/api/*`) works fine. This is a known edge case with Payload 3.85.1 + Next.js 16.2.9 where `useConfig()` returns an empty `ClientConfig` during server rendering. Documented on Linear **CLO-3**.
 
 Workaround: create the first admin user via API:
+
 ```bash
 curl -X POST http://localhost:3000/api/users/first-register \
   -H "Content-Type: application/json" \
@@ -95,9 +103,24 @@ curl -X POST http://localhost:3000/api/users/first-register \
 
 Strict mode. Path aliases: `@/*` → `./src/*`, `@payload-config` → `./src/payload.config.ts`. `jsx: react-jsx` (set by Next.js, don't change to `preserve`).
 
-## CI
+## CI/CD
 
-GitHub Actions runs on PRs to `main`: `pnpm install --frozen-lockfile` → format check → lint → typecheck → production build. Needs `PAYLOAD_SECRET` env var set in CI.
+See [`docs/ci-cd.md`](docs/ci-cd.md) for the full setup. Quick reference:
+
+- **Branches**: `develop` (preview env), `main` (production)
+- **Workflows**: `ci.yml` (lint/test/build), `release.yml` (semantic-release on main), `deploy-preview.yml` (Vercel preview on develop), `deploy-prod.yml` (Vercel production on main)
+- **Environments**:
+  - Dev DB: Neon branch `development`
+  - Prod DB: Neon branch `production`
+  - Dev storage: Cloudflare R2 bucket `shagya-dev`
+  - Prod storage: Cloudflare R2 bucket `shagya-media`
+- **Versioning**: semantic-release, Conventional Commits enforced by commitlint (husky hook on `commit-msg`)
+
+GitHub Actions runs on push/PR to `main` or `develop`: format check → lint → typecheck → unit tests → production build. Needs `PAYLOAD_SECRET` env var set in CI.
+
+## Git
+
+Use Conventional Commits (`feat:`, `fix:`, `refactor:`, etc.). Husky + commitlint enforces this on every commit. semantic-release bumps the version on `main` and updates `CHANGELOG.md` automatically. No direct commits to `main` — work on `develop` or feature branches, then open a PR.
 
 ## Linear
 

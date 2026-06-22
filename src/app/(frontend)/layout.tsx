@@ -53,7 +53,7 @@ export default function RootLayout({
       lang="en"
       className={`${sora.variable} ${publicSans.variable} ${notoSansDevanagari.variable}`}
     >
-      <body className="flex min-h-screen flex-col font-body antialiased">
+      <body className="font-body flex min-h-screen flex-col antialiased">
         <Header />
         <main className="flex-1">{children}</main>
         <Footer />

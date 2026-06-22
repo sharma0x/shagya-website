@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
   pull_request:
-    branches: [main]
+    branches: [main, develop]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -12,39 +12,55 @@ concurrency:
 
 jobs:
   validate:
-    name: Lint, Type Check & Build
+    name: Format, Lint, Type Check & Unit Tests
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
+      - uses: pnpm/action-setup@v4
+        with: { version: 10 }
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: 'pnpm'
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: 'pnpm' }
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile
 
-      - name: Type check
-        run: pnpm build 2>&1 | grep -E "(Failed|✓|error)" || true
-        continue-on-error: true
+      - run: pnpm format:check
 
-      - name: Lint
-        run: pnpm lint --max-warnings 0 || true
+      - run: pnpm lint
 
-      - name: Format check
-        run: pnpm format:check
+      - run: pnpm typecheck
 
-      - name: Build
-        run: pnpm build
+      - run: pnpm test
         env:
           PAYLOAD_SECRET: ci-test-secret-do-not-use-in-prod
+
+  build:
+    name: Production Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: validate
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with: { version: 10 }
+
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: 'pnpm' }
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm build
+        env:
+          PAYLOAD_SECRET: ci-test-secret-do-not-use-in-prod
+          NEXT_PUBLIC_SERVER_URL: http://localhost:3000
+          DATABASE_URL: postgres://placeholder:placeholder@localhost:5432/placeholder
+          R2_BUCKET: ci-bucket
+          R2_ENDPOINT: https://placeholder.r2.cloudflarestorage.com
+          R2_ACCESS_KEY_ID: placeholder
+          R2_SECRET_ACCESS_KEY: placeholder
+          R2_REGION: auto

@@ -16,7 +16,6 @@ export function Logo({
 }: LogoProps) {
   const mark = (
     <>
-      {/* eslint-disable-next-line @next/next/no-img-element -- static, optimized asset */}
       <img
         src="/shagya-logo.svg"
         alt=""

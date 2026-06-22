@@ -47,4 +47,9 @@ src/payload-types.ts
 
 # opencode
 opencode.json
-.vercel
+
+# Legacy research docs (pre-existing, not reformatted)
+docs/research/
+docs/shagya-payloadcms.md
+docs/shagya-shopify.md
+docs/linear-plan.md
