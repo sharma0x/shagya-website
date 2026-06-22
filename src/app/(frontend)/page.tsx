@@ -113,6 +113,7 @@ function ImagePanel({
   rounded = 'rounded-2xl',
   caption,
   region,
+  loading,
 }: {
   src: string
   alt: string
@@ -120,6 +121,7 @@ function ImagePanel({
   rounded?: string
   caption?: string
   region?: string
+  loading?: 'lazy' | 'eager'
 }) {
   return (
     <div
@@ -132,6 +134,7 @@ function ImagePanel({
         sizes="(max-width: 768px) 100vw, 50vw"
         className="object-cover"
         unoptimized
+        loading={loading ?? 'lazy'}
       />
       {/* woven-texture hint */}
       <div
@@ -220,6 +223,7 @@ export default function HomePage() {
                 caption="Kanchipuram silk"
                 region="Tamil Nadu"
                 className="aspect-[4/5] w-full shadow-xl"
+                loading="eager"
               />
               {/* gold hairline frame accent */}
               <div className="rule-gold absolute -inset-x-3 -bottom-3 hidden h-px md:block" />
