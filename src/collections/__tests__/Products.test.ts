@@ -99,4 +99,86 @@ describe('Products collection', () => {
       expect(result.slug).not.toContain('!')
     })
   })
+
+  describe('Fabric field', () => {
+    const fabricField = Products.fields?.find(
+      (f: any) => f.name === 'fabric',
+    ) as any
+
+    it('exists and is a select field', () => {
+      expect(fabricField).toBeDefined()
+      expect(fabricField?.type).toBe('select')
+      expect(fabricField?.required).toBe(true)
+    })
+
+    it('has all 9 fabric options', () => {
+      const values = fabricField?.options?.map((o: any) => o.value)
+      expect(values).toHaveLength(9)
+      expect(values).toEqual([
+        'silk',
+        'cotton',
+        'linen',
+        'georgette',
+        'chiffon',
+        'crepe',
+        'velvet',
+        'net',
+        'blend',
+      ])
+    })
+  })
+
+  describe('Weave field', () => {
+    const weaveField = Products.fields?.find(
+      (f: any) => f.name === 'weave',
+    ) as any
+
+    it('exists and is a select field', () => {
+      expect(weaveField).toBeDefined()
+      expect(weaveField?.type).toBe('select')
+      expect(weaveField?.required).toBe(true)
+    })
+
+    it('has all 11 weave options', () => {
+      const values = weaveField?.options?.map((o: any) => o.value)
+      expect(values).toHaveLength(11)
+      expect(values).toEqual([
+        'banarasi',
+        'kanchipuram',
+        'bandhani',
+        'patola',
+        'kalamkari',
+        'ikkat',
+        'paithani',
+        'maheshwari',
+        'chanderi',
+        'tant',
+        'baluchari',
+      ])
+    })
+  })
+
+  describe('Pattern field', () => {
+    const patternField = Products.fields?.find(
+      (f: any) => f.name === 'pattern',
+    ) as any
+
+    it('exists and is a select field', () => {
+      expect(patternField).toBeDefined()
+      expect(patternField?.type).toBe('select')
+      expect(patternField?.required).toBe(true)
+    })
+
+    it('has all 5 pattern options', () => {
+      const values = patternField?.options?.map((o: any) => o.value)
+      expect(values).toHaveLength(5)
+      expect(values).toEqual([
+        'solid',
+        'printed',
+        'embroidered',
+        'embellished',
+        'painted',
+      ])
+    })
+  })
 })
