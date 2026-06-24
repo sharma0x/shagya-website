@@ -96,6 +96,35 @@ export const Products: CollectionConfig = {
         { label: 'Painted', value: 'painted' },
       ],
     },
+    {
+      name: 'length',
+      type: 'number',
+      min: 1,
+      max: 9,
+      admin: {
+        step: 0.1,
+      },
+    },
+    {
+      name: 'blouseType',
+      type: 'text',
+    },
+    {
+      name: 'palluDetails',
+      type: 'text',
+    },
+    {
+      name: 'borderType',
+      type: 'text',
+    },
+    {
+      name: 'weavePattern',
+      type: 'text',
+    },
+    {
+      name: 'occasion',
+      type: 'text',
+    },
   ],
   timestamps: true,
 }

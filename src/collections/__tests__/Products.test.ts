@@ -181,4 +181,61 @@ describe('Products collection', () => {
       ])
     })
   })
+
+  describe('Detail fields', () => {
+    it('has length field (number, min=1, max=9, step=0.1)', () => {
+      const field = Products.fields?.find(
+        (f: any) => f.name === 'length',
+      ) as any
+      expect(field).toBeDefined()
+      expect(field?.type).toBe('number')
+      expect(field?.min).toBe(1)
+      expect(field?.max).toBe(9)
+      expect(field?.admin?.step).toBe(0.1)
+    })
+
+    it('has blouseType text field', () => {
+      const field = Products.fields?.find(
+        (f: any) => f.name === 'blouseType',
+      ) as any
+      expect(field).toBeDefined()
+      expect(field?.type).toBe('text')
+    })
+
+    it('has palluDetails text field', () => {
+      const field = Products.fields?.find(
+        (f: any) => f.name === 'palluDetails',
+      ) as any
+      expect(field).toBeDefined()
+      expect(field?.type).toBe('text')
+    })
+
+    it('has borderType text field', () => {
+      const field = Products.fields?.find(
+        (f: any) => f.name === 'borderType',
+      ) as any
+      expect(field).toBeDefined()
+      expect(field?.type).toBe('text')
+    })
+
+    it('has weavePattern text field', () => {
+      const field = Products.fields?.find(
+        (f: any) => f.name === 'weavePattern',
+      ) as any
+      expect(field).toBeDefined()
+      expect(field?.type).toBe('text')
+    })
+
+    it('has occasion text field', () => {
+      const field = Products.fields?.find(
+        (f: any) => f.name === 'occasion',
+      ) as any
+      expect(field).toBeDefined()
+      expect(field?.type).toBe('text')
+    })
+
+    it('has exactly 13 fields in total', () => {
+      expect(Products.fields).toHaveLength(13)
+    })
+  })
 })
