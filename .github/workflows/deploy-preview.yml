@@ -14,9 +14,16 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - run: npm install --global vercel@latest
+
+      - run: npm install --global vercel@latest pnpm@10
+
       - run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+
       - run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
       - run: vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}

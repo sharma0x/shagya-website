@@ -239,3 +239,67 @@ git add -A                              # re-stage everything
 git commit -m "clean message"           # single clean commit
 git push --force-with-lease origin develop
 ```
+
+---
+
+## GitHub Actions Workflows
+
+### pnpm/action-setup@v4 — do NOT specify `version` if package.json has packageManager
+
+The `pnpm/action-setup@v4` auto-reads `packageManager` from `package.json`.
+Specifying an additional `version:` in the workflow YAML causes a conflict error:
+
+```
+Error: Multiple versions of pnpm specified:
+  - version 10 in the GitHub Action config with the key "version"
+  - version pnpm@10.1.0 in the package.json with the key "packageManager"
+```
+
+**Correct — no version field (action reads from package.json):**
+
+```yaml
+- uses: pnpm/action-setup@v4
+- uses: actions/setup-node@v4
+  with: { node-version: 22, cache: 'pnpm' }
+```
+
+**Wrong — duplicate version causes failure:**
+
+```yaml
+- uses: pnpm/action-setup@v4
+  with: { version: 10 } # ← REMOVE THIS
+```
+
+### deploy workflows — pnpm must be installed globally for `vercel build`
+
+`vercel build` detects `pnpm` from `pnpm-lock.yaml` and `package.json#packageManager`,
+then runs `pnpm install` as the install command. The GitHub Actions default runner
+**does not** have pnpm pre-installed.
+
+**Correct — install pnpm globally before vercel build:**
+
+```yaml
+- run: npm install --global vercel@latest pnpm@10
+- run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+```
+
+### Vercel environment variable resolution during build
+
+When `vercel build` runs outside Vercel's infrastructure (e.g., in GitHub Actions),
+it does NOT have access to Vercel's system environment variables. It shows:
+
+```
+WARNING! Build not running on Vercel. System environment variables will not be available.
+```
+
+This means `NEXT_PUBLIC_*` vars from Vercel project settings ARE injected
+(because `vercel pull` downloads them), but Vercel system vars like `VERCEL_URL`
+are NOT available. For preview deployments, `NEXT_PUBLIC_SERVER_URL` should be
+set explicitly in Vercel project env vars, not rely on `VERCEL_URL`.
+
+### CI workflow build step needs placeholder env vars
+
+The CI build job runs `pnpm build` which loads `payload.config.ts` and other
+configs that reference `R2_*`, `DATABASE_URL`, `PAYLOAD_SECRET`. These must be
+provided even as placeholders since the build just runs Next.js compilation and
+doesn't actually connect to the database or R2 at build time.
