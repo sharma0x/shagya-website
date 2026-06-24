@@ -11,6 +11,8 @@ import { s3Storage } from '@payloadcms/storage-s3'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { Users } from './collections/Users'
 import { Products } from './collections/Products'
+import { Categories } from './collections/Categories'
+import { Collections } from './collections/Collections'
 import { Variants } from './collections/Variants'
 import { Orders } from './collections/Orders'
 import { Customers } from './collections/Customers'
@@ -51,11 +53,12 @@ export default buildConfig({
   collections: [
     Users,
     Products,
+    Categories,
+    Collections,
     Variants,
     Orders,
     Customers,
-    // Media collection (Phase 2)
-    // Categories etc. (Phase 2+)
+    // Media collection (Phase 2+)
   ],
 
   // ---------------------------------------------------------------------------
