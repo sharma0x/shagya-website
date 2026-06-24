@@ -1,5 +1,14 @@
 # Shagya — Agent Instructions
 
+## Memory File
+
+Maintain `.opencode/memory.md` as a living knowledge base of correct API calls,
+MCP patterns, and configurations discovered after trial and error. When you
+learn a better way to do something (or the first time you figure out the right
+call after getting errors), write it there. When a previously documented
+method has an improved approach, update the existing entry — don't duplicate.
+This file is for the AI, by the AI.
+
 ## Architecture
 
 Single-repo fullstack: **Payload CMS 3.x** (backend) + **Next.js 16 App Router** (frontend). Both share one Next.js process. One `pnpm dev` starts everything.
