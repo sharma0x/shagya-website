@@ -14,20 +14,24 @@ export const Users: CollectionConfig = {
     group: 'Admin',
   },
   access: {
-    // Only admins can create new admin users
-    create: ({ req: { user } }) => user?.role === 'admin',
-    // Users can read their own profile; admins can read all
+    // Super-admin and admin can create users
+    create: ({ req: { user } }) =>
+      user?.role === 'super-admin' || user?.role === 'admin',
+    // Super-admin and admin can read all; others read own profile only
     read: ({ req: { user } }) => {
-      if (user?.role === 'admin') return true
-      return { id: { equals: user?.id } }
+      if (!user) return false
+      if (user.role === 'super-admin' || user.role === 'admin') return true
+      return { id: { equals: user.id } }
     },
-    // Users can update their own profile; admins can update all
+    // Super-admin and admin can update all; others update own profile only
     update: ({ req: { user } }) => {
-      if (user?.role === 'admin') return true
-      return { id: { equals: user?.id } }
+      if (!user) return false
+      if (user.role === 'super-admin' || user.role === 'admin') return true
+      return { id: { equals: user.id } }
     },
-    // Only admins can delete users
-    delete: ({ req: { user } }) => user?.role === 'admin',
+    // Only super-admin and admin can delete users
+    delete: ({ req: { user } }) =>
+      user?.role === 'super-admin' || user?.role === 'admin',
   },
   fields: [
     {
