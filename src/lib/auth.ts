@@ -26,6 +26,18 @@ export const auth = betterAuth({
       clientSecret: process.env.APPLE_CLIENT_SECRET || '',
     },
   },
+  // When a user registers, create a corresponding Customer record in Payload.
+  // Uses dynamic import to avoid circular dependencies with Payload config.
+  databaseHooks: {
+    user: {
+      create: {
+        after: async (user) => {
+          const { syncCustomer } = await import('./auth-sync')
+          await syncCustomer(user)
+        },
+      },
+    },
+  },
   plugins: [
     phoneNumber({
       sendOTP: ({ phoneNumber, code }) => {
