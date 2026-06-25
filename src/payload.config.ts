@@ -19,6 +19,7 @@ import { Customers } from './collections/Customers'
 import { Addresses } from './collections/Addresses'
 import { Coupons } from './collections/Coupons'
 import { Media } from './collections/Media'
+import { Pages } from './collections/Pages'
 import sharp from 'sharp'
 import path from 'path'
 import { fileURLToPath } from 'url'
@@ -64,6 +65,7 @@ export default buildConfig({
     Addresses,
     Coupons,
     Media,
+    Pages,
   ],
 
   // ---------------------------------------------------------------------------
