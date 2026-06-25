@@ -2,6 +2,7 @@ import { betterAuth } from 'better-auth'
 import { passkey } from '@better-auth/passkey'
 import { phoneNumber, twoFactor, magicLink } from 'better-auth/plugins'
 import { Pool } from 'pg'
+import { sendEmail } from './email'
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -42,8 +43,8 @@ export const auth = betterAuth({
   plugins: [
     phoneNumber({
       sendOTP: ({ phoneNumber, code }) => {
-        // Stub implementation — real SMS integration comes in CLO-35
-        console.log(`[Auth OTP] Sending code ${code} to ${phoneNumber}`)
+        // Stub — Log for dev. Real SMS integration in CLO-35.
+        console.log(`[Auth OTP] Code ${code} for ${phoneNumber}`)
         return Promise.resolve()
       },
     }),
@@ -62,8 +63,23 @@ export const auth = betterAuth({
     }),
     magicLink({
       sendMagicLink: async ({ email, url }) => {
-        // Stub — real email integration in CLO-34
-        console.log(`[Auth Magic Link] Sending to ${email}: ${url}`)
+        const html = `
+          <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
+            <h1 style="color: #333;">Sign in to Shagya</h1>
+            <p>Click the button below to sign in to your Shagya account. This link is valid for 10 minutes.</p>
+            <a href="${url}" style="display: inline-block; padding: 12px 24px; background-color: oklch(0.65 0.18 65); color: #fff; text-decoration: none; border-radius: 6px; font-weight: 600;">Sign in to Shagya</a>
+            <p style="margin-top: 16px; font-size: 14px; color: #666;">
+              If you didn't request this, you can safely ignore this email.
+            </p>
+            <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
+            <p style="font-size: 12px; color: #999;">Shagya — Premium Fabrics</p>
+          </div>
+        `
+        await sendEmail({
+          to: email,
+          subject: 'Sign in to Shagya',
+          html,
+        })
       },
     }),
   ],
