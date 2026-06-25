@@ -8,6 +8,7 @@
 import { buildConfig } from 'payload'
 import { postgresAdapter } from '@payloadcms/db-postgres'
 import { s3Storage } from '@payloadcms/storage-s3'
+import { seoPlugin } from '@payloadcms/plugin-seo'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { Users } from './collections/Users'
 import { Products } from './collections/Products'
@@ -32,6 +33,42 @@ import { fileURLToPath } from 'url'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
+
+// ---------------------------------------------------------------------------
+// SEO Plugin — helpers
+// ---------------------------------------------------------------------------
+export const generateTitle = ({ doc }: { doc: any }): string => {
+  return (doc?.title || doc?.name || '').toString()
+}
+
+export const generateDescription = ({ doc }: { doc: any }): string => {
+  const description = doc?.description
+  if (typeof description === 'string') return description.slice(0, 160)
+  if (typeof description === 'object' && description?.root) {
+    // Lexical richText — extract plain text from first paragraph
+    const firstParagraph = description.root.children?.find(
+      (child: any) => child.type === 'paragraph',
+    )
+    if (firstParagraph) {
+      const text = firstParagraph.children
+        ?.map((node: any) => node.text || '')
+        .join(' ')
+      return text.slice(0, 160)
+    }
+  }
+  // Fallback to content blocks text extraction (Pages)
+  const blocks = doc?.content
+  if (Array.isArray(blocks) && blocks.length > 0) {
+    const firstBlock = blocks[0]
+    if (firstBlock?.heading) return firstBlock.heading.slice(0, 160)
+    if (firstBlock?.body) {
+      return typeof firstBlock.body === 'string'
+        ? firstBlock.body.slice(0, 160)
+        : firstBlock.body.slice(0, 160)
+    }
+  }
+  return ''
+}
 
 export default buildConfig({
   // Secret for encrypting JWT tokens, API keys, and cookies
@@ -99,6 +136,12 @@ export default buildConfig({
   // File Storage — Cloudflare R2 (S3-compatible)
   // ---------------------------------------------------------------------------
   plugins: [
+    seoPlugin({
+      collections: ['products', 'pages'],
+      uploadsCollection: 'media',
+      generateTitle,
+      generateDescription,
+    }),
     s3Storage({
       collections: {
         media: true,
