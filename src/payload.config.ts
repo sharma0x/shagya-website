@@ -22,6 +22,7 @@ import { Addresses } from './collections/Addresses'
 import { Coupons } from './collections/Coupons'
 import { Media } from './collections/Media'
 import { Pages } from './collections/Pages'
+import { Posts } from './collections/Posts'
 import { Reviews } from './collections/Reviews'
 import { Tags } from './collections/Tags'
 import { Brands } from './collections/Brands'
@@ -118,6 +119,7 @@ export default buildConfig({
     Occasions,
     EventLogs,
     Wishlist,
+    Posts,
   ],
 
   // ---------------------------------------------------------------------------
@@ -141,7 +143,7 @@ export default buildConfig({
   // ---------------------------------------------------------------------------
   plugins: [
     seoPlugin({
-      collections: ['products', 'pages'],
+      collections: ['products', 'pages', 'posts'],
       uploadsCollection: 'media',
       generateTitle,
       generateDescription,
