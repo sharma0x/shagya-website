@@ -17,6 +17,7 @@ import { Variants } from './collections/Variants'
 import { Orders } from './collections/Orders'
 import { Customers } from './collections/Customers'
 import { Addresses } from './collections/Addresses'
+import { Coupons } from './collections/Coupons'
 import { Media } from './collections/Media'
 import sharp from 'sharp'
 import path from 'path'
@@ -61,6 +62,7 @@ export default buildConfig({
     Orders,
     Customers,
     Addresses,
+    Coupons,
     Media,
   ],
 
