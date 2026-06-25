@@ -12,8 +12,12 @@ import {
   adminUser,
   categories,
   collections,
+  tags,
+  brands,
   products,
   pages,
+  blogPosts,
+  navigations,
   siteSettingsData,
 } from './seed-data'
 
@@ -162,9 +166,11 @@ export async function seedProducts(payload: Payload): Promise<void> {
         collection: 'products',
         data: {
           ...rest,
+          imagePath: prod.imagePath,
           description: lexicalRichText(description),
           length: 5.5,
-          trackQuantity: false,
+          gstPercent: 5,
+          shippingPrice: 0,
         },
         overrideAccess: true,
       })
@@ -235,6 +241,113 @@ export async function seedSiteSettings(payload: Payload): Promise<void> {
   console.log('  ✅ Site settings updated')
 }
 
+export async function seedTags(payload: Payload): Promise<void> {
+  console.log(`\n🏷️  Seeding ${tags.length} tags...`)
+
+  for (const tag of tags) {
+    const existing = await (payload.find as any)({
+      collection: 'tags',
+      where: { name: { equals: tag.name } },
+      overrideAccess: true,
+    })
+
+    if (existing.totalDocs === 0) {
+      await (payload.create as any)({
+        collection: 'tags',
+        data: tag,
+        overrideAccess: true,
+      })
+      console.log(`  ✅ Created tag: ${tag.name}`)
+    } else {
+      console.log(`  ⏭️  Tag already exists: ${tag.name}`)
+    }
+  }
+}
+
+export async function seedBrands(payload: Payload): Promise<void> {
+  console.log(`\n🏢 Seeding ${brands.length} brands...`)
+
+  for (const brand of brands) {
+    const existing = await (payload.find as any)({
+      collection: 'brands',
+      where: { name: { equals: brand.name } },
+      overrideAccess: true,
+    })
+
+    if (existing.totalDocs === 0) {
+      await (payload.create as any)({
+        collection: 'brands',
+        data: brand,
+        overrideAccess: true,
+      })
+      console.log(`  ✅ Created brand: ${brand.name}`)
+    } else {
+      console.log(`  ⏭️  Brand already exists: ${brand.name}`)
+    }
+  }
+}
+
+export async function seedBlogPosts(payload: Payload): Promise<void> {
+  console.log(`\n📝 Seeding ${blogPosts.length} blog posts...`)
+
+  for (const post of blogPosts) {
+    const existing = await (payload.find as any)({
+      collection: 'posts',
+      where: { title: { equals: post.title } },
+      overrideAccess: true,
+    })
+
+    if (existing.totalDocs === 0) {
+      await (payload.create as any)({
+        collection: 'posts',
+        data: {
+          title: post.title,
+          status: post.status,
+          excerpt: post.excerpt,
+          content: lexicalRichText(post.excerpt),
+          publishedAt: new Date().toISOString(),
+          imagePath: post.imagePath,
+        },
+        overrideAccess: true,
+      })
+      console.log(`  ✅ Created blog post: ${post.title}`)
+    } else {
+      console.log(`  ⏭️  Blog post already exists: ${post.title}`)
+    }
+  }
+}
+
+export async function seedNavigation(payload: Payload): Promise<void> {
+  console.log(`\n🧭 Seeding ${navigations.length} navigation menus...`)
+
+  for (const nav of navigations) {
+    const existing = await (payload.find as any)({
+      collection: 'navigation',
+      where: { name: { equals: nav.name } },
+      overrideAccess: true,
+    })
+
+    if (existing.totalDocs === 0) {
+      await (payload.create as any)({
+        collection: 'navigation',
+        data: {
+          name: nav.name,
+          location: nav.location,
+          items: nav.items.map((item) => ({
+            label: item.label,
+            type: item.type,
+            url: item.url || '',
+          })),
+        },
+        overrideAccess: true,
+      })
+      console.log(`  ✅ Created navigation: ${nav.name}`)
+    } else {
+      console.log(`  ⏭️  Navigation already exists: ${nav.name}`)
+    }
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
@@ -261,8 +374,12 @@ async function main(): Promise<void> {
     await seedAdmin(payload)
     await seedCategories(payload)
     await seedCollections(payload)
+    await seedTags(payload)
+    await seedBrands(payload)
     await seedProducts(payload)
     await seedPages(payload)
+    await seedBlogPosts(payload)
+    await seedNavigation(payload)
     await seedSiteSettings(payload)
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1)
