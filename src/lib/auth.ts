@@ -3,6 +3,7 @@ import { passkey } from '@better-auth/passkey'
 import { phoneNumber, twoFactor, magicLink } from 'better-auth/plugins'
 import { Pool } from 'pg'
 import { sendEmail } from './email'
+import { sendSMS } from './sms'
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -42,10 +43,8 @@ export const auth = betterAuth({
   },
   plugins: [
     phoneNumber({
-      sendOTP: ({ phoneNumber, code }) => {
-        // Stub — Log for dev. Real SMS integration in CLO-35.
-        console.log(`[Auth OTP] Code ${code} for ${phoneNumber}`)
-        return Promise.resolve()
+      sendOTP: async ({ phoneNumber, code }) => {
+        await sendSMS(phoneNumber, `Your Shagya verification code is: ${code}`)
       },
     }),
     twoFactor({
