@@ -23,6 +23,7 @@
     "test:e2e": "playwright test",
     "test:e2e:install": "playwright install --with-deps chromium",
     "test:all": "pnpm test && pnpm test:e2e",
+    "seed": "tsx scripts/seed.ts",
     "typecheck": "tsc --noEmit",
     "release": "semantic-release",
     "prepare": "husky"
