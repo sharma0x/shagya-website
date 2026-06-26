@@ -14,8 +14,8 @@ export const Pages: CollectionConfig = {
   },
   hooks: {
     beforeChange: [
-      ({ data }) => {
-        if (data?.title) {
+      ({ data, originalDoc }) => {
+        if (data?.title && !data?.slug) {
           data.slug = data.title
             .toLowerCase()
             .replace(/[^a-z0-9\s-]/g, '')

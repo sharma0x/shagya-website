@@ -86,6 +86,28 @@ export const SiteSettings: GlobalConfig = {
       label: 'Return Policy',
     },
 
+    // ---- Announcement Bar ----
+    {
+      name: 'announcementBar',
+      type: 'group',
+      label: 'Announcement Bar',
+      fields: [
+        {
+          name: 'enabled',
+          type: 'checkbox',
+          label: 'Enable Announcement Bar',
+          defaultValue: true,
+        },
+        {
+          name: 'text',
+          type: 'text',
+          label: 'Announcement Text',
+          defaultValue:
+            'Free shipping on orders above ₹999 &nbsp;·&nbsp; Easy 7-day returns',
+        },
+      ],
+    },
+
     // ---- Store Configuration ----
     {
       name: 'gstPercent',

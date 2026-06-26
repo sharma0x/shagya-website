@@ -42,11 +42,8 @@ export const Categories: CollectionConfig = {
     },
     {
       name: 'image',
-      type: 'text',
-      admin: {
-        description:
-          'Will become upload field when Media collection is created',
-      },
+      type: 'upload',
+      relationTo: 'media',
     },
     {
       name: 'parent',

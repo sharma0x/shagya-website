@@ -21,6 +21,7 @@ import { EventLogs } from './collections/EventLogs'
 import { Customers } from './collections/Customers'
 import { Addresses } from './collections/Addresses'
 import { Coupons } from './collections/Coupons'
+import { Carts } from './collections/Carts'
 import { Media } from './collections/Media'
 import { Pages } from './collections/Pages'
 import { Posts } from './collections/Posts'
@@ -217,6 +218,7 @@ export default buildConfig({
     Orders,
     Customers,
     Addresses,
+    Carts,
     Coupons,
     Media,
     Pages,
@@ -245,8 +247,8 @@ export default buildConfig({
     pool: {
       connectionString: process.env.DATABASE_URL || '',
     },
-    // Enable schema push in dev, migrations in production
-    push: process.env.NODE_ENV !== 'production',
+    // Disabled automatic schema push to prevent conflict/deletion of Better Auth tables in development
+    push: false,
   }),
 
   // ---------------------------------------------------------------------------

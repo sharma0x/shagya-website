@@ -198,6 +198,15 @@ export const Products: CollectionConfig = {
       type: 'checkbox',
       defaultValue: false,
     },
+    {
+      name: 'collections',
+      type: 'relationship',
+      relationTo: 'collections',
+      hasMany: true,
+      admin: {
+        description: 'Curated editorial collections this product belongs to',
+      },
+    },
   ],
   timestamps: true,
 }
