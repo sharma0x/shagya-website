@@ -126,6 +126,26 @@ export const Products: CollectionConfig = {
       type: 'text',
     },
     {
+      name: 'gallery',
+      type: 'array',
+      label: 'Product Images',
+      minRows: 1,
+      maxRows: 8,
+      fields: [
+        {
+          name: 'image',
+          type: 'upload',
+          relationTo: 'media',
+          required: true,
+        },
+        {
+          name: 'alt',
+          type: 'text',
+          label: 'Alt Text',
+        },
+      ],
+    },
+    {
       name: 'basePrice',
       type: 'number',
       required: true,

@@ -234,8 +234,25 @@ describe('Products collection', () => {
       expect(field?.type).toBe('text')
     })
 
-    it('has exactly 23 fields in total', () => {
-      expect(Products.fields).toHaveLength(23)
+    it('has exactly 24 fields in total', () => {
+      expect(Products.fields).toHaveLength(24)
+    })
+  })
+
+  describe('Gallery field', () => {
+    it('has gallery array field with image upload', () => {
+      const field = Products.fields?.find(
+        (f: any) => f.name === 'gallery',
+      ) as any
+      expect(field).toBeDefined()
+      expect(field?.type).toBe('array')
+      expect(field?.label).toBe('Product Images')
+      expect(field?.minRows).toBe(1)
+      expect(field?.maxRows).toBe(8)
+      expect(field?.fields).toHaveLength(2)
+      const imageField = field?.fields?.find((sf: any) => sf.name === 'image')
+      expect(imageField?.type).toBe('upload')
+      expect(imageField?.relationTo).toBe('media')
     })
   })
 
