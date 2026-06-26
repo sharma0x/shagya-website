@@ -917,6 +917,10 @@ export const siteSettingsData = {
   facebookUrl: 'https://facebook.com/shagya',
   youtubeUrl: 'https://youtube.com/@shagya',
   pinterestUrl: 'https://pinterest.com/shagya',
+  announcementBar: {
+    enabled: true,
+    text: 'Free shipping on orders above ₹999 &nbsp;·&nbsp; Easy 7-day returns',
+  },
   shippingPolicy:
     'We offer free shipping on all orders above ₹5,000. Standard delivery takes 5-7 business days. Express delivery is available for an additional fee.',
   returnPolicy:

@@ -8,6 +8,8 @@
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import type { Payload } from 'payload'
+import fs from 'fs'
+import path from 'path'
 import {
   adminUser,
   categories,
@@ -150,6 +152,52 @@ export async function seedCollections(payload: Payload): Promise<void> {
   }
 }
 
+async function uploadMedia(
+  payload: Payload,
+  imagePath: string,
+  altText: string,
+): Promise<string | null> {
+  const fullPath = path.join(process.cwd(), 'public', imagePath)
+  if (!fs.existsSync(fullPath)) {
+    console.warn(`    ⚠️ Image file not found: ${fullPath}`)
+    return null
+  }
+
+  const filename = path.basename(imagePath)
+  const existing = await payload.find({
+    collection: 'media',
+    where: {
+      filename: { equals: filename },
+    },
+    limit: 1,
+    overrideAccess: true,
+  })
+
+  if (existing.docs.length > 0) {
+    return existing.docs[0].id as any
+  }
+
+  try {
+    const mediaDoc = await payload.create({
+      collection: 'media',
+      data: {
+        alt: altText,
+      },
+      file: {
+        data: fs.readFileSync(fullPath),
+        name: filename,
+        mimetype: 'image/jpeg',
+        size: fs.statSync(fullPath).size,
+      },
+      overrideAccess: true,
+    })
+    return mediaDoc.id as any
+  } catch (err) {
+    console.error(`    ❌ Failed to upload media ${filename}:`, err)
+    return null
+  }
+}
+
 export async function seedProducts(payload: Payload): Promise<void> {
   console.log(`\n👗 Seeding ${products.length} products...`)
 
@@ -161,12 +209,61 @@ export async function seedProducts(payload: Payload): Promise<void> {
       overrideAccess: true,
     })
 
+    // Determine collections mapping
+    const collectionSlugs: string[] = []
+    const lowerName = prod.name.toLowerCase()
+    if (
+      lowerName.includes('banarasi') ||
+      lowerName.includes('kanchipuram') ||
+      lowerName.includes('patola') ||
+      lowerName.includes('paithani')
+    ) {
+      collectionSlugs.push('bridal-edit', 'handloom-heritage')
+    }
+    if (
+      lowerName.includes('cotton') ||
+      lowerName.includes('chanderi') ||
+      lowerName.includes('kota doria') ||
+      lowerName.includes('khadi')
+    ) {
+      collectionSlugs.push('everyday-elegance', 'summer-collection')
+    }
+    if (
+      lowerName.includes('bandhani') ||
+      lowerName.includes('maheshwari') ||
+      lowerName.includes('gota patti')
+    ) {
+      collectionSlugs.push('festive-special')
+    }
+
+    const collectionIds: string[] = []
+    if (collectionSlugs.length > 0) {
+      const foundCols = await payload.find({
+        collection: 'collections',
+        where: {
+          slug: { in: collectionSlugs },
+        },
+        limit: 10,
+        overrideAccess: true,
+      })
+      collectionIds.push(...foundCols.docs.map((c) => c.id as any))
+    }
+
     if (existing.totalDocs === 0) {
+      let gallery: any[] = []
+      if (prod.imagePath) {
+        const mediaId = await uploadMedia(payload, prod.imagePath, prod.name)
+        if (mediaId) {
+          gallery = [{ image: mediaId, alt: prod.name }]
+        }
+      }
+
       await (payload.create as any)({
         collection: 'products',
         data: {
           ...rest,
-          imagePath: prod.imagePath,
+          gallery,
+          collections: collectionIds,
           description: lexicalRichText(description),
           length: 5.5,
           gstPercent: 5,
@@ -176,7 +273,35 @@ export async function seedProducts(payload: Payload): Promise<void> {
       })
       console.log(`  ✅ Created product: ${prod.name}`)
     } else {
-      console.log(`  ⏭️  Product already exists: ${prod.name}`)
+      const doc = existing.docs[0]
+      const updateData: any = {}
+
+      // Update gallery if missing
+      if (!doc.gallery || doc.gallery.length === 0) {
+        if (prod.imagePath) {
+          const mediaId = await uploadMedia(payload, prod.imagePath, prod.name)
+          if (mediaId) {
+            updateData.gallery = [{ image: mediaId, alt: prod.name }]
+          }
+        }
+      }
+
+      // Update collections if missing or empty
+      if (!doc.collections || doc.collections.length === 0) {
+        updateData.collections = collectionIds
+      }
+
+      if (Object.keys(updateData).length > 0) {
+        await (payload.update as any)({
+          collection: 'products',
+          id: doc.id,
+          data: updateData,
+          overrideAccess: true,
+        })
+        console.log(`  ✅ Updated product fields for: ${prod.name}`)
+      } else {
+        console.log(`  ⏭️  Product already exists: ${prod.name}`)
+      }
     }
   }
 }
