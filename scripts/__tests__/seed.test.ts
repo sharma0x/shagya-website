@@ -7,8 +7,12 @@ import {
   adminUser,
   categories,
   collections,
+  tags,
+  brands,
   products,
   pages,
+  blogPosts,
+  navigations,
   siteSettingsData,
 } from '../seed-data'
 
@@ -42,8 +46,8 @@ describe('Seed data', () => {
   // ---------------------------------------------------------------------------
 
   describe('Categories', () => {
-    it('has exactly 10 categories', () => {
-      expect(categories).toHaveLength(10)
+    it('has exactly 12 categories', () => {
+      expect(categories).toHaveLength(12)
     })
 
     it('each category has a name and description', () => {
@@ -76,8 +80,8 @@ describe('Seed data', () => {
   // ---------------------------------------------------------------------------
 
   describe('Collections', () => {
-    it('has exactly 2 collections', () => {
-      expect(collections).toHaveLength(2)
+    it('has exactly 5 collections', () => {
+      expect(collections).toHaveLength(5)
     })
 
     it('each collection has a name and description', () => {
@@ -93,6 +97,7 @@ describe('Seed data', () => {
       const names = collections.map((c) => c.name)
       expect(names).toContain('Summer Collection')
       expect(names).toContain('Bridal Edit')
+      expect(names).toContain('Festive Special')
     })
   })
 
@@ -101,8 +106,8 @@ describe('Seed data', () => {
   // ---------------------------------------------------------------------------
 
   describe('Products', () => {
-    it('has exactly 5 products', () => {
-      expect(products).toHaveLength(5)
+    it('has exactly 20 products', () => {
+      expect(products).toHaveLength(20)
     })
 
     it('each product has a name', () => {
@@ -195,15 +200,17 @@ describe('Seed data', () => {
   // ---------------------------------------------------------------------------
 
   describe('Pages', () => {
-    it('has exactly 4 pages', () => {
-      expect(pages).toHaveLength(4)
+    it('has exactly 6 pages', () => {
+      expect(pages).toHaveLength(6)
     })
 
-    it('each page has a title and template', () => {
+    it('each page has a title, slug, template, and bodyContent', () => {
       for (const page of pages) {
         expect(page.title).toBeTruthy()
         expect(typeof page.title).toBe('string')
+        expect(page.slug).toBeTruthy()
         expect(page.template).toBeTruthy()
+        expect(page.bodyContent).toBeTruthy()
       }
     })
 
@@ -216,24 +223,67 @@ describe('Seed data', () => {
     it('has expected page titles', () => {
       const titles = pages.map((p) => p.title)
       expect(titles).toContain('Home')
-      expect(titles).toContain('About')
-      expect(titles).toContain('Contact')
+      expect(titles).toContain('About Us')
+      expect(titles).toContain('Contact Us')
       expect(titles).toContain('FAQ')
     })
 
     it('has correct template for Contact page', () => {
-      const contactPage = pages.find((p) => p.title === 'Contact')
+      const contactPage = pages.find((p) => p.title === 'Contact Us')
       expect(contactPage?.template).toBe('contact')
     })
 
     it('has correct template for About page', () => {
-      const aboutPage = pages.find((p) => p.title === 'About')
+      const aboutPage = pages.find((p) => p.title === 'About Us')
       expect(aboutPage?.template).toBe('about')
     })
 
     it('has correct template for FAQ page', () => {
       const faqPage = pages.find((p) => p.title === 'FAQ')
       expect(faqPage?.template).toBe('faq')
+    })
+  })
+
+  // ---------------------------------------------------------------------------
+  // Tags, Brands, Blog Posts, Navigation
+  // ---------------------------------------------------------------------------
+
+  describe('Tags', () => {
+    it('has tags defined', () => {
+      expect(tags.length).toBeGreaterThan(0)
+      for (const tag of tags) {
+        expect(tag.name).toBeTruthy()
+      }
+    })
+  })
+
+  describe('Brands', () => {
+    it('has brands defined', () => {
+      expect(brands.length).toBeGreaterThan(0)
+      for (const brand of brands) {
+        expect(brand.name).toBeTruthy()
+      }
+    })
+  })
+
+  describe('Blog Posts', () => {
+    it('has blog posts with body content', () => {
+      expect(blogPosts.length).toBeGreaterThan(0)
+      for (const post of blogPosts) {
+        expect(post.title).toBeTruthy()
+        expect(post.body).toBeTruthy()
+        expect(post.body.length).toBeGreaterThan(100)
+      }
+    })
+  })
+
+  describe('Navigation', () => {
+    it('has navigation menus with items', () => {
+      expect(navigations.length).toBeGreaterThan(0)
+      for (const nav of navigations) {
+        expect(nav.name).toBeTruthy()
+        expect(nav.items.length).toBeGreaterThan(0)
+      }
     })
   })
 

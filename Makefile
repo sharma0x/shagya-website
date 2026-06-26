@@ -146,7 +146,7 @@ db-migrate-create: ## Create a new migration (MSG='description')
 	pnpm payload migrate:create "$(MSG)"
 
 db-seed: ## Seed database with sample data
-	pnpm seed
+	@set -a && [ -f .env ] && . ./.env; set +a && pnpm seed
 
 db-generate-types: ## Generate Payload TypeScript types from schema
 	pnpm generate:types
