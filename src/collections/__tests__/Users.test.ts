@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { Users } from '../Users'
-import type { User } from '@/payload-types'
+
+type TestUser = { id: string; role?: string; email?: string }
 
 describe('Users collection', () => {
   describe('Role field', () => {
@@ -34,7 +35,7 @@ describe('Users collection', () => {
 
   describe('Field-level access on role', () => {
     const makeReq = (role: string | null) => ({
-      user: role ? ({ id: '1', role } as unknown as User) : null,
+      user: role ? ({ id: '1', role } as unknown as TestUser) : null,
     })
 
     it('allows super-admin to update role field', () => {
@@ -68,7 +69,9 @@ describe('Users collection', () => {
     const makeReq = (role: string | null) =>
       ({
         req: {
-          user: role ? ({ id: 'user-1', role } as unknown as User) : undefined,
+          user: role
+            ? ({ id: 'user-1', role } as unknown as TestUser)
+            : undefined,
         },
       }) as any
 

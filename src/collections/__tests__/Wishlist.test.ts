@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { Wishlist } from '../Wishlist'
-import type { User } from '@/payload-types'
+
+type TestUser = { id: string; role?: string }
 
 describe('Wishlist collection', () => {
   describe('collection structure', () => {
@@ -82,7 +83,9 @@ describe('Wishlist collection', () => {
     const makeReq = (role: string | null) =>
       ({
         req: {
-          user: role ? ({ id: 'user-1', role } as unknown as User) : undefined,
+          user: role
+            ? ({ id: 'user-1', role } as unknown as TestUser)
+            : undefined,
         },
       }) as any
 

@@ -15,15 +15,13 @@ function getTwilioClient() {
     return null
   }
 
-  try {
-    // Twilio is imported dynamically — the package is optional in dev
-    const twilio = require('twilio')
-    twilioClient = twilio(accountSid, authToken)
-    return twilioClient
-  } catch {
-    console.warn('[SMS] Twilio package not installed. Running in dev mode.')
-    return null
-  }
+  // Twilio is an optional peer dependency. When installed, uncomment:
+  // const twilio = require('twilio')
+  // twilioClient = twilio(accountSid, authToken)
+  // return twilioClient
+
+  console.warn('[SMS] Twilio package not installed. Running in dev mode.')
+  return null
 }
 
 /**

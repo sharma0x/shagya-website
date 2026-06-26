@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { Addresses } from '../Addresses'
-import type { User } from '@/payload-types'
+
+type TestUser = { id: string; role?: string }
 
 describe('Addresses collection', () => {
   describe('collection structure', () => {
@@ -197,7 +198,9 @@ describe('Addresses collection', () => {
     const makeReq = (role: string | null) =>
       ({
         req: {
-          user: role ? ({ id: 'user-1', role } as unknown as User) : undefined,
+          user: role
+            ? ({ id: 'user-1', role } as unknown as TestUser)
+            : undefined,
         },
       }) as any
 
