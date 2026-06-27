@@ -120,6 +120,7 @@ export default async function OrderDetailsPage({
                           <img
                             src={imageUrl}
                             alt={item.product?.name || 'Product Image'}
+                            loading="lazy"
                             className="h-full w-full object-cover"
                           />
                         ) : (

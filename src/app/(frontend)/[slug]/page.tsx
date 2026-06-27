@@ -280,6 +280,7 @@ export default async function CatchAllPage({ params, searchParams }: Props) {
                         <img
                           src={block.image.url}
                           alt={block.heading || 'Content image'}
+                          loading="lazy"
                           className="h-full w-full object-cover"
                         />
                       </div>
@@ -350,6 +351,7 @@ export default async function CatchAllPage({ params, searchParams }: Props) {
                               <img
                                 src={item.avatar.url}
                                 alt={item.name}
+                                loading="lazy"
                                 className="h-full w-full object-cover"
                               />
                             </div>

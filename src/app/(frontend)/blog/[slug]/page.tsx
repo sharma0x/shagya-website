@@ -131,6 +131,7 @@ export default async function BlogDetailPage({ params, searchParams }: Props) {
             <img
               src={post.featuredImage.url}
               alt={post.title}
+              loading="lazy"
               className="h-full w-full object-cover"
             />
           </div>

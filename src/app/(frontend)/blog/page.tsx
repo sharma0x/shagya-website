@@ -77,6 +77,7 @@ export default async function BlogIndexPage() {
                       <img
                         src={imageUrl}
                         alt={post.title}
+                        loading="lazy"
                         className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                       />
                     ) : (

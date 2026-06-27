@@ -837,6 +837,7 @@ export default function CheckoutPage() {
                             <img
                               src={imageUrl}
                               alt={item.product.name}
+                              loading="lazy"
                               className="h-full w-full object-cover"
                             />
                           ) : (
