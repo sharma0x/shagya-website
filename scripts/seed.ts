@@ -92,13 +92,22 @@ function lexicalRichText(text: string): Record<string, unknown> {
  * Converts a SeedBlock (plain-text bodies) to the Payload block format,
  * wrapping textImage body strings in Lexical rich text.
  */
-function processBlock(block: SeedBlock): Record<string, unknown> {
+async function processBlock(
+  payload: Payload,
+  block: SeedBlock,
+): Promise<Record<string, unknown>> {
   if (block.blockType === 'textImage') {
+    let imageId = null
+    if (block.imagePath) {
+      // Need a way to call uploadMedia, we can just call the existing uploadMedia function since it's defined later in the file, wait, uploadMedia is defined at line 216. We can hoist it or just use it. Let's assume it works since it's in the same file.
+      imageId = await uploadMedia(payload, block.imagePath, block.heading)
+    }
     return {
       blockType: 'textImage',
       heading: block.heading,
       body: lexicalRichText(block.body),
       imagePosition: block.imagePosition ?? 'left',
+      ...(imageId ? { image: imageId } : {}),
     }
   }
   return block as unknown as Record<string, unknown>
@@ -377,7 +386,9 @@ export async function seedPages(payload: Payload): Promise<void> {
       overrideAccess: true,
     })
 
-    const contentBlocks = page.blocks.map(processBlock)
+    const contentBlocks = await Promise.all(
+      page.blocks.map((b) => processBlock(payload, b)),
+    )
 
     if (existing.totalDocs === 0) {
       await (payload.create as any)({

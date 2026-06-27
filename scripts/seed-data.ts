@@ -59,6 +59,7 @@ export type SeedTextImageBlock = {
   heading: string
   body: string // plain text, converted to Lexical in seed.ts
   imagePosition?: 'left' | 'right'
+  imagePath?: string
 }
 
 export type SeedFeatureGridBlock = {
@@ -859,6 +860,7 @@ export const pages: SeedPage[] = [
         heading: 'The SHEROES Initiative',
         body: 'In 2022, we realised that most of our artisan partners were women who were working through male intermediaries — their husbands, fathers, or male relatives who handled sales while the women did the actual weaving. The women received a wage. The men received the relationship.\n\nSHEROES was built to change that structure. We help women weavers set up their own storefronts on Shayga — with their own names, their own craft descriptions, and direct access to customers. We provide training, photography support, and logistics. The women handle everything else.\n\nWe currently have 23 active SHEROES storefronts, run by women weavers from Banarasi silk clusters in Varanasi, Chanderi cotton-silk weavers in Madhya Pradesh, Kantha embroiderers in West Bengal, and Bandhani artisans in Kutch, Gujarat. Our goal is 100 active storefronts by 2027. Every SHEROES purchase is clearly marked on the product page so you know exactly who you are supporting.',
         imagePosition: 'left',
+        imagePath: '/images/hero/hero-1.jpg',
       } as SeedTextImageBlock,
       {
         blockType: 'testimonials',

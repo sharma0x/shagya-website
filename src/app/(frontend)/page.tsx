@@ -63,50 +63,38 @@ function ImagePanel({
   )
 }
 
-const WEAVES = [
-  {
-    name: 'Banarasi',
-    origin: 'Varanasi, UP',
-    imagePath: '/images/products/saree-01.jpg',
-  },
-  {
-    name: 'Kanchipuram',
-    origin: 'Kanchipuram, TN',
-    imagePath: '/images/products/saree-02.jpg',
-  },
-  {
-    name: 'Chanderi',
-    origin: 'Chanderi, MP',
-    imagePath: '/images/products/saree-05.jpg',
-  },
-  {
-    name: 'Jamdani',
-    origin: 'Dhaka, Bengal',
-    imagePath: '/images/products/saree-03.jpg',
-  },
-  {
-    name: 'Patola',
-    origin: 'Patan, GJ',
-    imagePath: '/images/products/saree-06.jpg',
-  },
-  {
-    name: 'Phulkari',
-    origin: 'Punjab',
-    imagePath: '/images/products/saree-04.jpg',
-  },
-  {
-    name: 'Baluchari',
-    origin: 'Murshidabad, WB',
-    imagePath: '/images/products/saree-10.jpg',
-  },
-  {
-    name: 'Maheshwari',
-    origin: 'Maheshwar, MP',
-    imagePath: '/images/products/saree-09.jpg',
-  },
-]
+function LexicalRenderer({ content }: { content: any }) {
+  if (!content || !content.root || !Array.isArray(content.root.children)) {
+    return null
+  }
+  return (
+    <div className="font-body space-y-4 text-[1.125rem] leading-relaxed text-neutral-600">
+      {content.root.children.map((block: any, idx: number) => {
+        if (block.type === 'paragraph' && Array.isArray(block.children)) {
+          return (
+            <p key={idx}>
+              {block.children.map((node: any, nIdx: number) => {
+                if (node.type === 'text') {
+                  return node.text
+                }
+                return null
+              })}
+            </p>
+          )
+        }
+        return null
+      })}
+    </div>
+  )
+}
 
-function WeaveFilmstrip() {
+function WeaveFilmstrip({ categories }: { categories: any[] }) {
+  if (!categories || categories.length === 0) return null
+
+  // Duplicate categories to ensure enough items for infinite scroll
+  const dupCount = Math.max(2, Math.ceil(16 / categories.length))
+  const items = Array.from({ length: dupCount }).flatMap(() => categories)
+
   return (
     <section
       aria-label="Weaves we carry"
@@ -122,33 +110,46 @@ function WeaveFilmstrip() {
             } as React.CSSProperties
           }
         >
-          {[...WEAVES, ...WEAVES].map((w, i) => (
-            <div
-              key={`${w.name}-${i}`}
-              className="relative flex h-24 w-40 shrink-0 items-end overflow-hidden rounded-lg bg-neutral-100 sm:h-28 sm:w-48"
-            >
-              <SkeletonImage
-                src={w.imagePath}
-                alt={w.name}
-                fill
-                sizes="192px"
-                className="object-cover"
-              />
+          {items.map((cat, i) => {
+            const img =
+              (cat.image && typeof cat.image === 'object'
+                ? cat.image.sizes?.card?.url || cat.image.url
+                : null) || ph(200, 150, '7a3a5d', 'f5e8ee', cat.name)
+
+            return (
               <div
-                className="pointer-events-none absolute inset-0"
-                style={{
-                  background:
-                    'linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.15) 55%, transparent 100%)',
-                }}
-              />
-              <div className="relative z-10 p-3">
-                <p className="font-display text-sm font-semibold text-white drop-shadow-sm">
-                  {w.name}
-                </p>
-                <p className="mt-0.5 text-xs text-white/70">{w.origin}</p>
+                key={`${cat.id || cat.name}-${i}`}
+                className="relative flex h-24 w-40 shrink-0 items-end overflow-hidden rounded-lg bg-neutral-100 sm:h-28 sm:w-48"
+              >
+                <SkeletonImage
+                  src={img}
+                  alt={cat.name}
+                  fill
+                  sizes="192px"
+                  className="object-cover"
+                />
+                <div
+                  className="pointer-events-none absolute inset-0"
+                  style={{
+                    background:
+                      'linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.15) 55%, transparent 100%)',
+                  }}
+                />
+                <div className="relative z-10 p-3">
+                  <p className="font-display text-sm font-semibold text-white drop-shadow-sm">
+                    {cat.name}
+                  </p>
+                  <p className="mt-0.5 text-xs text-white/70">
+                    {cat.description
+                      ? cat.description.length > 25
+                        ? cat.description.substring(0, 22) + '...'
+                        : cat.description
+                      : 'Handwoven'}
+                  </p>
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       </div>
     </section>
@@ -246,9 +247,18 @@ export default async function HomePage({ searchParams }: Props) {
 
   const categoriesRes = await payload.find({
     collection: 'categories',
-    limit: 3,
+    limit: 20,
   })
   const dbCategories = categoriesRes.docs
+
+  const craftStoryBlock = homeDoc?.content?.find(
+    (block: any) => block.blockType === 'textImage',
+  ) as any
+  const craftHeading = craftStoryBlock?.heading || 'Six hands, one saree'
+  const craftImageSrc =
+    craftStoryBlock?.image && typeof craftStoryBlock.image === 'object'
+      ? craftStoryBlock.image.sizes?.card?.url || craftStoryBlock.image.url
+      : ph(800, 800, 'a97e34', 'fff8ec', 'Craft Story')
 
   const postsRes = await payload.find({
     collection: 'posts',
@@ -326,7 +336,7 @@ export default async function HomePage({ searchParams }: Props) {
       </section>
 
       {/* ====================== WEAVE FILMSTRIP ====================== */}
-      <WeaveFilmstrip />
+      <WeaveFilmstrip categories={dbCategories} />
 
       {/* ====================== SHOP BY CRAFT ====================== */}
       <section className="container-page scroll-reveal py-24 md:py-32">
@@ -400,7 +410,7 @@ export default async function HomePage({ searchParams }: Props) {
         <div className="container-page grid items-center gap-12 py-24 md:py-32 lg:grid-cols-12 lg:gap-20">
           <div className="lg:col-span-5">
             <ImagePanel
-              src="/images/hero/hero-1.jpg"
+              src={craftImageSrc}
               alt="An artisan weaving a saree on a wooden handloom"
               caption="On the loom"
               region="Varanasi"
@@ -410,14 +420,20 @@ export default async function HomePage({ searchParams }: Props) {
           <div className="lg:col-span-7">
             <div className="bg-gold-400 mb-5 h-px w-12" aria-hidden="true" />
             <h2 className="text-headline font-display font-semibold tracking-tight text-neutral-900">
-              Six hands, one saree
+              {craftHeading}
             </h2>
-            <p className="mt-6 max-w-[58ch] text-lg leading-relaxed text-neutral-600">
-              A single Banarasi can take eighteen days and three artisans — the
-              weaver, the border-maker, the draw-boy. We work directly with
-              these clusters, so the hand that wove it is the hand that&apos;s
-              paid for it.
-            </p>
+            <div className="mt-6 max-w-[58ch]">
+              {craftStoryBlock?.body ? (
+                <LexicalRenderer content={craftStoryBlock.body} />
+              ) : (
+                <p className="text-lg leading-relaxed text-neutral-600">
+                  A single Banarasi can take eighteen days and three artisans —
+                  the weaver, the border-maker, the draw-boy. We work directly
+                  with these clusters, so the hand that wove it is the hand
+                  that&apos;s paid for it.
+                </p>
+              )}
+            </div>
             <dl className="mt-8 grid grid-cols-3 gap-6 border-t border-neutral-200 pt-8">
               <div>
                 <dt className="font-body text-xs text-neutral-500">
