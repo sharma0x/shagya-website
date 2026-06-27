@@ -123,7 +123,7 @@ export const SiteSettings: GlobalConfig = {
           type: 'text',
           label: 'Announcement Text',
           defaultValue:
-            'Free shipping on orders above ₹999 &nbsp;·&nbsp; Easy 7-day returns',
+            'Free shipping on orders above ₹999 \u00A0·\u00A0 Easy 7-day returns',
         },
       ],
     },

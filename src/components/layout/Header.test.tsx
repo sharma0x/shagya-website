@@ -27,7 +27,7 @@ vi.stubGlobal(
         return Promise.resolve({
           announcementBar: {
             enabled: true,
-            text: 'Free shipping on orders above ₹999 · Easy 7-day returns',
+            text: 'Free shipping on orders above ₹999 \u00A0·\u00A0 Easy 7-day returns',
           },
         })
       },
