@@ -231,6 +231,63 @@ export const Pages: CollectionConfig = {
             },
           ],
         },
+        {
+          slug: 'categoriesGrid',
+          fields: [
+            {
+              name: 'heading',
+              type: 'text',
+            },
+            {
+              name: 'subheading',
+              type: 'textarea',
+            },
+          ],
+        },
+        {
+          slug: 'productGrid',
+          fields: [
+            {
+              name: 'heading',
+              type: 'text',
+            },
+            {
+              name: 'ctaText',
+              type: 'text',
+            },
+            {
+              name: 'ctaLink',
+              type: 'text',
+            },
+            {
+              name: 'limit',
+              type: 'number',
+              defaultValue: 4,
+            },
+          ],
+        },
+        {
+          slug: 'postGrid',
+          fields: [
+            {
+              name: 'heading',
+              type: 'text',
+            },
+            {
+              name: 'ctaText',
+              type: 'text',
+            },
+            {
+              name: 'ctaLink',
+              type: 'text',
+            },
+            {
+              name: 'limit',
+              type: 'number',
+              defaultValue: 2,
+            },
+          ],
+        },
       ],
     },
     {

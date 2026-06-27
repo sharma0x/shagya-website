@@ -324,7 +324,19 @@ export async function seedProducts(payload: Payload): Promise<void> {
       if (prod.imagePath) {
         const mediaId = await uploadMedia(payload, prod.imagePath, prod.name)
         if (mediaId) {
-          gallery = [{ image: mediaId, alt: prod.name }]
+          gallery.push({ image: mediaId, alt: prod.name })
+        }
+      }
+      if (prod.galleryImages && prod.galleryImages.length > 0) {
+        for (let i = 0; i < prod.galleryImages.length; i++) {
+          const mId = await uploadMedia(
+            payload,
+            prod.galleryImages[i],
+            `${prod.name} ${i + 2}`,
+          )
+          if (mId) {
+            gallery.push({ image: mId, alt: `${prod.name} view ${i + 2}` })
+          }
         }
       }
 
@@ -346,13 +358,34 @@ export async function seedProducts(payload: Payload): Promise<void> {
       const doc = existing.docs[0]
       const updateData: any = {}
 
-      // Update gallery if missing
-      if (!doc.gallery || doc.gallery.length === 0) {
+      // Update gallery if missing or only has 1 image when more are requested
+      if (
+        !doc.gallery ||
+        doc.gallery.length === 0 ||
+        (prod.galleryImages &&
+          doc.gallery.length < prod.galleryImages.length + 1)
+      ) {
+        let newGallery: any[] = []
         if (prod.imagePath) {
           const mediaId = await uploadMedia(payload, prod.imagePath, prod.name)
           if (mediaId) {
-            updateData.gallery = [{ image: mediaId, alt: prod.name }]
+            newGallery.push({ image: mediaId, alt: prod.name })
           }
+        }
+        if (prod.galleryImages && prod.galleryImages.length > 0) {
+          for (let i = 0; i < prod.galleryImages.length; i++) {
+            const mId = await uploadMedia(
+              payload,
+              prod.galleryImages[i],
+              `${prod.name} ${i + 2}`,
+            )
+            if (mId) {
+              newGallery.push({ image: mId, alt: `${prod.name} view ${i + 2}` })
+            }
+          }
+        }
+        if (newGallery.length > 0) {
+          updateData.gallery = newGallery
         }
       }
 
