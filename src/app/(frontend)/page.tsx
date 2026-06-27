@@ -286,7 +286,7 @@ export default async function HomePage({ searchParams }: Props) {
                   <p className="mt-6 max-w-[55ch] text-lg leading-relaxed text-neutral-600">
                     {block.subheading}
                   </p>
-                  <div className="mt-10 flex flex-col gap-5 sm:flex-row sm:items-center">
+                  <div className="mt-10 flex flex-col items-start gap-5 sm:flex-row sm:items-center">
                     <Link
                       href={block.ctaLink || '/category/all'}
                       className="bg-brand-600 hover:bg-brand-700 focus-visible:ring-brand-400 inline-flex h-12 items-center gap-2 rounded-xl px-6 text-base font-semibold text-white transition-all focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-[0.97] sm:h-13 sm:px-7"

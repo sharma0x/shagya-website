@@ -1,13 +1,11 @@
 import { NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import config from '@payload-config'
-import { ftsSearch } from '@/lib/fts-search'
 
 /**
  * GET /api/search
  *
- * Full-text search across products and posts using PostgreSQL tsvector
- * columns with GIN indexes. Results are ranked by relevance (ts_rank).
+ * Search across products and posts using the Payload search collection.
  *
  * Query params:
  *   q     - search query string (required)
@@ -36,11 +34,59 @@ export async function GET(request: Request): Promise<NextResponse> {
 
     const payload = await getPayload({ config })
 
-    const result = await ftsSearch(payload, q, limit)
+    const result = await payload.find({
+      collection: 'search',
+      where: {
+        title: {
+          like: q,
+        },
+      },
+      limit,
+      depth: 1, // Populate the actual doc
+    })
+
+    const docs = result.docs
+      .filter(
+        (d: any) =>
+          d.doc &&
+          typeof d.doc.value === 'object' &&
+          ['products', 'posts'].includes(d.doc.relationTo),
+      )
+      .map((d: any, index: number) => {
+        const type = d.doc.relationTo === 'products' ? 'product' : 'post'
+        const docValue = d.doc.value
+
+        if (type === 'product') {
+          return {
+            id: docValue.id,
+            type: 'product',
+            name: docValue.name,
+            slug: docValue.slug,
+            basePrice: docValue.basePrice || null,
+            compareAtPrice: docValue.compareAtPrice || null,
+            fabric:
+              typeof docValue.fabric === 'object'
+                ? docValue.fabric?.title
+                : docValue.fabric,
+            weave: docValue.weave,
+            rank: d.priority || limit - index,
+          }
+        }
+
+        return {
+          id: docValue.id,
+          type: 'post',
+          title: docValue.title,
+          slug: docValue.slug,
+          excerpt: docValue.excerpt,
+          rank: d.priority || limit - index,
+        }
+      })
+      .sort((a, b) => b.rank - a.rank)
 
     return NextResponse.json(
       {
-        docs: result.docs,
+        docs,
         totalDocs: result.totalDocs,
         limit,
         query: q,

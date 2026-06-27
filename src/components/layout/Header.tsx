@@ -161,7 +161,8 @@ export function Header() {
       {/* Mobile Nav Overlay */}
       <div
         className={cn(
-          'bg-surface fixed inset-0 z-[120] flex flex-col transition-all duration-500 lg:hidden',
+          'fixed inset-0 z-[120] flex flex-col bg-white transition-all duration-500 lg:hidden',
+
           mobileMenuOpen
             ? 'pointer-events-auto translate-x-0 opacity-100'
             : 'pointer-events-none translate-x-full opacity-0',

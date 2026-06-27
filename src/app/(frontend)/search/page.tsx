@@ -3,11 +3,6 @@ import Image from 'next/image'
 import { ArrowLeft } from 'lucide-react'
 import { getPayload } from 'payload'
 import config from '@payload-config'
-import {
-  ftsSearch,
-  type FTSProductResult,
-  type FTSPostResult,
-} from '@/lib/fts-search'
 
 const ph = (w: number, h: number, bg: string, fg: string, text: string) =>
   `https://placehold.co/${w}x${h}/${bg}/${fg}?text=${encodeURIComponent(text)}&font=lora`
@@ -39,6 +34,27 @@ function ImagePanel({
   )
 }
 
+interface FTSProductResult {
+  id: number
+  type: 'product'
+  name: string
+  slug: string
+  basePrice: number | null
+  compareAtPrice: number | null
+  fabric: string | null
+  weave: string | null
+  rank: number
+}
+
+interface FTSPostResult {
+  id: number
+  type: 'post'
+  title: string
+  slug: string
+  excerpt: string | null
+  rank: number
+}
+
 export default async function SearchPage({
   searchParams,
 }: {
@@ -51,11 +67,59 @@ export default async function SearchPage({
   let posts: FTSPostResult[] = []
 
   if (q.trim()) {
-    const result = await ftsSearch(payload, q, 50)
-    products = result.docs.filter(
-      (d): d is FTSProductResult => d.type === 'product',
-    )
-    posts = result.docs.filter((d): d is FTSPostResult => d.type === 'post')
+    const limit = 50
+    const result = await payload.find({
+      collection: 'search',
+      where: {
+        title: {
+          like: q,
+        },
+      },
+      limit,
+      depth: 1,
+    })
+
+    const docs = result.docs
+      .filter(
+        (d: any) =>
+          d.doc &&
+          typeof d.doc.value === 'object' &&
+          ['products', 'posts'].includes(d.doc.relationTo),
+      )
+      .map((d: any, index: number) => {
+        const type = d.doc.relationTo === 'products' ? 'product' : 'post'
+        const docValue = d.doc.value
+
+        if (type === 'product') {
+          return {
+            id: docValue.id,
+            type: 'product',
+            name: docValue.name,
+            slug: docValue.slug,
+            basePrice: docValue.basePrice || null,
+            compareAtPrice: docValue.compareAtPrice || null,
+            fabric:
+              typeof docValue.fabric === 'object'
+                ? docValue.fabric?.title
+                : docValue.fabric,
+            weave: docValue.weave,
+            rank: d.priority || limit - index,
+          } as FTSProductResult
+        }
+
+        return {
+          id: docValue.id,
+          type: 'post',
+          title: docValue.title,
+          slug: docValue.slug,
+          excerpt: docValue.excerpt,
+          rank: d.priority || limit - index,
+        } as FTSPostResult
+      })
+      .sort((a, b) => b.rank - a.rank)
+
+    products = docs.filter((d): d is FTSProductResult => d.type === 'product')
+    posts = docs.filter((d): d is FTSPostResult => d.type === 'post')
   }
 
   const hasResults = products.length > 0 || posts.length > 0

@@ -233,9 +233,21 @@ export default buildConfig({
       icons: [{ url: '/favicon.ico' }],
     },
     livePreview: {
-      url: ({ data, collectionConfig, globalConfig }) => {
-        const base =
-          process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'
+      url: ({ data, collectionConfig, globalConfig, req }) => {
+        let base = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'
+
+        if (req && typeof req === 'object' && 'headers' in req) {
+          const headers = req.headers as any
+          const host =
+            typeof headers.get === 'function'
+              ? headers.get('host')
+              : headers.host
+          if (host) {
+            const protocol = host.includes('localhost') ? 'http' : 'https'
+            base = `${protocol}://${host}`
+          }
+        }
+
         if (collectionConfig?.slug === 'pages' && data) {
           return `${base}/${data.slug}?preview=true&id=${data.id}`
         }
