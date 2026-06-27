@@ -9,12 +9,14 @@ export interface SeedCategory {
   name: string
   description: string
   imagePath: string
+  galleryImages?: string[]
 }
 
 export interface SeedCollection {
   name: string
   description: string
   imagePath: string
+  galleryImages?: string[]
 }
 
 export interface SeedTag {
