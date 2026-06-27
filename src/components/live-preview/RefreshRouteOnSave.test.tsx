@@ -66,4 +66,20 @@ describe('RefreshRouteOnSave', () => {
 
     expect(r.refresh).not.toHaveBeenCalled()
   })
+
+  it('ignores postMessages with a non-document event type from the serverURL', () => {
+    const r = useRouter() as unknown as { refresh: ReturnType<typeof vi.fn> }
+    render(<RefreshRouteOnSave />)
+
+    const event = new MessageEvent('message', {
+      origin: SERVER_URL,
+      data: { type: 'payload-live-preview', ready: true },
+    })
+
+    act(() => {
+      window.dispatchEvent(event)
+    })
+
+    expect(r.refresh).not.toHaveBeenCalled()
+  })
 })
