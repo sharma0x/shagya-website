@@ -156,6 +156,8 @@ seed: ## Full seed: start infra → migrate → download images → seed data �
 	@echo ""
 	@echo "Step 3/4  Running database migrations..."
 	@set -a; [ -f .env ] && . ./.env; set +a; pnpm payload migrate
+	@echo "          Running Better Auth migrations..."
+	@set -a; [ -f .env ] && . ./.env; set +a; pnpm dlx @better-auth/cli migrate --config src/lib/auth.ts -y
 	@echo ""
 	@echo "Step 4/4  Downloading seed images (skips existing)..."
 	@bash scripts/download-images.sh
@@ -179,6 +181,7 @@ seed: ## Full seed: start infra → migrate → download images → seed data �
 
 db-migrate: ## Run pending database migrations
 	pnpm payload migrate
+	pnpm dlx @better-auth/cli migrate --config src/lib/auth.ts -y
 
 db-migrate-create: ## Create a new migration (MSG='description')
 	@if [ -z "$(MSG)" ]; then \

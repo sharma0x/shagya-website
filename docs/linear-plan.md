@@ -1,4 +1,4 @@
-# Linear Plan — Shagya Saree E-commerce MVP
+# Linear Plan — Shayga Saree E-commerce MVP
 
 > **Ready-to-import plan for Linear.** This document structures all work
 > as **Initiative → Projects → Issues (with sub-issues)**, using
@@ -7,7 +7,7 @@
 >
 > **Target team**: `Prince Sharma` (key: `PRI`)
 > **Estimated effort**: 12–14 weeks (7 × 2-week cycles)
-> **Created from**: `docs/shagya-payloadcms.md` v1.3
+> **Created from**: `docs/shayga-payloadcms.md` v1.3
 >
 > **How to use this file**:
 > 1. Review the plan below
@@ -40,7 +40,7 @@
 
 | Field | Value |
 |-------|-------|
-| **Name** | Shagya Saree E-commerce MVP |
+| **Name** | Shayga Saree E-commerce MVP |
 | **Description** | Build and launch the new client saree e-commerce website using Payload CMS + Next.js 16 + Better Auth. India-first D2C, 30–80 SKUs at launch, mobile-first, Razorpay payments. |
 | **Target date** | 14 weeks from project start |
 | **Owner** | [Client] |
@@ -473,7 +473,7 @@
 - **Acceptance**:
   - [ ] Resend account + API key
   - [ ] Domain verified (SPF, DKIM, DMARC)
-  - [ ] From address set (e.g., `hello@shagyabrand.com`)
+  - [ ] From address set (e.g., `hello@shaygabrand.com`)
   - [ ] Test email send + delivery
 - **Sub-issues**:
   - PRI-241: Set up Resend account + domain verification
@@ -559,7 +559,7 @@
 - **Cycle**: Cycle 2
 - **Acceptance**:
   - [ ] `src/collections/Products.ts` with all saree-specific fields (fabric, weave, work, occasion, blouse piece, region, certifications, etc.)
-  - [ ] Saree-specific metafields documented in shagya-payloadcms.md Section 11
+  - [ ] Saree-specific metafields documented in shayga-payloadcms.md Section 11
   - [ ] Color variants as array
   - [ ] Test: create a product with 2 colors, appears on frontend
 
@@ -2162,6 +2162,6 @@ defined here. Each issue maps to an `issueCreate` mutation.
 - **Version**: 1.0
 - **Created**: June 2026
 - **Target workspace**: Prince Sharma team (PRI)
-- **Source plan**: `docs/shagya-payloadcms.md` v1.3 + `docs/shagya-shopify.md`
-- **Owner**: Shagya project manager (you)
+- **Source plan**: `docs/shayga-payloadcms.md` v1.3 + `docs/shayga-shopify.md`
+- **Owner**: Shayga project manager (you)
 - **Next step**: Approve plan → push to Linear

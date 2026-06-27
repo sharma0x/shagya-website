@@ -24,7 +24,7 @@ export async function sendEmail({
   if (process.env.MAILPIT_SMTP_HOST) {
     const transport = createMailpitTransport()
     const info = await transport.sendMail({
-      from: 'Shagya <noreply@shagya.com>',
+      from: 'Shayga <noreply@shayga.com>',
       to,
       subject,
       html,
@@ -44,7 +44,7 @@ export async function sendEmail({
   }
 
   const { data, error } = await resend.emails.send({
-    from: 'Shagya <noreply@shagya.com>',
+    from: 'Shayga <noreply@shayga.com>',
     to,
     subject,
     html,

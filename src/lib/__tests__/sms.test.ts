@@ -119,10 +119,10 @@ describe('sendSMS', () => {
 
     const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
 
-    await sendSMS('9123456780', 'Shagya OTP: 111222')
+    await sendSMS('9123456780', 'Shayga OTP: 111222')
 
     expect(consoleSpy).toHaveBeenCalledWith(
-      '[SMS Dev] To 9123456780: Shagya OTP: 111222',
+      '[SMS Dev] To 9123456780: Shayga OTP: 111222',
     )
   })
 

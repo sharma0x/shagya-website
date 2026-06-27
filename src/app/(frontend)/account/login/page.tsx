@@ -62,7 +62,7 @@ export default function LoginPage() {
           Welcome back
         </h2>
         <p className="font-body mt-2 text-center text-sm text-neutral-500">
-          Sign in to your Shagya account to manage orders and wishlist
+          Sign in to your Shayga account to manage orders and wishlist
         </p>
       </div>
 

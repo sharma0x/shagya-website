@@ -181,7 +181,7 @@ Create `src/collections/Customers.ts` — **NO** `auth: true` (Better Auth handl
 
 The **largest and most important collection**. Full saree-specific schema with all 30+ custom fields (fabric, weave, work, occasion, blouse piece, region, certifications, etc.).
 
-Reference: `docs/shagya-payloadcms.md` Section 11 (Saree-Specific Product Fields)
+Reference: `docs/shayga-payloadcms.md` Section 11 (Saree-Specific Product Fields)
 
 ## Key fields
 
@@ -262,7 +262,7 @@ Addresses collection linked to customers. Fields: full_name, phone, line1, line2
 
 ## Overview
 
-A Coupons collection for managing discount codes in the Shagya saree ecommerce platform. Supports percentage, fixed amount, and free shipping discount types with cart validation, usage tracking, and date-based expiry.
+A Coupons collection for managing discount codes in the Shayga saree ecommerce platform. Supports percentage, fixed amount, and free shipping discount types with cart validation, usage tracking, and date-based expiry.
 
 ## Acceptance Criteria
 
@@ -397,7 +397,7 @@ Create a database seed script that populates dev environment with sample data. U
 
 ## What the seed script creates
 
-- **Admin user**: email: [admin@shagya.com](<mailto:
+- **Admin user**: email: [admin@shayga.com](<mailto:
 
 ---
 
@@ -451,7 +451,7 @@ Set up Resend for transactional emails (order confirmations, password resets, ma
 
 - [ ] Resend account + API key
 - [ ] Domain verified (SPF, DKIM, DMARC)
-- [ ] From address set (e.g., `hello@shagyabrand.com`)
+- [ ] From address set (e.g., `hello@shaygabrand.com`)
 - [ ] Test email send + delivery
 
 **Cycle**: 2
@@ -482,7 +482,7 @@ Create `proxy.ts` (Next.js 16 renamed `middleware.ts` to `proxy.ts`) in project 
 
 When a customer signs up via Better Auth, auto-create a matching Payload `customers` document linked via `betterAuthUserId`. Sync email/phone/name changes back to Payload. This is the bridge between the two auth/data systems.
 
-Reference: `docs/shagya-payloadcms.md` Section 18.3 (databaseHooks)
+Reference: `docs/shayga-payloadcms.md` Section 18.3 (databaseHooks)
 
 **Cycle**: 2
 

@@ -1,5 +1,5 @@
 // =============================================================================
-// Shagya — Seed Data (Shared Data Structures)
+// Shayga — Seed Data (Shared Data Structures)
 // =============================================================================
 // This file is kept lightweight — no Payload imports — so tests can import
 // the data structures without loading the full config.
@@ -140,7 +140,7 @@ export const avatarImagePath = (index: number) =>
 // ---------------------------------------------------------------------------
 
 export const adminUser = {
-  email: 'admin@shagya.com',
+  email: 'admin@shayga.com',
   password: 'admin123',
   name: 'Admin',
   role: 'super-admin' as const,
@@ -243,7 +243,7 @@ export const tags: SeedTag[] = [
 // ---------------------------------------------------------------------------
 
 export const brands: SeedBrand[] = [
-  { name: 'Shagya Original', description: 'Our in-house designed sarees' },
+  { name: 'Shayga Original', description: 'Our in-house designed sarees' },
   { name: 'Varanasi Weaves', description: 'Authentic Banarasi weavers' },
   { name: 'Kanchipuram Silks', description: 'Traditional South Indian silks' },
   { name: 'Rajasthan Handloom', description: 'Rajasthani handloom artisans' },
@@ -825,7 +825,7 @@ export const pages: SeedPage[] = [
       {
         blockType: 'textImage',
         heading: 'Forty years on the ghats',
-        body: "My mother, Meera, ran a small saree shop near Assi Ghat in Varanasi for four decades. Women came from three districts to buy from her — not because she had the most stock, but because she never lied about the weave. She knew every weaver by name. She knew which cluster in Madanpura was producing the finest Kadhwa work that season. When a customer asked about a saree's zari, she could tell them exactly which family in Pilikothi had woven it.\n\nWhen she retired in 2019, the weavers she had worked with for decades were losing ground to machine-made copies. Power looms in Surat were producing near-identical Banarasi patterns in four hours — pieces that took a handloom weaver three weeks. Prices were being undercut. Younger members of weaver families were leaving the loom for factory work. The tradition that sustained Varanasi's identity for five centuries was hollowing out.\n\nShagya launched in 2020 with twelve sarees and a WhatsApp group of 200 women. We photographed each saree in natural daylight, wrote the weaver's name on the product page, and priced it fairly — no bargaining culture, no inflated MRP. Within six months, all twelve sarees had sold. The weavers asked us to continue.",
+        body: "My mother, Meera, ran a small saree shop near Assi Ghat in Varanasi for four decades. Women came from three districts to buy from her — not because she had the most stock, but because she never lied about the weave. She knew every weaver by name. She knew which cluster in Madanpura was producing the finest Kadhwa work that season. When a customer asked about a saree's zari, she could tell them exactly which family in Pilikothi had woven it.\n\nWhen she retired in 2019, the weavers she had worked with for decades were losing ground to machine-made copies. Power looms in Surat were producing near-identical Banarasi patterns in four hours — pieces that took a handloom weaver three weeks. Prices were being undercut. Younger members of weaver families were leaving the loom for factory work. The tradition that sustained Varanasi's identity for five centuries was hollowing out.\n\nShayga launched in 2020 with twelve sarees and a WhatsApp group of 200 women. We photographed each saree in natural daylight, wrote the weaver's name on the product page, and priced it fairly — no bargaining culture, no inflated MRP. Within six months, all twelve sarees had sold. The weavers asked us to continue.",
         imagePosition: 'right',
       } as SeedTextImageBlock,
       {
@@ -835,7 +835,7 @@ export const pages: SeedPage[] = [
           {
             title: 'Verified handloom only',
             description:
-              'Every saree on Shagya is tested against the India Handloom Mark criteria before listing. No power-loom substitutes — even when they look identical from a photograph.',
+              'Every saree on Shayga is tested against the India Handloom Mark criteria before listing. No power-loom substitutes — even when they look identical from a photograph.',
           },
           {
             title: 'Maker traceability',
@@ -857,7 +857,7 @@ export const pages: SeedPage[] = [
       {
         blockType: 'textImage',
         heading: 'The SHEROES Initiative',
-        body: 'In 2022, we realised that most of our artisan partners were women who were working through male intermediaries — their husbands, fathers, or male relatives who handled sales while the women did the actual weaving. The women received a wage. The men received the relationship.\n\nSHEROES was built to change that structure. We help women weavers set up their own storefronts on Shagya — with their own names, their own craft descriptions, and direct access to customers. We provide training, photography support, and logistics. The women handle everything else.\n\nWe currently have 23 active SHEROES storefronts, run by women weavers from Banarasi silk clusters in Varanasi, Chanderi cotton-silk weavers in Madhya Pradesh, Kantha embroiderers in West Bengal, and Bandhani artisans in Kutch, Gujarat. Our goal is 100 active storefronts by 2027. Every SHEROES purchase is clearly marked on the product page so you know exactly who you are supporting.',
+        body: 'In 2022, we realised that most of our artisan partners were women who were working through male intermediaries — their husbands, fathers, or male relatives who handled sales while the women did the actual weaving. The women received a wage. The men received the relationship.\n\nSHEROES was built to change that structure. We help women weavers set up their own storefronts on Shayga — with their own names, their own craft descriptions, and direct access to customers. We provide training, photography support, and logistics. The women handle everything else.\n\nWe currently have 23 active SHEROES storefronts, run by women weavers from Banarasi silk clusters in Varanasi, Chanderi cotton-silk weavers in Madhya Pradesh, Kantha embroiderers in West Bengal, and Bandhani artisans in Kutch, Gujarat. Our goal is 100 active storefronts by 2027. Every SHEROES purchase is clearly marked on the product page so you know exactly who you are supporting.',
         imagePosition: 'left',
       } as SeedTextImageBlock,
       {
@@ -874,13 +874,13 @@ export const pages: SeedPage[] = [
             name: 'Fatima Sheikh',
             role: 'Chanderi weaver, Chanderi, Madhya Pradesh',
             quote:
-              'My grandmother wove Chanderi for the Nawab of Bhopal. My mother wove for local traders. I weave for Shagya. For the first time in three generations, I know what my sarees sell for and who buys them. That knowledge changes how I work.',
+              'My grandmother wove Chanderi for the Nawab of Bhopal. My mother wove for local traders. I weave for Shayga. For the first time in three generations, I know what my sarees sell for and who buys them. That knowledge changes how I work.',
           },
           {
             name: 'Rukmini Bai',
             role: 'Kantha embroiderer, Bolpur, West Bengal',
             quote:
-              'We were making Kantha work and selling to city buyers for very low prices. Shagya listed our sarees at their real value — what the craft actually costs to make. The first month, I earned more from four sarees than in the previous three months combined.',
+              'We were making Kantha work and selling to city buyers for very low prices. Shayga listed our sarees at their real value — what the craft actually costs to make. The first month, I earned more from four sarees than in the previous three months combined.',
           },
         ],
       } as SeedTestimonialsBlock,
@@ -940,17 +940,17 @@ export const pages: SeedPage[] = [
           {
             question: 'Can I modify or cancel my order after placing it?',
             answer:
-              'Orders can be modified or cancelled within 2 hours of placement by contacting us at care@shagya.com or WhatsApp +91 98765 43210. After 2 hours, the order enters processing and cannot be modified. Once dispatched, cancellations are not possible — you would need to initiate a return after delivery.',
+              'Orders can be modified or cancelled within 2 hours of placement by contacting us at care@shayga.com or WhatsApp +91 98765 43210. After 2 hours, the order enters processing and cannot be modified. Once dispatched, cancellations are not possible — you would need to initiate a return after delivery.',
           },
           {
             question: 'Do you offer blouse stitching?',
             answer:
-              'Yes. Blouse stitching is complimentary on all sarees priced above Rs 15,000. For sarees below that, stitching is available for Rs 600. Please send your measurements (chest, waist, and sleeve preference) to care@shagya.com within 24 hours of ordering. Stitched blouses are custom-made and cannot be returned.',
+              'Yes. Blouse stitching is complimentary on all sarees priced above Rs 15,000. For sarees below that, stitching is available for Rs 600. Please send your measurements (chest, waist, and sleeve preference) to care@shayga.com within 24 hours of ordering. Stitched blouses are custom-made and cannot be returned.',
           },
           {
             question: 'How do I know if a saree is truly handloom?',
             answer:
-              'Every saree on Shagya is authenticated before listing. We check for India Handloom Mark criteria: presence of floating weft threads in hand-woven pieces, warp density, and construction technique. We also list the specific weave technique (Kadhwa, Phekwa, Korvai, etc.) on each product page. If you want to verify, you can request a video call with the weaver.',
+              'Every saree on Shayga is authenticated before listing. We check for India Handloom Mark criteria: presence of floating weft threads in hand-woven pieces, warp density, and construction technique. We also list the specific weave technique (Kadhwa, Phekwa, Korvai, etc.) on each product page. If you want to verify, you can request a video call with the weaver.',
           },
         ],
       } as SeedFaqBlock,
@@ -961,7 +961,7 @@ export const pages: SeedPage[] = [
           {
             question: 'What is the standard length of a saree?',
             answer:
-              'All sarees on Shagya are 5.5 metres long, which is the standard length across most Indian weaving traditions. This length works for all body types when draped in the Nivi style. Select weaves — Kanjivaram, Paithani, Banarasi — are available in 6 and 6.5 metre options. Check the product page for available length options.',
+              'All sarees on Shayga are 5.5 metres long, which is the standard length across most Indian weaving traditions. This length works for all body types when draped in the Nivi style. Select weaves — Kanjivaram, Paithani, Banarasi — are available in 6 and 6.5 metre options. Check the product page for available length options.',
           },
           {
             question: 'Is a blouse piece included?',
@@ -1003,12 +1003,12 @@ export const pages: SeedPage[] = [
           {
             question: 'How do I track my order?',
             answer:
-              'Once your order is dispatched, you will receive an SMS and email with the tracking number and courier partner details. We use BlueDart and Delhivery for domestic orders, and DHL or FedEx for international orders. If you have not received tracking details within 2 business days of ordering, write to care@shagya.com.',
+              'Once your order is dispatched, you will receive an SMS and email with the tracking number and courier partner details. We use BlueDart and Delhivery for domestic orders, and DHL or FedEx for international orders. If you have not received tracking details within 2 business days of ordering, write to care@shayga.com.',
           },
           {
             question: 'What if my delivery is delayed?',
             answer:
-              'Occasional delays can occur due to courier logistics, especially in remote areas or during festive seasons. If your order has not arrived within the expected window, first check the tracking link. If tracking shows no movement for more than 48 hours, write to care@shagya.com with your order number — we will investigate and resolve within 24 hours.',
+              'Occasional delays can occur due to courier logistics, especially in remote areas or during festive seasons. If your order has not arrived within the expected window, first check the tracking link. If tracking shows no movement for more than 48 hours, write to care@shayga.com with your order number — we will investigate and resolve within 24 hours.',
           },
         ],
       } as SeedFaqBlock,
@@ -1019,7 +1019,7 @@ export const pages: SeedPage[] = [
           {
             question: 'What is your return policy?',
             answer:
-              'We accept returns within 15 days of delivery. The saree must be unworn, undamaged, and have original tags and packaging intact. Custom-stitched blouses are non-returnable. To initiate a return, email care@shagya.com with your order number and reason. We arrange free pickup from most metro and tier-2 cities.',
+              'We accept returns within 15 days of delivery. The saree must be unworn, undamaged, and have original tags and packaging intact. Custom-stitched blouses are non-returnable. To initiate a return, email care@shayga.com with your order number and reason. We arrange free pickup from most metro and tier-2 cities.',
           },
           {
             question: 'Can I exchange for a different colour or size?',
@@ -1034,7 +1034,7 @@ export const pages: SeedPage[] = [
           {
             question: 'What if I receive a damaged or wrong saree?',
             answer:
-              'We inspect every saree before dispatch, but if a damaged or incorrect item arrives, we will resolve it immediately — full refund or replacement at no cost to you. Photograph the issue and email care@shagya.com within 48 hours of delivery.',
+              'We inspect every saree before dispatch, but if a damaged or incorrect item arrives, we will resolve it immediately — full refund or replacement at no cost to you. Photograph the issue and email care@shayga.com within 48 hours of delivery.',
           },
         ],
       } as SeedFaqBlock,
@@ -1050,7 +1050,7 @@ export const pages: SeedPage[] = [
           {
             question: 'How should I store my sarees?',
             answer:
-              'Fold along the natural creases and wrap in clean, dry muslin cloth or the cotton bag included with your Shagya order. Store flat in a wooden or cardboard box — never in a plastic bag or airtight container, as plastic traps moisture and causes yellowing. Keep in a cool, dry, dark environment. Every 6 months, refold along different lines to prevent permanent crease stress.',
+              'Fold along the natural creases and wrap in clean, dry muslin cloth or the cotton bag included with your Shayga order. Store flat in a wooden or cardboard box — never in a plastic bag or airtight container, as plastic traps moisture and causes yellowing. Keep in a cool, dry, dark environment. Every 6 months, refold along different lines to prevent permanent crease stress.',
           },
           {
             question: 'Can I iron my saree?',
@@ -1120,7 +1120,7 @@ export const pages: SeedPage[] = [
       {
         blockType: 'textImage',
         heading: 'Tracking your order',
-        body: "As soon as your saree is dispatched, we will send you an SMS and email containing your tracking number, the courier partner's name, a direct link to track your package, and an estimated delivery date.\n\nFor domestic orders we use BlueDart and Delhivery — both have real-time tracking apps. For international orders we ship via DHL or FedEx.\n\nIf you have not received tracking details within 2 business days of placing your order, please contact us at care@shagya.com with your order number.",
+        body: "As soon as your saree is dispatched, we will send you an SMS and email containing your tracking number, the courier partner's name, a direct link to track your package, and an estimated delivery date.\n\nFor domestic orders we use BlueDart and Delhivery — both have real-time tracking apps. For international orders we ship via DHL or FedEx.\n\nIf you have not received tracking details within 2 business days of placing your order, please contact us at care@shayga.com with your order number.",
         imagePosition: 'right',
       } as SeedTextImageBlock,
       {
@@ -1153,7 +1153,7 @@ export const pages: SeedPage[] = [
       {
         blockType: 'textImage',
         heading: 'How to initiate a return',
-        body: 'Step 1: Email care@shagya.com with your order number, the reason for return, and photographs if the issue is damage or a wrong item.\n\nStep 2: Our team will review your request and confirm eligibility within 24 hours.\n\nStep 3: We will schedule a free pickup from your address (metro and most tier-2 cities). You will receive an SMS with the pickup date.\n\nStep 4: Once the saree reaches our warehouse and passes quality inspection (3–5 business days), your refund will be initiated to the original payment method.\n\nFor faster resolution, WhatsApp us at +91 98765 43210 with your order number and photographs.',
+        body: 'Step 1: Email care@shayga.com with your order number, the reason for return, and photographs if the issue is damage or a wrong item.\n\nStep 2: Our team will review your request and confirm eligibility within 24 hours.\n\nStep 3: We will schedule a free pickup from your address (metro and most tier-2 cities). You will receive an SMS with the pickup date.\n\nStep 4: Once the saree reaches our warehouse and passes quality inspection (3–5 business days), your refund will be initiated to the original payment method.\n\nFor faster resolution, WhatsApp us at +91 98765 43210 with your order number and photographs.',
         imagePosition: 'right',
       } as SeedTextImageBlock,
       {
@@ -1192,19 +1192,19 @@ export const pages: SeedPage[] = [
       {
         blockType: 'textImage',
         heading: 'What we never do with your data',
-        body: 'We want to be direct about this:\n\nWe do not sell your data to any third party — ever. We do not rent or share your contact information with marketing agencies or data brokers. We do not run retargeting ads using your browsing history from our site. We do not use your purchase data to show you personalised ads on other platforms. We do not share your information with social media platforms for advertising purposes.\n\nIf you receive an email or call claiming to be from Shagya and asking for payment details, do not respond — contact us immediately at privacy@shagya.com.',
+        body: 'We want to be direct about this:\n\nWe do not sell your data to any third party — ever. We do not rent or share your contact information with marketing agencies or data brokers. We do not run retargeting ads using your browsing history from our site. We do not use your purchase data to show you personalised ads on other platforms. We do not share your information with social media platforms for advertising purposes.\n\nIf you receive an email or call claiming to be from Shayga and asking for payment details, do not respond — contact us immediately at privacy@shayga.com.',
         imagePosition: 'left',
       } as SeedTextImageBlock,
       {
         blockType: 'textImage',
         heading: 'Third parties we share data with',
-        body: "We share limited information only with the following partners, strictly for fulfilling your order:\n\nLogistics partners (BlueDart, Delhivery, India Post, DHL, FedEx): receive your name, phone number, and delivery address. Our tailor (for blouse stitching orders): receives your measurements only. Razorpay (payment gateway): processes your payment — Shagya never receives your card details. AWS (Amazon Web Services): hosts our application and database infrastructure.\n\nAll partners are bound by their own privacy policies and applicable data protection laws. We share no more information than is necessary for each partner's specific role.",
+        body: "We share limited information only with the following partners, strictly for fulfilling your order:\n\nLogistics partners (BlueDart, Delhivery, India Post, DHL, FedEx): receive your name, phone number, and delivery address. Our tailor (for blouse stitching orders): receives your measurements only. Razorpay (payment gateway): processes your payment — Shayga never receives your card details. AWS (Amazon Web Services): hosts our application and database infrastructure.\n\nAll partners are bound by their own privacy policies and applicable data protection laws. We share no more information than is necessary for each partner's specific role.",
         imagePosition: 'right',
       } as SeedTextImageBlock,
       {
         blockType: 'textImage',
         heading: 'Your rights',
-        body: "Access: you can request a complete copy of the data we hold about you at any time.\n\nCorrection: update or correct your name, address, email, and other details directly from your account settings.\n\nDeletion: you can request that we permanently delete your account and all associated data. Write to privacy@shagya.com and we will process the deletion within 30 days.\n\nUnsubscribe: click 'unsubscribe' in any newsletter email to stop receiving marketing communications immediately. This does not affect transactional emails (order confirmations, shipping updates).\n\nFor any privacy-related requests or concerns, email privacy@shagya.com. We respond to all privacy queries within 5 business days.",
+        body: "Access: you can request a complete copy of the data we hold about you at any time.\n\nCorrection: update or correct your name, address, email, and other details directly from your account settings.\n\nDeletion: you can request that we permanently delete your account and all associated data. Write to privacy@shayga.com and we will process the deletion within 30 days.\n\nUnsubscribe: click 'unsubscribe' in any newsletter email to stop receiving marketing communications immediately. This does not affect transactional emails (order confirmations, shipping updates).\n\nFor any privacy-related requests or concerns, email privacy@shayga.com. We respond to all privacy queries within 5 business days.",
         imagePosition: 'left',
       } as SeedTextImageBlock,
       {
@@ -1216,8 +1216,8 @@ export const pages: SeedPage[] = [
       {
         blockType: 'cta',
         heading: 'Questions about privacy?',
-        body: 'We take privacy questions seriously. Reach us at privacy@shagya.com for any data-related queries or requests.',
-        buttonText: 'Write to privacy@shagya.com',
+        body: 'We take privacy questions seriously. Reach us at privacy@shayga.com for any data-related queries or requests.',
+        buttonText: 'Write to privacy@shayga.com',
         buttonLink: '/contact',
       } as SeedCtaBlock,
     ],
@@ -1232,18 +1232,18 @@ export const pages: SeedPage[] = [
     template: 'default',
     status: 'published',
     heroSubheading:
-      'Please read these terms carefully before using Shagya. By placing an order you agree to them.',
+      'Please read these terms carefully before using Shayga. By placing an order you agree to them.',
     blocks: [
       {
         blockType: 'textImage',
         heading: 'Placing an order',
-        body: 'When you place an order on shagya.com, you are making an offer to purchase. An order confirmation email does not constitute our acceptance — your order is accepted when we dispatch it. We reserve the right to cancel any order before dispatch, in which case you will receive a full refund.\n\nOrders may be cancelled by us if the product becomes unavailable after your order was placed, if we detect a pricing error (we will notify you and you may confirm at the correct price or cancel), if there are concerns about fraudulent activity on the account, or if your delivery address cannot be serviced by our logistics partners.',
+        body: 'When you place an order on shayga.com, you are making an offer to purchase. An order confirmation email does not constitute our acceptance — your order is accepted when we dispatch it. We reserve the right to cancel any order before dispatch, in which case you will receive a full refund.\n\nOrders may be cancelled by us if the product becomes unavailable after your order was placed, if we detect a pricing error (we will notify you and you may confirm at the correct price or cancel), if there are concerns about fraudulent activity on the account, or if your delivery address cannot be serviced by our logistics partners.',
         imagePosition: 'left',
       } as SeedTextImageBlock,
       {
         blockType: 'textImage',
         heading: 'Pricing and payment',
-        body: "All prices displayed on shagya.com are in Indian Rupees (INR) and are inclusive of applicable GST (currently 5% on textile products). Prices do not include shipping charges, which are calculated at checkout.\n\nWe reserve the right to change prices without prior notice. The price applicable to your order is the price confirmed at checkout. In the event of a pricing error, we will notify you at your registered email address before processing the order. Payments are processed by Razorpay and are subject to Razorpay's terms of service.",
+        body: "All prices displayed on shayga.com are in Indian Rupees (INR) and are inclusive of applicable GST (currently 5% on textile products). Prices do not include shipping charges, which are calculated at checkout.\n\nWe reserve the right to change prices without prior notice. The price applicable to your order is the price confirmed at checkout. In the event of a pricing error, we will notify you at your registered email address before processing the order. Payments are processed by Razorpay and are subject to Razorpay's terms of service.",
         imagePosition: 'right',
       } as SeedTextImageBlock,
       {
@@ -1255,26 +1255,26 @@ export const pages: SeedPage[] = [
       {
         blockType: 'textImage',
         heading: 'Intellectual property',
-        body: 'All content on shagya.com — including product photographs, weave descriptions, blog articles, the Shagya brand name, logo, and design system — is the exclusive intellectual property of Shagya or the individual artisans who have licensed their stories and images to us.\n\nYou may not reproduce, copy, distribute, or commercially exploit any content from this site without prior written permission from Shagya. Linking to our product pages is permitted for non-commercial purposes. For press, editorial, or wholesale inquiries, contact hello@shagya.com.',
+        body: 'All content on shayga.com — including product photographs, weave descriptions, blog articles, the Shayga brand name, logo, and design system — is the exclusive intellectual property of Shayga or the individual artisans who have licensed their stories and images to us.\n\nYou may not reproduce, copy, distribute, or commercially exploit any content from this site without prior written permission from Shayga. Linking to our product pages is permitted for non-commercial purposes. For press, editorial, or wholesale inquiries, contact hello@shayga.com.',
         imagePosition: 'right',
       } as SeedTextImageBlock,
       {
         blockType: 'textImage',
         heading: 'Limitation of liability',
-        body: "To the maximum extent permitted by applicable law, Shagya's liability in connection with any product purchased through this site is limited to the purchase price of that product.\n\nShagya is not liable for indirect, incidental, or consequential damages; loss of profits or business; delays or damages resulting from events beyond our reasonable control (including customs delays, natural disasters, or logistics partner failures); or dissatisfaction with a product that was accurately described in the listing.\n\nNothing in these terms limits our liability for death or personal injury caused by negligence, fraud, or anything else that cannot be excluded under applicable law.",
+        body: "To the maximum extent permitted by applicable law, Shayga's liability in connection with any product purchased through this site is limited to the purchase price of that product.\n\nShayga is not liable for indirect, incidental, or consequential damages; loss of profits or business; delays or damages resulting from events beyond our reasonable control (including customs delays, natural disasters, or logistics partner failures); or dissatisfaction with a product that was accurately described in the listing.\n\nNothing in these terms limits our liability for death or personal injury caused by negligence, fraud, or anything else that cannot be excluded under applicable law.",
         imagePosition: 'left',
       } as SeedTextImageBlock,
       {
         blockType: 'textImage',
         heading: 'Governing law',
-        body: 'These Terms of Service are governed by the laws of Uttar Pradesh, India. Any dispute arising from your use of shagya.com or from a transaction on the platform shall be subject to the exclusive jurisdiction of the courts in Varanasi, Uttar Pradesh, India.\n\nIf you are a consumer based outside India, applicable mandatory consumer protection laws in your country may also apply. We will always attempt to resolve disputes amicably before either party initiates legal proceedings. Contact legal@shagya.com to raise any legal or compliance concern.',
+        body: 'These Terms of Service are governed by the laws of Uttar Pradesh, India. Any dispute arising from your use of shayga.com or from a transaction on the platform shall be subject to the exclusive jurisdiction of the courts in Varanasi, Uttar Pradesh, India.\n\nIf you are a consumer based outside India, applicable mandatory consumer protection laws in your country may also apply. We will always attempt to resolve disputes amicably before either party initiates legal proceedings. Contact legal@shayga.com to raise any legal or compliance concern.',
         imagePosition: 'right',
       } as SeedTextImageBlock,
       {
         blockType: 'cta',
         heading: 'Questions about these terms?',
         body: 'We try to write legal documents in plain English. If something is unclear, ask us.',
-        buttonText: 'Write to legal@shagya.com',
+        buttonText: 'Write to legal@shayga.com',
         buttonLink: '/contact',
       } as SeedCtaBlock,
     ],
@@ -1294,7 +1294,7 @@ export const pages: SeedPage[] = [
       {
         blockType: 'textImage',
         heading: 'A small team doing something rare',
-        body: 'Shagya is a bootstrapped company of twelve people, distributed between Varanasi, Bangalore, and Mumbai. We work with 50+ artisan families across eight states. Our job is to make their work visible, their prices fair, and their craft sustainable — so that the next generation of weavers has a reason to sit at the loom.\n\nWe are not a fast-fashion company that happens to sell Indian textiles. We are a company built around the belief that a handloom saree has more worth — economic, cultural, environmental — than the market currently recognises. Our role is to correct that gap.\n\nEvery product decision, every pricing call, every piece of content we publish is filtered through one question: does this serve the artisan and the customer honestly?',
+        body: 'Shayga is a bootstrapped company of twelve people, distributed between Varanasi, Bangalore, and Mumbai. We work with 50+ artisan families across eight states. Our job is to make their work visible, their prices fair, and their craft sustainable — so that the next generation of weavers has a reason to sit at the loom.\n\nWe are not a fast-fashion company that happens to sell Indian textiles. We are a company built around the belief that a handloom saree has more worth — economic, cultural, environmental — than the market currently recognises. Our role is to correct that gap.\n\nEvery product decision, every pricing call, every piece of content we publish is filtered through one question: does this serve the artisan and the customer honestly?',
         imagePosition: 'right',
       } as SeedTextImageBlock,
       {
@@ -1320,7 +1320,7 @@ export const pages: SeedPage[] = [
       } as SeedFeatureGridBlock,
       {
         blockType: 'featureGrid',
-        heading: 'Why Shagya',
+        heading: 'Why Shayga',
         features: [
           {
             title: 'Measurable impact',
@@ -1347,13 +1347,13 @@ export const pages: SeedPage[] = [
       {
         blockType: 'textImage',
         heading: 'What we look for',
-        body: 'More than specific skills, we look for people who think clearly, write well, and care deeply about what they are working on.\n\nEvery person at Shagya can explain — clearly and concisely — why handloom matters. Not because we require a memorised answer, but because you cannot do this work well without genuinely believing in it.\n\nWe look for people who ask good questions before starting work, who admit when they do not know something, and who are made uncomfortable by inaccuracy. We are building something that is honest about what it is — and we need people who hold themselves to that same standard.',
+        body: 'More than specific skills, we look for people who think clearly, write well, and care deeply about what they are working on.\n\nEvery person at Shayga can explain — clearly and concisely — why handloom matters. Not because we require a memorised answer, but because you cannot do this work well without genuinely believing in it.\n\nWe look for people who ask good questions before starting work, who admit when they do not know something, and who are made uncomfortable by inaccuracy. We are building something that is honest about what it is — and we need people who hold themselves to that same standard.',
         imagePosition: 'left',
       } as SeedTextImageBlock,
       {
         blockType: 'cta',
         heading: 'Not seeing the right role?',
-        body: 'We keep every application on file. Send a short note — three sentences about why you care about handloom and what you are good at — to careers@shagya.com.',
+        body: 'We keep every application on file. Send a short note — three sentences about why you care about handloom and what you are good at — to careers@shayga.com.',
         buttonText: 'Send an open application',
         buttonLink: '/contact',
       } as SeedCtaBlock,
@@ -1371,7 +1371,7 @@ export const blogPosts: SeedBlogPost[] = [
     excerpt:
       "From Mughal ateliers to modern trousseaus, the Banarasi saree remains India's most celebrated handloom treasure. Discover the craftsmanship, the techniques, and how to tell a real Banarasi from an impostor.",
     imagePath: '/images/blogs/blog-1.jpg',
-    body: 'Walk through the gullies of Madanpura or Pilikothi in Varanasi and you will hear it before you see it — the rhythmic clack-clack-thump of the drawloom, a sound that has echoed through these lanes for five centuries. The Banarasi saree is not merely fabric; it is woven history. The Mughal seed: Persian motifs — the shikargah hunting scene, the bel creeping vine, the jaal lattice — melded with indigenous Indian sensibilities. Kadhwa versus Phekwa: In Kadhwa, every motif is woven independently with zero floating threads on the reverse. Phekwa uses a running weft — faster, cheaper. A Kadhwa Banarasi takes three to six months. True zari is pure silk twisted with silver wire electroplated in 24-karat gold. Shagya works directly with master weaver families in Varanasi — every Banarasi in our collection is Kadhwa-woven, using only certified pure zari.',
+    body: 'Walk through the gullies of Madanpura or Pilikothi in Varanasi and you will hear it before you see it — the rhythmic clack-clack-thump of the drawloom, a sound that has echoed through these lanes for five centuries. The Banarasi saree is not merely fabric; it is woven history. The Mughal seed: Persian motifs — the shikargah hunting scene, the bel creeping vine, the jaal lattice — melded with indigenous Indian sensibilities. Kadhwa versus Phekwa: In Kadhwa, every motif is woven independently with zero floating threads on the reverse. Phekwa uses a running weft — faster, cheaper. A Kadhwa Banarasi takes three to six months. True zari is pure silk twisted with silver wire electroplated in 24-karat gold. Shayga works directly with master weaver families in Varanasi — every Banarasi in our collection is Kadhwa-woven, using only certified pure zari.',
   },
   {
     title: 'How to Choose the Perfect Bridal Saree',
@@ -1395,7 +1395,7 @@ export const blogPosts: SeedBlogPost[] = [
     excerpt:
       'A fine silk saree can outlive its owner — but only with the right care. From storage myths to dry-cleaning rules, here is how to protect your most valuable wardrobe.',
     imagePath: '/images/blogs/blog-4.jpg',
-    body: 'Silk is protein — it breathes, ages, and responds to its environment much like skin does. Never store a silk saree in a plastic bag — plastic traps moisture and can react with silk proteins causing permanent yellowing. The correct method: fold along natural creases, wrap in clean muslin cloth, store flat in a wooden box. Every six months, refold along different lines to prevent crease stress. Do not wash silk at home — dry-cleaning is non-negotiable. Store in cool-dark-dry conditions (18-22 C, below 55% humidity). Place silica gel sachets among your saree boxes. Every saree from Shagya arrives with a cotton storage bag, acid-free tissue, and a detailed care card.',
+    body: 'Silk is protein — it breathes, ages, and responds to its environment much like skin does. Never store a silk saree in a plastic bag — plastic traps moisture and can react with silk proteins causing permanent yellowing. The correct method: fold along natural creases, wrap in clean muslin cloth, store flat in a wooden box. Every six months, refold along different lines to prevent crease stress. Do not wash silk at home — dry-cleaning is non-negotiable. Store in cool-dark-dry conditions (18-22 C, below 55% humidity). Place silica gel sachets among your saree boxes. Every saree from Shayga arrives with a cotton storage bag, acid-free tissue, and a detailed care card.',
   },
   {
     title: "India's Weaving Traditions: A Regional Journey",
@@ -1403,7 +1403,7 @@ export const blogPosts: SeedBlogPost[] = [
     excerpt:
       "From the temple towns of Tamil Nadu to the desert workshops of Gujarat, India's saree traditions form a map of extraordinary living artistry.",
     imagePath: '/images/blogs/blog-5.jpg',
-    body: 'Kanjeevaram of Tamil Nadu is the queen of South Indian weaves — three-shuttle technique where body and border are woven separately then interlocked. Banarasi of Uttar Pradesh is poetry in silk — intricate brocade work with Persian-influenced design vocabulary. Paithani of Maharashtra features the signature peacock motif woven into the pallu with a special tapestry technique using separate bobbins for each colour. Baluchari of West Bengal is a storytelling saree with narrative pallus depicting scenes from the Ramayana and Mahabharata. Patola of Gujarat is the most mathematically demanding textile in the world — double ikat where a single misplaced thread corrupts the entire pattern. Shagya sources each weave directly from the communities that create them.',
+    body: 'Kanjeevaram of Tamil Nadu is the queen of South Indian weaves — three-shuttle technique where body and border are woven separately then interlocked. Banarasi of Uttar Pradesh is poetry in silk — intricate brocade work with Persian-influenced design vocabulary. Paithani of Maharashtra features the signature peacock motif woven into the pallu with a special tapestry technique using separate bobbins for each colour. Baluchari of West Bengal is a storytelling saree with narrative pallus depicting scenes from the Ramayana and Mahabharata. Patola of Gujarat is the most mathematically demanding textile in the world — double ikat where a single misplaced thread corrupts the entire pattern. Shayga sources each weave directly from the communities that create them.',
   },
 ]
 
@@ -1449,12 +1449,12 @@ export const navigations: SeedNavigation[] = [
       {
         label: 'Instagram',
         type: 'custom_url',
-        url: 'https://instagram.com/shagya',
+        url: 'https://instagram.com/shayga',
       },
       {
         label: 'Facebook',
         type: 'custom_url',
-        url: 'https://facebook.com/shagya',
+        url: 'https://facebook.com/shayga',
       },
     ],
   },
@@ -1465,15 +1465,15 @@ export const navigations: SeedNavigation[] = [
 // ---------------------------------------------------------------------------
 
 export const siteSettingsData = {
-  siteName: 'Shagya',
+  siteName: 'Shayga',
   tagline: 'Timeless Indian Sarees, Crafted with Love',
-  contactEmail: 'hello@shagya.com',
+  contactEmail: 'hello@shayga.com',
   contactPhone: '+91 9876543210',
   address: "123 Weaver's Lane\nVaranasi, Uttar Pradesh 221001\nIndia",
-  instagramUrl: 'https://instagram.com/shagya',
-  facebookUrl: 'https://facebook.com/shagya',
-  youtubeUrl: 'https://youtube.com/@shagya',
-  pinterestUrl: 'https://pinterest.com/shagya',
+  instagramUrl: 'https://instagram.com/shayga',
+  facebookUrl: 'https://facebook.com/shayga',
+  youtubeUrl: 'https://youtube.com/@shayga',
+  pinterestUrl: 'https://pinterest.com/shayga',
   announcementBar: {
     enabled: true,
     text: 'Free shipping on orders above ₹999 \u00A0·\u00A0 Easy 7-day returns',

@@ -35,14 +35,14 @@ describe('sendEmail', () => {
     const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
 
     const result = await sendEmail({
-      to: 'user@shagya.com',
+      to: 'user@shayga.com',
       subject: 'Welcome',
-      html: '<p>Welcome to Shagya</p>',
+      html: '<p>Welcome to Shayga</p>',
     })
 
     expect(result).toEqual({ success: true, messageId: 'dev-mode' })
     expect(consoleSpy).toHaveBeenCalledWith(
-      '[Email] Would send to user@shagya.com: Welcome',
+      '[Email] Would send to user@shayga.com: Welcome',
     )
   })
 
@@ -52,12 +52,12 @@ describe('sendEmail', () => {
 
     await sendEmail({
       to: 'hello@example.com',
-      subject: 'Sign in to Shagya',
+      subject: 'Sign in to Shayga',
       html: '<p>Magic link</p>',
     })
 
     expect(consoleSpy).toHaveBeenCalledWith(
-      '[Email] Would send to hello@example.com: Sign in to Shagya',
+      '[Email] Would send to hello@example.com: Sign in to Shayga',
     )
   })
 

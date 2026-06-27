@@ -29,7 +29,7 @@ async function getAdminEmail(payload: Payload): Promise<string> {
   } catch {
     // fall through
   }
-  return process.env.ADMIN_EMAIL || 'admin@shagya.in'
+  return process.env.ADMIN_EMAIL || 'admin@shayga.in'
 }
 
 async function safeSend(

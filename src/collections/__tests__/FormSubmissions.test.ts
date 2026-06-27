@@ -243,7 +243,7 @@ describe('FormSubmissions collection', () => {
           findByID: vi.fn().mockResolvedValue({
             id: 'form-1',
             title: 'Contact Us',
-            emailTo: 'admin@shagya.com',
+            emailTo: 'admin@shayga.com',
           }),
           logger: { error: vi.fn() },
         },
@@ -264,7 +264,7 @@ describe('FormSubmissions collection', () => {
       expect(sendEmail).toHaveBeenCalledTimes(1)
 
       const callArgs = vi.mocked(sendEmail).mock.calls[0][0]
-      expect(callArgs.to).toBe('admin@shagya.com')
+      expect(callArgs.to).toBe('admin@shayga.com')
       expect(callArgs.subject).toContain('Contact Us')
       expect(callArgs.html).toContain('John')
       expect(callArgs.html).toContain('john@test.com')

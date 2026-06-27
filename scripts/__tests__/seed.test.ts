@@ -23,7 +23,7 @@ describe('Seed data', () => {
 
   describe('Admin user', () => {
     it('has correct email', () => {
-      expect(adminUser.email).toBe('admin@shagya.com')
+      expect(adminUser.email).toBe('admin@shayga.com')
     })
 
     it('has super-admin role', () => {
@@ -200,8 +200,8 @@ describe('Seed data', () => {
   // ---------------------------------------------------------------------------
 
   describe('Pages', () => {
-    it('has exactly 6 pages', () => {
-      expect(pages).toHaveLength(6)
+    it('has exactly 8 pages', () => {
+      expect(pages).toHaveLength(8)
     })
 
     it('each page has a title, slug, template, and bodyContent', () => {
@@ -293,7 +293,7 @@ describe('Seed data', () => {
 
   describe('Site settings', () => {
     it('has a site name', () => {
-      expect(siteSettingsData.siteName).toBe('Shagya')
+      expect(siteSettingsData.siteName).toBe('Shayga')
     })
 
     it('has a tagline', () => {

@@ -25,7 +25,7 @@ export default async function BlogIndexPage() {
         {/* Title Block */}
         <div className="mb-16 space-y-3 text-center">
           <span className="text-brand-700 font-display text-[10px] font-semibold tracking-widest uppercase">
-            The Shagya Journal
+            The Shayga Journal
           </span>
           <h1 className="font-display text-3xl font-bold tracking-tight text-neutral-900 sm:text-4xl">
             Weaving Chronicles

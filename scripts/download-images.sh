@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# Shagya — Seed image downloader
+# Shayga — Seed image downloader
 # =============================================================================
 # Downloads every image required by scripts/seed.ts from Pexels (free, CC0).
 # Safe to re-run: files that are already present and ≥ 8 KB are skipped.

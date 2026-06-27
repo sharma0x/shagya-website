@@ -82,17 +82,17 @@ export const auth = betterAuth({
   plugins: [
     phoneNumber({
       sendOTP: async ({ phoneNumber, code }) => {
-        await sendSMS(phoneNumber, `Your Shagya verification code is: ${code}`)
+        await sendSMS(phoneNumber, `Your Shayga verification code is: ${code}`)
       },
     }),
     twoFactor({
-      issuer: 'Shagya',
+      issuer: 'Shayga',
       backupCodeOptions: {
         amount: 8,
       },
     }),
     passkey({
-      rpName: 'Shagya',
+      rpName: 'Shayga',
       rpID: process.env.NEXT_PUBLIC_SERVER_URL
         ? new URL(process.env.NEXT_PUBLIC_SERVER_URL).hostname
         : 'localhost',

@@ -49,13 +49,13 @@ describe('Categories collection', () => {
       expect(field?.type).toBe('textarea')
     })
 
-    it('has image field (text placeholder for Media)', () => {
+    it('has image field (upload to Media)', () => {
       const field = Categories.fields?.find(
         (f: any) => f.name === 'image',
       ) as any
       expect(field).toBeDefined()
-      expect(field?.type).toBe('text')
-      expect(field?.admin?.description).toContain('Media collection')
+      expect(field?.type).toBe('upload')
+      expect(field?.relationTo).toBe('media')
     })
 
     it('has parent field (relationship to categories)', () => {

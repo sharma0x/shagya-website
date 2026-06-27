@@ -2,7 +2,7 @@
 
 ## Overview
 
-A Coupons collection for managing discount codes in the Shagya saree ecommerce platform. Supports percentage, fixed amount, and free shipping discount types with cart validation, usage tracking, and date-based expiry.
+A Coupons collection for managing discount codes in the Shayga saree ecommerce platform. Supports percentage, fixed amount, and free shipping discount types with cart validation, usage tracking, and date-based expiry.
 
 ## Acceptance Criteria
 

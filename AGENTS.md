@@ -1,4 +1,4 @@
-# Shagya — Agent Instructions
+# Shayga — Agent Instructions
 
 ## Memory File
 
@@ -73,10 +73,10 @@ Must be running **before** `make dev`:
 
 | Service       | Port                       | Credentials                        |
 | ------------- | -------------------------- | ---------------------------------- |
-| PostgreSQL 18 | 5432                       | `shagya` / `shagya_dev` / `shagya` |
+| PostgreSQL 18 | 5432                       | `shayga` / `shayga_dev` / `shayga` |
 | MinIO (S3)    | 9000 (API), 9001 (Console) | `minioadmin` / `minioadmin`        |
 
-`.env` defaults to Docker: `DATABASE_URL=postgres://shagya:shagya_dev@localhost:5432/shagya`. For production, switch to Neon connection string.
+`.env` defaults to Docker: `DATABASE_URL=postgres://shayga:shayga_dev@localhost:5432/shayga`. For production, switch to Neon connection string.
 
 **Volume mount gotcha**: Postgres 18 Alpine requires `PGDATA=/var/lib/postgresql/pgdata` and volume at `/var/lib/postgresql` (not `/var/lib/postgresql/data`). If PG restarts in a loop, run `make infra-reset` and restart.
 
@@ -101,7 +101,7 @@ Workaround: create the first admin user via API:
 ```bash
 curl -X POST http://localhost:3000/api/users/first-register \
   -H "Content-Type: application/json" \
-  -d '{"email":"admin@shagya.com","password":"...","name":"Admin"}'
+  -d '{"email":"admin@shayga.com","password":"...","name":"Admin"}'
 ```
 
 ## Package Manager
@@ -121,8 +121,8 @@ See [`docs/ci-cd.md`](docs/ci-cd.md) for the full setup. Quick reference:
 - **Environments**:
   - Dev DB: Neon branch `development`
   - Prod DB: Neon branch `production`
-  - Dev storage: Cloudflare R2 bucket `shagya-dev`
-  - Prod storage: Cloudflare R2 bucket `shagya-media`
+  - Dev storage: Cloudflare R2 bucket `shayga-dev`
+  - Prod storage: Cloudflare R2 bucket `shayga-media`
 - **Versioning**: semantic-release, Conventional Commits enforced by commitlint (husky hook on `commit-msg`)
 
 GitHub Actions runs on push/PR to `main` or `develop`: format check → lint → typecheck → unit tests → production build. Needs `PAYLOAD_SECRET` env var set in CI.

@@ -22,6 +22,7 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [success, setSuccess] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -46,7 +47,7 @@ export default function RegisterPage() {
       if (res?.error) {
         setError(res.error.message || 'Registration failed. Please try again.')
       } else {
-        router.push('/account')
+        setSuccess(true)
       }
     } catch (err: any) {
       setError(err?.message || 'Something went wrong. Please try again.')
@@ -69,145 +70,170 @@ export default function RegisterPage() {
           Create an account
         </h2>
         <p className="font-body mt-2 text-center text-sm text-neutral-500">
-          Join Shagya to track orders, manage addresses, and curate your
+          Join Shayga to track orders, manage addresses, and curate your
           wishlist
         </p>
       </div>
 
       <div className="mx-auto mt-8 w-full max-w-lg">
         <div className="border border-neutral-100 bg-white px-4 py-8 shadow-xs sm:rounded-2xl sm:px-10">
-          <form className="space-y-5" onSubmit={handleSubmit}>
-            {error && (
-              <div className="flex items-start gap-2.5 rounded-xl border border-red-100 bg-red-50 p-4 text-xs text-red-700">
-                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-                <span>{error}</span>
+          {success ? (
+            <div className="space-y-4 py-8 text-center">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-50 text-green-600">
+                <Mail className="h-6 w-6" />
               </div>
-            )}
-
-            <div>
-              <label
-                htmlFor="name"
-                className="font-display block text-xs font-semibold tracking-wider text-neutral-500 uppercase"
-              >
-                Full Name
-              </label>
-              <div className="relative mt-2">
-                <input
-                  id="name"
-                  name="name"
-                  type="text"
-                  autoComplete="name"
-                  required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="font-body focus:border-brand-500 h-11 w-full rounded-xl border border-neutral-200 bg-white pr-4 pl-10 text-sm text-neutral-900 transition-colors outline-none placeholder:text-neutral-400"
-                  placeholder="Aarav Sharma"
-                />
-                <User className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+              <h3 className="font-display text-lg font-semibold text-neutral-900">
+                Check your email
+              </h3>
+              <p className="font-body text-sm text-neutral-500">
+                We've sent a verification link to{' '}
+                <span className="font-semibold text-neutral-900">{email}</span>.
+                Please verify your email address to complete your account
+                creation.
+              </p>
+              <div className="pt-4">
+                <Link
+                  href="/account/login"
+                  className="font-display flex w-full items-center justify-center rounded-xl bg-neutral-900 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-neutral-800"
+                >
+                  Return to Login
+                </Link>
               </div>
             </div>
+          ) : (
+            <form className="space-y-5" onSubmit={handleSubmit}>
+              {error && (
+                <div className="flex items-start gap-2.5 rounded-xl border border-red-100 bg-red-50 p-4 text-xs text-red-700">
+                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                  <span>{error}</span>
+                </div>
+              )}
 
-            <div>
-              <label
-                htmlFor="email"
-                className="font-display block text-xs font-semibold tracking-wider text-neutral-500 uppercase"
-              >
-                Email Address
-              </label>
-              <div className="relative mt-2">
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="font-body focus:border-brand-500 h-11 w-full rounded-xl border border-neutral-200 bg-white pr-4 pl-10 text-sm text-neutral-900 transition-colors outline-none placeholder:text-neutral-400"
-                  placeholder="you@example.com"
-                />
-                <Mail className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+              <div>
+                <label
+                  htmlFor="name"
+                  className="font-display block text-xs font-semibold tracking-wider text-neutral-500 uppercase"
+                >
+                  Full Name
+                </label>
+                <div className="relative mt-2">
+                  <input
+                    id="name"
+                    name="name"
+                    type="text"
+                    autoComplete="name"
+                    required
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="font-body focus:border-brand-500 h-11 w-full rounded-xl border border-neutral-200 bg-white pr-4 pl-10 text-sm text-neutral-900 transition-colors outline-none placeholder:text-neutral-400"
+                    placeholder="Aarav Sharma"
+                  />
+                  <User className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+                </div>
               </div>
-            </div>
 
-            <div>
-              <label
-                htmlFor="phone"
-                className="font-display block text-xs font-semibold tracking-wider text-neutral-500 uppercase"
-              >
-                Phone Number (Optional)
-              </label>
-              <div className="relative mt-2">
-                <input
-                  id="phone"
-                  name="phone"
-                  type="tel"
-                  autoComplete="tel"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  className="font-body focus:border-brand-500 h-11 w-full rounded-xl border border-neutral-200 bg-white pr-4 pl-10 text-sm text-neutral-900 transition-colors outline-none placeholder:text-neutral-400"
-                  placeholder="+91 98765 43210"
-                />
-                <Phone className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+              <div>
+                <label
+                  htmlFor="email"
+                  className="font-display block text-xs font-semibold tracking-wider text-neutral-500 uppercase"
+                >
+                  Email Address
+                </label>
+                <div className="relative mt-2">
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="font-body focus:border-brand-500 h-11 w-full rounded-xl border border-neutral-200 bg-white pr-4 pl-10 text-sm text-neutral-900 transition-colors outline-none placeholder:text-neutral-400"
+                    placeholder="you@example.com"
+                  />
+                  <Mail className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+                </div>
               </div>
-            </div>
 
-            <div>
-              <label
-                htmlFor="password"
-                className="font-display block text-xs font-semibold tracking-wider text-neutral-500 uppercase"
-              >
-                Password
-              </label>
-              <div className="relative mt-2">
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="new-password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="font-body focus:border-brand-500 h-11 w-full rounded-xl border border-neutral-200 bg-white pr-4 pl-10 text-sm text-neutral-900 transition-colors outline-none placeholder:text-neutral-400"
-                  placeholder="••••••••"
-                />
-                <KeyRound className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+              <div>
+                <label
+                  htmlFor="phone"
+                  className="font-display block text-xs font-semibold tracking-wider text-neutral-500 uppercase"
+                >
+                  Phone Number (Optional)
+                </label>
+                <div className="relative mt-2">
+                  <input
+                    id="phone"
+                    name="phone"
+                    type="tel"
+                    autoComplete="tel"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    className="font-body focus:border-brand-500 h-11 w-full rounded-xl border border-neutral-200 bg-white pr-4 pl-10 text-sm text-neutral-900 transition-colors outline-none placeholder:text-neutral-400"
+                    placeholder="+91 98765 43210"
+                  />
+                  <Phone className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+                </div>
               </div>
-            </div>
 
-            <div>
-              <label
-                htmlFor="confirmPassword"
-                className="font-display block text-xs font-semibold tracking-wider text-neutral-500 uppercase"
-              >
-                Confirm Password
-              </label>
-              <div className="relative mt-2">
-                <input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type="password"
-                  autoComplete="new-password"
-                  required
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="font-body focus:border-brand-500 h-11 w-full rounded-xl border border-neutral-200 bg-white pr-4 pl-10 text-sm text-neutral-900 transition-colors outline-none placeholder:text-neutral-400"
-                  placeholder="••••••••"
-                />
-                <KeyRound className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+              <div>
+                <label
+                  htmlFor="password"
+                  className="font-display block text-xs font-semibold tracking-wider text-neutral-500 uppercase"
+                >
+                  Password
+                </label>
+                <div className="relative mt-2">
+                  <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    autoComplete="new-password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="font-body focus:border-brand-500 h-11 w-full rounded-xl border border-neutral-200 bg-white pr-4 pl-10 text-sm text-neutral-900 transition-colors outline-none placeholder:text-neutral-400"
+                    placeholder="••••••••"
+                  />
+                  <KeyRound className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+                </div>
               </div>
-            </div>
 
-            <div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="bg-brand-600 hover:bg-brand-700 font-display flex h-11 w-full items-center justify-center rounded-xl text-sm font-semibold text-white shadow-xs transition-all active:scale-95 disabled:opacity-50"
-              >
-                {loading ? 'Creating Account...' : 'Create Account'}
-              </button>
-            </div>
-          </form>
+              <div>
+                <label
+                  htmlFor="confirmPassword"
+                  className="font-display block text-xs font-semibold tracking-wider text-neutral-500 uppercase"
+                >
+                  Confirm Password
+                </label>
+                <div className="relative mt-2">
+                  <input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type="password"
+                    autoComplete="new-password"
+                    required
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="font-body focus:border-brand-500 h-11 w-full rounded-xl border border-neutral-200 bg-white pr-4 pl-10 text-sm text-neutral-900 transition-colors outline-none placeholder:text-neutral-400"
+                    placeholder="••••••••"
+                  />
+                  <KeyRound className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+                </div>
+              </div>
+
+              <div>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="bg-brand-600 hover:bg-brand-700 font-display flex h-11 w-full items-center justify-center rounded-xl text-sm font-semibold text-white shadow-xs transition-all active:scale-95 disabled:opacity-50"
+                >
+                  {loading ? 'Creating Account...' : 'Create Account'}
+                </button>
+              </div>
+            </form>
+          )}
 
           <p className="font-body mt-6 text-center text-xs text-neutral-400">
             Already have an account?{' '}

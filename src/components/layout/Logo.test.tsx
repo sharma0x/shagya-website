@@ -5,24 +5,24 @@ import { Logo } from './Logo'
 describe('Logo', () => {
   it('renders the wordmark by default', () => {
     render(<Logo />)
-    expect(screen.getByText('Shagya')).toBeInTheDocument()
+    expect(screen.getByText('Shayga')).toBeInTheDocument()
   })
 
   it('hides the wordmark when showWordmark is false', () => {
     render(<Logo showWordmark={false} />)
-    expect(screen.queryByText('Shagya')).not.toBeInTheDocument()
+    expect(screen.queryByText('Shayga')).not.toBeInTheDocument()
   })
 
   it('renders as a link by default with aria-label', () => {
     render(<Logo />)
-    const link = screen.getByRole('link', { name: /shagya/i })
+    const link = screen.getByRole('link', { name: /shayga/i })
     expect(link).toHaveAttribute('href', '/')
   })
 
   it('renders as a span when href is null', () => {
     render(<Logo href={null} />)
     expect(screen.queryByRole('link')).not.toBeInTheDocument()
-    expect(screen.getByText('Shagya')).toBeInTheDocument()
+    expect(screen.getByText('Shayga')).toBeInTheDocument()
   })
 
   it('uses custom href when provided', () => {

@@ -14,7 +14,7 @@ const footerLinks = {
     ],
   },
   company: {
-    title: 'Shagya',
+    title: 'Shayga',
     links: [
       { label: 'About Us', href: '/about' },
       { label: 'Journal', href: '/blog' },
@@ -35,9 +35,9 @@ const footerLinks = {
   connect: {
     title: 'Connect',
     links: [
-      { label: 'Instagram', href: 'https://instagram.com/shagya' },
-      { label: 'Facebook', href: 'https://facebook.com/shagya' },
-      { label: 'Pinterest', href: 'https://pinterest.com/shagya' },
+      { label: 'Instagram', href: 'https://instagram.com/shayga' },
+      { label: 'Facebook', href: 'https://facebook.com/shayga' },
+      { label: 'Pinterest', href: 'https://pinterest.com/shayga' },
       { label: 'WhatsApp', href: 'https://wa.me/919876543210' },
     ],
   },
@@ -82,7 +82,7 @@ export function Footer() {
         {/* Bottom Bar */}
         <div className="mt-16 flex flex-col items-center justify-between gap-4 border-t border-neutral-200 pt-8 md:flex-row">
           <p className="text-xs text-neutral-400">
-            &copy; {new Date().getFullYear()} Shagya. All rights reserved.
+            &copy; {new Date().getFullYear()} Shayga. All rights reserved.
           </p>
           <div className="flex items-center gap-3">
             <span className="text-xs text-neutral-400">We accept:</span>

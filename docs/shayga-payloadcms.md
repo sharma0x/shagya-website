@@ -1,15 +1,15 @@
-# Shagya — Saree E-Commerce Website Plan (Payload CMS + Next.js)
+# Shayga — Saree E-Commerce Website Plan (Payload CMS + Next.js)
 
 > Detailed implementation plan for the new client saree e-commerce website
 > using **Payload CMS** (headless, code-first) as the backend and **Next.js
 > 16 (App Router)** as the frontend. Single-repo fullstack TypeScript
 > codebase deployed on **Vercel** or self-hosted.
 >
-> **Companion document**: [`shagya-shopify.md`](./shagya-shopify.md) covers
+> **Companion document**: [`shayga-shopify.md`](./shayga-shopify.md) covers
 > the same business requirements on a Shopify stack. Read both for a
 > side-by-side comparison.
 >
-> **Audience**: project owner (client) + Shagya delivery team.
+> **Audience**: project owner (client) + Shayga delivery team.
 > **Status**: Draft v1.1 — pending client sign-off on open questions.
 
 ### Latest Tech Versions (June 2026)
@@ -77,7 +77,7 @@ Verify latest patch versions on [nextjs.org](https://nextjs.org) and
 | ----------------- | --------------------------------------------------------------------- |
 | Project           | New online saree e-commerce website                                   |
 | Client            | [Client name] — first-time saree D2C founder                          |
-| Agency            | Shagya                                                                |
+| Agency            | Shayga                                                                |
 | Business Model    | D2C (Direct-to-Consumer)                                              |
 | Initial Geography | India (domestic focus for MVP)                                        |
 | Phase 2 Geography | NRI markets — USA, UK, UAE, Singapore, Canada, Australia              |
@@ -515,15 +515,15 @@ and best-in-class performance.
 | ---------- | ---------------------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
 | Local      | `main` (or feature branches) | Local Postgres (Docker)                                       | `localhost:3000`                                                                      |
 | Preview    | PR branches                  | Neon branch (or local)                                        | Auto-generated `.vercel.app` URL (Tier 0/2) or `staging-pr-X.yourdomain.com` (Tier 1) |
-| Staging    | `staging` branch             | Neon branch (Tier 0/2) or Hetzner staging DB (Tier 1)         | `staging.shagyabrand.com`                                                             |
-| Production | `main` branch                | Neon production branch (Tier 0/2) or Hetzner prod DB (Tier 1) | `shagyabrand.com`                                                                     |
+| Staging    | `staging` branch             | Neon branch (Tier 0/2) or Hetzner staging DB (Tier 1)         | `staging.shaygabrand.com`                                                             |
+| Production | `main` branch                | Neon production branch (Tier 0/2) or Hetzner prod DB (Tier 1) | `shaygabrand.com`                                                                     |
 
 ### Domains (works for all tiers)
 
-- Apex: `shagyabrand.com` (or `.in`)
+- Apex: `shaygabrand.com` (or `.in`)
 - `www.` → apex redirect
-- Payload Admin: `admin.shagyabrand.com` (or `/admin` on apex)
-- Staging: `staging.shagyabrand.com` (password-protected)
+- Payload Admin: `admin.shaygabrand.com` (or `/admin` on apex)
+- Staging: `staging.shaygabrand.com` (password-protected)
 - DNS: Cloudflare (free, includes proxy + DDoS protection)
 
 ### CI/CD (per tier)
@@ -571,10 +571,10 @@ jobs:
             pnpm install --frozen-lockfile
             pnpm payload migrate
             pnpm build
-            pm2 reload shagya
+            pm2 reload shayga
 ```
 
-### Recommended Starting Path for Shagya (New Business)
+### Recommended Starting Path for Shayga (New Business)
 
 1. **Launch on Tier 0** ($0/month) — validate the business, build catalog
 2. **Move to Tier 1** ($8/month) at ~500 orders/month — predictable cost
@@ -591,7 +591,7 @@ across all tiers; only the deployment target changes.
 ## 5. Repository Structure
 
 ```
-shagya-saree/
+shayga-saree/
 ├── .env.example                      # Example env vars (committed)
 ├── .env                              # Real env vars (gitignored)
 ├── .gitignore
@@ -1756,7 +1756,7 @@ export const Products: CollectionConfig = {
       hooks: { beforeValidate: [formatSlug] },
     },
     { name: 'sku', type: 'text', required: true, unique: true, index: true },
-    { name: 'vendor', type: 'text', defaultValue: 'Shagya' },
+    { name: 'vendor', type: 'text', defaultValue: 'Shayga' },
     {
       name: 'status',
       type: 'select',
@@ -2359,7 +2359,7 @@ const products = await payload.find({
 
 **The page sections (Homepage, PLP, PDP, Cart, Checkout, Account, static
 pages) are functionally identical to the Shopify plan.** Refer to
-[`shagya-shopify.md` Section 12](./shagya-shopify.md#12-page-types--sections)
+[`shayga-shopify.md` Section 12](./shayga-shopify.md#12-page-types--sections)
 for the full page-by-page breakdown.
 
 ### Key Payload-specific differences
@@ -2603,7 +2603,7 @@ export function RazorpayCheckout({ order, customer }) {
       key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
       amount: order.amount,
       currency: 'INR',
-      name: 'Shagya',
+      name: 'Shayga',
       description: `Order #${order.receipt}`,
       order_id: order.id,
       prefill: {
@@ -2840,9 +2840,9 @@ export const auth = betterAuth({
     maxPasswordLength: 128,
     sendResetPassword: async ({ user, url }) => {
       await resend.emails.send({
-        from: 'Shagya <hello@shagyabrand.com>',
+        from: 'Shayga <hello@shaygabrand.com>',
         to: user.email,
-        subject: 'Reset your Shagya password',
+        subject: 'Reset your Shayga password',
         html: `<p>Click <a href="${url}">here</a> to reset your password.</p>`,
       })
     },
@@ -2851,9 +2851,9 @@ export const auth = betterAuth({
   emailVerification: {
     sendVerificationEmail: async ({ user, url }) => {
       await resend.emails.send({
-        from: 'Shagya <hello@shagyabrand.com>',
+        from: 'Shayga <hello@shaygabrand.com>',
         to: user.email,
-        subject: 'Verify your Shagya account',
+        subject: 'Verify your Shayga account',
         html: `<p>Welcome! Verify your email: <a href="${url}">${url}</a></p>`,
       })
     },
@@ -2917,7 +2917,7 @@ export const auth = betterAuth({
         // Use MSG91 or Twilio to send OTP via SMS
         await sendSms(
           phoneNumber,
-          `Your Shagya code is: ${code}. Valid for 10 minutes.`,
+          `Your Shayga code is: ${code}. Valid for 10 minutes.`,
         )
       },
       otpLength: 6,
@@ -2927,7 +2927,7 @@ export const auth = betterAuth({
 
     // 2FA via TOTP (Google Authenticator, Authy)
     twoFactor({
-      issuer: 'Shagya',
+      issuer: 'Shayga',
       totpOptions: {
         digits: 6,
         period: 30,
@@ -2936,7 +2936,7 @@ export const auth = betterAuth({
 
     // Passkeys (WebAuthn) — passwordless, modern
     passkey({
-      rpName: 'Shagya',
+      rpName: 'Shayga',
       rpID: process.env.NEXT_PUBLIC_APP_URL
         ? new URL(process.env.NEXT_PUBLIC_APP_URL).hostname
         : 'localhost',
@@ -2947,9 +2947,9 @@ export const auth = betterAuth({
     magicLink({
       sendMagicLink: async ({ email, url }) => {
         await resend.emails.send({
-          from: 'Shagya <hello@shagyabrand.com>',
+          from: 'Shayga <hello@shaygabrand.com>',
           to: email,
-          subject: 'Your Shagya sign-in link',
+          subject: 'Your Shayga sign-in link',
           html: `<p>Click to sign in: <a href="${url}">${url}</a></p>`,
         })
       },
@@ -3214,7 +3214,7 @@ export default function LoginPage() {
 
   return (
     <div className="mx-auto max-w-md p-6">
-      <h1 className="mb-6 text-2xl font-semibold">Sign in to Shagya</h1>
+      <h1 className="mb-6 text-2xl font-semibold">Sign in to Shayga</h1>
 
       {/* Social login */}
       <div className="mb-6 space-y-2">
@@ -3421,7 +3421,7 @@ export async function sendSms(phone: string, message: string) {
       'content-type': 'application/json',
     },
     body: JSON.stringify({
-      sender: 'SHAGYA',
+      sender: 'SHAYGA',
       route: '4', // transactional
       country: '91',
       sms: [{ message, to: phone.replace('+91', '') }],
@@ -3457,14 +3457,14 @@ export async function sendSms(phone: string, message: string) {
 
 1. Go to https://console.cloud.google.com
 2. Create OAuth 2.0 Client ID
-3. Authorized redirect URI: `https://shagyabrand.com/api/auth/callback/google`
+3. Authorized redirect URI: `https://shaygabrand.com/api/auth/callback/google`
 4. Add `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` to `.env`
 
 **Facebook**:
 
 1. Go to https://developers.facebook.com
 2. Create app → Add Facebook Login product
-3. Valid OAuth Redirect URI: `https://shagyabrand.com/api/auth/callback/facebook`
+3. Valid OAuth Redirect URI: `https://shaygabrand.com/api/auth/callback/facebook`
 4. Add `FACEBOOK_APP_ID` and `FACEBOOK_APP_SECRET` to `.env`
 
 **Apple** (required for iOS App Store, recommended for premium feel):
@@ -3826,7 +3826,7 @@ const refund = await razorpay.payments.refund(paymentId, {
 ### Email Deliverability Setup
 
 - SPF, DKIM, DMARC records configured
-- Verified sending domain (e.g., `email.shagyabrand.com`)
+- Verified sending domain (e.g., `email.shaygabrand.com`)
 - Dedicated IP (Phase 2)
 - Bounce/complaint handling
 
@@ -3882,7 +3882,7 @@ Per-page metadata via `generateMetadata`:
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const product = await getProduct(params.slug)
   return {
-    title: product.seo?.title || `${product.title} | Shagya`,
+    title: product.seo?.title || `${product.title} | Shayga`,
     description: product.seo?.description || product.shortDescription,
     openGraph: {
       title: product.title,
@@ -4512,7 +4512,7 @@ If you start on Payload and want to move to Shopify later:
 **Key takeaway:** Data is portable in both directions. The switching cost
 is in rebuilding the UI, not the data.
 
-### Final Recommendation for Shagya (New Business)
+### Final Recommendation for Shayga (New Business)
 
 **Start on Payload Tier 0.** Here's why:
 
@@ -4803,7 +4803,7 @@ plus Payload CMS best practices. Detailed findings are in `docs/research/`:
 
 **Companion plan (alternative architecture)**:
 
-- `shagya-shopify.md` — Same business requirements on Shopify stack
+- `shayga-shopify.md` — Same business requirements on Shopify stack
 
 ## Appendix C: Glossary
 
@@ -4873,7 +4873,7 @@ plus Payload CMS best practices. Detailed findings are in `docs/research/`:
 - **Tech versions pinned**: Next.js 16.2 · React 19.2 · Payload 3.x · Better Auth 1.x · PostgreSQL 18 · Node 22 LTS · TypeScript 5.7+ · Tailwind v4
 - **Auth architecture**: Hybrid — Payload built-in for admin (`/admin`) + Better Auth for customers (`/account/*`)
 - **Next Review**: After client sign-off on open questions (starting tier, Better Auth providers, SMS provider)
-- **Owner**: Shagya delivery team
+- **Owner**: Shayga delivery team
 - **Client Sign-off**: Pending
 - **Recommended starting tier**: **Tier 0** ($0/month — free tiers)
-- **Companion**: `shagya-shopify.md` (alternative architecture)
+- **Companion**: `shayga-shopify.md` (alternative architecture)

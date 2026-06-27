@@ -148,14 +148,14 @@ describe('Search Plugin', () => {
       const result = extractSearchText({
         content: [
           {
-            heading: 'Welcome to Shagya',
+            heading: 'Welcome to Shayga',
             subheading: 'Discover the finest handloom sarees',
             body: 'Our collection features exquisite weaves from across India.',
           },
         ],
       })
       expect(result).toBe(
-        'Welcome to Shagya Discover the finest handloom sarees Our collection features exquisite weaves from across India.',
+        'Welcome to Shayga Discover the finest handloom sarees Our collection features exquisite weaves from across India.',
       )
     })
 

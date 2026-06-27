@@ -18,7 +18,7 @@ test.describe('Smoke', () => {
     await page.goto('/')
     await waitForHydration(page)
     await expect(
-      page.getByRole('link', { name: /shagya/i }).first(),
+      page.getByRole('link', { name: /shayga/i }).first(),
     ).toBeVisible()
   })
 

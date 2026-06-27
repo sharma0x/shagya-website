@@ -19,7 +19,7 @@ test.describe('Customer Storefront Flows', () => {
 
     // Verify brand link in Header
     await expect(
-      page.getByRole('link', { name: /shagya/i }).first(),
+      page.getByRole('link', { name: /shayga/i }).first(),
     ).toBeVisible()
 
     // Header should contain category links

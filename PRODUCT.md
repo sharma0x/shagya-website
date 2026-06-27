@@ -10,7 +10,7 @@ Indian women, 28–50, buying sarees for themselves. She knows her weaves — sh
 
 ## Product Purpose
 
-Shagya is a direct-to-consumer handloom saree marketplace. It connects buyers to weaving clusters across India — maker-traced, no middlemen — and sells silk, cotton, and heritage weaves sourced directly from artisans. Success looks like a customer who trusts the provenance, understands the craft, and returns because the experience matched the quality.
+Shayga is a direct-to-consumer handloom saree marketplace. It connects buyers to weaving clusters across India — maker-traced, no middlemen — and sells silk, cotton, and heritage weaves sourced directly from artisans. Success looks like a customer who trusts the provenance, understands the craft, and returns because the experience matched the quality.
 
 ## Brand Personality
 

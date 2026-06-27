@@ -1,7 +1,7 @@
-# Shagya — Homepage Design Plan
+# Shayga — Homepage Design Plan
 
 > Source of truth for the homepage redesign. Brand color extracted from the
-> official logo `shagya-logo-vector-2.svg`. Built before code, per the brief:
+> official logo `shayga-logo-vector-2.svg`. Built before code, per the brief:
 > _"first create the wireframe and great content and design planning, and only
 > then redesign the homepage."_
 
@@ -9,7 +9,7 @@
 
 ## 1. Brand Color Extraction (from the logo)
 
-The logo `shagya-logo-vector-2.svg` contains a single fill color:
+The logo `shayga-logo-vector-2.svg` contains a single fill color:
 
 | Token     | Value                        |
 | --------- | ---------------------------- |
@@ -61,11 +61,11 @@ neutrals around them.
 
 ## 2. Logo Usage
 
-- Optimized, themeable SVG at `public/shagya-logo.svg` (~35 KB, single path,
+- Optimized, themeable SVG at `public/shayga-logo.svg` (~35 KB, single path,
   `fill="currentColor"` so it inherits text color).
 - Reusable `<Logo>` component (`src/components/layout/Logo.tsx`):
   - Props: `className`, `showWordmark` (default true), `markClassName`.
-  - Renders the mark + "Shagya" wordmark in Sora.
+  - Renders the mark + "Shayga" wordmark in Sora.
   - Mark uses `text-brand-600`; on dark surfaces use `text-gold-400`.
 - Used in: Header (left), Footer (brand column), favicon (`app/icon.svg`).
 
@@ -145,7 +145,7 @@ Mobile-first. Sections stack vertically; desktop layout noted per section.
 ╞════════════════════════════════════════════════════════════════╡
 │  SECTION 6 — WINE FEATURE BAND (dark, full-bleed)           │
 │  bg: brand-950 (richest wine). Gold hairline top.           │
-│  Eyebrow (gold-400): "A note from Shagya"                   │
+│  Eyebrow (gold-400): "A note from Shayga"                   │
 │  H2 (white): "Every saree is signed by its maker"          │
 │  Body: our promise — handloom-verified, maker-traced,       │
 │  no middleman markup.                                        │
@@ -220,7 +220,7 @@ Phulkari · Baluchari · Maheshwari · Ilkal
 
 ### Wine feature band
 
-- **Eyebrow** (gold): A note from Shagya
+- **Eyebrow** (gold): A note from Shayga
 - **H2**: Every saree is signed by its maker
 - **Body**: Handloom-verified. Maker-traced. No middleman markup, no
   warehouse mystery stock — just the cloth, the cluster it came from, and a

@@ -4,10 +4,10 @@
 
 | Git branch | Environment | Neon branch   | R2 bucket      |
 | ---------- | ----------- | ------------- | -------------- |
-| `develop`  | Preview     | `development` | `shagya-dev`   |
-| `main`     | Production  | `production`  | `shagya-media` |
+| `develop`  | Preview     | `development` | `shayga-dev`   |
+| `main`     | Production  | `production`  | `shayga-media` |
 
-Both Neon branches live in the same project (`shagya`, region `aws-us-east-1`).
+Both Neon branches live in the same project (`shayga`, region `aws-us-east-1`).
 
 ## Workflows
 
@@ -29,9 +29,9 @@ All Vercel project env vars are configured per-environment. No manual setup need
 | `R2_ENDPOINT`            | `https://<acct>.r2.cloudflarestorage.com` | Same                                  |
 | `R2_ACCESS_KEY_ID`       | Prod R2 key (encrypted)                   | Dev R2 key (encrypted)                |
 | `R2_SECRET_ACCESS_KEY`   | Prod R2 secret (encrypted)                | Dev R2 secret (encrypted)             |
-| `R2_BUCKET`              | `shagya-media`                            | `shagya-dev`                          |
+| `R2_BUCKET`              | `shayga-media`                            | `shayga-dev`                          |
 | `R2_REGION`              | `auto`                                    | `auto`                                |
-| `NEXT_PUBLIC_SERVER_URL` | `https://shagya.com`                      | (Vercel auto-assigns at deploy time)  |
+| `NEXT_PUBLIC_SERVER_URL` | `https://shayga.com`                      | (Vercel auto-assigns at deploy time)  |
 | `RESEND_API_KEY`         | Set (encrypted)                           | Set (encrypted)                       |
 
 ## GitHub Secrets (all set)
@@ -49,8 +49,8 @@ All Vercel project env vars are configured per-environment. No manual setup need
 
 | Variable                | Value                                             |
 | ----------------------- | ------------------------------------------------- |
-| `VERCEL_PREVIEW_DOMAIN` | `shagya-website-git-develop-clow-work.vercel.app` |
-| `VERCEL_PROD_DOMAIN`    | `shagya.com`                                      |
+| `VERCEL_PREVIEW_DOMAIN` | `shayga-website-git-develop-clow-work.vercel.app` |
+| `VERCEL_PROD_DOMAIN`    | `shayga.com`                                      |
 
 ## Semantic Versioning
 

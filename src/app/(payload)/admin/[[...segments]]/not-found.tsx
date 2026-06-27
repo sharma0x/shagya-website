@@ -6,7 +6,7 @@ import type { Metadata } from 'next'
 import { NotFoundPage } from '@payloadcms/next/views'
 
 export const metadata: Metadata = {
-  title: 'Page Not Found — Shagya Admin',
+  title: 'Page Not Found — Shayga Admin',
 }
 
 export default NotFoundPage

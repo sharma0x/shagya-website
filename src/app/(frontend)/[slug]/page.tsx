@@ -102,7 +102,7 @@ export default async function CatchAllPage({ params, searchParams }: Props) {
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(105,37,78,0.25),rgba(255,255,255,0))]" />
           <div className="relative z-10 mx-auto max-w-3xl space-y-4">
             <span className="text-gold-300 font-display text-[10px] font-semibold tracking-widest uppercase">
-              Shagya Heritage
+              Shayga Heritage
             </span>
             <h1 className="font-display text-4xl leading-tight font-bold tracking-tight text-white sm:text-5xl">
               {page.title}
@@ -185,10 +185,10 @@ export default async function CatchAllPage({ params, searchParams }: Props) {
                     Email Address
                   </p>
                   <a
-                    href="mailto:care@shagya.com"
+                    href="mailto:care@shayga.com"
                     className="hover:text-brand-700 transition-colors"
                   >
-                    care@shagya.com
+                    care@shayga.com
                   </a>
                 </div>
               </div>
@@ -448,9 +448,9 @@ export async function generateMetadata({ params }: Props) {
 
   const page = result.docs[0] as any
   return {
-    title: page.metaTitle || `${page.title} — Shagya Heritage`,
+    title: page.metaTitle || `${page.title} — Shayga Heritage`,
     description:
       page.metaDescription ||
-      `Explore the dynamic blocks on this Shagya web app page.`,
+      `Explore the dynamic blocks on this Shayga web app page.`,
   }
 }

@@ -285,7 +285,7 @@ export default function CheckoutPage() {
           key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_test_xxxx',
           amount: razorpayOrder.amount,
           currency: razorpayOrder.currency,
-          name: 'Shagya',
+          name: 'Shayga',
           description: `Saree Purchase`,
           order_id: razorpayOrder.id,
           prefill: {
@@ -395,7 +395,7 @@ export default function CheckoutPage() {
           </Link>
           <div className="flex items-center gap-2">
             <span className="font-display text-xl font-semibold tracking-tight text-neutral-900">
-              Shagya
+              Shayga
             </span>
             <span className="font-display border-l border-neutral-200 pl-2 text-xs font-medium tracking-widest text-neutral-400 uppercase">
               Checkout

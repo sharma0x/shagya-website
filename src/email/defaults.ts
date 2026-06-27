@@ -15,7 +15,7 @@ function wrap(content: string): string {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Shagya</title>
+<title>Shayga</title>
 </head>
 <body style="margin:0;padding:0;background-color:#FAF5F7;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;">
 <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#FAF5F7;">
@@ -23,7 +23,7 @@ function wrap(content: string): string {
 <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;background-color:#ffffff;border:1px solid #E8DDE2;">
   <tr>
     <td style="background-color:#6B2448;padding:30px 40px;text-align:center;">
-      <span style="font-family:Georgia,'Times New Roman',serif;font-size:22px;letter-spacing:0.2em;color:#FAF5F7;font-weight:400;">SHAGYA</span>
+      <span style="font-family:Georgia,'Times New Roman',serif;font-size:22px;letter-spacing:0.2em;color:#FAF5F7;font-weight:400;">SHAYGA</span>
     </td>
   </tr>
   <tr><td height="2" style="background-color:#B5922A;font-size:0;line-height:0;">&nbsp;</td></tr>
@@ -72,7 +72,7 @@ function sectionLabel(text: string): string {
 export const DEFAULT_TEMPLATES: Record<TemplateSlug, EmailDefault> = {
   // ── Customer: order placed ─────────────────────────────────────────────────
   'order-placed-customer': {
-    subject: 'Order {{orderNumber}} received — Shagya',
+    subject: 'Order {{orderNumber}} received — Shayga',
     body: wrap(`
 <h2 style="margin:0 0 6px;font-family:Georgia,serif;font-size:22px;font-weight:400;color:#6B2448;">Thank you, {{customerName}}</h2>
 <p style="margin:0 0 24px;font-size:14px;color:#6B5E63;padding-bottom:20px;border-bottom:1px solid #E8DDE2;">We've received your order and will begin processing it as soon as payment is confirmed.</p>
@@ -98,7 +98,7 @@ ${btn('{{storeUrl}}/account/orders/{{orderNumber}}', 'Track Your Order')}
     subject: '[New Order] {{orderNumber}} — {{customerName}}',
     body: wrap(`
 <h2 style="margin:0 0 6px;font-family:Georgia,serif;font-size:20px;font-weight:400;color:#6B2448;">New Order Received</h2>
-<p style="margin:0 0 24px;font-size:14px;color:#6B5E63;padding-bottom:20px;border-bottom:1px solid #E8DDE2;">A new order has been placed on Shagya.</p>
+<p style="margin:0 0 24px;font-size:14px;color:#6B5E63;padding-bottom:20px;border-bottom:1px solid #E8DDE2;">A new order has been placed on Shayga.</p>
 
 <table cellpadding="0" cellspacing="0">
   ${kv('Order', '<strong>{{orderNumber}}</strong>')}
@@ -158,7 +158,7 @@ ${btn('{{storeUrl}}/account/orders/{{orderNumber}}', 'View Order')}
 <h2 style="margin:0 0 6px;font-family:Georgia,serif;font-size:22px;font-weight:400;color:#6B2448;">Your order is on its way</h2>
 <p style="margin:0 0 24px;font-size:14px;color:#6B5E63;padding-bottom:20px;border-bottom:1px solid #E8DDE2;">Dear {{customerName}}, your order <strong>{{orderNumber}}</strong> has been dispatched.</p>
 
-<p style="margin:0 0 20px;font-size:14px;color:#6B5E63;">Please allow 5–7 business days for delivery. For any questions write to <a href="mailto:care@shagya.in" style="color:#6B2448;text-decoration:none;">care@shagya.in</a>.</p>
+<p style="margin:0 0 20px;font-size:14px;color:#6B5E63;">Please allow 5–7 business days for delivery. For any questions write to <a href="mailto:care@shayga.in" style="color:#6B2448;text-decoration:none;">care@shayga.in</a>.</p>
 
 ${btn('{{storeUrl}}/account/orders/{{orderNumber}}', 'View Order')}
 `),
@@ -166,7 +166,7 @@ ${btn('{{storeUrl}}/account/orders/{{orderNumber}}', 'View Order')}
 
   // ── Customer: delivered ────────────────────────────────────────────────────
   'order-delivered-customer': {
-    subject: 'Your Shagya order has arrived — {{orderNumber}}',
+    subject: 'Your Shayga order has arrived — {{orderNumber}}',
     body: wrap(`
 <h2 style="margin:0 0 6px;font-family:Georgia,serif;font-size:22px;font-weight:400;color:#6B2448;">Your order has been delivered</h2>
 <p style="margin:0 0 24px;font-size:14px;color:#6B5E63;padding-bottom:20px;border-bottom:1px solid #E8DDE2;">Dear {{customerName}}, we're delighted that your order <strong>{{orderNumber}}</strong> has arrived.</p>
@@ -193,7 +193,7 @@ ${btn('{{storeUrl}}/account/orders/{{orderNumber}}', 'Leave a Review')}
 
 <p style="margin:24px 0 16px;font-size:14px;color:#6B5E63;">If a payment was made, a refund will be processed within 5–7 business days to your original payment method.</p>
 
-<p style="margin:0;font-size:14px;color:#6B5E63;">Questions? Write to <a href="mailto:care@shagya.in" style="color:#6B2448;text-decoration:none;">care@shagya.in</a>.</p>
+<p style="margin:0;font-size:14px;color:#6B5E63;">Questions? Write to <a href="mailto:care@shayga.in" style="color:#6B2448;text-decoration:none;">care@shayga.in</a>.</p>
 
 ${btn('{{storeUrl}}', 'Continue Shopping')}
 `),
@@ -231,7 +231,7 @@ ${btn('{{adminOrderUrl}}', 'View in Admin')}
 
 <p style="margin:24px 0 16px;font-size:14px;color:#6B5E63;">Please allow 5–7 business days for the amount to reflect in your account. The timeline depends on your bank or payment provider.</p>
 
-<p style="margin:0;font-size:14px;color:#6B5E63;">Need help? Write to <a href="mailto:care@shagya.in" style="color:#6B2448;text-decoration:none;">care@shagya.in</a>.</p>
+<p style="margin:0;font-size:14px;color:#6B5E63;">Need help? Write to <a href="mailto:care@shayga.in" style="color:#6B2448;text-decoration:none;">care@shayga.in</a>.</p>
 `),
   },
 
@@ -255,14 +255,14 @@ ${btn('{{adminOrderUrl}}', 'View in Admin')}
 
   // ── Customer: welcome ──────────────────────────────────────────────────────
   'welcome-customer': {
-    subject: 'Welcome to Shagya, {{customerName}}',
+    subject: 'Welcome to Shayga, {{customerName}}',
     body: wrap(`
 <h2 style="margin:0 0 6px;font-family:Georgia,serif;font-size:24px;font-weight:400;color:#6B2448;">Welcome, {{customerName}}</h2>
-<p style="margin:0 0 24px;font-size:14px;color:#6B5E63;padding-bottom:20px;border-bottom:1px solid #E8DDE2;">Thank you for joining Shagya — where every thread carries a story.</p>
+<p style="margin:0 0 24px;font-size:14px;color:#6B5E63;padding-bottom:20px;border-bottom:1px solid #E8DDE2;">Thank you for joining Shayga — where every thread carries a story.</p>
 
 <p style="margin:0 0 16px;font-size:14px;color:#6B5E63;">Your account is ready. Explore our collection of handcrafted sarees, each woven with care by master artisans across India.</p>
 
-<p style="margin:0 0 0;font-size:14px;color:#6B5E63;">Questions? We're always here at <a href="mailto:care@shagya.in" style="color:#6B2448;text-decoration:none;">care@shagya.in</a>.</p>
+<p style="margin:0 0 0;font-size:14px;color:#6B5E63;">Questions? We're always here at <a href="mailto:care@shayga.in" style="color:#6B2448;text-decoration:none;">care@shayga.in</a>.</p>
 
 ${btn('{{storeUrl}}', 'Explore Collection')}
 `),
@@ -270,25 +270,25 @@ ${btn('{{storeUrl}}', 'Explore Collection')}
 
   // ── Customer: verify email ──────────────────────────────────────────────────
   'verify-email': {
-    subject: 'Verify your email — Shagya',
+    subject: 'Verify your email — Shayga',
     body: wrap(`
 <h2 style="margin:0 0 6px;font-family:Georgia,serif;font-size:22px;font-weight:400;color:#6B2448;">Verify your email</h2>
-<p style="margin:0 0 24px;font-size:14px;color:#6B5E63;padding-bottom:20px;border-bottom:1px solid #E8DDE2;">Hi {{customerName}}, welcome to Shagya. Please confirm your email address to activate your account.</p>
+<p style="margin:0 0 24px;font-size:14px;color:#6B5E63;padding-bottom:20px;border-bottom:1px solid #E8DDE2;">Hi {{customerName}}, welcome to Shayga. Please confirm your email address to activate your account.</p>
 
 <p style="margin:0 0 6px;font-size:14px;color:#6B5E63;">This link is valid for 1 hour.</p>
 
 ${btn('{{verificationUrl}}', 'Verify Email')}
 
-<p style="margin:28px 0 0;font-size:13px;color:#9B8E93;">If you didn't create an account with Shagya, you can safely ignore this email.</p>
+<p style="margin:28px 0 0;font-size:13px;color:#9B8E93;">If you didn't create an account with Shayga, you can safely ignore this email.</p>
 `),
   },
 
   // ── Customer: magic link sign-in ────────────────────────────────────────────
   'magic-link': {
-    subject: 'Sign in to Shagya',
+    subject: 'Sign in to Shayga',
     body: wrap(`
-<h2 style="margin:0 0 6px;font-family:Georgia,serif;font-size:22px;font-weight:400;color:#6B2448;">Sign in to Shagya</h2>
-<p style="margin:0 0 24px;font-size:14px;color:#6B5E63;padding-bottom:20px;border-bottom:1px solid #E8DDE2;">Use the button below to sign in to your Shagya account. This link is valid for 10 minutes.</p>
+<h2 style="margin:0 0 6px;font-family:Georgia,serif;font-size:22px;font-weight:400;color:#6B2448;">Sign in to Shayga</h2>
+<p style="margin:0 0 24px;font-size:14px;color:#6B5E63;padding-bottom:20px;border-bottom:1px solid #E8DDE2;">Use the button below to sign in to your Shayga account. This link is valid for 10 minutes.</p>
 
 ${btn('{{verificationUrl}}', 'Sign In')}
 

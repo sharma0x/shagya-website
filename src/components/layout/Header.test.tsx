@@ -47,7 +47,7 @@ describe('Header', () => {
 
   it('renders the brand logo', () => {
     render(<Header />)
-    const homeLink = screen.getByRole('link', { name: /shagya/i })
+    const homeLink = screen.getByRole('link', { name: /shayga/i })
     expect(homeLink).toBeInTheDocument()
   })
 

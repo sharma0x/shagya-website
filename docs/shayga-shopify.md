@@ -1,7 +1,7 @@
-# Shagya — Saree E-Commerce Website Plan
+# Shayga — Saree E-Commerce Website Plan
 
 > Detailed implementation plan for the new client saree e-commerce website.
-> Audience: project owner (client) + Shagya delivery team.
+> Audience: project owner (client) + Shayga delivery team.
 > Status: Draft v1 — pending client sign-off on open questions.
 
 ---
@@ -47,7 +47,7 @@
 | ----------------- | -------------------------------------------------------- |
 | Project           | New online saree e-commerce website                      |
 | Client            | [Client name] — first-time saree D2C founder             |
-| Agency            | Shagya                                                   |
+| Agency            | Shayga                                                   |
 | Business Model    | D2C (Direct-to-Consumer)                                 |
 | Initial Geography | India (domestic focus for MVP)                           |
 | Phase 2 Geography | NRI markets — USA, UK, UAE, Singapore, Canada, Australia |
@@ -2263,5 +2263,5 @@ This plan is informed by research of 7 leading Indian saree e-commerce websites.
 - **Version**: 1.0
 - **Last Updated**: 2024
 - **Next Review**: After client sign-off on open questions
-- **Owner**: Shagya delivery team
+- **Owner**: Shayga delivery team
 - **Client Sign-off**: Pending

@@ -151,7 +151,7 @@ export default function WishlistPage() {
               Your Wishlist is Empty
             </h3>
             <p className="font-body mt-2 text-xs leading-relaxed text-neutral-500">
-              Explore Shagya's handloom collections and save the drapes that
+              Explore Shayga's handloom collections and save the drapes that
               resonate with your heritage.
             </p>
             <Link
@@ -199,7 +199,7 @@ export default function WishlistPage() {
                             'f5e8ee',
                             product.name?.charAt(0) || 'S',
                           )}
-                          alt={product.name || 'Shagya saree'}
+                          alt={product.name || 'Shayga saree'}
                           fill
                           sizes="33vw"
                           className="object-cover"

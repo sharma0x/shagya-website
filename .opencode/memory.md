@@ -222,8 +222,8 @@ Add to `.prettierignore`:
 
 ```
 docs/research/
-docs/shagya-payloadcms.md
-docs/shagya-shopify.md
+docs/shayga-payloadcms.md
+docs/shayga-shopify.md
 docs/linear-plan.md
 ```
 

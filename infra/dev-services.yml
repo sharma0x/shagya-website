@@ -1,5 +1,5 @@
 # =============================================================================
-# Shagya — Local Development Services
+# Shayga — Local Development Services
 # =============================================================================
 # Start: docker compose -f infra/dev-services.yml up -d
 # Stop:  docker compose -f infra/dev-services.yml down
@@ -12,19 +12,19 @@ services:
   # ---------------------------------------------------------------------------
   postgres:
     image: postgres:18-alpine
-    container_name: shagya-pg
+    container_name: shayga-pg
     restart: unless-stopped
     ports:
       - '5432:5432'
     environment:
-      POSTGRES_USER: shagya
-      POSTGRES_PASSWORD: shagya_dev
-      POSTGRES_DB: shagya
+      POSTGRES_USER: shayga
+      POSTGRES_PASSWORD: shayga_dev
+      POSTGRES_DB: shayga
       PGDATA: /var/lib/postgresql/pgdata
     volumes:
       - pgdata:/var/lib/postgresql
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U shagya -d shagya']
+      test: ['CMD-SHELL', 'pg_isready -U shayga -d shayga']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -40,11 +40,11 @@ services:
   # ---------------------------------------------------------------------------
   # API:          http://localhost:9000  (S3 endpoint)
   # Console:      http://localhost:9001  (web UI — login with minioadmin/minioadmin)
-  # Bucket:       shagya-media (auto-created on first start)
+  # Bucket:       shayga-media (auto-created on first start)
   # ===========================================================================
   minio:
     image: minio/minio:latest
-    container_name: shagya-minio
+    container_name: shayga-minio
     restart: unless-stopped
     ports:
       - '9000:9000' # S3 API
@@ -68,19 +68,19 @@ services:
         max-file: '3'
 
   # ---------------------------------------------------------------------------
-  # MinIO bucket creator — creates the shagya-media bucket on startup
+  # MinIO bucket creator — creates the shayga-media bucket on startup
   # ---------------------------------------------------------------------------
   minio-create-bucket:
     image: minio/mc:latest
-    container_name: shagya-minio-setup
+    container_name: shayga-minio-setup
     depends_on:
       minio:
         condition: service_healthy
     entrypoint: >
       /bin/sh -c "
       until (/usr/bin/mc alias set local http://minio:9000 minioadmin minioadmin) do echo '...waiting...' && sleep 1; done;
-      /usr/bin/mc mb local/shagya-media --ignore-existing;
-      echo '✓ MinIO bucket shagya-media ready';
+      /usr/bin/mc mb local/shayga-media --ignore-existing;
+      echo '✓ MinIO bucket shayga-media ready';
       exit 0;
       "
 
@@ -93,7 +93,7 @@ services:
   # ===========================================================================
   mailpit:
     image: axllent/mailpit:latest
-    container_name: shagya-mailpit
+    container_name: shayga-mailpit
     restart: unless-stopped
     ports:
       - '1025:1025' # SMTP
@@ -106,6 +106,6 @@ services:
 
 volumes:
   pgdata:
-    name: shagya-pgdata
+    name: shayga-pgdata
   miniodata:
-    name: shagya-miniodata
+    name: shayga-miniodata

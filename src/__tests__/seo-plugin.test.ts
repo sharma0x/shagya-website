@@ -173,10 +173,10 @@ describe('SEO Plugin', () => {
     it('extracts from content blocks heading (Pages)', () => {
       const result = generateDescription({
         doc: {
-          content: [{ heading: 'Welcome to Shagya' }, { heading: 'Our Story' }],
+          content: [{ heading: 'Welcome to Shayga' }, { heading: 'Our Story' }],
         },
       })
-      expect(result).toBe('Welcome to Shagya')
+      expect(result).toBe('Welcome to Shayga')
     })
 
     it('falls back to content block body when no heading', () => {

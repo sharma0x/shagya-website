@@ -216,7 +216,7 @@ export const useCart = create<CartState>()(
       },
     }),
     {
-      name: 'shagya-cart', // Persists in localStorage
+      name: 'shayga-cart', // Persists in localStorage
       partialize: (state) => ({ items: state.items, coupon: state.coupon }), // save only items and coupon
     },
   ),

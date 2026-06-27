@@ -1,5 +1,5 @@
 // =============================================================================
-// Shagya — Payload CMS Configuration
+// Shayga — Payload CMS Configuration
 // =============================================================================
 // This is the central configuration file for the entire backend.
 // All collections, globals, plugins, and admin settings live here.
@@ -190,8 +190,8 @@ export const extractSearchText = (doc: Record<string, unknown>): string => {
 // Email adapter — Mailpit (dev) or Resend (prod/staging)
 // Switch is driven by MAILPIT_SMTP_HOST: present → Mailpit, absent → Resend.
 // ---------------------------------------------------------------------------
-const FROM_NAME = process.env.EMAIL_FROM_NAME || 'Shagya'
-const FROM_ADDRESS = process.env.EMAIL_FROM_ADDRESS || 'noreply@shagya.in'
+const FROM_NAME = process.env.EMAIL_FROM_NAME || 'Shayga'
+const FROM_ADDRESS = process.env.EMAIL_FROM_ADDRESS || 'noreply@shayga.in'
 
 const emailAdapter = process.env.MAILPIT_SMTP_HOST
   ? nodemailerAdapter({
@@ -229,7 +229,7 @@ export default buildConfig({
       importMapFile: path.resolve(dirname, 'app/(payload)/admin/importMap.js'),
     },
     meta: {
-      titleSuffix: '— Shagya',
+      titleSuffix: '— Shayga',
       icons: [{ url: '/favicon.ico' }],
     },
     livePreview: {
@@ -339,7 +339,7 @@ export default buildConfig({
       collections: {
         media: true,
       },
-      bucket: process.env.R2_BUCKET || 'shagya-media',
+      bucket: process.env.R2_BUCKET || 'shayga-media',
       config: {
         endpoint: process.env.R2_ENDPOINT || '',
         credentials: {

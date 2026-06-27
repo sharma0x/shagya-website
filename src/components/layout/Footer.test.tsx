@@ -5,8 +5,8 @@ import { Footer } from './Footer'
 describe('Footer', () => {
   it('renders the brand name', () => {
     render(<Footer />)
-    // "Shagya" appears in both the Logo wordmark and the company column title
-    expect(screen.getAllByText('Shagya').length).toBeGreaterThanOrEqual(1)
+    // "Shayga" appears in both the Logo wordmark and the company column title
+    expect(screen.getAllByText('Shayga').length).toBeGreaterThanOrEqual(1)
   })
 
   it('renders a copyright line with the current year', () => {
