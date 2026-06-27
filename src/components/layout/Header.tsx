@@ -198,15 +198,14 @@ export function Header() {
               </Link>
             </nav>
           </div>
-
-          <CartDrawer isOpen={cartOpen} onClose={() => setCartOpen(false)} />
         </div>
 
-        {/* SearchCommand rendered outside header's stacking context
-          so the fixed overlay sits above hero/main content, not trapped
-          inside the sticky header's z-index layer. */}
+        {/* SearchCommand and CartDrawer are rendered outside the <header>
+            so their position:fixed overlays escape the backdrop-filter
+            containing block created by glass-panel. */}
       </header>
       <SearchCommand isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
+      <CartDrawer isOpen={cartOpen} onClose={() => setCartOpen(false)} />
     </>
   )
 }

@@ -5,6 +5,7 @@
         lint format typecheck \
         test test-watch test-coverage test-e2e test-all \
         infra-up infra-down infra-logs infra-reset \
+        seed \
         db-migrate db-migrate-create db-seed db-generate-types \
         release \
         setup clean clean-all
@@ -16,6 +17,9 @@
 help: ## Show this help message
 	@echo "Shagya — Available Commands"
 	@echo "============================"
+	@echo ""
+	@echo "Quick start:"
+	@echo "  make seed             Full seed: start infra → migrate → images → data + credentials"
 	@echo ""
 	@echo "Installation:"
 	@echo "  make install          Install all dependencies"
@@ -46,9 +50,9 @@ help: ## Show this help message
 	@echo "  make test-all         Run all tests"
 	@echo ""
 	@echo "Database:"
-	@echo "  make db-migrate       Run database migrations"
+	@echo "  make db-migrate       Run pending migrations"
 	@echo "  make db-migrate-create Create a new migration (MSG='description')"
-	@echo "  make db-seed          Seed database with sample data"
+	@echo "  make db-seed          Seed only (no infra/migration steps)"
 	@echo "  make db-generate-types Generate Payload TypeScript types"
 	@echo ""
 	@echo "Utilities:"
@@ -132,10 +136,48 @@ infra-reset: ## Reset infrastructure (delete all data)
 	docker compose -f infra/dev-services.yml down -v
 
 # ============================================================================
+# Seed (one-stop command — works on a completely fresh database)
+# ============================================================================
+
+seed: ## Full seed: start infra → migrate → download images → seed data → print credentials
+	@echo ""
+	@echo "========================================"
+	@echo "  Shagya — Full Dev Seed"
+	@echo "========================================"
+	@echo ""
+	@echo "Step 1/4  Starting infrastructure..."
+	docker compose -f infra/dev-services.yml up -d
+	@echo ""
+	@echo "Step 2/4  Waiting for PostgreSQL to be ready..."
+	@until docker exec shagya-pg pg_isready -U shagya -d shagya >/dev/null 2>&1; do \
+		printf "."; sleep 1; \
+	done
+	@printf " ready\n"
+	@echo ""
+	@echo "Step 3/4  Running database migrations..."
+	@set -a; [ -f .env ] && . ./.env; set +a; pnpm payload migrate
+	@echo ""
+	@echo "Step 4/4  Downloading seed images (skips existing)..."
+	@bash scripts/download-images.sh
+	@echo ""
+	@echo "         Seeding database with dummy data..."
+	pnpm seed
+	@echo ""
+	@echo "========================================"
+	@echo "  Seed complete!"
+	@echo "========================================"
+	@echo "  App:      http://localhost:3000"
+	@echo "  Admin:    http://localhost:3000/admin"
+	@echo "  Email:    admin@shagya.com"
+	@echo "  Password: admin123"
+	@echo "========================================"
+	@echo ""
+
+# ============================================================================
 # Database
 # ============================================================================
 
-db-migrate: ## Run database migrations
+db-migrate: ## Run pending database migrations
 	pnpm payload migrate
 
 db-migrate-create: ## Create a new migration (MSG='description')

@@ -23,7 +23,7 @@ function LexicalRenderer({ content }: { content: any }) {
     return null
   }
   return (
-    <div className="font-body space-y-4 text-sm leading-relaxed text-neutral-600">
+    <div className="font-body space-y-4 text-[0.9375rem] leading-7 text-neutral-600">
       {content.root.children.map((block: any, idx: number) => {
         if (block.type === 'paragraph' && Array.isArray(block.children)) {
           return (
@@ -200,7 +200,7 @@ export default async function CatchAllPage({ params }: Props) {
         </div>
       )}
 
-      {/* Render Blocks */}
+      {/* Render Blocks — all non-hero blocks share max-w-4xl for consistent edge alignment */}
       <div className="space-y-20 py-12">
         {page.content?.map((block: any, idx: number) => {
           switch (block.blockType || block.slug) {
@@ -244,22 +244,20 @@ export default async function CatchAllPage({ params }: Props) {
               return (
                 <div
                   key={idx}
-                  className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8"
+                  className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8"
                 >
-                  <div
-                    className={`grid grid-cols-1 items-center gap-12 md:grid-cols-2`}
-                  >
-                    <div
-                      className={
-                        block.imagePosition === 'right' ? 'md:order-1' : ''
-                      }
-                    >
-                      <h3 className="font-display mb-4 text-2xl font-bold text-neutral-900">
-                        {block.heading}
-                      </h3>
-                      <LexicalRenderer content={block.body} />
-                    </div>
-                    {block.image?.url && (
+                  {block.image?.url ? (
+                    <div className="grid grid-cols-1 items-center gap-12 md:grid-cols-2">
+                      <div
+                        className={
+                          block.imagePosition === 'right' ? 'md:order-1' : ''
+                        }
+                      >
+                        <h3 className="font-display mb-4 text-2xl font-bold text-neutral-900">
+                          {block.heading}
+                        </h3>
+                        <LexicalRenderer content={block.body} />
+                      </div>
                       <div className="relative h-80 w-full overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-100">
                         <img
                           src={block.image.url}
@@ -267,8 +265,15 @@ export default async function CatchAllPage({ params }: Props) {
                           className="h-full w-full object-cover"
                         />
                       </div>
-                    )}
-                  </div>
+                    </div>
+                  ) : (
+                    <>
+                      <h3 className="font-display mb-4 text-2xl font-bold text-neutral-900">
+                        {block.heading}
+                      </h3>
+                      <LexicalRenderer content={block.body} />
+                    </>
+                  )}
                 </div>
               )
 
@@ -276,23 +281,23 @@ export default async function CatchAllPage({ params }: Props) {
               return (
                 <div
                   key={idx}
-                  className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8"
+                  className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8"
                 >
                   {block.heading && (
-                    <h3 className="font-display mb-8 text-center text-xl font-semibold text-neutral-900">
+                    <h3 className="font-display mb-8 text-xl font-semibold text-neutral-900">
                       {block.heading}
                     </h3>
                   )}
-                  <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-3">
+                  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                     {block.features?.map((item: any, fIdx: number) => (
                       <div
                         key={fIdx}
-                        className="space-y-3 rounded-2xl border border-neutral-100 bg-white p-6 shadow-xs"
+                        className="space-y-2 rounded-2xl border border-neutral-100 bg-white p-6 shadow-xs"
                       >
                         <h4 className="font-display text-sm font-semibold text-neutral-900">
                           {item.title}
                         </h4>
-                        <p className="font-body text-xs leading-relaxed text-neutral-500">
+                        <p className="font-body text-sm leading-relaxed text-neutral-500">
                           {item.description}
                         </p>
                       </div>
@@ -305,20 +310,20 @@ export default async function CatchAllPage({ params }: Props) {
               return (
                 <div
                   key={idx}
-                  className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8"
+                  className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8"
                 >
                   {block.heading && (
-                    <h3 className="font-display mb-8 text-center text-xl font-semibold text-neutral-900">
+                    <h3 className="font-display mb-8 text-xl font-semibold text-neutral-900">
                       {block.heading}
                     </h3>
                   )}
-                  <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     {block.items?.map((item: any, tIdx: number) => (
                       <div
                         key={tIdx}
                         className="flex flex-col justify-between rounded-2xl border border-neutral-100 bg-white p-6 shadow-xs"
                       >
-                        <p className="font-body text-xs leading-relaxed text-neutral-600 italic">
+                        <p className="font-body text-sm leading-relaxed text-neutral-600 italic">
                           &ldquo;{item.quote}&rdquo;
                         </p>
                         <div className="mt-6 flex items-center gap-3">
@@ -348,23 +353,26 @@ export default async function CatchAllPage({ params }: Props) {
 
             case 'faq':
               return (
-                <div key={idx} className="mx-auto max-w-3xl px-4 sm:px-6">
+                <div
+                  key={idx}
+                  className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8"
+                >
                   {block.heading && (
-                    <h3 className="font-display mb-6 flex items-center gap-2 text-lg font-semibold text-neutral-900">
-                      <HelpCircle className="text-brand-600 h-5 w-5" />
+                    <h3 className="font-display mb-6 flex items-center gap-2 text-xl font-semibold text-neutral-900">
+                      <HelpCircle className="text-brand-600 h-5 w-5 shrink-0" />
                       {block.heading}
                     </h3>
                   )}
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {block.questions?.map((item: any, qIdx: number) => (
                       <div
                         key={qIdx}
                         className="space-y-2 rounded-2xl border border-neutral-100 bg-white p-5 shadow-xs"
                       >
-                        <h4 className="font-display text-xs font-semibold text-neutral-900">
+                        <h4 className="font-display text-sm font-semibold text-neutral-900">
                           {item.question}
                         </h4>
-                        <p className="font-body text-xs leading-relaxed text-neutral-500">
+                        <p className="font-body text-sm leading-relaxed text-neutral-500">
                           {item.answer}
                         </p>
                       </div>
@@ -377,20 +385,20 @@ export default async function CatchAllPage({ params }: Props) {
               return (
                 <div
                   key={idx}
-                  className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8"
+                  className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8"
                 >
                   <div className="bg-brand-50 border-brand-100/50 space-y-4 rounded-3xl border p-8 text-center sm:p-12">
                     <h3 className="font-display text-brand-950 text-2xl font-bold">
                       {block.heading}
                     </h3>
-                    <p className="font-body mx-auto max-w-xl text-xs leading-relaxed text-neutral-600 sm:text-sm">
+                    <p className="font-body mx-auto max-w-lg text-sm leading-relaxed text-neutral-600">
                       {block.body}
                     </p>
                     {block.buttonText && block.buttonLink && (
                       <div className="pt-2">
                         <Link
                           href={block.buttonLink}
-                          className="bg-brand-600 hover:bg-brand-700 font-display inline-flex h-11 items-center gap-1.5 rounded-xl px-5 text-xs font-semibold text-white transition-all"
+                          className="bg-brand-600 hover:bg-brand-700 font-display inline-flex h-11 items-center gap-1.5 rounded-xl px-6 text-xs font-semibold text-white transition-all"
                         >
                           {block.buttonText}
                         </Link>

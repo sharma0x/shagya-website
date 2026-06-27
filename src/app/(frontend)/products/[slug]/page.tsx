@@ -2,8 +2,7 @@ import { getPayload } from 'payload'
 import config from '@payload-config'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import Image from 'next/image'
-import { ArrowLeft, RefreshCw, ShieldCheck, Truck } from 'lucide-react'
+import { ArrowLeft, ShieldCheck, Truck, RefreshCw } from 'lucide-react'
 import { ProductActions } from '@/components/product/ProductActions'
 import { ProductGallery } from '@/components/product/ProductGallery'
 
@@ -11,29 +10,80 @@ const ph = (w: number, h: number, bg: string, fg: string, text: string) =>
   `https://placehold.co/${w}x${h}/${bg}/${fg}?text=${encodeURIComponent(text)}&font=lora`
 
 function LexicalRenderer({ content }: { content: any }) {
-  if (!content || !content.root || !Array.isArray(content.root.children)) {
-    return null
+  if (!content?.root?.children) return null
+
+  function renderInline(node: any, idx: number): React.ReactNode {
+    if (node.type !== 'text') return null
+    let el: React.ReactNode = node.text
+    if (node.format & 1) el = <strong key={idx}>{el}</strong>
+    if (node.format & 2) el = <em key={idx}>{el}</em>
+    return <span key={idx}>{el}</span>
   }
+
+  function renderBlock(node: any, idx: number): React.ReactNode {
+    switch (node.type) {
+      case 'paragraph':
+        if (!node.children?.some((c: any) => c.text?.trim())) return null
+        return (
+          <p key={idx}>
+            {node.children.map((c: any, ci: number) => renderInline(c, ci))}
+          </p>
+        )
+      case 'heading': {
+        const cls: Record<string, string> = {
+          h2: 'font-display mt-6 mb-2 text-base font-semibold text-neutral-800',
+          h3: 'font-display mt-5 mb-1.5 text-sm font-semibold text-neutral-800',
+          h4: 'font-display mt-4 mb-1 text-xs font-semibold text-neutral-700',
+        }
+        const Tag = (node.tag ?? 'h3') as 'h2' | 'h3' | 'h4'
+        return (
+          <Tag key={idx} className={cls[node.tag] ?? cls.h3}>
+            {node.children?.map((c: any, ci: number) => renderInline(c, ci))}
+          </Tag>
+        )
+      }
+      case 'list': {
+        const items = node.children?.map((item: any, ii: number) => (
+          <li key={ii}>
+            {item.children?.map((c: any, ci: number) => renderInline(c, ci))}
+          </li>
+        ))
+        return node.listType === 'bullet' ? (
+          <ul key={idx} className="list-disc space-y-1 pl-5">
+            {items}
+          </ul>
+        ) : (
+          <ol key={idx} className="list-decimal space-y-1 pl-5">
+            {items}
+          </ol>
+        )
+      }
+      default:
+        return null
+    }
+  }
+
   return (
     <div className="font-body space-y-4 text-sm leading-relaxed text-neutral-600">
-      {content.root.children.map((block: any, idx: number) => {
-        if (block.type === 'paragraph' && Array.isArray(block.children)) {
-          return (
-            <p key={idx}>
-              {block.children.map((node: any, nIdx: number) => {
-                if (node.type === 'text') {
-                  return node.text
-                }
-                return null
-              })}
-            </p>
-          )
-        }
-        return null
-      })}
+      {content.root.children.map(renderBlock)}
     </div>
   )
 }
+
+const TRUST = [
+  {
+    icon: ShieldCheck,
+    text: 'Handloom verified — sourced directly from the weaving cluster',
+  },
+  {
+    icon: Truck,
+    text: 'Free shipping across India · Delivered in 5–7 business days',
+  },
+  {
+    icon: RefreshCw,
+    text: '7-day easy returns on unworn, tag-on sarees',
+  },
+]
 
 export default async function ProductDetailPage({
   params,
@@ -50,13 +100,10 @@ export default async function ProductDetailPage({
     depth: 2,
   })
 
-  if (result.docs.length === 0) {
-    return notFound()
-  }
+  if (result.docs.length === 0) return notFound()
 
   const product = result.docs[0]
 
-  // Resolve cover image and thumbnail URLs
   const imageUrls =
     product.gallery && product.gallery.length > 0
       ? product.gallery.map((g: any) =>
@@ -66,7 +113,6 @@ export default async function ProductDetailPage({
         )
       : [ph(1200, 1500, '69254e', 'f5e8ee', product.name)]
 
-  // Construct a minimal product representation for client store
   const serializableProduct = {
     id: product.id,
     name: product.name,
@@ -84,43 +130,80 @@ export default async function ProductDetailPage({
     weave: product.weave,
   }
 
+  const discountPct =
+    product.compareAtPrice && product.compareAtPrice > product.basePrice
+      ? Math.round(
+          ((product.compareAtPrice - product.basePrice) /
+            product.compareAtPrice) *
+            100,
+        )
+      : null
+
+  // Specs rows — only non-empty values
+  const specs: { label: string; value: string }[] = [
+    product.fabric && {
+      label: 'Fabric',
+      value: product.fabric.charAt(0).toUpperCase() + product.fabric.slice(1),
+    },
+    product.weave && {
+      label: 'Weave',
+      value: product.weave.charAt(0).toUpperCase() + product.weave.slice(1),
+    },
+    product.pattern && {
+      label: 'Pattern',
+      value: product.pattern.charAt(0).toUpperCase() + product.pattern.slice(1),
+    },
+    product.length && { label: 'Length', value: `${product.length} metres` },
+    product.blouseType && { label: 'Blouse piece', value: product.blouseType },
+    product.palluDetails && { label: 'Pallu', value: product.palluDetails },
+    product.borderType && { label: 'Border', value: product.borderType },
+    product.weavePattern && {
+      label: 'Weave technique',
+      value: product.weavePattern,
+    },
+    product.occasion && { label: 'Occasion', value: product.occasion },
+  ].filter(Boolean) as { label: string; value: string }[]
+
   return (
-    <div className="bg-surface min-h-screen py-10 md:py-16">
+    <div className="bg-surface min-h-screen py-10 md:py-14">
       <div className="container-page">
-        {/* Back Link */}
+        {/* Back link */}
         <Link
           href={`/category/${product.fabric}`}
-          className="font-display hover:text-brand-700 inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-500 transition-colors"
+          className="font-display hover:text-brand-700 inline-flex items-center gap-1.5 text-xs font-medium text-neutral-400 transition-colors hover:text-neutral-700"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
-          Back to{' '}
           {product.fabric.charAt(0).toUpperCase() +
             product.fabric.slice(1)}{' '}
           Sarees
         </Link>
 
-        {/* Core PDP Grid */}
-        <div className="mt-8 grid gap-10 lg:grid-cols-12 lg:gap-16">
-          {/* Left Column: Image Gallery */}
+        {/* ── Main PDP Grid ── */}
+        <div className="mt-8 grid gap-10 lg:grid-cols-12 lg:gap-14">
+          {/* Left — Gallery */}
           <div className="lg:col-span-7">
             <ProductGallery imageUrls={imageUrls} productName={product.name} />
           </div>
-          {/* Right Column: Meta & Actions */}
-          <div className="flex flex-col justify-between lg:col-span-5">
-            <div>
-              {/* Region and Cluster */}
-              <div className="flex items-center gap-2">
-                <span className="bg-gold-50 text-gold-700 font-display rounded-md px-2.5 py-1 text-[10px] font-semibold tracking-wider uppercase">
-                  {product.weave} Weave
+
+          {/* Right — Info (sticky on desktop) */}
+          <div className="lg:col-span-5">
+            <div className="lg:sticky lg:top-24">
+              {/* Weave + occasion tags */}
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="font-display bg-brand-50 text-brand-700 rounded-md px-2.5 py-1 text-[11px] font-semibold tracking-wide">
+                  {product.weave.charAt(0).toUpperCase() +
+                    product.weave.slice(1)}{' '}
+                  Weave
                 </span>
-                <span className="text-neutral-300">·</span>
-                <span className="font-body text-xs font-medium text-neutral-500">
-                  {product.occasion || 'Traditional Craft'}
-                </span>
+                {product.occasion && (
+                  <span className="font-body text-xs text-neutral-400">
+                    {product.occasion}
+                  </span>
+                )}
               </div>
 
               {/* Title */}
-              <h1 className="font-display mt-4 text-2xl font-semibold tracking-tight text-neutral-900 md:text-3xl lg:text-4xl">
+              <h1 className="font-display mt-4 text-2xl font-semibold tracking-tight text-neutral-900 md:text-3xl">
                 {product.name}
               </h1>
 
@@ -135,143 +218,87 @@ export default async function ProductDetailPage({
                       <span className="font-display text-sm text-neutral-400 line-through">
                         ₹{product.compareAtPrice.toLocaleString('en-IN')}
                       </span>
-                      <span className="font-display text-xs font-semibold text-green-600">
-                        (
-                        {Math.round(
-                          ((product.compareAtPrice - product.basePrice) /
-                            product.compareAtPrice) *
-                            100,
-                        )}
-                        % OFF)
-                      </span>
+                      {discountPct && (
+                        <span className="font-display bg-success-light text-success rounded-md px-2 py-0.5 text-xs font-semibold">
+                          {discountPct}% off
+                        </span>
+                      )}
                     </>
                   )}
               </div>
 
-              {/* Actions component */}
-              <div className="mt-8">
+              {/* Size, stitching, CTAs */}
+              <div className="mt-7">
                 <ProductActions product={serializableProduct} />
               </div>
-            </div>
 
-            {/* TrustStrip */}
-            <div className="mt-8 grid grid-cols-3 gap-4 border-t border-neutral-100 pt-8 text-center text-[11px] text-neutral-500">
-              <div className="flex flex-col items-center gap-2">
-                <div className="bg-brand-50 text-brand-700 flex h-9 w-9 items-center justify-center rounded-full">
-                  <ShieldCheck className="h-4.5 w-4.5" />
-                </div>
-                <span className="font-display font-semibold text-neutral-800">
-                  Handloom Verified
-                </span>
-              </div>
-              <div className="flex flex-col items-center gap-2">
-                <div className="bg-brand-50 text-brand-700 flex h-9 w-9 items-center justify-center rounded-full">
-                  <Truck className="h-4.5 w-4.5" />
-                </div>
-                <span className="font-display font-semibold text-neutral-800">
-                  Free India Shipping
-                </span>
-              </div>
-              <div className="flex flex-col items-center gap-2">
-                <div className="bg-brand-50 text-brand-700 flex h-9 w-9 items-center justify-center rounded-full">
-                  <RefreshCw className="h-4.5 w-4.5" />
-                </div>
-                <span className="font-display font-semibold text-neutral-800">
-                  7-Day Easy Returns
-                </span>
+              {/* Trust signals — inline list, no icon circles */}
+              <div className="mt-8 space-y-3.5 border-t border-neutral-100 pt-8">
+                {TRUST.map(({ icon: Icon, text }) => (
+                  <div
+                    key={text}
+                    className="flex items-start gap-3 text-sm text-neutral-600"
+                  >
+                    <Icon className="text-brand-600 mt-0.5 h-4 w-4 shrink-0" />
+                    <span>{text}</span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
         </div>
 
-        {/* Details & Specs Section */}
-        <div className="mt-16 border-t border-neutral-200 pt-16">
-          <div className="grid gap-12 lg:grid-cols-12 lg:gap-16">
-            {/* Left: Weave Story */}
+        {/* ── Details: Story + Specs ── */}
+        <div className="mt-20 border-t border-neutral-200 pt-16">
+          <div className="grid gap-12 lg:grid-cols-12 lg:gap-14">
+            {/* Weave Story */}
             <div className="lg:col-span-7">
-              <h3 className="font-display border-b border-neutral-100 pb-3 text-lg font-semibold text-neutral-900">
+              <div className="bg-gold-400 mb-5 h-px w-12" aria-hidden="true" />
+              <h2 className="font-display text-xl font-semibold tracking-tight text-neutral-900">
                 The Weave Story
-              </h3>
+              </h2>
               <div className="mt-5">
-                <LexicalRenderer content={product.description} />
+                {product.description ? (
+                  <LexicalRenderer content={product.description} />
+                ) : (
+                  <p className="text-sm text-neutral-400">
+                    No description yet for this piece.
+                  </p>
+                )}
               </div>
             </div>
 
-            {/* Right: Technical Specifications */}
+            {/* Specifications */}
             <div className="lg:col-span-5">
-              <h3 className="font-display border-b border-neutral-100 pb-3 text-lg font-semibold text-neutral-900">
+              <div className="bg-gold-400 mb-5 h-px w-12" aria-hidden="true" />
+              <h2 className="font-display text-xl font-semibold tracking-tight text-neutral-900">
                 Specifications
-              </h3>
-              <div className="mt-5 overflow-hidden rounded-xl border border-neutral-200 bg-white">
-                <table className="font-body w-full border-collapse text-left text-xs text-neutral-600">
-                  <tbody className="divide-y divide-neutral-100">
-                    <tr className="hover:bg-neutral-50/50">
-                      <td className="w-1/3 px-4 py-3.5 font-medium text-neutral-400">
-                        Fabric
-                      </td>
-                      <td className="px-4 py-3.5 font-semibold text-neutral-800 capitalize">
-                        {product.fabric}
-                      </td>
-                    </tr>
-                    <tr className="hover:bg-neutral-50/50">
-                      <td className="px-4 py-3.5 font-medium text-neutral-400">
-                        Weave Style
-                      </td>
-                      <td className="px-4 py-3.5 font-semibold text-neutral-800 capitalize">
-                        {product.weave}
-                      </td>
-                    </tr>
-                    <tr className="hover:bg-neutral-50/50">
-                      <td className="px-4 py-3.5 font-medium text-neutral-400">
-                        Length
-                      </td>
-                      <td className="px-4 py-3.5 font-semibold text-neutral-800">
-                        {product.length || '5.5'} Metres
-                      </td>
-                    </tr>
-                    {product.blouseType && (
-                      <tr className="hover:bg-neutral-50/50">
-                        <td className="px-4 py-3.5 font-medium text-neutral-400">
-                          Blouse Piece
-                        </td>
-                        <td className="px-4 py-3.5 text-neutral-800">
-                          {product.blouseType}
-                        </td>
-                      </tr>
-                    )}
-                    {product.palluDetails && (
-                      <tr className="hover:bg-neutral-50/50">
-                        <td className="px-4 py-3.5 font-medium text-neutral-400">
-                          Pallu details
-                        </td>
-                        <td className="px-4 py-3.5 text-neutral-800">
-                          {product.palluDetails}
-                        </td>
-                      </tr>
-                    )}
-                    {product.borderType && (
-                      <tr className="hover:bg-neutral-50/50">
-                        <td className="px-4 py-3.5 font-medium text-neutral-400">
-                          Border
-                        </td>
-                        <td className="px-4 py-3.5 text-neutral-800">
-                          {product.borderType}
-                        </td>
-                      </tr>
-                    )}
-                    {product.weavePattern && (
-                      <tr className="hover:bg-neutral-50/50">
-                        <td className="px-4 py-3.5 font-medium text-neutral-400">
-                          Weave technique
-                        </td>
-                        <td className="px-4 py-3.5 text-neutral-800">
-                          {product.weavePattern}
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
+              </h2>
+              {specs.length > 0 ? (
+                <dl className="mt-5 overflow-hidden rounded-xl border border-neutral-200 bg-white">
+                  {specs.map(({ label, value }, i) => (
+                    <div
+                      key={label}
+                      className={`flex items-baseline px-4 py-3.5 text-sm ${
+                        i < specs.length - 1
+                          ? 'border-b border-neutral-100'
+                          : ''
+                      }`}
+                    >
+                      <dt className="font-body w-2/5 shrink-0 text-xs text-neutral-400">
+                        {label}
+                      </dt>
+                      <dd className="font-body font-medium text-neutral-800">
+                        {value}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              ) : (
+                <p className="mt-5 text-sm text-neutral-400">
+                  Specifications coming soon.
+                </p>
+              )}
             </div>
           </div>
         </div>

@@ -9,8 +9,8 @@ const footerLinks = {
       { label: 'Cotton Sarees', href: '/category/cotton' },
       { label: 'Handloom', href: '/category/handloom' },
       { label: 'Designer', href: '/category/designer' },
-      { label: 'New Arrivals', href: '/new-arrivals' },
-      { label: 'Bestsellers', href: '/bestsellers' },
+      { label: 'New Arrivals', href: '/collections' },
+      { label: 'Bestsellers', href: '/category/silk' },
     ],
   },
   company: {
@@ -26,7 +26,7 @@ const footerLinks = {
     title: 'Help',
     links: [
       { label: 'Shipping', href: '/shipping' },
-      { label: 'Returns & Exchange', href: '/returns' },
+      { label: 'Returns & Exchange', href: '/shipping' },
       { label: 'FAQs', href: '/faq' },
       { label: 'Terms', href: '/terms' },
       { label: 'Privacy', href: '/privacy' },
@@ -35,17 +35,17 @@ const footerLinks = {
   connect: {
     title: 'Connect',
     links: [
-      { label: 'Instagram', href: '#' },
-      { label: 'Facebook', href: '#' },
-      { label: 'Pinterest', href: '#' },
-      { label: 'WhatsApp', href: '#' },
+      { label: 'Instagram', href: 'https://instagram.com/shagya' },
+      { label: 'Facebook', href: 'https://facebook.com/shagya' },
+      { label: 'Pinterest', href: 'https://pinterest.com/shagya' },
+      { label: 'WhatsApp', href: 'https://wa.me/919876543210' },
     ],
   },
 }
 
 export function Footer() {
   return (
-    <footer className="border-t border-neutral-200 bg-neutral-50/50">
+    <footer className="border-t border-neutral-200 bg-neutral-50">
       <div className="container-page py-20">
         <div className="grid grid-cols-2 gap-10 md:grid-cols-4 lg:grid-cols-12">
           {/* Brand */}

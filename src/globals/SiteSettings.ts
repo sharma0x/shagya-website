@@ -35,6 +35,17 @@ export const SiteSettings: GlobalConfig = {
       label: 'Favicon',
     },
 
+    // ---- Email Notifications ----
+    {
+      name: 'adminNotificationEmail',
+      type: 'email',
+      label: 'Admin Notification Email',
+      admin: {
+        description:
+          'All order and system notifications (new orders, cancellations, refunds) are sent to this address. Falls back to the ADMIN_EMAIL env var if not set.',
+      },
+    },
+
     // ---- Contact Info ----
     {
       name: 'contactEmail',

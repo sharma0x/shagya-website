@@ -8,11 +8,13 @@
 export interface SeedCategory {
   name: string
   description: string
+  imagePath: string
 }
 
 export interface SeedCollection {
   name: string
   description: string
+  imagePath: string
 }
 
 export interface SeedTag {
@@ -48,14 +50,57 @@ export interface SeedProduct {
   lowStockThreshold: number
 }
 
+// ---------------------------------------------------------------------------
+// Page Content Blocks
+// ---------------------------------------------------------------------------
+
+export type SeedTextImageBlock = {
+  blockType: 'textImage'
+  heading: string
+  body: string // plain text, converted to Lexical in seed.ts
+  imagePosition?: 'left' | 'right'
+}
+
+export type SeedFeatureGridBlock = {
+  blockType: 'featureGrid'
+  heading: string
+  features: { title: string; description: string }[]
+}
+
+export type SeedFaqBlock = {
+  blockType: 'faq'
+  heading: string
+  questions: { question: string; answer: string }[]
+}
+
+export type SeedCtaBlock = {
+  blockType: 'cta'
+  heading: string
+  body?: string
+  buttonText?: string
+  buttonLink?: string
+}
+
+export type SeedTestimonialsBlock = {
+  blockType: 'testimonials'
+  heading: string
+  items: { name: string; role: string; quote: string }[]
+}
+
+export type SeedBlock =
+  | SeedTextImageBlock
+  | SeedFeatureGridBlock
+  | SeedFaqBlock
+  | SeedCtaBlock
+  | SeedTestimonialsBlock
+
 export interface SeedPage {
   title: string
   slug: string
   template: 'default' | 'contact' | 'about' | 'faq'
   status: 'draft' | 'published'
-  heroHeading: string
-  heroSubheading: string
-  bodyContent: string
+  heroSubheading: string // used for metaDescription
+  blocks: SeedBlock[]
 }
 
 export interface SeedBlogPost {
@@ -110,54 +155,69 @@ export const categories: SeedCategory[] = [
     name: 'Silk',
     description:
       'Luxurious silk sarees crafted with traditional Indian weaving techniques',
+    imagePath: '/images/products/saree-01.jpg',
   },
   {
     name: 'Cotton',
     description:
       'Breathable cotton sarees perfect for daily wear and casual occasions',
+    imagePath: '/images/products/saree-03.jpg',
   },
   {
     name: 'Bridal',
     description:
       'Exquisite bridal sarees with intricate embroidery and embellishments',
+    imagePath: '/images/products/saree-02.jpg',
   },
   {
     name: 'Festive',
     description:
       'Vibrant festive sarees for celebrations, festivals, and special gatherings',
+    imagePath: '/images/products/saree-04.jpg',
   },
   {
     name: 'Casual',
     description: 'Comfortable everyday sarees that blend style with simplicity',
+    imagePath: '/images/products/saree-09.jpg',
   },
   {
     name: 'Office Wear',
     description:
       'Elegant sarees designed for professional environments and workplace style',
+    imagePath: '/images/products/saree-05.jpg',
   },
   {
     name: 'Party Wear',
     description:
       'Glamorous sarees that make a statement at evening events and parties',
+    imagePath: '/images/products/saree-20.jpg',
   },
   {
     name: 'Handloom',
     description:
       "Authentic handwoven sarees that celebrate India's rich textile heritage",
+    imagePath: '/images/products/saree-10.jpg',
   },
   {
     name: 'Designer',
     description:
       'Contemporary designer sarees with modern silhouettes and unique patterns',
+    imagePath: '/images/products/saree-11.jpg',
   },
-  { name: 'Banarasi', description: 'Timeless Banarasi sarees from Varanasi' },
+  {
+    name: 'Banarasi',
+    description: 'Timeless Banarasi sarees from Varanasi',
+    imagePath: '/images/products/saree-07.jpg',
+  },
   {
     name: 'Linen',
     description: 'Lightweight linen sarees for summer elegance',
+    imagePath: '/images/products/saree-14.jpg',
   },
   {
     name: 'Chiffon',
     description: 'Flowing chiffon sarees for graceful drapes',
+    imagePath: '/images/products/saree-12.jpg',
   },
 ]
 
@@ -198,23 +258,28 @@ export const collections: SeedCollection[] = [
   {
     name: 'Summer Collection',
     description: 'Light, airy sarees designed for the warm summer months',
+    imagePath: '/images/products/saree-14.jpg',
   },
   {
     name: 'Bridal Edit',
     description:
       'A curated selection of our finest bridal sarees for the modern bride',
+    imagePath: '/images/products/saree-02.jpg',
   },
   {
     name: 'Festive Special',
     description: 'Stunning sarees for Diwali, weddings, and celebrations',
+    imagePath: '/images/products/saree-08.jpg',
   },
   {
     name: 'Everyday Elegance',
     description: 'Affordable sarees for daily wear and office',
+    imagePath: '/images/products/saree-05.jpg',
   },
   {
     name: 'Handloom Heritage',
     description: "Celebrating India's rich handloom weaving traditions",
+    imagePath: '/images/products/saree-10.jpg',
   },
 ]
 
@@ -741,66 +806,558 @@ export const pages: SeedPage[] = [
     slug: 'home',
     template: 'default',
     status: 'published',
-    heroHeading: 'Timeless Sarees, Handcrafted with Love',
     heroSubheading:
       "Discover India's finest handloom traditions — from Banarasi to Kanchipuram, every saree tells a story.",
-    bodyContent:
-      "We don't stock thousands of sarees. We stock the ones that stopped us mid-scroll. Banarasi silks woven on looms that have been in the same family for seven generations. Kanchipuram silks where the zari still carries real silver. Each piece comes from a weaver we know by name. When you buy from Shagya, you're paying the artisan directly. Browse by craft: Banarasi, Kanchipuram, Chanderi, Maheshwari, Tussar, Patola. Blouse stitching included free on sarees above Rs 15,000. Free shipping over Rs 5,000 across India. Join 12,000+ women who get our weekly newsletter.",
+    blocks: [],
   },
+
+  // -------------------------------------------------------------------------
+  // About Us
+  // -------------------------------------------------------------------------
   {
     title: 'About Us',
     slug: 'about',
     template: 'about',
     status: 'published',
-    heroHeading: 'We Started in a Gully in Varanasi',
     heroSubheading:
       'A mother-daughter story, fifty artisan families, and one quiet belief — that a saree should outlast trends.',
-    bodyContent:
-      "My mother, Meera, spent forty years running a small saree shop near Assi Ghat. Women came from three districts to buy from her — not because she had the most stock, but because she never lied about the weave. When she retired in 2019, the weavers she'd worked with for decades were losing ground to machine-made copies. Shagya launched in 2020 with twelve sarees and a WhatsApp group of 200 women. Today we work with 50+ artisan families across eight states. Every saree on this site is photographed unedited, with the weaver's name attached. Our SHEROES initiative gives women weavers their own storefront, pays them 85% of the sale price. Currently 23 women run independent storefronts through SHEROES. We're working toward 100 by 2027. A Banarasi saree takes 15 to 45 days to weave. A power loom knocks out a copy in four hours. When you buy handloom, you're telling their children that the loom is still worth sitting at.",
+    blocks: [
+      {
+        blockType: 'textImage',
+        heading: 'Forty years on the ghats',
+        body: "My mother, Meera, ran a small saree shop near Assi Ghat in Varanasi for four decades. Women came from three districts to buy from her — not because she had the most stock, but because she never lied about the weave. She knew every weaver by name. She knew which cluster in Madanpura was producing the finest Kadhwa work that season. When a customer asked about a saree's zari, she could tell them exactly which family in Pilikothi had woven it.\n\nWhen she retired in 2019, the weavers she had worked with for decades were losing ground to machine-made copies. Power looms in Surat were producing near-identical Banarasi patterns in four hours — pieces that took a handloom weaver three weeks. Prices were being undercut. Younger members of weaver families were leaving the loom for factory work. The tradition that sustained Varanasi's identity for five centuries was hollowing out.\n\nShagya launched in 2020 with twelve sarees and a WhatsApp group of 200 women. We photographed each saree in natural daylight, wrote the weaver's name on the product page, and priced it fairly — no bargaining culture, no inflated MRP. Within six months, all twelve sarees had sold. The weavers asked us to continue.",
+        imagePosition: 'right',
+      } as SeedTextImageBlock,
+      {
+        blockType: 'featureGrid',
+        heading: 'What we will never compromise',
+        features: [
+          {
+            title: 'Verified handloom only',
+            description:
+              'Every saree on Shagya is tested against the India Handloom Mark criteria before listing. No power-loom substitutes — even when they look identical from a photograph.',
+          },
+          {
+            title: 'Maker traceability',
+            description:
+              'The name of the weaver and the cluster they work from appears on every product page. You will know who wove your saree before it arrives at your door.',
+          },
+          {
+            title: '85% to the artisan',
+            description:
+              'Through our SHEROES storefronts, 85% of your purchase price goes directly to the artisan. The remaining 15% covers platform and logistics costs — nothing else.',
+          },
+          {
+            title: 'Unedited photography',
+            description:
+              'Every saree is photographed in natural light on a neutral background. No filters, no colour correction. What you see on the screen is what arrives in the box.',
+          },
+        ],
+      } as SeedFeatureGridBlock,
+      {
+        blockType: 'textImage',
+        heading: 'The SHEROES Initiative',
+        body: 'In 2022, we realised that most of our artisan partners were women who were working through male intermediaries — their husbands, fathers, or male relatives who handled sales while the women did the actual weaving. The women received a wage. The men received the relationship.\n\nSHEROES was built to change that structure. We help women weavers set up their own storefronts on Shagya — with their own names, their own craft descriptions, and direct access to customers. We provide training, photography support, and logistics. The women handle everything else.\n\nWe currently have 23 active SHEROES storefronts, run by women weavers from Banarasi silk clusters in Varanasi, Chanderi cotton-silk weavers in Madhya Pradesh, Kantha embroiderers in West Bengal, and Bandhani artisans in Kutch, Gujarat. Our goal is 100 active storefronts by 2027. Every SHEROES purchase is clearly marked on the product page so you know exactly who you are supporting.',
+        imagePosition: 'left',
+      } as SeedTextImageBlock,
+      {
+        blockType: 'testimonials',
+        heading: 'From the loom room',
+        items: [
+          {
+            name: 'Sunita Devi',
+            role: 'Banarasi weaver, Madanpura — 3rd generation',
+            quote:
+              'Before SHEROES, my father-in-law would sell my sarees to traders in the market. I never knew the final price, never met the customer. Now I have my own storefront. Last month I sold a kadhwa saree to a woman in Canada. She sent me a photo of her wedding. I kept it.',
+          },
+          {
+            name: 'Fatima Sheikh',
+            role: 'Chanderi weaver, Chanderi, Madhya Pradesh',
+            quote:
+              'My grandmother wove Chanderi for the Nawab of Bhopal. My mother wove for local traders. I weave for Shagya. For the first time in three generations, I know what my sarees sell for and who buys them. That knowledge changes how I work.',
+          },
+          {
+            name: 'Rukmini Bai',
+            role: 'Kantha embroiderer, Bolpur, West Bengal',
+            quote:
+              'We were making Kantha work and selling to city buyers for very low prices. Shagya listed our sarees at their real value — what the craft actually costs to make. The first month, I earned more from four sarees than in the previous three months combined.',
+          },
+        ],
+      } as SeedTestimonialsBlock,
+      {
+        blockType: 'cta',
+        heading: 'Every saree has a weaver. Every weaver has a name.',
+        body: "Browse our collection and read the maker's story on each product page. When you buy handloom, you're telling their children that the loom is still worth sitting at.",
+        buttonText: 'Explore the collection',
+        buttonLink: '/products',
+      } as SeedCtaBlock,
+    ],
   },
+
+  // -------------------------------------------------------------------------
+  // Contact Us — template handles the form; no additional blocks needed
+  // -------------------------------------------------------------------------
   {
     title: 'Contact Us',
     slug: 'contact',
     template: 'contact',
     status: 'published',
-    heroHeading: "We'd Love to Hear From You",
     heroSubheading:
       "Whether it's a question about a saree, help with measurements, or just to say hello — we're here.",
-    bodyContent:
-      "Visit us: Shagya House, B-12/47, Bengali Tola, Near Assi Ghat, Varanasi, Uttar Pradesh 221001. Open 11 AM to 7 PM, Tuesday through Sunday. Call or WhatsApp: +91 98765 43210. Email: hello@shagya.com. Not sure which weave suits you? Book a 30-minute video consultation with our stylist, Kavya. She'll walk you through fabrics, colours, and draping styles based on your body type, skin tone, and the occasion. It's free — we'd rather you buy the right saree once than the wrong one twice.",
+    blocks: [],
   },
+
+  // -------------------------------------------------------------------------
+  // FAQ
+  // -------------------------------------------------------------------------
   {
     title: 'FAQ',
     slug: 'faq',
     template: 'faq',
     status: 'published',
-    heroHeading: 'You Ask, We Answer',
     heroSubheading:
       'Everything you need to know about ordering, shipping, returns, and caring for your saree.',
-    bodyContent:
-      'Sarees are one-size garments — standard length is 5.5 metres with a 0.8-metre blouse piece. We offer 6-metre and 6.5-metre options on select weaves. Yes, we stitch blouses — free on sarees above Rs 15,000, Rs 600 below that. Standard shipping: 5-7 business days. Express: 2-3 days (Rs 300). International: 10-14 days. Free shipping above Rs 5,000. Returns within 15 days — saree must be unworn with tags. Stitched blouse is non-returnable. We accept UPI, cards, netbanking, and COD (up to Rs 10,000). Bulk orders for weddings — email bulk@shagya.com. Dry clean only for silks. Cottons can be hand-washed in cold water. Store in muslin cloth, not plastic.',
+    blocks: [
+      {
+        blockType: 'faq',
+        heading: 'Ordering & Payment',
+        questions: [
+          {
+            question: 'How do I place an order?',
+            answer:
+              'Browse the product pages, add your chosen sarees to the cart, and proceed to checkout. You will need to provide your delivery address and select a payment method. Once your order is confirmed, you will receive an email with your order summary and tracking information once the saree is dispatched.',
+          },
+          {
+            question: 'What payment methods do you accept?',
+            answer:
+              'We accept all major UPI apps (Google Pay, PhonePe, Paytm), credit and debit cards (Visa, Mastercard, RuPay), net banking, and EMI options on select cards. Cash on Delivery is available for orders up to Rs 10,000 within India.',
+          },
+          {
+            question: 'Is Cash on Delivery available?',
+            answer:
+              'Yes — COD is available for orders up to Rs 10,000 within India. A COD convenience fee of Rs 40 applies. Please have the exact cash amount ready at the time of delivery.',
+          },
+          {
+            question: 'Can I modify or cancel my order after placing it?',
+            answer:
+              'Orders can be modified or cancelled within 2 hours of placement by contacting us at care@shagya.com or WhatsApp +91 98765 43210. After 2 hours, the order enters processing and cannot be modified. Once dispatched, cancellations are not possible — you would need to initiate a return after delivery.',
+          },
+          {
+            question: 'Do you offer blouse stitching?',
+            answer:
+              'Yes. Blouse stitching is complimentary on all sarees priced above Rs 15,000. For sarees below that, stitching is available for Rs 600. Please send your measurements (chest, waist, and sleeve preference) to care@shagya.com within 24 hours of ordering. Stitched blouses are custom-made and cannot be returned.',
+          },
+          {
+            question: 'How do I know if a saree is truly handloom?',
+            answer:
+              'Every saree on Shagya is authenticated before listing. We check for India Handloom Mark criteria: presence of floating weft threads in hand-woven pieces, warp density, and construction technique. We also list the specific weave technique (Kadhwa, Phekwa, Korvai, etc.) on each product page. If you want to verify, you can request a video call with the weaver.',
+          },
+        ],
+      } as SeedFaqBlock,
+      {
+        blockType: 'faq',
+        heading: 'Sizing & Fit',
+        questions: [
+          {
+            question: 'What is the standard length of a saree?',
+            answer:
+              'All sarees on Shagya are 5.5 metres long, which is the standard length across most Indian weaving traditions. This length works for all body types when draped in the Nivi style. Select weaves — Kanjivaram, Paithani, Banarasi — are available in 6 and 6.5 metre options. Check the product page for available length options.',
+          },
+          {
+            question: 'Is a blouse piece included?',
+            answer:
+              'Yes — every saree comes with a running blouse piece (0.8 to 1 metre). The blouse piece fabric is the same as the saree body unless otherwise stated. For designer and embellished sarees, the blouse piece is typically a contrasting fabric as described on the product page.',
+          },
+          {
+            question: 'Can sarees be worn by all body types?',
+            answer:
+              "Absolutely. The saree is one of the most body-inclusive garments in the world — its six metres of fabric can be draped to flatter any silhouette. If you're unsure which draping style would work best for you, our stylist Kavya is available for free 30-minute consultations. Book via the Contact page.",
+          },
+          {
+            question:
+              "I've never worn a saree before. Which should I start with?",
+            answer:
+              "We recommend beginning with a lightweight cotton or Chanderi saree — they are easier to drape, stay in place better, and are forgiving with pleats. Our 'Everyday Elegance' collection is specifically curated for first-time wearers. The Maheshwari cotton-silk or Kota Doria are ideal first sarees — both under 300 grams and drape beautifully.",
+          },
+        ],
+      } as SeedFaqBlock,
+      {
+        blockType: 'faq',
+        heading: 'Shipping & Delivery',
+        questions: [
+          {
+            question: 'How long does delivery take?',
+            answer:
+              'Standard delivery across India takes 5–7 business days. Express delivery (2–3 business days) is available for Rs 300 extra. International orders to the US, UK, UAE, Canada, Australia, and Singapore take 10–14 business days. Orders placed before 1:00 PM IST are typically dispatched the same day.',
+          },
+          {
+            question: 'What is the shipping charge?',
+            answer:
+              'Shipping is free on all orders above Rs 5,000 within India. For orders below that, a flat fee of Rs 150 applies. COD orders have an additional Rs 40 handling fee. International shipping starts at Rs 1,500 and varies by destination and weight.',
+          },
+          {
+            question: 'Do you ship internationally?',
+            answer:
+              'Yes — we ship to over 25 countries including the United States, United Kingdom, UAE, Canada, Australia, Singapore, Malaysia, and all EU countries. International shipping takes 10–14 business days. Customs duties or import taxes applicable in your country are your responsibility.',
+          },
+          {
+            question: 'How do I track my order?',
+            answer:
+              'Once your order is dispatched, you will receive an SMS and email with the tracking number and courier partner details. We use BlueDart and Delhivery for domestic orders, and DHL or FedEx for international orders. If you have not received tracking details within 2 business days of ordering, write to care@shagya.com.',
+          },
+          {
+            question: 'What if my delivery is delayed?',
+            answer:
+              'Occasional delays can occur due to courier logistics, especially in remote areas or during festive seasons. If your order has not arrived within the expected window, first check the tracking link. If tracking shows no movement for more than 48 hours, write to care@shagya.com with your order number — we will investigate and resolve within 24 hours.',
+          },
+        ],
+      } as SeedFaqBlock,
+      {
+        blockType: 'faq',
+        heading: 'Returns & Refunds',
+        questions: [
+          {
+            question: 'What is your return policy?',
+            answer:
+              'We accept returns within 15 days of delivery. The saree must be unworn, undamaged, and have original tags and packaging intact. Custom-stitched blouses are non-returnable. To initiate a return, email care@shagya.com with your order number and reason. We arrange free pickup from most metro and tier-2 cities.',
+          },
+          {
+            question: 'Can I exchange for a different colour or size?',
+            answer:
+              'Exchanges are treated as a return followed by a new purchase. Return the original saree within the 15-day window, and once the return quality check passes (3–5 business days), the refund is processed. You can then place a new order. We cannot guarantee the specific piece will still be available — our artisan-made inventory is limited.',
+          },
+          {
+            question: 'How do refunds work?',
+            answer:
+              'Refunds are processed within 7–10 business days after we receive and inspect the returned saree. The refund goes back to the original payment method. For COD orders, refunds are processed via bank transfer (NEFT/IMPS). Shipping charges are not refunded unless the return is due to a defect or error on our part.',
+          },
+          {
+            question: 'What if I receive a damaged or wrong saree?',
+            answer:
+              'We inspect every saree before dispatch, but if a damaged or incorrect item arrives, we will resolve it immediately — full refund or replacement at no cost to you. Photograph the issue and email care@shagya.com within 48 hours of delivery.',
+          },
+        ],
+      } as SeedFaqBlock,
+      {
+        blockType: 'faq',
+        heading: 'Caring for Your Saree',
+        questions: [
+          {
+            question: 'How do I wash a silk saree?',
+            answer:
+              'Silk sarees should always be dry cleaned. Never wash silk at home — water can cause irreversible shrinkage, distortion of the zari, and colour bleeding. If a dry cleaner is unavailable in an emergency, hand washing in cold water with a silk-safe shampoo (never detergent) is an option, but professional dry cleaning is strongly recommended for anything with real zari or heavy embellishment.',
+          },
+          {
+            question: 'How should I store my sarees?',
+            answer:
+              'Fold along the natural creases and wrap in clean, dry muslin cloth or the cotton bag included with your Shagya order. Store flat in a wooden or cardboard box — never in a plastic bag or airtight container, as plastic traps moisture and causes yellowing. Keep in a cool, dry, dark environment. Every 6 months, refold along different lines to prevent permanent crease stress.',
+          },
+          {
+            question: 'Can I iron my saree?',
+            answer:
+              'Cotton and linen sarees can be ironed on a medium-high setting with a slightly damp cloth between the iron and fabric. Silk sarees should be ironed on the reverse side on a low (silk) setting — never steam iron directly, as steam can damage zari threads. For heavily embellished sarees, hang in a steam-filled bathroom briefly rather than ironing directly.',
+          },
+          {
+            question: 'How do I prevent silver zari from tarnishing?',
+            answer:
+              'Real silver zari will naturally tarnish when exposed to air. To slow this, wrap your saree with a few cloves or a folded strip of camphor before storing — these absorb moisture and sulfur compounds that cause tarnish. Avoid wearing real-zari sarees with perfume or deodorant sprays applied directly to the fabric.',
+          },
+        ],
+      } as SeedFaqBlock,
+      {
+        blockType: 'cta',
+        heading: "Couldn't find your answer?",
+        body: 'Our team responds to all queries within 4 hours on business days. You can also WhatsApp us for faster responses.',
+        buttonText: 'Write to us',
+        buttonLink: '/contact',
+      } as SeedCtaBlock,
+    ],
   },
+
+  // -------------------------------------------------------------------------
+  // Shipping & Returns
+  // -------------------------------------------------------------------------
   {
     title: 'Shipping & Returns',
-    slug: 'shipping-returns',
+    slug: 'shipping',
     template: 'default',
     status: 'published',
-    heroHeading: 'Shipping & Returns',
     heroSubheading:
       'Everything you need to know about delivery timelines, return eligibility, and refunds.',
-    bodyContent:
-      'Free standard shipping on orders above Rs 5,000 within India. Below that, flat Rs 150 fee. Delivery: Standard 5-7 business days, Express 2-3 days (Rs 300 surcharge), International 10-14 days (rates from Rs 1,500). We ship via BlueDart, Delhivery, and India Post domestically; DHL or FedEx internationally. Orders placed before 1 PM IST ship same day. Returns: 15 days from delivery, unworn with original tags. The stitched blouse is custom-made and non-returnable — we deduct Rs 600 from your refund. Refunds processed within 7-10 business days after quality check.',
+    blocks: [
+      {
+        blockType: 'textImage',
+        heading: 'Free shipping above ₹5,000',
+        body: 'We offer free standard shipping on all orders above Rs 5,000 within India. For orders below Rs 5,000, a flat shipping fee of Rs 150 applies.\n\nOrders placed before 1:00 PM IST (Monday to Saturday) are dispatched the same day. Orders placed after 1:00 PM, or on Sundays and public holidays, are dispatched the next working day. You will receive an SMS and email with your tracking details once the order is on its way.',
+        imagePosition: 'left',
+      } as SeedTextImageBlock,
+      {
+        blockType: 'featureGrid',
+        heading: 'Delivery options',
+        features: [
+          {
+            title: 'Standard delivery — 5–7 business days',
+            description:
+              'Free on orders above Rs 5,000. Rs 150 flat fee below that. We ship via BlueDart and Delhivery across all 28 states and 8 union territories.',
+          },
+          {
+            title: 'Express delivery — 2–3 business days',
+            description:
+              'Available for an additional Rs 300. Order before 1 PM IST for same-day dispatch. Available in all major metros and tier-1 cities.',
+          },
+          {
+            title: 'Cash on delivery',
+            description:
+              'Available on orders up to Rs 10,000. A Rs 40 COD convenience fee applies. Please have the exact cash amount ready at delivery.',
+          },
+          {
+            title: 'International shipping — 10–14 business days',
+            description:
+              "Available to 25+ countries via DHL and FedEx. Shipping rates start at Rs 1,500 and vary by destination. Import duties are the customer's responsibility.",
+          },
+        ],
+      } as SeedFeatureGridBlock,
+      {
+        blockType: 'textImage',
+        heading: 'Tracking your order',
+        body: "As soon as your saree is dispatched, we will send you an SMS and email containing your tracking number, the courier partner's name, a direct link to track your package, and an estimated delivery date.\n\nFor domestic orders we use BlueDart and Delhivery — both have real-time tracking apps. For international orders we ship via DHL or FedEx.\n\nIf you have not received tracking details within 2 business days of placing your order, please contact us at care@shagya.com with your order number.",
+        imagePosition: 'right',
+      } as SeedTextImageBlock,
+      {
+        blockType: 'textImage',
+        heading: 'Returns: 15-day window',
+        body: 'We accept returns within 15 days of delivery. To be eligible, the saree must be unworn and undamaged with original tags still attached, and returned in the original or equivalent protective packaging.\n\nCustom-stitched blouses are made to your exact measurements and cannot be returned.\n\nWe arrange free pickup for all returns from metro cities and most tier-2 cities. For areas where our courier partners do not provide pickup, you will need to send the saree via any courier and we will reimburse the shipping cost (up to Rs 150) upon receipt.',
+        imagePosition: 'left',
+      } as SeedTextImageBlock,
+      {
+        blockType: 'featureGrid',
+        heading: 'Return eligibility at a glance',
+        features: [
+          {
+            title: 'Eligible for return',
+            description:
+              'Unworn sarees with original tags and packaging, returned within 15 days of delivery. Sarees received in damaged or incorrect condition (full refund + free return pickup arranged).',
+          },
+          {
+            title: 'Not eligible for return',
+            description:
+              'Custom-stitched blouses made to your measurements. Sarees that have been worn, washed, or have tags removed. Orders beyond the 15-day return window.',
+          },
+          {
+            title: 'Refund timeline',
+            description:
+              'Refunds are processed within 7–10 business days after the returned saree passes our quality check. For COD orders, refunds go to your bank account via NEFT/IMPS.',
+          },
+        ],
+      } as SeedFeatureGridBlock,
+      {
+        blockType: 'textImage',
+        heading: 'How to initiate a return',
+        body: 'Step 1: Email care@shagya.com with your order number, the reason for return, and photographs if the issue is damage or a wrong item.\n\nStep 2: Our team will review your request and confirm eligibility within 24 hours.\n\nStep 3: We will schedule a free pickup from your address (metro and most tier-2 cities). You will receive an SMS with the pickup date.\n\nStep 4: Once the saree reaches our warehouse and passes quality inspection (3–5 business days), your refund will be initiated to the original payment method.\n\nFor faster resolution, WhatsApp us at +91 98765 43210 with your order number and photographs.',
+        imagePosition: 'right',
+      } as SeedTextImageBlock,
+      {
+        blockType: 'cta',
+        heading: 'Questions about your order?',
+        body: 'Our support team is available Monday to Saturday, 10 AM to 7 PM IST. Average response time is under 2 hours.',
+        buttonText: 'Contact support',
+        buttonLink: '/contact',
+      } as SeedCtaBlock,
+    ],
   },
+
+  // -------------------------------------------------------------------------
+  // Privacy Policy
+  // -------------------------------------------------------------------------
   {
     title: 'Privacy Policy',
     slug: 'privacy',
     template: 'default',
     status: 'published',
-    heroHeading: 'Privacy Policy',
     heroSubheading:
-      "We take your privacy seriously. Here's exactly what we collect and what we never do.",
-    bodyContent:
-      "We collect your name, email, phone, and address when you order. We do not store payment card details — payments are processed through Razorpay. We use your data only for order processing, shipping, and our newsletter (if you opt in). We don't run retargeting ads. We don't buy or rent customer lists. We share data only with logistics partners and our tailor — no marketing agencies, no data brokers. You can request a copy of your data, ask us to delete your account, or unsubscribe anytime. For privacy questions: privacy@shagya.com.",
+      "We take your privacy seriously. Here's exactly what we collect, how we use it, and what we never do.",
+    blocks: [
+      {
+        blockType: 'textImage',
+        heading: 'What information we collect',
+        body: 'When you create an account or place an order, we collect your name, email address, phone number, and delivery address. We do not store payment card details — payments are processed entirely by Razorpay and we never see or store your card information.\n\nIf you sign up for our newsletter, we store your email address and your preferences. We also collect anonymised browsing data (pages visited, session duration) to improve our site — this data contains no personal identifiers.\n\nWe do not collect information unless it is necessary for completing your order or meaningfully improving your experience.',
+        imagePosition: 'left',
+      } as SeedTextImageBlock,
+      {
+        blockType: 'textImage',
+        heading: 'How we use your information',
+        body: 'Order processing: to confirm your purchase, coordinate dispatch, and provide customer support. Delivery: to share your name, phone, and address with our logistics partners (BlueDart, Delhivery, DHL, FedEx) for shipping — nothing else.\n\nCommunication: to send order confirmations, shipping updates, and responses to your support queries. Newsletter: if you opted in, to send weekly updates on new arrivals, weave stories, and exclusive offers — you can unsubscribe at any time.\n\nProduct improvement: anonymised and aggregated purchase data helps us decide which weaves to source and stock. We never use your information for automated profiling, credit scoring, or third-party advertising targeting.',
+        imagePosition: 'right',
+      } as SeedTextImageBlock,
+      {
+        blockType: 'textImage',
+        heading: 'What we never do with your data',
+        body: 'We want to be direct about this:\n\nWe do not sell your data to any third party — ever. We do not rent or share your contact information with marketing agencies or data brokers. We do not run retargeting ads using your browsing history from our site. We do not use your purchase data to show you personalised ads on other platforms. We do not share your information with social media platforms for advertising purposes.\n\nIf you receive an email or call claiming to be from Shagya and asking for payment details, do not respond — contact us immediately at privacy@shagya.com.',
+        imagePosition: 'left',
+      } as SeedTextImageBlock,
+      {
+        blockType: 'textImage',
+        heading: 'Third parties we share data with',
+        body: "We share limited information only with the following partners, strictly for fulfilling your order:\n\nLogistics partners (BlueDart, Delhivery, India Post, DHL, FedEx): receive your name, phone number, and delivery address. Our tailor (for blouse stitching orders): receives your measurements only. Razorpay (payment gateway): processes your payment — Shagya never receives your card details. AWS (Amazon Web Services): hosts our application and database infrastructure.\n\nAll partners are bound by their own privacy policies and applicable data protection laws. We share no more information than is necessary for each partner's specific role.",
+        imagePosition: 'right',
+      } as SeedTextImageBlock,
+      {
+        blockType: 'textImage',
+        heading: 'Your rights',
+        body: "Access: you can request a complete copy of the data we hold about you at any time.\n\nCorrection: update or correct your name, address, email, and other details directly from your account settings.\n\nDeletion: you can request that we permanently delete your account and all associated data. Write to privacy@shagya.com and we will process the deletion within 30 days.\n\nUnsubscribe: click 'unsubscribe' in any newsletter email to stop receiving marketing communications immediately. This does not affect transactional emails (order confirmations, shipping updates).\n\nFor any privacy-related requests or concerns, email privacy@shagya.com. We respond to all privacy queries within 5 business days.",
+        imagePosition: 'left',
+      } as SeedTextImageBlock,
+      {
+        blockType: 'textImage',
+        heading: 'Cookies',
+        body: 'Our website uses three types of cookies:\n\nEssential cookies are required for the site to function — they manage your cart, login session, and security. We cannot disable these. Analytics cookies use anonymised, privacy-compliant analytics to understand which pages are visited and how customers navigate the site. No personal data is included. Preference cookies remember your wishlist and session settings.\n\nWe do not use advertising or tracking cookies. You can manage cookie preferences through your browser settings. Disabling essential cookies may affect site functionality.',
+        imagePosition: 'right',
+      } as SeedTextImageBlock,
+      {
+        blockType: 'cta',
+        heading: 'Questions about privacy?',
+        body: 'We take privacy questions seriously. Reach us at privacy@shagya.com for any data-related queries or requests.',
+        buttonText: 'Write to privacy@shagya.com',
+        buttonLink: '/contact',
+      } as SeedCtaBlock,
+    ],
+  },
+
+  // -------------------------------------------------------------------------
+  // Terms of Service
+  // -------------------------------------------------------------------------
+  {
+    title: 'Terms of Service',
+    slug: 'terms',
+    template: 'default',
+    status: 'published',
+    heroSubheading:
+      'Please read these terms carefully before using Shagya. By placing an order you agree to them.',
+    blocks: [
+      {
+        blockType: 'textImage',
+        heading: 'Placing an order',
+        body: 'When you place an order on shagya.com, you are making an offer to purchase. An order confirmation email does not constitute our acceptance — your order is accepted when we dispatch it. We reserve the right to cancel any order before dispatch, in which case you will receive a full refund.\n\nOrders may be cancelled by us if the product becomes unavailable after your order was placed, if we detect a pricing error (we will notify you and you may confirm at the correct price or cancel), if there are concerns about fraudulent activity on the account, or if your delivery address cannot be serviced by our logistics partners.',
+        imagePosition: 'left',
+      } as SeedTextImageBlock,
+      {
+        blockType: 'textImage',
+        heading: 'Pricing and payment',
+        body: "All prices displayed on shagya.com are in Indian Rupees (INR) and are inclusive of applicable GST (currently 5% on textile products). Prices do not include shipping charges, which are calculated at checkout.\n\nWe reserve the right to change prices without prior notice. The price applicable to your order is the price confirmed at checkout. In the event of a pricing error, we will notify you at your registered email address before processing the order. Payments are processed by Razorpay and are subject to Razorpay's terms of service.",
+        imagePosition: 'right',
+      } as SeedTextImageBlock,
+      {
+        blockType: 'textImage',
+        heading: 'Product descriptions and authenticity',
+        body: "We make every effort to describe our products accurately — weave technique, fabric composition, zari type, origin cluster, and artisan details. Photographs are taken in natural light without colour correction; slight colour variations between the photograph and the physical saree may occur due to monitor calibration differences.\n\nAll products sold as 'handloom' are verified against the India Handloom Mark criteria before listing. All products described as containing 'real zari' or 'pure zari' are verified with the weaver. If you receive a product that materially differs from its description, you are entitled to a full refund.",
+        imagePosition: 'left',
+      } as SeedTextImageBlock,
+      {
+        blockType: 'textImage',
+        heading: 'Intellectual property',
+        body: 'All content on shagya.com — including product photographs, weave descriptions, blog articles, the Shagya brand name, logo, and design system — is the exclusive intellectual property of Shagya or the individual artisans who have licensed their stories and images to us.\n\nYou may not reproduce, copy, distribute, or commercially exploit any content from this site without prior written permission from Shagya. Linking to our product pages is permitted for non-commercial purposes. For press, editorial, or wholesale inquiries, contact hello@shagya.com.',
+        imagePosition: 'right',
+      } as SeedTextImageBlock,
+      {
+        blockType: 'textImage',
+        heading: 'Limitation of liability',
+        body: "To the maximum extent permitted by applicable law, Shagya's liability in connection with any product purchased through this site is limited to the purchase price of that product.\n\nShagya is not liable for indirect, incidental, or consequential damages; loss of profits or business; delays or damages resulting from events beyond our reasonable control (including customs delays, natural disasters, or logistics partner failures); or dissatisfaction with a product that was accurately described in the listing.\n\nNothing in these terms limits our liability for death or personal injury caused by negligence, fraud, or anything else that cannot be excluded under applicable law.",
+        imagePosition: 'left',
+      } as SeedTextImageBlock,
+      {
+        blockType: 'textImage',
+        heading: 'Governing law',
+        body: 'These Terms of Service are governed by the laws of Uttar Pradesh, India. Any dispute arising from your use of shagya.com or from a transaction on the platform shall be subject to the exclusive jurisdiction of the courts in Varanasi, Uttar Pradesh, India.\n\nIf you are a consumer based outside India, applicable mandatory consumer protection laws in your country may also apply. We will always attempt to resolve disputes amicably before either party initiates legal proceedings. Contact legal@shagya.com to raise any legal or compliance concern.',
+        imagePosition: 'right',
+      } as SeedTextImageBlock,
+      {
+        blockType: 'cta',
+        heading: 'Questions about these terms?',
+        body: 'We try to write legal documents in plain English. If something is unclear, ask us.',
+        buttonText: 'Write to legal@shagya.com',
+        buttonLink: '/contact',
+      } as SeedCtaBlock,
+    ],
+  },
+
+  // -------------------------------------------------------------------------
+  // Careers
+  // -------------------------------------------------------------------------
+  {
+    title: 'Careers',
+    slug: 'careers',
+    template: 'default',
+    status: 'published',
+    heroSubheading:
+      "We're a small team building something meaningful. If you care deeply about craft, culture, and commerce — we should talk.",
+    blocks: [
+      {
+        blockType: 'textImage',
+        heading: 'A small team doing something rare',
+        body: 'Shagya is a bootstrapped company of twelve people, distributed between Varanasi, Bangalore, and Mumbai. We work with 50+ artisan families across eight states. Our job is to make their work visible, their prices fair, and their craft sustainable — so that the next generation of weavers has a reason to sit at the loom.\n\nWe are not a fast-fashion company that happens to sell Indian textiles. We are a company built around the belief that a handloom saree has more worth — economic, cultural, environmental — than the market currently recognises. Our role is to correct that gap.\n\nEvery product decision, every pricing call, every piece of content we publish is filtered through one question: does this serve the artisan and the customer honestly?',
+        imagePosition: 'right',
+      } as SeedTextImageBlock,
+      {
+        blockType: 'featureGrid',
+        heading: 'Open roles — June 2026',
+        features: [
+          {
+            title: 'Content Writer — Varanasi / Remote',
+            description:
+              'We need someone who can write about Banarasi weaves with the depth of a textile historian and the clarity of a great journalist. You will own product descriptions, the blog, and artisan profiles. Strong Hindi reading ability is a plus.',
+          },
+          {
+            title: 'Full-Stack Developer — Remote',
+            description:
+              'Next.js, TypeScript, Payload CMS, PostgreSQL. You would be the fourth engineer on a product used by 12,000 customers. We move thoughtfully, not fast. You will own whole features end-to-end.',
+          },
+          {
+            title: 'Artisan Relations Manager — Varanasi',
+            description:
+              'You will spend roughly half your time in weaving clusters across UP, MP, Gujarat, and West Bengal — meeting weavers, assessing new partnerships, and managing our SHEROES programme. Fluency in Hindi is required.',
+          },
+        ],
+      } as SeedFeatureGridBlock,
+      {
+        blockType: 'featureGrid',
+        heading: 'Why Shagya',
+        features: [
+          {
+            title: 'Measurable impact',
+            description:
+              'You will see exactly how your work translates to artisan income. We share cluster-level revenue data with the whole team every quarter.',
+          },
+          {
+            title: 'Real ownership',
+            description:
+              'We are a small team. You will own entire problem spaces, not tickets. If something is broken or missing, you will fix it — and take credit for it.',
+          },
+          {
+            title: 'Remote-first culture',
+            description:
+              'No mandatory office. The Varanasi studio is available to anyone who wants it. Core hours are 10 AM to 1 PM IST; you manage your own time beyond that.',
+          },
+          {
+            title: 'Competitive compensation',
+            description:
+              'Market-rate salaries with a simple equity participation plan. We are bootstrapped, so we cannot match VC-backed startups on cash — but we compete on everything else.',
+          },
+        ],
+      } as SeedFeatureGridBlock,
+      {
+        blockType: 'textImage',
+        heading: 'What we look for',
+        body: 'More than specific skills, we look for people who think clearly, write well, and care deeply about what they are working on.\n\nEvery person at Shagya can explain — clearly and concisely — why handloom matters. Not because we require a memorised answer, but because you cannot do this work well without genuinely believing in it.\n\nWe look for people who ask good questions before starting work, who admit when they do not know something, and who are made uncomfortable by inaccuracy. We are building something that is honest about what it is — and we need people who hold themselves to that same standard.',
+        imagePosition: 'left',
+      } as SeedTextImageBlock,
+      {
+        blockType: 'cta',
+        heading: 'Not seeing the right role?',
+        body: 'We keep every application on file. Send a short note — three sentences about why you care about handloom and what you are good at — to careers@shagya.com.',
+        buttonText: 'Send an open application',
+        buttonLink: '/contact',
+      } as SeedCtaBlock,
+    ],
   },
 ]
 

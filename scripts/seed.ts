@@ -21,6 +21,7 @@ import {
   blogPosts,
   navigations,
   siteSettingsData,
+  type SeedBlock,
 } from './seed-data'
 
 // ---------------------------------------------------------------------------
@@ -28,9 +29,53 @@ import {
 // ---------------------------------------------------------------------------
 
 /**
- * Creates a minimal valid Lexical rich text node for a given plain text.
+ * Creates a valid Lexical rich text node. Splits on double newlines to
+ * produce multiple paragraph children.
  */
 function lexicalRichText(text: string): Record<string, unknown> {
+  const paragraphs = text.split('\n\n').filter((p) => p.trim().length > 0)
+  const children = paragraphs.map((para) => ({
+    type: 'paragraph',
+    format: '',
+    indent: 0,
+    version: 1,
+    direction: 'ltr',
+    textStyle: '',
+    textFormat: 0,
+    children: [
+      {
+        mode: 'normal',
+        text: para.trim(),
+        type: 'text',
+        style: '',
+        detail: 0,
+        format: 0,
+        version: 1,
+      },
+    ],
+  }))
+  if (children.length === 0) {
+    children.push({
+      type: 'paragraph',
+      format: '',
+      indent: 0,
+      version: 1,
+      direction: 'ltr',
+      textStyle: '',
+      textFormat: 0,
+      children: [
+        {
+          mode: 'normal',
+          text: '',
+          type: 'text',
+          style: '',
+          detail: 0,
+          format: 0,
+          version: 1,
+        },
+      ],
+    })
+  }
   return {
     root: {
       type: 'root',
@@ -38,47 +83,25 @@ function lexicalRichText(text: string): Record<string, unknown> {
       format: '',
       indent: 0,
       version: 1,
-      children: [
-        {
-          type: 'paragraph',
-          format: '',
-          indent: 0,
-          version: 1,
-          children: [
-            {
-              mode: 'normal',
-              text,
-              type: 'text',
-              style: '',
-              detail: 0,
-              format: 0,
-              version: 1,
-            },
-          ],
-          direction: 'ltr',
-          textStyle: '',
-          textFormat: 0,
-        },
-      ],
+      children,
     },
   }
 }
 
 /**
- * Creates a hero block for Pages content.
+ * Converts a SeedBlock (plain-text bodies) to the Payload block format,
+ * wrapping textImage body strings in Lexical rich text.
  */
-function heroBlock(
-  heading: string,
-  subheading?: string,
-): Record<string, unknown> {
-  const block: Record<string, unknown> = {
-    blockType: 'hero',
-    heading,
+function processBlock(block: SeedBlock): Record<string, unknown> {
+  if (block.blockType === 'textImage') {
+    return {
+      blockType: 'textImage',
+      heading: block.heading,
+      body: lexicalRichText(block.body),
+      imagePosition: block.imagePosition ?? 'left',
+    }
   }
-  if (subheading) {
-    block.subheading = subheading
-  }
-  return block
+  return block as unknown as Record<string, unknown>
 }
 
 // ---------------------------------------------------------------------------
@@ -117,14 +140,31 @@ export async function seedCategories(payload: Payload): Promise<void> {
     })
 
     if (existing.totalDocs === 0) {
+      const imageId = cat.imagePath
+        ? await uploadMedia(payload, cat.imagePath, cat.name)
+        : null
       await payload.create({
         collection: 'categories',
-        data: cat,
+        data: { ...cat, image: imageId ?? undefined },
         overrideAccess: true,
       })
       console.log(`  ✅ Created category: ${cat.name}`)
     } else {
-      console.log(`  ⏭️  Category already exists: ${cat.name}`)
+      const doc = existing.docs[0]
+      if (!doc.image && cat.imagePath) {
+        const imageId = await uploadMedia(payload, cat.imagePath, cat.name)
+        if (imageId) {
+          await payload.update({
+            collection: 'categories',
+            id: doc.id,
+            data: { image: imageId },
+            overrideAccess: true,
+          })
+          console.log(`  ✅ Updated image for category: ${cat.name}`)
+        }
+      } else {
+        console.log(`  ⏭️  Category already exists: ${cat.name}`)
+      }
     }
   }
 }
@@ -140,14 +180,35 @@ export async function seedCollections(payload: Payload): Promise<void> {
     })
 
     if (existing.totalDocs === 0) {
+      const imageId = col.imagePath
+        ? await uploadMedia(payload, col.imagePath, col.name)
+        : null
       await payload.create({
         collection: 'collections',
-        data: col,
+        data: {
+          name: col.name,
+          description: col.description,
+          image: imageId ?? undefined,
+        },
         overrideAccess: true,
       })
       console.log(`  ✅ Created collection: ${col.name}`)
     } else {
-      console.log(`  ⏭️  Collection already exists: ${col.name}`)
+      const doc = existing.docs[0]
+      if (!doc.image && col.imagePath) {
+        const imageId = await uploadMedia(payload, col.imagePath, col.name)
+        if (imageId) {
+          await payload.update({
+            collection: 'collections',
+            id: doc.id,
+            data: { image: imageId },
+            overrideAccess: true,
+          })
+          console.log(`  ✅ Updated image for collection: ${col.name}`)
+        }
+      } else {
+        console.log(`  ⏭️  Collection already exists: ${col.name}`)
+      }
     }
   }
 }
@@ -316,22 +377,41 @@ export async function seedPages(payload: Payload): Promise<void> {
       overrideAccess: true,
     })
 
+    const contentBlocks = page.blocks.map(processBlock)
+
     if (existing.totalDocs === 0) {
       await (payload.create as any)({
         collection: 'pages',
         data: {
           title: page.title,
+          slug: page.slug,
           status: page.status,
           template: page.template,
-          content: [heroBlock(page.heroHeading, page.heroSubheading)],
+          content: contentBlocks,
           metaTitle: `${page.title} — Shagya`,
           metaDescription: page.heroSubheading,
         },
         overrideAccess: true,
       })
-      console.log(`  ✅ Created page: ${page.title}`)
+      console.log(`  ✅ Created page: ${page.title} (/${page.slug})`)
     } else {
-      console.log(`  ⏭️  Page already exists: ${page.title}`)
+      const doc = existing.docs[0]
+      const updateData: Record<string, unknown> = { content: contentBlocks }
+
+      if (doc.slug !== page.slug) {
+        updateData.slug = page.slug
+      }
+
+      await (payload.update as any)({
+        collection: 'pages',
+        id: doc.id,
+        data: updateData,
+        overrideAccess: true,
+      })
+
+      const slugNote =
+        doc.slug !== page.slug ? ` (slug: ${doc.slug} → ${page.slug})` : ''
+      console.log(`  ✅ Updated content: ${page.title}${slugNote}`)
     }
   }
 }
@@ -421,6 +501,9 @@ export async function seedBlogPosts(payload: Payload): Promise<void> {
     })
 
     if (existing.totalDocs === 0) {
+      const featuredImageId = post.imagePath
+        ? await uploadMedia(payload, post.imagePath, post.title)
+        : null
       await (payload.create as any)({
         collection: 'posts',
         data: {
@@ -430,12 +513,31 @@ export async function seedBlogPosts(payload: Payload): Promise<void> {
           author: authorId,
           content: lexicalRichText(post.body),
           publishedAt: new Date().toISOString(),
+          featuredImage: featuredImageId ?? undefined,
         },
         overrideAccess: true,
       })
       console.log(`  ✅ Created blog post: ${post.title}`)
     } else {
-      console.log(`  ⏭️  Blog post already exists: ${post.title}`)
+      const doc = existing.docs[0]
+      if (!doc.featuredImage && post.imagePath) {
+        const featuredImageId = await uploadMedia(
+          payload,
+          post.imagePath,
+          post.title,
+        )
+        if (featuredImageId) {
+          await (payload.update as any)({
+            collection: 'posts',
+            id: doc.id,
+            data: { featuredImage: featuredImageId },
+            overrideAccess: true,
+          })
+          console.log(`  ✅ Updated featured image for: ${post.title}`)
+        }
+      } else {
+        console.log(`  ⏭️  Blog post already exists: ${post.title}`)
+      }
     }
   }
 }

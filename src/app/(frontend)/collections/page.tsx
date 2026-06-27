@@ -1,6 +1,6 @@
 import Link from 'next/link'
-import Image from 'next/image'
 import { ArrowLeft, ArrowRight } from 'lucide-react'
+import { SkeletonImage } from '@/components/ui/SkeletonImage'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 
@@ -22,7 +22,7 @@ function ImagePanel({
     <div
       className={`relative overflow-hidden bg-neutral-100 ${rounded} ${className ?? ''}`}
     >
-      <Image
+      <SkeletonImage
         src={src}
         alt={alt}
         fill

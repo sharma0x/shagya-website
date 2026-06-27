@@ -7,10 +7,13 @@
 
 import { buildConfig } from 'payload'
 import { postgresAdapter } from '@payloadcms/db-postgres'
+import { resendAdapter } from '@payloadcms/email-resend'
+import { nodemailerAdapter } from '@payloadcms/email-nodemailer'
 import { s3Storage } from '@payloadcms/storage-s3'
 import { searchPlugin } from '@payloadcms/plugin-search'
 import { seoPlugin } from '@payloadcms/plugin-seo'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
+import nodemailer from 'nodemailer'
 import { Users } from './collections/Users'
 import { Products } from './collections/Products'
 import { Categories } from './collections/Categories'
@@ -35,6 +38,7 @@ import { Navigation } from './collections/Navigation'
 import { Forms } from './collections/Forms'
 import { FormSubmissions } from './collections/FormSubmissions'
 import { SiteSettings } from './globals/SiteSettings'
+import { EmailTemplates } from './collections/EmailTemplates'
 import sharp from 'sharp'
 import path from 'path'
 import { fileURLToPath } from 'url'
@@ -182,9 +186,38 @@ export const extractSearchText = (doc: Record<string, unknown>): string => {
   return parts.join(' ').replace(/\s+/g, ' ').trim()
 }
 
+// ---------------------------------------------------------------------------
+// Email adapter — Mailpit (dev) or Resend (prod/staging)
+// Switch is driven by MAILPIT_SMTP_HOST: present → Mailpit, absent → Resend.
+// ---------------------------------------------------------------------------
+const FROM_NAME = process.env.EMAIL_FROM_NAME || 'Shagya'
+const FROM_ADDRESS = process.env.EMAIL_FROM_ADDRESS || 'noreply@shagya.in'
+
+const emailAdapter = process.env.MAILPIT_SMTP_HOST
+  ? nodemailerAdapter({
+      defaultFromName: FROM_NAME,
+      defaultFromAddress: FROM_ADDRESS,
+      transport: nodemailer.createTransport({
+        host: process.env.MAILPIT_SMTP_HOST,
+        port: Number(process.env.MAILPIT_SMTP_PORT || 1025),
+        secure: false,
+        ignoreTLS: true,
+      }),
+    })
+  : resendAdapter({
+      defaultFromName: FROM_NAME,
+      defaultFromAddress: FROM_ADDRESS,
+      apiKey: process.env.RESEND_API_KEY || '',
+    })
+
 export default buildConfig({
   // Secret for encrypting JWT tokens, API keys, and cookies
   secret: process.env.PAYLOAD_SECRET || 'dev-secret-change-in-production',
+
+  // ---------------------------------------------------------------------------
+  // Email
+  // ---------------------------------------------------------------------------
+  email: emailAdapter,
 
   // ---------------------------------------------------------------------------
   // Admin Panel
@@ -211,6 +244,7 @@ export default buildConfig({
   // ---------------------------------------------------------------------------
   collections: [
     Users,
+    EmailTemplates,
     Products,
     Categories,
     Collections,

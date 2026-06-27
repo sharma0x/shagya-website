@@ -1,5 +1,6 @@
 import type { CollectionConfig } from 'payload'
 import { sendWebhook } from '@/lib/webhooks'
+import { sendOrderPlacedEmails, sendOrderStatusEmails } from '@/email/send'
 
 const addressGroup = {
   name: 'address',
@@ -48,6 +49,20 @@ export const Orders: CollectionConfig = {
     group: 'Orders',
   },
   hooks: {
+    afterOperation: [
+      async ({ operation, result, req }) => {
+        if (operation !== 'create') return result
+        const id = (result as Record<string, unknown>)?.id as string | undefined
+        if (!id) return result
+        // Fire-and-forget — email failure must never affect the order response
+        sendOrderPlacedEmails(req.payload, id).catch((err) =>
+          req.payload.logger.error(
+            `[Email] sendOrderPlacedEmails failed: ${err}`,
+          ),
+        )
+        return result
+      },
+    ],
     beforeChange: [
       async ({ data, operation, req }) => {
         if (operation === 'create' && !data?.orderNumber) {
@@ -88,6 +103,14 @@ export const Orders: CollectionConfig = {
           | undefined
 
         if (!newStatus || prevStatus === newStatus) return doc
+
+        // Send transactional emails for the new status (fire-and-forget)
+        const docId = (doc as Record<string, unknown>).id as string
+        sendOrderStatusEmails(req.payload, docId, newStatus).catch((err) =>
+          req.payload.logger.error(
+            `[Email] sendOrderStatusEmails failed: ${err}`,
+          ),
+        )
 
         const orderId = (doc as Record<string, unknown>).orderNumber as string
         const webhookUrl = process.env.WEBHOOK_URL

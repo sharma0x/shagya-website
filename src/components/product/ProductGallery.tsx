@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { SkeletonImage } from '@/components/ui/SkeletonImage'
 
 interface ProductGalleryProps {
   imageUrls: string[]
@@ -16,49 +18,110 @@ export function ProductGallery({
 
   if (!imageUrls || imageUrls.length === 0) {
     return (
-      <div className="font-body relative flex aspect-[3/4] w-full items-center justify-center overflow-hidden rounded-2xl bg-neutral-100 text-sm text-neutral-400 shadow-sm">
+      <div className="font-body relative flex aspect-[3/4] w-full items-center justify-center overflow-hidden rounded-2xl bg-neutral-100 text-sm text-neutral-400">
         No images available
       </div>
     )
   }
 
-  const activeUrl = imageUrls[activeIdx] || '/images/placeholder.jpg'
+  const total = imageUrls.length
+
+  function prev() {
+    setActiveIdx((i) => (i - 1 + total) % total)
+  }
+
+  function next() {
+    setActiveIdx((i) => (i + 1) % total)
+  }
 
   return (
-    <div className="flex flex-col gap-4">
-      {/* Main Preview Image */}
-      <div className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl bg-neutral-100 shadow-sm transition-all duration-300">
-        <Image
-          src={activeUrl}
-          alt={productName}
-          fill
-          priority
-          className="object-cover transition-opacity duration-300"
-          unoptimized={activeUrl.startsWith('https://placehold.co')}
-        />
-        {/* subtle border overlay */}
-        <div className="pointer-events-none absolute inset-0 rounded-2xl border border-neutral-900/5" />
+    <div className="flex flex-col gap-3">
+      {/* Main image — all images stacked, active one fades in */}
+      <div className="group relative aspect-[3/4] w-full overflow-hidden rounded-2xl bg-neutral-100">
+        {imageUrls.map((url, idx) => (
+          <div
+            key={idx}
+            className="absolute inset-0"
+            style={{
+              opacity: idx === activeIdx ? 1 : 0,
+              transition: 'opacity 380ms ease-in-out',
+              zIndex: idx === activeIdx ? 1 : 0,
+            }}
+          >
+            <SkeletonImage
+              src={url}
+              alt={idx === 0 ? productName : `${productName} — view ${idx + 1}`}
+              fill
+              priority={idx === 0}
+              className="object-cover"
+              unoptimized={url.startsWith('https://placehold.co')}
+            />
+          </div>
+        ))}
+
+        {/* Inner border overlay */}
+        <div className="pointer-events-none absolute inset-0 z-10 rounded-2xl border border-neutral-900/5" />
+
+        {/* Prev / Next arrows */}
+        {total > 1 && (
+          <>
+            <button
+              type="button"
+              onClick={prev}
+              aria-label="Previous image"
+              className="absolute top-1/2 left-3 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-neutral-700 opacity-0 shadow-md backdrop-blur-sm transition-all group-hover:opacity-100 hover:bg-white active:scale-95"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+            <button
+              type="button"
+              onClick={next}
+              aria-label="Next image"
+              className="absolute top-1/2 right-3 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-neutral-700 opacity-0 shadow-md backdrop-blur-sm transition-all group-hover:opacity-100 hover:bg-white active:scale-95"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+
+            {/* Dot indicators */}
+            <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1.5">
+              {imageUrls.map((_, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => setActiveIdx(idx)}
+                  aria-label={`View image ${idx + 1}`}
+                  className={`rounded-full transition-all duration-200 ${
+                    idx === activeIdx
+                      ? 'h-1.5 w-5 bg-white'
+                      : 'h-1.5 w-1.5 bg-white/50 hover:bg-white/75'
+                  }`}
+                />
+              ))}
+            </div>
+          </>
+        )}
       </div>
 
-      {/* Thumbnails if multiple images exist */}
-      {imageUrls.length > 1 && (
-        <div className="grid grid-cols-4 gap-3">
-          {imageUrls.map((url, idx) => {
+      {/* Thumbnails */}
+      {total > 1 && (
+        <div className="grid grid-cols-5 gap-2">
+          {imageUrls.slice(0, 5).map((url, idx) => {
             const isActive = idx === activeIdx
             return (
               <button
                 key={idx}
                 type="button"
                 onClick={() => setActiveIdx(idx)}
-                className={`focus-visible:ring-gold-500 relative aspect-[3/4] cursor-pointer overflow-hidden rounded-xl bg-neutral-50 transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
+                aria-label={`View image ${idx + 1}`}
+                className={`focus-visible:ring-brand-500 relative aspect-[3/4] overflow-hidden rounded-xl bg-neutral-100 transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
                   isActive
-                    ? 'ring-gold-500 scale-[0.98] border-transparent ring-2 ring-offset-1'
-                    : 'border border-neutral-200 hover:border-neutral-400'
+                    ? 'ring-brand-600 ring-2 ring-offset-1'
+                    : 'opacity-55 hover:opacity-90'
                 }`}
               >
-                <Image
+                <SkeletonImage
                   src={url}
-                  alt={`Thumbnail ${idx + 1}`}
+                  alt={`View ${idx + 1}`}
                   fill
                   className="object-cover"
                   unoptimized={url.startsWith('https://placehold.co')}

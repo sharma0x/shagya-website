@@ -153,7 +153,10 @@
   }
 
   html {
-    scroll-behavior: smooth;
+    /* scroll-behavior: smooth here conflicts with Next.js programmatic
+       scrollTo(0,0) on navigation — it animates slowly and leaves users
+       mid-page on arrival. Apply smooth scroll per-element where needed. */
+    scroll-behavior: auto;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
@@ -417,6 +420,34 @@
   }
   to {
     transform: translateX(-50%);
+  }
+}
+
+/* Skeleton shimmer — image and card loading states */
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    oklch(0.92 0.005 346) 25%,
+    oklch(0.86 0.005 346) 50%,
+    oklch(0.92 0.005 346) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+    background: oklch(0.9 0.005 346);
   }
 }
 

@@ -1,10 +1,10 @@
 import Link from 'next/link'
-import Image from 'next/image'
 import { ArrowLeft, Filter } from 'lucide-react'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import { SortSelect } from '@/components/ui/sort-select'
 import { WishlistButton } from '@/components/product/WishlistButton'
+import { SkeletonImage } from '@/components/ui/SkeletonImage'
 
 const ph = (w: number, h: number, bg: string, fg: string, text: string) =>
   `https://placehold.co/${w}x${h}/${bg}/${fg}?text=${encodeURIComponent(text)}&font=lora`
@@ -28,7 +28,7 @@ function ImagePanel({
     <div
       className={`relative overflow-hidden bg-neutral-100 ${rounded} ${className ?? ''}`}
     >
-      <Image
+      <SkeletonImage
         src={src}
         alt={alt}
         fill
