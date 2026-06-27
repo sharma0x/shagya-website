@@ -5,6 +5,7 @@ import config from '@payload-config'
 import { NewsletterForm } from '@/components/newsletter/NewsletterForm'
 import { HeroGallery, type HeroImage } from '@/components/homepage/HeroGallery'
 import { SkeletonImage } from '@/components/ui/SkeletonImage'
+import { RefreshRouteOnSave } from '@/components/live-preview/RefreshRouteOnSave'
 
 const ph = (w: number, h: number, bg: string, fg: string, text: string) =>
   `https://placehold.co/${w}x${h}/${bg}/${fg}?text=${encodeURIComponent(text)}&font=lora`
@@ -154,7 +155,13 @@ function WeaveFilmstrip() {
   )
 }
 
-export default async function HomePage() {
+type Props = {
+  searchParams: Promise<{ preview?: string; id?: string }>
+}
+
+export default async function HomePage({ searchParams }: Props) {
+  const { preview, id } = await searchParams
+  const isPreview = preview === 'true' && id === 'site-settings'
   const payload = await getPayload({ config })
 
   const pageRes = await payload.find({
@@ -260,6 +267,7 @@ export default async function HomePage() {
 
   return (
     <div className="bg-surface">
+      {isPreview && <RefreshRouteOnSave />}
       {/* ============================ HERO ============================ */}
       <section className="container-page pt-16 pb-24 md:pt-28 md:pb-40">
         <div className="grid items-center gap-12 lg:grid-cols-12 lg:gap-20">
