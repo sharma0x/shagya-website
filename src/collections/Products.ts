@@ -21,6 +21,11 @@ export const Products: CollectionConfig = {
       },
     ],
   },
+  versions: {
+    drafts: {
+      autosave: { interval: 800 },
+    },
+  },
   fields: [
     {
       name: 'name',

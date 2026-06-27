@@ -10,6 +10,11 @@ export const SiteSettings: GlobalConfig = {
     read: () => true,
     update: ({ req: { user } }) => Boolean(user),
   },
+  versions: {
+    drafts: {
+      autosave: { interval: 800 },
+    },
+  },
   fields: [
     // ---- Brand Identity ----
     {

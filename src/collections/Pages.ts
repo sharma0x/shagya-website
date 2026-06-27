@@ -12,6 +12,11 @@ export const Pages: CollectionConfig = {
     update: ({ req: { user } }) => Boolean(user),
     delete: ({ req: { user } }) => Boolean(user),
   },
+  versions: {
+    drafts: {
+      autosave: { interval: 800 },
+    },
+  },
   hooks: {
     beforeChange: [
       ({ data, originalDoc }) => {
