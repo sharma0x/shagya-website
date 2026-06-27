@@ -1,11 +1,14 @@
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import { notFound } from 'next/navigation'
+import { headers as nextHeaders } from 'next/headers'
 import Link from 'next/link'
 import { ArrowLeft, Calendar, User } from 'lucide-react'
+import { RefreshRouteOnSave } from '@/components/live-preview/RefreshRouteOnSave'
 
 type Props = {
   params: Promise<{ slug: string }>
+  searchParams: Promise<{ preview?: string; id?: string }>
 }
 
 function LexicalRenderer({ content }: { content: any }) {
@@ -45,25 +48,37 @@ function LexicalRenderer({ content }: { content: any }) {
   )
 }
 
-export default async function BlogDetailPage({ params }: Props) {
+export default async function BlogDetailPage({ params, searchParams }: Props) {
   const { slug } = await params
+  const { preview, id } = await searchParams
+  const isPreview = preview === 'true' && Boolean(id)
   const payload = await getPayload({ config })
+  const { user } = await payload.auth({ headers: await nextHeaders() })
 
-  const result = await payload.find({
-    collection: 'posts',
-    where: {
-      slug: { equals: slug },
-      status: { equals: 'published' },
-    },
-    limit: 1,
-    depth: 2,
-  })
+  const post: any = isPreview
+    ? await payload.findByID({
+        collection: 'posts',
+        id: id!,
+        draft: true,
+        overrideAccess: false,
+        user: user ?? undefined,
+        depth: 2,
+      })
+    : ((
+        await payload.find({
+          collection: 'posts',
+          where: {
+            slug: { equals: slug },
+            status: { equals: 'published' },
+          },
+          limit: 1,
+          depth: 2,
+        })
+      ).docs[0] as any)
 
-  if (result.docs.length === 0) {
+  if (!post) {
     return notFound()
   }
-
-  const post = result.docs[0] as any
 
   const dateStr = post.publishedAt
     ? new Date(post.publishedAt).toLocaleDateString('en-IN', {
@@ -75,6 +90,7 @@ export default async function BlogDetailPage({ params }: Props) {
 
   return (
     <div className="bg-surface min-h-screen px-4 py-12 sm:px-6 lg:px-8">
+      {isPreview && <RefreshRouteOnSave />}
       <article className="mx-auto max-w-3xl space-y-8">
         {/* Navigation back */}
         <Link
