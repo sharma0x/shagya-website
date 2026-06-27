@@ -1,6 +1,7 @@
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import { notFound } from 'next/navigation'
+import { headers as nextHeaders } from 'next/headers'
 import Link from 'next/link'
 import Image from 'next/image'
 import {
@@ -13,9 +14,11 @@ import {
   ShieldCheck,
 } from 'lucide-react'
 import { ContactForm } from '@/components/page/ContactForm'
+import { RefreshRouteOnSave } from '@/components/live-preview/RefreshRouteOnSave'
 
 type Props = {
   params: Promise<{ slug: string }>
+  searchParams: Promise<{ preview?: string; id?: string }>
 }
 
 function LexicalRenderer({ content }: { content: any }) {
@@ -43,25 +46,38 @@ function LexicalRenderer({ content }: { content: any }) {
   )
 }
 
-export default async function CatchAllPage({ params }: Props) {
+export default async function CatchAllPage({ params, searchParams }: Props) {
   const { slug } = await params
+  const { preview, id } = await searchParams
+  const isPreview = preview === 'true' && Boolean(id)
   const payload = await getPayload({ config })
+  const { user } = await payload.auth({ headers: await nextHeaders() })
 
-  const result = await payload.find({
-    collection: 'pages',
-    where: {
-      slug: { equals: slug },
-      status: { equals: 'published' },
-    },
-    limit: 1,
-    depth: 2,
-  })
+  const page: any = isPreview
+    ? await payload.findByID({
+        collection: 'pages',
+        id: id!,
+        draft: true,
+        overrideAccess: false,
+        user: user ?? undefined,
+        depth: 2,
+      })
+    : ((
+        await payload.find({
+          collection: 'pages',
+          where: {
+            slug: { equals: slug },
+            status: { equals: 'published' },
+          },
+          limit: 1,
+          depth: 2,
+        })
+      ).docs[0] as any)
 
-  if (result.docs.length === 0) {
+  if (!page) {
     return notFound()
   }
 
-  const page = result.docs[0] as any
   const template = page.template || 'default'
 
   // If page is contact, search for contact form
@@ -79,6 +95,7 @@ export default async function CatchAllPage({ params }: Props) {
 
   return (
     <div className="bg-surface min-h-screen">
+      {isPreview && <RefreshRouteOnSave />}
       {/* Template Header if not default */}
       {template === 'about' && (
         <div className="bg-brand-950 relative overflow-hidden px-4 py-24 text-center">
