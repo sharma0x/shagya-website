@@ -1,10 +1,17 @@
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import { notFound } from 'next/navigation'
+import { headers as nextHeaders } from 'next/headers'
 import Link from 'next/link'
 import { ArrowLeft, ShieldCheck, Truck, RefreshCw } from 'lucide-react'
 import { ProductActions } from '@/components/product/ProductActions'
 import { ProductGallery } from '@/components/product/ProductGallery'
+import { RefreshRouteOnSave } from '@/components/live-preview/RefreshRouteOnSave'
+
+type Props = {
+  params: Promise<{ slug: string }>
+  searchParams: Promise<{ preview?: string; id?: string }>
+}
 
 const ph = (w: number, h: number, bg: string, fg: string, text: string) =>
   `https://placehold.co/${w}x${h}/${bg}/${fg}?text=${encodeURIComponent(text)}&font=lora`
@@ -87,22 +94,38 @@ const TRUST = [
 
 export default async function ProductDetailPage({
   params,
-}: {
-  params: Promise<{ slug: string }>
-}) {
+  searchParams,
+}: Props) {
   const { slug } = await params
+  const { preview, id } = await searchParams
+  const isPreview = preview === 'true' && Boolean(id)
   const payload = await getPayload({ config })
+  const { user } = await payload.auth({ headers: await nextHeaders() })
 
-  const result = await payload.find({
-    collection: 'products',
-    where: { slug: { equals: slug } },
-    limit: 1,
-    depth: 2,
-  })
+  const product: any = isPreview
+    ? await payload.findByID({
+        collection: 'products',
+        id: id!,
+        draft: true,
+        overrideAccess: false,
+        user: user ?? undefined,
+        depth: 2,
+      })
+    : ((
+        await payload.find({
+          collection: 'products',
+          where: {
+            slug: { equals: slug },
+            status: { equals: 'published' },
+          },
+          limit: 1,
+          depth: 2,
+        })
+      ).docs[0] as any)
 
-  if (result.docs.length === 0) return notFound()
-
-  const product = result.docs[0]
+  if (!product) {
+    return notFound()
+  }
 
   const imageUrls =
     product.gallery && product.gallery.length > 0
@@ -166,6 +189,7 @@ export default async function ProductDetailPage({
 
   return (
     <div className="bg-surface min-h-screen py-10 md:py-14">
+      {isPreview && <RefreshRouteOnSave />}
       <div className="container-page">
         {/* Back link */}
         <Link
