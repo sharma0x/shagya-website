@@ -15,7 +15,7 @@
 # ============================================================================
 
 help: ## Show this help message
-	@echo "Shagya — Available Commands"
+	@echo "Shayga — Available Commands"
 	@echo "============================"
 	@echo ""
 	@echo "Quick start:"
@@ -142,14 +142,14 @@ infra-reset: ## Reset infrastructure (delete all data)
 seed: ## Full seed: start infra → migrate → download images → seed data → print credentials
 	@echo ""
 	@echo "========================================"
-	@echo "  Shagya — Full Dev Seed"
+	@echo "  Shayga — Full Dev Seed"
 	@echo "========================================"
 	@echo ""
 	@echo "Step 1/4  Starting infrastructure..."
 	docker compose -f infra/dev-services.yml up -d
 	@echo ""
 	@echo "Step 2/4  Waiting for PostgreSQL to be ready..."
-	@until docker exec shagya-pg pg_isready -U shagya -d shagya >/dev/null 2>&1; do \
+	@until docker exec shayga-pg pg_isready -U shayga -d shayga >/dev/null 2>&1; do \
 		printf "."; sleep 1; \
 	done
 	@printf " ready\n"
@@ -168,7 +168,7 @@ seed: ## Full seed: start infra → migrate → download images → seed data �
 	@echo "========================================"
 	@echo "  App:      http://localhost:3000"
 	@echo "  Admin:    http://localhost:3000/admin"
-	@echo "  Email:    admin@shagya.com"
+	@echo "  Email:    admin@shayga.com"
 	@echo "  Password: admin123"
 	@echo "========================================"
 	@echo ""
@@ -207,7 +207,7 @@ release: ## Run semantic-release locally (requires GH_TOKEN env var)
 setup: ## First-time environment setup
 	@command -v pnpm >/dev/null 2>&1 || { echo "Error: pnpm is required. Install from https://pnpm.io/"; exit 1; }
 	@command -v docker >/dev/null 2>&1 || { echo "Error: docker is required. Install from https://docker.com/"; exit 1; }
-	@echo "Setting up Shagya development environment..."
+	@echo "Setting up Shayga development environment..."
 	@cp -n .env.example .env 2>/dev/null || echo ".env already exists — skipping copy"
 	pnpm install
 	@echo ""

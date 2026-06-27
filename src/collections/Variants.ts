@@ -3,7 +3,7 @@ import type { CollectionConfig } from 'payload'
 export const Variants: CollectionConfig = {
   slug: 'variants',
   admin: {
-    useAsTitle: 'sku',
+    useAsTitle: 'id',
     group: 'Products',
   },
   fields: [

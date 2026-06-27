@@ -37,9 +37,9 @@ ${content}
     <td style="background-color:#FAF5F7;padding:24px 40px;text-align:center;">
       <p style="margin:0 0 8px;font-family:Georgia,serif;font-size:11px;color:#9B8E93;font-style:italic;letter-spacing:0.05em;">Heritage Handloom &middot; Crafted since 1987</p>
       <p style="margin:0;font-size:11px;color:#B5A8AD;">
-        <a href="{{storeUrl}}" style="color:#6B2448;text-decoration:none;">Visit Store</a>
+        <a href="{{storeUrl}}/shop" style="color:#6B2448;text-decoration:none;">Shop</a>
         &nbsp;&middot;&nbsp;
-        <a href="{{storeUrl}}/orders" style="color:#6B2448;text-decoration:none;">My Orders</a>
+        <a href="{{storeUrl}}/account/orders" style="color:#6B2448;text-decoration:none;">My Orders</a>
         &nbsp;&middot;&nbsp;
         <a href="{{storeUrl}}/contact" style="color:#6B2448;text-decoration:none;">Contact</a>
       </p>
@@ -89,7 +89,7 @@ ${sectionLabel('Order Summary')}
 ${sectionLabel('Delivery Address')}
 <p style="margin:0;font-size:14px;color:#2A1E24;line-height:1.75;">{{shippingAddressBlock}}</p>
 
-${btn('{{storeUrl}}/orders', 'Track Your Order')}
+${btn('{{storeUrl}}/account/orders/{{orderNumber}}', 'Track Your Order')}
 `),
   },
 
@@ -134,7 +134,7 @@ ${btn('{{adminOrderUrl}}', 'View in Admin')}
 
 <p style="margin:28px 0 0;font-size:14px;color:#6B5E63;">You'll receive another email when your order is dispatched.</p>
 
-${btn('{{storeUrl}}/orders', 'View Order')}
+${btn('{{storeUrl}}/account/orders/{{orderNumber}}', 'View Order')}
 `),
   },
 
@@ -147,7 +147,7 @@ ${btn('{{storeUrl}}/orders', 'View Order')}
 
 <p style="margin:0;font-size:14px;color:#6B5E63;">Our team is handpicking and quality-checking each item. You'll hear from us as soon as it is dispatched.</p>
 
-${btn('{{storeUrl}}/orders', 'View Order')}
+${btn('{{storeUrl}}/account/orders/{{orderNumber}}', 'View Order')}
 `),
   },
 
@@ -160,7 +160,7 @@ ${btn('{{storeUrl}}/orders', 'View Order')}
 
 <p style="margin:0 0 20px;font-size:14px;color:#6B5E63;">Please allow 5–7 business days for delivery. For any questions write to <a href="mailto:care@shagya.in" style="color:#6B2448;text-decoration:none;">care@shagya.in</a>.</p>
 
-${btn('{{storeUrl}}/orders', 'View Order')}
+${btn('{{storeUrl}}/account/orders/{{orderNumber}}', 'View Order')}
 `),
   },
 
@@ -175,7 +175,7 @@ ${btn('{{storeUrl}}/orders', 'View Order')}
 
 <p style="margin:0 0 0;font-size:14px;color:#6B5E63;">Your review also helps other customers — we'd love to hear your thoughts.</p>
 
-${btn('{{storeUrl}}/orders', 'Leave a Review')}
+${btn('{{storeUrl}}/account/orders/{{orderNumber}}', 'Leave a Review')}
 `),
   },
 

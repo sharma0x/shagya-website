@@ -14,16 +14,16 @@
 
 ### Latest Tech Versions (June 2026)
 
-| Component | Version | Notes |
-|-----------|---------|-------|
-| **Next.js** | **16.2** | App Router, Turbopack default, React Compiler stable, Cache Components |
-| **React** | **19.2** | View Transitions, `useEffectEvent`, `<Activity />`, ships with Next 16 |
-| **Payload CMS** | **3.x** (latest 3.x) | Headless, code-first, TypeScript-native |
-| **PostgreSQL** | **18.4** | Latest stable (May 2026), 19 in beta |
-| **Node.js** | **22 LTS** | Required minimum: 20.9; we use 22 LTS |
-| **TypeScript** | **5.7+** | Strict mode end-to-end |
-| **Tailwind CSS** | **v4** | New engine, faster builds |
-| **shadcn/ui** | **Latest** | Component library on top of Tailwind |
+| Component        | Version              | Notes                                                                  |
+| ---------------- | -------------------- | ---------------------------------------------------------------------- |
+| **Next.js**      | **16.2**             | App Router, Turbopack default, React Compiler stable, Cache Components |
+| **React**        | **19.2**             | View Transitions, `useEffectEvent`, `<Activity />`, ships with Next 16 |
+| **Payload CMS**  | **3.x** (latest 3.x) | Headless, code-first, TypeScript-native                                |
+| **PostgreSQL**   | **18.4**             | Latest stable (May 2026), 19 in beta                                   |
+| **Node.js**      | **22 LTS**           | Required minimum: 20.9; we use 22 LTS                                  |
+| **TypeScript**   | **5.7+**             | Strict mode end-to-end                                                 |
+| **Tailwind CSS** | **v4**               | New engine, faster builds                                              |
+| **shadcn/ui**    | **Latest**           | Component library on top of Tailwind                                   |
 
 Verify latest patch versions on [nextjs.org](https://nextjs.org) and
 [postgresql.org](https://www.postgresql.org) before pinning in
@@ -32,6 +32,7 @@ Verify latest patch versions on [nextjs.org](https://nextjs.org) and
 ---
 
 ## Table of Contents
+
 1. [Project Overview](#1-project-overview)
 2. [Architecture Decision: Why Payload CMS](#2-architecture-decision-why-payload-cms)
 3. [Tech Stack](#3-tech-stack)
@@ -72,20 +73,21 @@ Verify latest patch versions on [nextjs.org](https://nextjs.org) and
 
 ## 1. Project Overview
 
-| Field | Value |
-|-------|-------|
-| Project | New online saree e-commerce website |
-| Client | [Client name] — first-time saree D2C founder |
-| Agency | Shagya |
-| Business Model | D2C (Direct-to-Consumer) |
-| Initial Geography | India (domestic focus for MVP) |
-| Phase 2 Geography | NRI markets — USA, UK, UAE, Singapore, Canada, Australia |
-| Platform | **Payload CMS 3.x** + **Next.js 16 (App Router)** + **PostgreSQL 18** |
-| Deployment | Vercel (single repo, single deploy) |
-| Catalog at Launch | 30–80 SKUs across 4–6 categories |
-| Target Launch | [TBD — pending client timeline] |
+| Field             | Value                                                                 |
+| ----------------- | --------------------------------------------------------------------- |
+| Project           | New online saree e-commerce website                                   |
+| Client            | [Client name] — first-time saree D2C founder                          |
+| Agency            | Shagya                                                                |
+| Business Model    | D2C (Direct-to-Consumer)                                              |
+| Initial Geography | India (domestic focus for MVP)                                        |
+| Phase 2 Geography | NRI markets — USA, UK, UAE, Singapore, Canada, Australia              |
+| Platform          | **Payload CMS 3.x** + **Next.js 16 (App Router)** + **PostgreSQL 18** |
+| Deployment        | Vercel (single repo, single deploy)                                   |
+| Catalog at Launch | 30–80 SKUs across 4–6 categories                                      |
+| Target Launch     | [TBD — pending client timeline]                                       |
 
 ### What we are building
+
 A modern, fast, mobile-first **headless e-commerce** storefront powered by
 Payload CMS. Customers browse sarees, view detailed product pages, add to
 cart, and check out via **Razorpay** (cards, UPI, netbanking, wallets, COD).
@@ -93,6 +95,7 @@ A custom **Payload Admin Panel** lets the client's team manage products,
 orders, customers, and content without writing code.
 
 ### What we are NOT building (in MVP)
+
 - Multi-vendor marketplace
 - Bridal appointment booking
 - AR/VR try-on
@@ -106,11 +109,13 @@ orders, customers, and content without writing code.
 ## 2. Architecture Decision: Why Payload CMS
 
 ### What is Payload?
+
 **Payload** is a **code-first, self-hosted, TypeScript-native** headless
 CMS and application framework. It is **now part of Figma** (acquired 2024)
 and ships as a fullstack framework deeply integrated with **Next.js**.
 
 A single Payload Config file gives you:
+
 - **Auto-generated Admin Panel** (React UI, fully extensible)
 - **Auto-generated REST, GraphQL, and Local Node.js APIs**
 - **Database with migrations** (Postgres or MongoDB)
@@ -126,34 +131,35 @@ A single Payload Config file gives you:
 
 ### Why Payload for a saree e-commerce site
 
-| Need | Why Payload wins |
-|------|------------------|
+| Need                                                                  | Why Payload wins                                                                                |
+| --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
 | **Saree-specific data** (fabric, weave, work, occasion, blouse piece) | Code-first schema — define any field shape, no constraints from a platform's "product" template |
-| **Indian payment methods** (UPI, COD, Net Banking) | Use Razorpay directly — Payload integrates with any payment gateway via custom endpoints |
-| **Full design control** | Next.js App Router + custom UI — no theme lock-in like Shopify |
-| **Self-host or own the stack** | Single repo, deploy anywhere (Vercel, Railway, Render, your own VPS) |
-| **Custom admin** | Auto-generated React admin that matches your schema — and you can add custom views |
-| **Content + commerce in one CMS** | Blog posts, About page, FAQs, banners, homepage sections — all manageable in one admin |
-| **Image-heavy product** | Built-in image processing (sizes, focal point, WebP conversion, CDN-ready) |
-| **Long-term flexibility** | Not locked to a vendor's data model or pricing — own the database |
+| **Indian payment methods** (UPI, COD, Net Banking)                    | Use Razorpay directly — Payload integrates with any payment gateway via custom endpoints        |
+| **Full design control**                                               | Next.js App Router + custom UI — no theme lock-in like Shopify                                  |
+| **Self-host or own the stack**                                        | Single repo, deploy anywhere (Vercel, Railway, Render, your own VPS)                            |
+| **Custom admin**                                                      | Auto-generated React admin that matches your schema — and you can add custom views              |
+| **Content + commerce in one CMS**                                     | Blog posts, About page, FAQs, banners, homepage sections — all manageable in one admin          |
+| **Image-heavy product**                                               | Built-in image processing (sizes, focal point, WebP conversion, CDN-ready)                      |
+| **Long-term flexibility**                                             | Not locked to a vendor's data model or pricing — own the database                               |
 
 ### Payload vs Shopify (Headless Comparison)
 
-| Dimension | Payload + Next.js | Shopify (Hydrogen) |
-|-----------|-------------------|---------------------|
-| **Code ownership** | Full — own the codebase | Limited — theme/app boundaries |
-| **Database** | Postgres or MongoDB (yours) | Shopify-managed (locked) |
-| **Admin panel** | Auto-generated, fully customizable | Shopify admin (good, but not yours) |
-| **Checkout** | Custom-built (more work, full control) | Pre-built (faster, less flexible) |
-| **Indian payments** | Razorpay, custom integration | Native Indian gateways |
-| **Subscription cost** | Vercel + DB + Razorpay fees | Shopify plan + transaction fees |
-| **Time to launch** | 8–12 weeks | 4–6 weeks |
-| **Dev cost upfront** | Higher (more code) | Lower (less code) |
-| **Long-term TCO** | Lower (no per-order fees) | Higher (transaction fees on every order) |
-| **SEO flexibility** | Total control via Next.js Metadata | Good (Hydrogen + metafields) |
-| **Migration risk** | Low (open data formats) | High (vendor lock-in) |
+| Dimension             | Payload + Next.js                      | Shopify (Hydrogen)                       |
+| --------------------- | -------------------------------------- | ---------------------------------------- |
+| **Code ownership**    | Full — own the codebase                | Limited — theme/app boundaries           |
+| **Database**          | Postgres or MongoDB (yours)            | Shopify-managed (locked)                 |
+| **Admin panel**       | Auto-generated, fully customizable     | Shopify admin (good, but not yours)      |
+| **Checkout**          | Custom-built (more work, full control) | Pre-built (faster, less flexible)        |
+| **Indian payments**   | Razorpay, custom integration           | Native Indian gateways                   |
+| **Subscription cost** | Vercel + DB + Razorpay fees            | Shopify plan + transaction fees          |
+| **Time to launch**    | 8–12 weeks                             | 4–6 weeks                                |
+| **Dev cost upfront**  | Higher (more code)                     | Lower (less code)                        |
+| **Long-term TCO**     | Lower (no per-order fees)              | Higher (transaction fees on every order) |
+| **SEO flexibility**   | Total control via Next.js Metadata     | Good (Hydrogen + metafields)             |
+| **Migration risk**    | Low (open data formats)                | High (vendor lock-in)                    |
 
 ### When Payload is the right choice
+
 - Client wants **full ownership** of the platform and data
 - **Custom product schema** is needed (sarees are not a standard product)
 - Long-term scale justifies upfront dev investment
@@ -162,6 +168,7 @@ A single Payload Config file gives you:
 - Content + commerce **in one admin**
 
 ### When Shopify is the right choice
+
 - Faster time to market is critical (weeks vs months)
 - Smaller dev team
 - Want battle-tested checkout out of the box
@@ -173,39 +180,40 @@ A single Payload Config file gives you:
 
 ### Core Stack
 
-| Layer | Technology | Why |
-|-------|------------|-----|
-| **CMS / Backend** | **Payload CMS 3.x** (latest 3.x release) | Code-first, self-hosted, TypeScript-native |
-| **Frontend** | **Next.js 16** (App Router, Turbopack default, React Compiler) | Latest stable, native Payload pairing, RSC/ISR/Server Actions |
-| **Language** | **TypeScript 5.7+** (strict mode) | Type safety end-to-end |
-| **Database** | **PostgreSQL 18** (latest stable, 18.4 as of May 2026) | ACID, JSON/JSONB, vector search (pgvector), strong tooling |
-| **DB Hosting** | **Tiered** — Neon (free) / Neon (paid) / Self-hosted Postgres on Hetzner | Serverless Postgres with branching OR VPS-managed |
-| **File Storage** | **Tiered** — Vercel Blob (free, 1 GB) / Cloudflare R2 (free egress) / S3 (enterprise) | CDN-backed, signed URLs, image transforms |
-| **Hosting** | **Tiered** — Vercel Hobby (free) / Vercel Pro ($20) / Self-hosted on Hetzner VPS ($5–10) | First-class Next.js + Payload support, edge functions |
-| **Auth (Admin)** | **Payload's built-in** | HttpOnly cookies, JWT, role-based — powers `/admin` panel |
-| **Auth (Customer)** | **Better Auth** + plugins (phone OTP, Google, Facebook, 2FA, passkey) | Modern, TypeScript-native, Next.js 16 ready (uses `proxy.ts`), 50+ plugins |
-| **Payments (India)** | **Razorpay** | UPI, cards, netbanking, wallets, EMI, COD reconciliation |
-| **Payments (International)** | **Stripe** (Phase 2) | Cards, Apple Pay, Google Pay, multi-currency |
-| **Email (transactional)** | **Resend** (free up to 100/day, 3K/mo) | React Email templates, great DX |
-| **Email (marketing)** | **Resend** / **Loops.so** (free tier) | Newsletter, automation flows |
-| **SMS (India)** | **MSG91** (pay per SMS) or **Twilio** | OTP, order updates, alerts |
-| **Forms (contact, etc.)** | **Payload Form Builder plugin** | DB-backed, no third-party needed |
-| **Search** | **Postgres full-text search** (MVP) → **Algolia / Meilisearch** (Phase 2) | MVP uses built-in, scales later |
-| **Image optimization** | **Next.js Image** + (Vercel CDN OR Cloudflare) | Auto WebP, lazy load, responsive |
-| **Styling** | **Tailwind CSS v4** + **shadcn/ui** | Utility-first, accessible components |
-| **Forms (frontend)** | **React Hook Form** + **Zod** | Type-safe form validation |
-| **State management** | **Zustand** (cart, UI state) | Lightweight, no boilerplate |
-| **Server state** | **TanStack Query** (or Next.js fetch) | Cache, revalidate, mutations |
-| **Date handling** | **date-fns** | Tree-shakable |
-| **Validation** | **Zod** | Runtime validation, used in Payload hooks |
-| **Testing** | **Vitest** (unit) + **Playwright** (E2E) | Fast, modern |
-| **Linting** | **ESLint** + **Prettier** | Code quality |
-| **Monitoring** | **Tiered** — Vercel Logs (free) / Sentry (free 5K errors/mo) / PostHog (free 1M events/mo) | Error tracking, performance |
-| **Analytics** | **PostHog** (free) + GA4 (free) + Meta Pixel (free) | Privacy-friendly, funnels |
-| **DNS + CDN** | **Cloudflare** (free) | DDoS protection, edge cache, DNS |
-| **Git / CI** | **GitHub** + Vercel CI (or self-hosted runner for VPS) | Auto-deploy on push |
+| Layer                        | Technology                                                                                 | Why                                                                        |
+| ---------------------------- | ------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------- |
+| **CMS / Backend**            | **Payload CMS 3.x** (latest 3.x release)                                                   | Code-first, self-hosted, TypeScript-native                                 |
+| **Frontend**                 | **Next.js 16** (App Router, Turbopack default, React Compiler)                             | Latest stable, native Payload pairing, RSC/ISR/Server Actions              |
+| **Language**                 | **TypeScript 5.7+** (strict mode)                                                          | Type safety end-to-end                                                     |
+| **Database**                 | **PostgreSQL 18** (latest stable, 18.4 as of May 2026)                                     | ACID, JSON/JSONB, vector search (pgvector), strong tooling                 |
+| **DB Hosting**               | **Tiered** — Neon (free) / Neon (paid) / Self-hosted Postgres on Hetzner                   | Serverless Postgres with branching OR VPS-managed                          |
+| **File Storage**             | **Tiered** — Vercel Blob (free, 1 GB) / Cloudflare R2 (free egress) / S3 (enterprise)      | CDN-backed, signed URLs, image transforms                                  |
+| **Hosting**                  | **Tiered** — Vercel Hobby (free) / Vercel Pro ($20) / Self-hosted on Hetzner VPS ($5–10)   | First-class Next.js + Payload support, edge functions                      |
+| **Auth (Admin)**             | **Payload's built-in**                                                                     | HttpOnly cookies, JWT, role-based — powers `/admin` panel                  |
+| **Auth (Customer)**          | **Better Auth** + plugins (phone OTP, Google, Facebook, 2FA, passkey)                      | Modern, TypeScript-native, Next.js 16 ready (uses `proxy.ts`), 50+ plugins |
+| **Payments (India)**         | **Razorpay**                                                                               | UPI, cards, netbanking, wallets, EMI, COD reconciliation                   |
+| **Payments (International)** | **Stripe** (Phase 2)                                                                       | Cards, Apple Pay, Google Pay, multi-currency                               |
+| **Email (transactional)**    | **Resend** (free up to 100/day, 3K/mo)                                                     | React Email templates, great DX                                            |
+| **Email (marketing)**        | **Resend** / **Loops.so** (free tier)                                                      | Newsletter, automation flows                                               |
+| **SMS (India)**              | **MSG91** (pay per SMS) or **Twilio**                                                      | OTP, order updates, alerts                                                 |
+| **Forms (contact, etc.)**    | **Payload Form Builder plugin**                                                            | DB-backed, no third-party needed                                           |
+| **Search**                   | **Postgres full-text search** (MVP) → **Algolia / Meilisearch** (Phase 2)                  | MVP uses built-in, scales later                                            |
+| **Image optimization**       | **Next.js Image** + (Vercel CDN OR Cloudflare)                                             | Auto WebP, lazy load, responsive                                           |
+| **Styling**                  | **Tailwind CSS v4** + **shadcn/ui**                                                        | Utility-first, accessible components                                       |
+| **Forms (frontend)**         | **React Hook Form** + **Zod**                                                              | Type-safe form validation                                                  |
+| **State management**         | **Zustand** (cart, UI state)                                                               | Lightweight, no boilerplate                                                |
+| **Server state**             | **TanStack Query** (or Next.js fetch)                                                      | Cache, revalidate, mutations                                               |
+| **Date handling**            | **date-fns**                                                                               | Tree-shakable                                                              |
+| **Validation**               | **Zod**                                                                                    | Runtime validation, used in Payload hooks                                  |
+| **Testing**                  | **Vitest** (unit) + **Playwright** (E2E)                                                   | Fast, modern                                                               |
+| **Linting**                  | **ESLint** + **Prettier**                                                                  | Code quality                                                               |
+| **Monitoring**               | **Tiered** — Vercel Logs (free) / Sentry (free 5K errors/mo) / PostHog (free 1M events/mo) | Error tracking, performance                                                |
+| **Analytics**                | **PostHog** (free) + GA4 (free) + Meta Pixel (free)                                        | Privacy-friendly, funnels                                                  |
+| **DNS + CDN**                | **Cloudflare** (free)                                                                      | DDoS protection, edge cache, DNS                                           |
+| **Git / CI**                 | **GitHub** + Vercel CI (or self-hosted runner for VPS)                                     | Auto-deploy on push                                                        |
 
 ### Why Next.js (not SvelteKit / Astro / Remix)
+
 - **Payload is a Next.js-native framework** — its maintainer (Vercel team)
   builds Payload to be tightly coupled with Next.js
 - Largest ecosystem of UI libraries, integrations, and documentation
@@ -215,6 +223,7 @@ A single Payload Config file gives you:
 - **Vercel deployment** is one-click with first-class support
 
 ### Next.js 16 — Key Features We'll Use
+
 - **Turbopack (stable, default bundler)** — 53% faster dev startup, 94% faster
   code updates vs Webpack; ~400% faster `next dev` startup in 16.2
 - **React Compiler (stable)** — automatic memoization, no more manual
@@ -232,6 +241,7 @@ A single Payload Config file gives you:
 - **Native ESM + Node.js 22 LTS** support
 
 > ⚠️ **Next.js 16 Breaking Changes to be aware of**:
+>
 > - `params` and `searchParams` in page/layout components are now Promises
 >   — must `await` them
 > - `<Image>` default `sizes` and `priority` behavior changed
@@ -240,6 +250,7 @@ A single Payload Config file gives you:
 > - Minimum Node.js: **20.9** (we'll use **22 LTS**)
 
 ### Database Choice: Postgres (not MongoDB)
+
 - **ACID transactions** — important for inventory, orders, payments
 - **Relational** — orders have line items, customers have addresses, products
   have variants → natural relational model
@@ -271,20 +282,21 @@ A single Payload Config file gives you:
 Use free tiers of every managed service. Zero fixed cost. Variable cost
 (2% Razorpay per transaction) applies.
 
-| Service | Free Tier Limit | Cost |
-|---------|----------------|------|
-| **Vercel Hobby** | 100 GB bandwidth, 100 GB-hr compute, 6K build min/mo | **$0** |
-| **Neon Postgres (Free)** | 0.5 GB storage, 190 compute hrs/mo | **$0** |
-| **Vercel Blob (Free)** | 1 GB storage, 100 GB bandwidth | **$0** |
-| **Resend (Free)** | 100 emails/day, 3K/month | **$0** |
-| **Sentry (Developer Free)** | 5K errors/month | **$0** |
-| **PostHog Cloud (Free)** | 1M events/month, 1 project | **$0** |
-| **Cloudflare DNS + CDN** | Unlimited | **$0** |
-| **GitHub (private repo)** | Unlimited | **$0** |
-| **Razorpay** | 2% per transaction (no monthly fee) | **2% per txn** |
-| **Total fixed monthly** | | **$0** |
+| Service                     | Free Tier Limit                                      | Cost           |
+| --------------------------- | ---------------------------------------------------- | -------------- |
+| **Vercel Hobby**            | 100 GB bandwidth, 100 GB-hr compute, 6K build min/mo | **$0**         |
+| **Neon Postgres (Free)**    | 0.5 GB storage, 190 compute hrs/mo                   | **$0**         |
+| **Vercel Blob (Free)**      | 1 GB storage, 100 GB bandwidth                       | **$0**         |
+| **Resend (Free)**           | 100 emails/day, 3K/month                             | **$0**         |
+| **Sentry (Developer Free)** | 5K errors/month                                      | **$0**         |
+| **PostHog Cloud (Free)**    | 1M events/month, 1 project                           | **$0**         |
+| **Cloudflare DNS + CDN**    | Unlimited                                            | **$0**         |
+| **GitHub (private repo)**   | Unlimited                                            | **$0**         |
+| **Razorpay**                | 2% per transaction (no monthly fee)                  | **2% per txn** |
+| **Total fixed monthly**     |                                                      | **$0**         |
 
 **Architecture diagram:**
+
 ```
 Internet → Cloudflare (DNS + CDN + DDoS) → Vercel Hobby (Next.js + Payload)
                                                       ↓
@@ -295,12 +307,14 @@ Internet → Cloudflare (DNS + CDN + DDoS) → Vercel Hobby (Next.js + Payload)
 ```
 
 **Pros:**
+
 - Zero fixed cost — pay only when you make sales
 - Fast to launch — no DevOps setup
 - Auto-scaling via Vercel
 - Great for validating the business idea
 
 **Cons / Trade-offs:**
+
 - Vercel Hobby has 10s serverless function timeout (rarely an issue)
 - Neon DB sleeps after 5 min inactivity → ~1–2s cold start on first query
 - No team features (single admin user)
@@ -308,6 +322,7 @@ Internet → Cloudflare (DNS + CDN + DDoS) → Vercel Hobby (Next.js + Payload)
 - 100 GB bandwidth — fine for early stage, may need upgrade at scale
 
 **When to upgrade out of Tier 0:**
+
 - Traffic > 50K visits/month
 - Orders > 500/month and seeing slow queries
 - Team > 1 admin user
@@ -322,19 +337,20 @@ Internet → Cloudflare (DNS + CDN + DDoS) → Vercel Hobby (Next.js + Payload)
 Move off Vercel. Run everything on a single cheap European VPS. Same
 performance for moderate traffic, fraction of the cost, full control.
 
-| Service | Spec | Cost |
-|---------|------|------|
-| **Hetzner Cloud CX21** | 4 GB RAM, 2 vCPU, 40 GB SSD, 20 TB traffic | **€5.39/mo (~$5.80)** |
-| **Postgres** | Self-hosted on same VPS | $0 |
-| **Next.js + Payload** | Self-hosted (Docker or systemd) | $0 |
-| **Cloudflare (DNS + CDN + DDoS)** | Free | $0 |
-| **Hetzner Snapshots (backups)** | +20% of server cost | **~$1.16/mo** |
-| **Domain (.in)** | $10–15/year | **~$1/mo** |
-| **Resend (Free)** | 100 emails/day | $0 |
-| **Razorpay** | 2% per transaction | variable |
-| **Total fixed monthly** | | **~$8/month (~₹670)** |
+| Service                           | Spec                                       | Cost                  |
+| --------------------------------- | ------------------------------------------ | --------------------- |
+| **Hetzner Cloud CX21**            | 4 GB RAM, 2 vCPU, 40 GB SSD, 20 TB traffic | **€5.39/mo (~$5.80)** |
+| **Postgres**                      | Self-hosted on same VPS                    | $0                    |
+| **Next.js + Payload**             | Self-hosted (Docker or systemd)            | $0                    |
+| **Cloudflare (DNS + CDN + DDoS)** | Free                                       | $0                    |
+| **Hetzner Snapshots (backups)**   | +20% of server cost                        | **~$1.16/mo**         |
+| **Domain (.in)**                  | $10–15/year                                | **~$1/mo**            |
+| **Resend (Free)**                 | 100 emails/day                             | $0                    |
+| **Razorpay**                      | 2% per transaction                         | variable              |
+| **Total fixed monthly**           |                                            | **~$8/month (~₹670)** |
 
 **Architecture diagram:**
+
 ```
 Internet → Cloudflare (DNS + CDN + DDoS + SSL)
                   ↓
@@ -349,6 +365,7 @@ Internet → Cloudflare (DNS + CDN + DDoS + SSL)
 ```
 
 **Pros:**
+
 - Predictable flat cost regardless of order volume
 - Full control — install any software, run any command
 - No cold starts (always-on server)
@@ -358,6 +375,7 @@ Internet → Cloudflare (DNS + CDN + DDoS + SSL)
 - Easy to scale up (Hetzner snapshot → larger instance)
 
 **Cons / Trade-offs:**
+
 - Requires Linux sysadmin skills (basic: SSH, systemd, nginx)
 - Need to manage security updates, backups, monitoring
 - Single point of failure (no auto-scaling; add Hetzner load balancer if needed)
@@ -365,12 +383,14 @@ Internet → Cloudflare (DNS + CDN + DDoS + SSL)
 - No built-in DDoS mitigation beyond Cloudflare
 
 **When to upgrade out of Tier 1:**
+
 - Single VPS CPU/RAM saturated
 - Need 99.99% uptime SLA
 - Want zero DevOps involvement
 - Team > 5 admin users
 
 **Hetzner Setup (quick reference):**
+
 ```bash
 # On a fresh Hetzner CX21 (Ubuntu 24.04)
 ssh root@your-vps-ip
@@ -382,6 +402,7 @@ apt update && apt upgrade -y
 ```
 
 **Alternative VPS providers** (if Hetzner is unavailable):
+
 - **DigitalOcean Basic Droplet**: $6/mo (1 GB) — tight, may need $12/mo (2 GB)
 - **Vultr**: $5/mo (1 GB) — also tight
 - **OVH VPS**: €3.50/mo (Starter) — cheap
@@ -400,18 +421,19 @@ For Asia (closer to Indian users): **Vultr Singapore** or **DigitalOcean Bangalo
 When revenue justifies it, move to fully managed services for zero DevOps
 and best-in-class performance.
 
-| Service | Plan | Cost |
-|---------|------|------|
-| **Vercel Pro** | $20/seat/mo, 1 TB bandwidth, 400 GB-hr compute | **$20/mo** |
-| **Neon Launch** | $19/mo, 10 GB storage, 750 compute hrs/mo | **$19/mo** |
-| **Vercel Blob (Pro)** | $0.30/GB, includes more transforms | **~$5–10/mo** |
-| **Resend Pro** | 50K emails/mo | **$20/mo** |
-| **Sentry Team** | 50K errors/mo | **$26/mo** (optional) |
-| **Cloudflare** | Free | $0 |
-| **Razorpay** | 2% per transaction | variable |
-| **Total fixed monthly** | | **~$85–95/month (~₹7,100–7,900)** |
+| Service                 | Plan                                           | Cost                              |
+| ----------------------- | ---------------------------------------------- | --------------------------------- |
+| **Vercel Pro**          | $20/seat/mo, 1 TB bandwidth, 400 GB-hr compute | **$20/mo**                        |
+| **Neon Launch**         | $19/mo, 10 GB storage, 750 compute hrs/mo      | **$19/mo**                        |
+| **Vercel Blob (Pro)**   | $0.30/GB, includes more transforms             | **~$5–10/mo**                     |
+| **Resend Pro**          | 50K emails/mo                                  | **$20/mo**                        |
+| **Sentry Team**         | 50K errors/mo                                  | **$26/mo** (optional)             |
+| **Cloudflare**          | Free                                           | $0                                |
+| **Razorpay**            | 2% per transaction                             | variable                          |
+| **Total fixed monthly** |                                                | **~$85–95/month (~₹7,100–7,900)** |
 
 **Pros:**
+
 - Zero DevOps — focus on business
 - Premium support from Vercel, Neon
 - 99.99% uptime SLA available
@@ -420,6 +442,7 @@ and best-in-class performance.
 - Advanced features (Edge Config, A/B testing, image optimization)
 
 **Cons / Trade-offs:**
+
 - $85+/mo fixed cost regardless of order volume
 - Vercel charges per seat ($20 each)
 - Total cost grows with team size
@@ -428,34 +451,35 @@ and best-in-class performance.
 
 ### Tier Comparison Summary
 
-| | Tier 0 (Free) | Tier 1 (Hetzner) | Tier 2 (Managed) |
-|---|:---:|:---:|:---:|
-| **Fixed monthly cost** | **$0** | **$8** | **$85** |
-| **Variable cost** | 2% per txn | 2% per txn | 2% per txn |
-| **DevOps required** | None | Basic Linux | None |
-| **Time to setup** | 30 min | 4–8 hours | 30 min |
-| **Best for** | MVP, validation | Growth (predictable cost) | Scale, premium support |
-| **Order volume ceiling** | ~500/mo | ~5K/mo | ~50K+/mo |
-| **Team seats** | 1 | 1–3 (manual) | Unlimited (paid) |
-| **Custom domain on admin** | ✅ Free | ✅ Free | ✅ Free |
-| **Cold starts** | Yes (Neon sleep) | No | No |
-| **Uptime SLA** | Best effort | Best effort (DIY) | 99.99% available |
-| **Backup** | Neon daily | DIY (Hetzner snapshot) | Neon daily + PITR |
-| **DDoS protection** | Cloudflare free | Cloudflare free | Cloudflare free + Vercel |
-| **Scalability** | Auto (within free tier) | Vertical (resize VPS) | Auto (Vercel serverless) |
+|                            |      Tier 0 (Free)      |     Tier 1 (Hetzner)      |     Tier 2 (Managed)     |
+| -------------------------- | :---------------------: | :-----------------------: | :----------------------: |
+| **Fixed monthly cost**     |         **$0**          |          **$8**           |         **$85**          |
+| **Variable cost**          |       2% per txn        |        2% per txn         |        2% per txn        |
+| **DevOps required**        |          None           |        Basic Linux        |           None           |
+| **Time to setup**          |         30 min          |         4–8 hours         |          30 min          |
+| **Best for**               |     MVP, validation     | Growth (predictable cost) |  Scale, premium support  |
+| **Order volume ceiling**   |         ~500/mo         |          ~5K/mo           |         ~50K+/mo         |
+| **Team seats**             |            1            |       1–3 (manual)        |     Unlimited (paid)     |
+| **Custom domain on admin** |         ✅ Free         |          ✅ Free          |         ✅ Free          |
+| **Cold starts**            |    Yes (Neon sleep)     |            No             |            No            |
+| **Uptime SLA**             |       Best effort       |     Best effort (DIY)     |     99.99% available     |
+| **Backup**                 |       Neon daily        |  DIY (Hetzner snapshot)   |    Neon daily + PITR     |
+| **DDoS protection**        |     Cloudflare free     |      Cloudflare free      | Cloudflare free + Vercel |
+| **Scalability**            | Auto (within free tier) |   Vertical (resize VPS)   | Auto (Vercel serverless) |
 
 ### Tier Selection Guide
 
-| Situation | Recommended Tier |
-|-----------|-----------------|
-| Pre-launch / validating idea | **Tier 0** |
-| Launched, <500 orders/mo, single admin | **Tier 0** |
-| Steady 500–2K orders/mo, want predictable cost | **Tier 1** (Hetzner) |
-| 2K+ orders/mo, team > 3, need 99.99% uptime | **Tier 2** (Managed) |
-| Multiple brands / high traffic | **Tier 2** + custom infra |
-| Onboarding a non-technical client | **Tier 2** (least DevOps) |
+| Situation                                      | Recommended Tier          |
+| ---------------------------------------------- | ------------------------- |
+| Pre-launch / validating idea                   | **Tier 0**                |
+| Launched, <500 orders/mo, single admin         | **Tier 0**                |
+| Steady 500–2K orders/mo, want predictable cost | **Tier 1** (Hetzner)      |
+| 2K+ orders/mo, team > 3, need 99.99% uptime    | **Tier 2** (Managed)      |
+| Multiple brands / high traffic                 | **Tier 2** + custom infra |
+| Onboarding a non-technical client              | **Tier 2** (least DevOps) |
 
 **Migration paths:**
+
 - **Tier 0 → Tier 1**: When free tier limits hurt. Migration is easy (Vercel
   deploys to a Node server instead).
 - **Tier 0 → Tier 2**: One-click upgrades on Vercel + Neon dashboards.
@@ -463,38 +487,39 @@ and best-in-class performance.
 
 ### Database Options (any tier)
 
-| Provider | Best For | Free Tier | Paid Tier Start |
-|----------|----------|-----------|-----------------|
-| **Neon** (serverless) | Tier 0, Tier 2 | 0.5 GB / 190 hrs/mo | $19/mo Launch |
-| **Supabase** (Postgres + extras) | If you want auth/storage bundled | 0.5 GB | $25/mo Pro |
-| **Vercel Postgres** | If already on Vercel | 256 MB (Hobby) | $10/mo + usage |
-| **Self-hosted Postgres** | Tier 1 (Hetzner) | Free (on your VPS) | Free (DIY backups) |
-| **Railway Postgres** | Alternative managed | 500 hrs/mo | $5/mo + usage |
+| Provider                         | Best For                         | Free Tier           | Paid Tier Start    |
+| -------------------------------- | -------------------------------- | ------------------- | ------------------ |
+| **Neon** (serverless)            | Tier 0, Tier 2                   | 0.5 GB / 190 hrs/mo | $19/mo Launch      |
+| **Supabase** (Postgres + extras) | If you want auth/storage bundled | 0.5 GB              | $25/mo Pro         |
+| **Vercel Postgres**              | If already on Vercel             | 256 MB (Hobby)      | $10/mo + usage     |
+| **Self-hosted Postgres**         | Tier 1 (Hetzner)                 | Free (on your VPS)  | Free (DIY backups) |
+| **Railway Postgres**             | Alternative managed              | 500 hrs/mo          | $5/mo + usage      |
 
 **Recommendation: Neon for Tier 0 and Tier 2; self-hosted on Hetzner for Tier 1.**
 
 ### File Storage Options (any tier)
 
-| Provider | Best For | Free Tier | Paid Tier Start |
-|----------|----------|-----------|-----------------|
-| **Vercel Blob** | Tier 0 (Vercel-native) | 1 GB | $0.30/GB Pro |
-| **Cloudflare R2** | Tier 1 (no egress fees!) | 10 GB / 1M reads/mo | $0.015/GB/mo |
-| **AWS S3** | Tier 2 enterprise | 5 GB / 15 GB transfer | $0.023/GB/mo |
-| **Hetzner Storage Box** | Tier 1 backups | — | €3.81/mo (1 TB) |
-| **Local disk** | Tier 1 (Hetzner) | Free (40 GB VPS disk) | Free |
+| Provider                | Best For                 | Free Tier             | Paid Tier Start |
+| ----------------------- | ------------------------ | --------------------- | --------------- |
+| **Vercel Blob**         | Tier 0 (Vercel-native)   | 1 GB                  | $0.30/GB Pro    |
+| **Cloudflare R2**       | Tier 1 (no egress fees!) | 10 GB / 1M reads/mo   | $0.015/GB/mo    |
+| **AWS S3**              | Tier 2 enterprise        | 5 GB / 15 GB transfer | $0.023/GB/mo    |
+| **Hetzner Storage Box** | Tier 1 backups           | —                     | €3.81/mo (1 TB) |
+| **Local disk**          | Tier 1 (Hetzner)         | Free (40 GB VPS disk) | Free            |
 
 **Recommendation: Vercel Blob for Tier 0; Cloudflare R2 for Tier 1 (zero egress fees save a lot at scale); AWS S3 for Tier 2 enterprise.**
 
 ### Environment Strategy (works for all tiers)
 
-| Env | Branch | DB | URL |
-|-----|--------|----|-----|
-| Local | `main` (or feature branches) | Local Postgres (Docker) | `localhost:3000` |
-| Preview | PR branches | Neon branch (or local) | Auto-generated `.vercel.app` URL (Tier 0/2) or `staging-pr-X.yourdomain.com` (Tier 1) |
-| Staging | `staging` branch | Neon branch (Tier 0/2) or Hetzner staging DB (Tier 1) | `staging.shagyabrand.com` |
-| Production | `main` branch | Neon production branch (Tier 0/2) or Hetzner prod DB (Tier 1) | `shagyabrand.com` |
+| Env        | Branch                       | DB                                                            | URL                                                                                   |
+| ---------- | ---------------------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| Local      | `main` (or feature branches) | Local Postgres (Docker)                                       | `localhost:3000`                                                                      |
+| Preview    | PR branches                  | Neon branch (or local)                                        | Auto-generated `.vercel.app` URL (Tier 0/2) or `staging-pr-X.yourdomain.com` (Tier 1) |
+| Staging    | `staging` branch             | Neon branch (Tier 0/2) or Hetzner staging DB (Tier 1)         | `staging.shagyabrand.com`                                                             |
+| Production | `main` branch                | Neon production branch (Tier 0/2) or Hetzner prod DB (Tier 1) | `shagyabrand.com`                                                                     |
 
 ### Domains (works for all tiers)
+
 - Apex: `shagyabrand.com` (or `.in`)
 - `www.` → apex redirect
 - Payload Admin: `admin.shagyabrand.com` (or `/admin` on apex)
@@ -504,12 +529,14 @@ and best-in-class performance.
 ### CI/CD (per tier)
 
 **Tier 0 / Tier 2 (Vercel):**
+
 - Git push to `main` → Vercel auto-deploys to production
 - Pull request → Vercel creates preview deployment with Neon branch DB
 - Payload migrations run as part of the Vercel build step
 - Rollback via Vercel dashboard (one click)
 
 **Tier 1 (Hetzner self-hosted):**
+
 - Git push to `main` → GitHub Actions runs build + tests + deploy
 - Deploy step: SSH to Hetzner, pull latest, `pnpm build`, `pm2 reload`
 - Payload migrations run via `pnpm payload migrate` before reload
@@ -517,6 +544,7 @@ and best-in-class performance.
 - Rollback: Hetzner snapshot restore (5 min)
 
 **Example GitHub Actions deploy (Tier 1):**
+
 ```yaml
 name: Deploy
 on:
@@ -728,6 +756,7 @@ shagya-saree/
 ```
 
 ### Key points
+
 - **One repo, one deploy** — `payload.config.ts` is the single source of
   truth for backend; Next.js routes consume it
 - **App Router groups** — `(frontend)`, `(payload)`, `(content)` for clean
@@ -740,6 +769,7 @@ shagya-saree/
 ## 6. Information Architecture
 
 ### Top-Level Sitemap (same business model as Shopify plan)
+
 ```
 / (Homepage)
 │
@@ -783,6 +813,7 @@ shagya-saree/
 ```
 
 ### Information Architecture Advantages with Payload
+
 - **Header nav, footer links, homepage sections** = Globals — edit
   in admin, no code change
 - **Static pages (About, FAQ, etc.)** = Pages collection with Layout
@@ -796,16 +827,19 @@ shagya-saree/
 ## 7. Site Navigation
 
 ### Header (Utility Bar)
+
 ```
 [Free Shipping on Orders Above ₹999 | COD Available]   [Track Order | Help]
 ```
 
 ### Header (Main Bar)
+
 - **Left**: Logo
 - **Center**: Shop ▾ | Collections ▾ | New Arrivals | Sale | About
 - **Right**: Search 🔍 | Account 👤 | Wishlist ♥ | Cart 🛒 (count)
 
 ### Mega-Menu (Driven by `Header` Global)
+
 ```
 Shop All
 ├── By Fabric → /collections?fabric=silk (filter chip)
@@ -816,6 +850,7 @@ Shop All
 ```
 
 ### Footer
+
 Multi-column with policies + social + payment icons + newsletter (driven by
 `Footer` global).
 
@@ -826,66 +861,66 @@ Multi-column with policies + social + payment icons + newsletter (driven by
 All storefront routes are **React Server Components** (RSC) for fast initial
 loads and excellent SEO.
 
-| Route | File | Type | Description |
-|-------|------|------|-------------|
-| `/` | `app/(frontend)/page.tsx` | RSC | Homepage (sections from `Homepage` global) |
-| `/products` | `app/(frontend)/products/page.tsx` | RSC | All products grid |
-| `/products/[slug]` | `app/(frontend)/products/[slug]/page.tsx` | RSC | Product detail page |
-| `/collections` | `app/(frontend)/collections/page.tsx` | RSC | All collections index |
-| `/collections/[slug]` | `app/(frontend)/collections/[slug]/page.tsx` | RSC | Collection / PLP |
-| `/search` | `app/(frontend)/search/page.tsx` | RSC | Search results |
-| `/cart` | `app/(frontend)/cart/page.tsx` | Client | Cart (client-side) |
-| `/checkout` | `app/(frontend)/checkout/page.tsx` | Client | Multi-step checkout |
-| `/checkout/success` | `app/(frontend)/checkout/success/page.tsx` | RSC | Order confirmation |
-| `/account` | `app/(frontend)/account/page.tsx` | RSC | Dashboard (auth required) |
-| `/account/orders` | `app/(frontend)/account/orders/page.tsx` | RSC | Order history |
-| `/account/orders/[id]` | `app/(frontend)/account/orders/[id]/page.tsx` | RSC | Single order |
-| `/account/addresses` | `app/(frontend)/account/addresses/page.tsx` | RSC | Address book |
-| `/account/wishlist` | `app/(frontend)/account/wishlist/page.tsx` | RSC | Wishlist |
-| `/account/profile` | `app/(frontend)/account/profile/page.tsx` | RSC | Profile settings |
-| `/account/login` | `app/(frontend)/account/login/page.tsx` | Client | Login form |
-| `/account/register` | `app/(frontend)/account/register/page.tsx` | Client | Registration form |
-| `/account/forgot-password` | `app/(frontend)/account/forgot-password/page.tsx` | Client | Reset request |
-| `/account/reset-password` | `app/(frontend)/account/reset-password/page.tsx` | Client | Reset confirm |
-| `/about` | `app/(frontend)/about/page.tsx` | RSC | About Us |
-| `/contact` | `app/(frontend)/contact/page.tsx` | RSC | Contact form |
-| `/faq` | `app/(frontend)/faq/page.tsx` | RSC | FAQ |
-| `/size-guide` | `app/(frontend)/size-guide/page.tsx` | RSC | Size guide |
-| `/shipping-policy` | `app/(frontend)/shipping-policy/page.tsx` | RSC | Shipping policy |
-| `/return-policy` | `app/(frontend)/return-policy/page.tsx` | RSC | Return policy |
-| `/care-instructions` | `app/(frontend)/care-instructions/page.tsx` | RSC | Care guide |
-| `/blog` | `app/(frontend)/blog/page.tsx` | RSC | Blog index (Phase 2) |
-| `/blog/[slug]` | `app/(frontend)/blog/[slug]/page.tsx` | RSC | Single post (Phase 2) |
-| `/404` | `app/not-found.tsx` | RSC | Not found |
-| `/sitemap.xml` | `app/sitemap.ts` | Generated | Dynamic sitemap |
-| `/robots.txt` | `app/robots.ts` | Generated | Robots file |
-| `/manifest.webmanifest` | `app/manifest.ts` | Generated | PWA manifest |
+| Route                      | File                                              | Type      | Description                                |
+| -------------------------- | ------------------------------------------------- | --------- | ------------------------------------------ |
+| `/`                        | `app/(frontend)/page.tsx`                         | RSC       | Homepage (sections from `Homepage` global) |
+| `/products`                | `app/(frontend)/products/page.tsx`                | RSC       | All products grid                          |
+| `/products/[slug]`         | `app/(frontend)/products/[slug]/page.tsx`         | RSC       | Product detail page                        |
+| `/collections`             | `app/(frontend)/collections/page.tsx`             | RSC       | All collections index                      |
+| `/collections/[slug]`      | `app/(frontend)/collections/[slug]/page.tsx`      | RSC       | Collection / PLP                           |
+| `/search`                  | `app/(frontend)/search/page.tsx`                  | RSC       | Search results                             |
+| `/cart`                    | `app/(frontend)/cart/page.tsx`                    | Client    | Cart (client-side)                         |
+| `/checkout`                | `app/(frontend)/checkout/page.tsx`                | Client    | Multi-step checkout                        |
+| `/checkout/success`        | `app/(frontend)/checkout/success/page.tsx`        | RSC       | Order confirmation                         |
+| `/account`                 | `app/(frontend)/account/page.tsx`                 | RSC       | Dashboard (auth required)                  |
+| `/account/orders`          | `app/(frontend)/account/orders/page.tsx`          | RSC       | Order history                              |
+| `/account/orders/[id]`     | `app/(frontend)/account/orders/[id]/page.tsx`     | RSC       | Single order                               |
+| `/account/addresses`       | `app/(frontend)/account/addresses/page.tsx`       | RSC       | Address book                               |
+| `/account/wishlist`        | `app/(frontend)/account/wishlist/page.tsx`        | RSC       | Wishlist                                   |
+| `/account/profile`         | `app/(frontend)/account/profile/page.tsx`         | RSC       | Profile settings                           |
+| `/account/login`           | `app/(frontend)/account/login/page.tsx`           | Client    | Login form                                 |
+| `/account/register`        | `app/(frontend)/account/register/page.tsx`        | Client    | Registration form                          |
+| `/account/forgot-password` | `app/(frontend)/account/forgot-password/page.tsx` | Client    | Reset request                              |
+| `/account/reset-password`  | `app/(frontend)/account/reset-password/page.tsx`  | Client    | Reset confirm                              |
+| `/about`                   | `app/(frontend)/about/page.tsx`                   | RSC       | About Us                                   |
+| `/contact`                 | `app/(frontend)/contact/page.tsx`                 | RSC       | Contact form                               |
+| `/faq`                     | `app/(frontend)/faq/page.tsx`                     | RSC       | FAQ                                        |
+| `/size-guide`              | `app/(frontend)/size-guide/page.tsx`              | RSC       | Size guide                                 |
+| `/shipping-policy`         | `app/(frontend)/shipping-policy/page.tsx`         | RSC       | Shipping policy                            |
+| `/return-policy`           | `app/(frontend)/return-policy/page.tsx`           | RSC       | Return policy                              |
+| `/care-instructions`       | `app/(frontend)/care-instructions/page.tsx`       | RSC       | Care guide                                 |
+| `/blog`                    | `app/(frontend)/blog/page.tsx`                    | RSC       | Blog index (Phase 2)                       |
+| `/blog/[slug]`             | `app/(frontend)/blog/[slug]/page.tsx`             | RSC       | Single post (Phase 2)                      |
+| `/404`                     | `app/not-found.tsx`                               | RSC       | Not found                                  |
+| `/sitemap.xml`             | `app/sitemap.ts`                                  | Generated | Dynamic sitemap                            |
+| `/robots.txt`              | `app/robots.ts`                                   | Generated | Robots file                                |
+| `/manifest.webmanifest`    | `app/manifest.ts`                                 | Generated | PWA manifest                               |
 
 ### Custom API Routes (Next.js Route Handlers)
 
-| Route | Method | Purpose |
-|-------|--------|---------|
-| `/api/razorpay/create-order` | POST | Create Razorpay order before checkout |
-| `/api/razorpay/verify` | POST | Verify payment signature after checkout |
-| `/api/webhooks/razorpay` | POST | Receive Razorpay webhooks |
-| `/api/webhooks/shiprocket` | POST | Receive shipping updates |
-| `/api/newsletter/subscribe` | POST | Add email to newsletter list |
-| `/api/contact/submit` | POST | Submit contact form (also saves to DB) |
-| `/api/search` | GET | Full-text search via Postgres |
-| `/api/revalidate` | POST | Vercel on-demand revalidation (called by Payload hooks) |
-| `/api/auth/[...nextauth]` | GET/POST | Customer auth handlers (if using NextAuth) |
+| Route                        | Method   | Purpose                                                 |
+| ---------------------------- | -------- | ------------------------------------------------------- |
+| `/api/razorpay/create-order` | POST     | Create Razorpay order before checkout                   |
+| `/api/razorpay/verify`       | POST     | Verify payment signature after checkout                 |
+| `/api/webhooks/razorpay`     | POST     | Receive Razorpay webhooks                               |
+| `/api/webhooks/shiprocket`   | POST     | Receive shipping updates                                |
+| `/api/newsletter/subscribe`  | POST     | Add email to newsletter list                            |
+| `/api/contact/submit`        | POST     | Submit contact form (also saves to DB)                  |
+| `/api/search`                | GET      | Full-text search via Postgres                           |
+| `/api/revalidate`            | POST     | Vercel on-demand revalidation (called by Payload hooks) |
+| `/api/auth/[...nextauth]`    | GET/POST | Customer auth handlers (if using NextAuth)              |
 
 ### Route-Level Caching Strategy
 
-| Route | Caching |
-|-------|---------|
-| Homepage | ISR — revalidate on `Homepage` global `afterChange` |
-| Collection pages | ISR — revalidate on `Products` change |
-| PDP | ISR + dynamic product schema |
-| Cart / Checkout | Dynamic (`force-dynamic`, no cache) |
-| Account pages | Dynamic (per-user) |
-| Static pages (About, FAQ) | ISR — revalidate on `Pages` change |
-| Blog | ISR — revalidate on `Posts` change |
+| Route                     | Caching                                             |
+| ------------------------- | --------------------------------------------------- |
+| Homepage                  | ISR — revalidate on `Homepage` global `afterChange` |
+| Collection pages          | ISR — revalidate on `Products` change               |
+| PDP                       | ISR + dynamic product schema                        |
+| Cart / Checkout           | Dynamic (`force-dynamic`, no cache)                 |
+| Account pages             | Dynamic (per-user)                                  |
+| Static pages (About, FAQ) | ISR — revalidate on `Pages` change                  |
+| Blog                      | ISR — revalidate on `Posts` change                  |
 
 ---
 
@@ -895,36 +930,39 @@ Payload **auto-generates** these from your collections. You can use REST,
 GraphQL, or Local API (server-side, fastest).
 
 ### REST API
+
 Base: `/api/<collection-slug>`
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/products` | GET | List products (with `?where=...`, `?limit=...`, `?depth=...`) |
-| `/api/products/:id` | GET | Single product |
-| `/api/products` | POST | Create product (admin only) |
-| `/api/products/:id` | PATCH | Update product (admin only) |
-| `/api/products/:id` | DELETE | Delete product (admin only) |
-| `/api/categories` | GET | List categories |
-| `/api/orders` | GET | List orders (admin) / user's own orders (customer) |
-| `/api/orders/:id` | GET | Single order |
-| `/api/orders` | POST | Create order (server-side, on payment success) |
-| `/api/customers` | GET | List customers (admin) |
-| `/api/customers/login` | POST | Customer login |
-| `/api/customers/logout` | POST | Customer logout |
-| `/api/customers/me` | GET | Current customer |
-| `/api/customers/register` | POST | Register new customer |
-| `/api/customers/forgot-password` | POST | Request password reset |
-| `/api/carts` | GET / POST / PATCH | Cart management (per customer) |
-| `/api/coupons` | GET | List/validate coupons |
-| `/api/media` | GET / POST | List / upload media |
-| `/api/pages` | GET | List CMS pages |
-| `/api/posts` | GET | List blog posts (Phase 2) |
-| `/api/form-submissions` | POST | Submit form (contact, etc.) |
+| Endpoint                         | Method             | Description                                                   |
+| -------------------------------- | ------------------ | ------------------------------------------------------------- |
+| `/api/products`                  | GET                | List products (with `?where=...`, `?limit=...`, `?depth=...`) |
+| `/api/products/:id`              | GET                | Single product                                                |
+| `/api/products`                  | POST               | Create product (admin only)                                   |
+| `/api/products/:id`              | PATCH              | Update product (admin only)                                   |
+| `/api/products/:id`              | DELETE             | Delete product (admin only)                                   |
+| `/api/categories`                | GET                | List categories                                               |
+| `/api/orders`                    | GET                | List orders (admin) / user's own orders (customer)            |
+| `/api/orders/:id`                | GET                | Single order                                                  |
+| `/api/orders`                    | POST               | Create order (server-side, on payment success)                |
+| `/api/customers`                 | GET                | List customers (admin)                                        |
+| `/api/customers/login`           | POST               | Customer login                                                |
+| `/api/customers/logout`          | POST               | Customer logout                                               |
+| `/api/customers/me`              | GET                | Current customer                                              |
+| `/api/customers/register`        | POST               | Register new customer                                         |
+| `/api/customers/forgot-password` | POST               | Request password reset                                        |
+| `/api/carts`                     | GET / POST / PATCH | Cart management (per customer)                                |
+| `/api/coupons`                   | GET                | List/validate coupons                                         |
+| `/api/media`                     | GET / POST         | List / upload media                                           |
+| `/api/pages`                     | GET                | List CMS pages                                                |
+| `/api/posts`                     | GET                | List blog posts (Phase 2)                                     |
+| `/api/form-submissions`          | POST               | Submit form (contact, etc.)                                   |
 
 ### GraphQL
+
 Same data exposed via `/api/graphql` (POST) — useful for complex queries.
 
 ### Local API (Server-side, no HTTP)
+
 ```ts
 import { getPayload } from 'payload'
 import config from '@payload-config'
@@ -937,6 +975,7 @@ const products = await payload.find({
   depth: 2,
 })
 ```
+
 Used inside Next.js Server Components — **fastest** way to read data.
 
 ---
@@ -949,6 +988,7 @@ Used inside Next.js Server Components — **fastest** way to read data.
 > `payload.config.ts`.
 
 ### 10.1 Users (Admin Team)
+
 - Auth-enabled (Payload's built-in)
 - Roles: `superAdmin`, `admin`, `editor`, `fulfillment`, `support`
 - Used for staff login to `/admin`
@@ -968,12 +1008,17 @@ export const Users: CollectionConfig = {
   },
   fields: [
     { name: 'name', type: 'text', required: true },
-    { name: 'role', type: 'select', options: ['superAdmin', 'admin', 'editor', 'fulfillment', 'support'] },
+    {
+      name: 'role',
+      type: 'select',
+      options: ['superAdmin', 'admin', 'editor', 'fulfillment', 'support'],
+    },
   ],
 }
 ```
 
 ### 10.2 Customers (Shoppers)
+
 - Separate from `Users` — clean separation of staff vs customers
 - Auth-enabled with HttpOnly cookies
 - Auto-creates account on first order or explicit registration
@@ -992,43 +1037,109 @@ export const Customers: CollectionConfig = {
   },
   fields: [
     // Link to Better Auth's user table (foreign key)
-    { name: 'betterAuthUserId', type: 'text', required: true, unique: true, index: true,
-      admin: { description: 'Better Auth user.id — set by Better Auth hook, do not edit' } },
-    { name: 'email', type: 'email', required: true, index: true,
-      admin: { description: 'Mirrored from Better Auth user.email for queries' } },
+    {
+      name: 'betterAuthUserId',
+      type: 'text',
+      required: true,
+      unique: true,
+      index: true,
+      admin: {
+        description:
+          'Better Auth user.id — set by Better Auth hook, do not edit',
+      },
+    },
+    {
+      name: 'email',
+      type: 'email',
+      required: true,
+      index: true,
+      admin: {
+        description: 'Mirrored from Better Auth user.email for queries',
+      },
+    },
     { name: 'firstName', type: 'text', required: true },
     { name: 'lastName', type: 'text', required: true },
-    { name: 'phone', type: 'text', required: true, index: true,
-      admin: { description: 'Used for WhatsApp updates and SMS notifications' } },
+    {
+      name: 'phone',
+      type: 'text',
+      required: true,
+      index: true,
+      admin: { description: 'Used for WhatsApp updates and SMS notifications' },
+    },
     { name: 'avatar', type: 'upload', relationTo: 'media' },
     { name: 'marketingOptIn', type: 'checkbox', defaultValue: false },
-    { name: 'preferredLanguage', type: 'select', options: ['en', 'hi'], defaultValue: 'en' },
+    {
+      name: 'preferredLanguage',
+      type: 'select',
+      options: ['en', 'hi'],
+      defaultValue: 'en',
+    },
     { name: 'dateOfBirth', type: 'date' },
-    { name: 'gender', type: 'select', options: ['female', 'male', 'other', 'prefer_not_to_say'] },
-    { name: 'anniversaryDate', type: 'date',
-      admin: { description: 'For anniversary saree recommendations' } },
-    { name: 'lifetimeValue', type: 'number', defaultValue: 0, admin: { readOnly: true,
-      description: 'Computed from orders, updated by hook' } },
-    { name: 'totalOrders', type: 'number', defaultValue: 0, admin: { readOnly: true } },
+    {
+      name: 'gender',
+      type: 'select',
+      options: ['female', 'male', 'other', 'prefer_not_to_say'],
+    },
+    {
+      name: 'anniversaryDate',
+      type: 'date',
+      admin: { description: 'For anniversary saree recommendations' },
+    },
+    {
+      name: 'lifetimeValue',
+      type: 'number',
+      defaultValue: 0,
+      admin: {
+        readOnly: true,
+        description: 'Computed from orders, updated by hook',
+      },
+    },
+    {
+      name: 'totalOrders',
+      type: 'number',
+      defaultValue: 0,
+      admin: { readOnly: true },
+    },
     { name: 'lastOrderAt', type: 'date', admin: { readOnly: true } },
-    { name: 'tags', type: 'array', fields: [
-      { name: 'tag', type: 'text' },
-    ], admin: { description: 'e.g. "VIP", "Bridal Customer", "Influencer"' } },
-    { name: 'addresses', type: 'array', fields: [
-      { name: 'label', type: 'text', admin: { description: 'e.g. "Home", "Office", "Mom\'s"' } },
-      { name: 'line1', type: 'text', required: true },
-      { name: 'line2', type: 'text' },
-      { name: 'landmark', type: 'text' },
-      { name: 'city', type: 'text', required: true },
-      { name: 'state', type: 'text', required: true },
-      { name: 'pincode', type: 'text', required: true },
-      { name: 'country', type: 'text', defaultValue: 'India' },
-      { name: 'phone', type: 'text' },
-      { name: 'isDefault', type: 'checkbox', defaultValue: false },
-    ]},
-    { name: 'wishlist', type: 'relationship', relationTo: 'products', hasMany: true },
-    { name: 'internalNotes', type: 'textarea', admin: {
-      description: 'Admin-only notes (size preferences, past issues, etc.)' } },
+    {
+      name: 'tags',
+      type: 'array',
+      fields: [{ name: 'tag', type: 'text' }],
+      admin: { description: 'e.g. "VIP", "Bridal Customer", "Influencer"' },
+    },
+    {
+      name: 'addresses',
+      type: 'array',
+      fields: [
+        {
+          name: 'label',
+          type: 'text',
+          admin: { description: 'e.g. "Home", "Office", "Mom\'s"' },
+        },
+        { name: 'line1', type: 'text', required: true },
+        { name: 'line2', type: 'text' },
+        { name: 'landmark', type: 'text' },
+        { name: 'city', type: 'text', required: true },
+        { name: 'state', type: 'text', required: true },
+        { name: 'pincode', type: 'text', required: true },
+        { name: 'country', type: 'text', defaultValue: 'India' },
+        { name: 'phone', type: 'text' },
+        { name: 'isDefault', type: 'checkbox', defaultValue: false },
+      ],
+    },
+    {
+      name: 'wishlist',
+      type: 'relationship',
+      relationTo: 'products',
+      hasMany: true,
+    },
+    {
+      name: 'internalNotes',
+      type: 'textarea',
+      admin: {
+        description: 'Admin-only notes (size preferences, past issues, etc.)',
+      },
+    },
   ],
   hooks: {
     // Mirror email changes from Better Auth (via custom endpoint)
@@ -1045,6 +1156,7 @@ password hash, sessions, OAuth accounts, 2FA, phone OTP). Payload's
 (addresses, wishlist, lifetime value, internal notes, marketing tags).
 
 Sync is one-directional:
+
 - **Better Auth → Payload**: When a customer signs up (email, Google,
   phone OTP), a `databaseHook` in Better Auth's config creates a
   matching Payload `Customer` document.
@@ -1058,6 +1170,7 @@ Better Auth setup and sync implementation.
 ### 10.3 Products (Sarees) — see Section 11 for full schema
 
 ### 10.4 Categories
+
 - Nested via `payload-plugin-nested-docs`
 - Auto-generates breadcrumb paths
 
@@ -1065,27 +1178,44 @@ Better Auth setup and sync implementation.
 export const Categories: CollectionConfig = {
   slug: 'categories',
   admin: { useAsTitle: 'name' },
-  access: { read: () => true, create: isAdmin, update: isAdmin, delete: isAdmin },
+  access: {
+    read: () => true,
+    create: isAdmin,
+    update: isAdmin,
+    delete: isAdmin,
+  },
   fields: [
     { name: 'name', type: 'text', required: true },
-    { name: 'slug', type: 'text', required: true, unique: true, hooks: { beforeValidate: [formatSlug] } },
+    {
+      name: 'slug',
+      type: 'text',
+      required: true,
+      unique: true,
+      hooks: { beforeValidate: [formatSlug] },
+    },
     { name: 'description', type: 'textarea' },
     { name: 'image', type: 'upload', relationTo: 'media' },
     { name: 'parent', type: 'relationship', relationTo: 'categories' },
-    { name: 'type', type: 'select', options: [
-      { label: 'Fabric', value: 'fabric' },
-      { label: 'Occasion', value: 'occasion' },
-      { label: 'Work', value: 'work' },
-      { label: 'Collection', value: 'collection' },
-      { label: 'Editorial', value: 'editorial' },
-    ]},
+    {
+      name: 'type',
+      type: 'select',
+      options: [
+        { label: 'Fabric', value: 'fabric' },
+        { label: 'Occasion', value: 'occasion' },
+        { label: 'Work', value: 'work' },
+        { label: 'Collection', value: 'collection' },
+        { label: 'Editorial', value: 'editorial' },
+      ],
+    },
     { name: 'displayOrder', type: 'number', defaultValue: 0 },
   ],
 }
 ```
 
 ### 10.5 Variants (Optional — keep as JSONB on Products for simplicity)
+
 Two design choices:
+
 - **Option A** (recommended for MVP): Variants as **JSON field** on Product
   - Pros: Simple, fewer joins, admin form is one document
   - Cons: Harder to query "all red variants across all products"
@@ -1097,6 +1227,7 @@ Two design choices:
 have ≤3 colors. Migrate to Option B if catalog grows.
 
 ### 10.6 Orders
+
 - Created **server-side** via `payload.create()` after Razorpay payment
   verification (never trust client)
 - Status: `pending` → `paid` → `processing` → `shipped` → `delivered` → `returned` | `cancelled`
@@ -1104,30 +1235,38 @@ have ≤3 colors. Migrate to Option B if catalog grows.
 ```ts
 export const Orders: CollectionConfig = {
   slug: 'orders',
-  admin: { useAsTitle: 'orderNumber', defaultColumns: ['orderNumber', 'customer', 'total', 'status', 'createdAt'] },
+  admin: {
+    useAsTitle: 'orderNumber',
+    defaultColumns: ['orderNumber', 'customer', 'total', 'status', 'createdAt'],
+  },
   access: {
-    create: () => false,  // server-only
+    create: () => false, // server-only
     read: isCustomerOrAdmin,
     update: isAdmin,
     delete: isAdmin,
   },
   fields: [
-    { name: 'orderNumber', type: 'text', required: true, unique: true },  // e.g. SHG-2024-00123
+    { name: 'orderNumber', type: 'text', required: true, unique: true }, // e.g. SHG-2024-00123
     { name: 'customer', type: 'relationship', relationTo: 'customers' },
     { name: 'email', type: 'email', required: true },
     { name: 'phone', type: 'text', required: true },
     {
-      name: 'items', type: 'array', required: true, fields: [
+      name: 'items',
+      type: 'array',
+      required: true,
+      fields: [
         { name: 'product', type: 'relationship', relationTo: 'products' },
-        { name: 'productSnapshot', type: 'json' },  // frozen at order time
-        { name: 'variant', type: 'json' },  // { color, size }
+        { name: 'productSnapshot', type: 'json' }, // frozen at order time
+        { name: 'variant', type: 'json' }, // { color, size }
         { name: 'quantity', type: 'number', required: true, min: 1 },
         { name: 'unitPrice', type: 'number', required: true },
         { name: 'lineTotal', type: 'number', required: true },
-      ]
+      ],
     },
     {
-      name: 'shippingAddress', type: 'group', fields: [
+      name: 'shippingAddress',
+      type: 'group',
+      fields: [
         { name: 'name', type: 'text' },
         { name: 'phone', type: 'text' },
         { name: 'line1', type: 'text' },
@@ -1136,7 +1275,7 @@ export const Orders: CollectionConfig = {
         { name: 'state', type: 'text' },
         { name: 'pincode', type: 'text' },
         { name: 'country', type: 'text' },
-      ]
+      ],
     },
     { name: 'subtotal', type: 'number' },
     { name: 'shippingCost', type: 'number' },
@@ -1144,24 +1283,43 @@ export const Orders: CollectionConfig = {
     { name: 'tax', type: 'number', defaultValue: 0 },
     { name: 'total', type: 'number', required: true },
     {
-      name: 'payment', type: 'group', fields: [
+      name: 'payment',
+      type: 'group',
+      fields: [
         { name: 'method', type: 'select', options: ['razorpay', 'cod'] },
-        { name: 'status', type: 'select', options: ['pending', 'captured', 'failed', 'refunded'] },
+        {
+          name: 'status',
+          type: 'select',
+          options: ['pending', 'captured', 'failed', 'refunded'],
+        },
         { name: 'razorpayOrderId', type: 'text' },
         { name: 'razorpayPaymentId', type: 'text' },
         { name: 'razorpaySignature', type: 'text' },
-      ]
+      ],
     },
     {
-      name: 'fulfillment', type: 'group', fields: [
-        { name: 'status', type: 'select', options: ['pending', 'processing', 'shipped', 'delivered', 'returned', 'cancelled'] },
+      name: 'fulfillment',
+      type: 'group',
+      fields: [
+        {
+          name: 'status',
+          type: 'select',
+          options: [
+            'pending',
+            'processing',
+            'shipped',
+            'delivered',
+            'returned',
+            'cancelled',
+          ],
+        },
         { name: 'shiprocketOrderId', type: 'text' },
-        { name: 'awbCode', type: 'text' },  // tracking number
+        { name: 'awbCode', type: 'text' }, // tracking number
         { name: 'courierName', type: 'text' },
         { name: 'shippedAt', type: 'date' },
         { name: 'deliveredAt', type: 'date' },
         { name: 'trackingUrl', type: 'text' },
-      ]
+      ],
     },
     { name: 'coupon', type: 'relationship', relationTo: 'coupons' },
     { name: 'notes', type: 'textarea' },
@@ -1173,7 +1331,7 @@ export const Orders: CollectionConfig = {
           data.orderNumber = `SHG-${new Date().getFullYear()}-${String(Date.now()).slice(-5)}`
         }
         return data
-      }
+      },
     ],
     afterChange: [
       sendOrderConfirmationEmail,
@@ -1185,6 +1343,7 @@ export const Orders: CollectionConfig = {
 ```
 
 ### 10.7 Carts
+
 - Saved for **logged-in customers** only (guest carts use localStorage +
   cookies)
 - Tied to `customer` via relationship
@@ -1200,13 +1359,27 @@ export const Carts: CollectionConfig = {
     delete: isCartOwner,
   },
   fields: [
-    { name: 'customer', type: 'relationship', relationTo: 'customers', required: true },
-    { name: 'items', type: 'array', fields: [
-      { name: 'product', type: 'relationship', relationTo: 'products', required: true },
-      { name: 'variant', type: 'json' },
-      { name: 'quantity', type: 'number', required: true, min: 1, max: 10 },
-      { name: 'unitPrice', type: 'number', required: true },
-    ]},
+    {
+      name: 'customer',
+      type: 'relationship',
+      relationTo: 'customers',
+      required: true,
+    },
+    {
+      name: 'items',
+      type: 'array',
+      fields: [
+        {
+          name: 'product',
+          type: 'relationship',
+          relationTo: 'products',
+          required: true,
+        },
+        { name: 'variant', type: 'json' },
+        { name: 'quantity', type: 'number', required: true, min: 1, max: 10 },
+        { name: 'unitPrice', type: 'number', required: true },
+      ],
+    },
     { name: 'coupon', type: 'relationship', relationTo: 'coupons' },
     { name: 'subtotal', type: 'number' },
     { name: 'lastActivity', type: 'date' },
@@ -1215,6 +1388,7 @@ export const Carts: CollectionConfig = {
 ```
 
 ### 10.8 Media (Image Uploads)
+
 - Used for product images, banners, blog post images
 - Auto-resize on upload (Vercel Image Optimization handles delivery)
 
@@ -1231,15 +1405,21 @@ export const Media: CollectionConfig = {
     ],
     mimeTypes: ['image/*'],
   },
-  access: { read: () => true, create: isAdminOrEditor, update: isAdminOrEditor, delete: isAdmin },
+  access: {
+    read: () => true,
+    create: isAdminOrEditor,
+    update: isAdminOrEditor,
+    delete: isAdmin,
+  },
   fields: [
-    { name: 'alt', type: 'text', required: true },  // accessibility + SEO
+    { name: 'alt', type: 'text', required: true }, // accessibility + SEO
     { name: 'caption', type: 'text' },
   ],
 }
 ```
 
 ### 10.9 Pages (CMS-managed static content)
+
 - Uses **Layout Builder** for flexible content
 - Slug-based routing via `app/(content)/[slug]/page.tsx`
 - Used for: About, Contact, FAQ, Size Guide, Shipping, Returns, etc.
@@ -1248,14 +1428,28 @@ export const Media: CollectionConfig = {
 export const Pages: CollectionConfig = {
   slug: 'pages',
   admin: { useAsTitle: 'title' },
-  versions: { drafts: true },  // Draft + Publish workflow
+  versions: { drafts: true }, // Draft + Publish workflow
   access: { read: () => true, ...isAdminOrEditor },
   fields: [
     { name: 'title', type: 'text', required: true },
-    { name: 'slug', type: 'text', required: true, unique: true, hooks: { beforeValidate: [formatSlug] } },
-    { name: 'seo', type: 'group', fields: [/* SEO fields via plugin */] },
     {
-      name: 'layout', type: 'blocks', blocks: [
+      name: 'slug',
+      type: 'text',
+      required: true,
+      unique: true,
+      hooks: { beforeValidate: [formatSlug] },
+    },
+    {
+      name: 'seo',
+      type: 'group',
+      fields: [
+        /* SEO fields via plugin */
+      ],
+    },
+    {
+      name: 'layout',
+      type: 'blocks',
+      blocks: [
         HeroBlock,
         ContentBlock,
         MediaBlock,
@@ -1270,11 +1464,13 @@ export const Pages: CollectionConfig = {
 ```
 
 ### 10.10 Posts (Blog — Phase 2)
+
 - Standard blog pattern with Layout Builder
 - Categories, tags, author relationship
 - Drafts + scheduling
 
 ### 10.11 Coupons (Discount Codes)
+
 - Used at checkout
 - Types: percentage, fixed, free shipping, BOGO
 - Limits: total uses, per-customer uses, expiration date, min order
@@ -1285,13 +1481,28 @@ export const Coupons: CollectionConfig = {
   admin: { useAsTitle: 'code' },
   access: { read: () => true /* validate at checkout */, ...isAdmin },
   fields: [
-    { name: 'code', type: 'text', required: true, unique: true, uppercase: true },
+    {
+      name: 'code',
+      type: 'text',
+      required: true,
+      unique: true,
+      uppercase: true,
+    },
     { name: 'description', type: 'text' },
-    { name: 'type', type: 'select', options: ['percentage', 'fixed', 'freeShipping'] },
+    {
+      name: 'type',
+      type: 'select',
+      options: ['percentage', 'fixed', 'freeShipping'],
+    },
     { name: 'value', type: 'number' },
     { name: 'minOrderAmount', type: 'number' },
     { name: 'maxUses', type: 'number' },
-    { name: 'currentUses', type: 'number', defaultValue: 0, admin: { readOnly: true } },
+    {
+      name: 'currentUses',
+      type: 'number',
+      defaultValue: 0,
+      admin: { readOnly: true },
+    },
     { name: 'maxUsesPerCustomer', type: 'number' },
     { name: 'startsAt', type: 'date' },
     { name: 'expiresAt', type: 'date' },
@@ -1301,6 +1512,7 @@ export const Coupons: CollectionConfig = {
 ```
 
 ### 10.12 Shipping Zones
+
 - Domestic India zones with rates and free-shipping thresholds
 - Editable in admin (no code change)
 
@@ -1311,102 +1523,164 @@ export const ShippingZones: CollectionConfig = {
   access: { ...isAdmin },
   fields: [
     { name: 'name', type: 'text', required: true },
-    { name: 'states', type: 'array', fields: [{ name: 'state', type: 'text' }] },
+    {
+      name: 'states',
+      type: 'array',
+      fields: [{ name: 'state', type: 'text' }],
+    },
     { name: 'rate', type: 'number' },
     { name: 'freeShippingThreshold', type: 'number' },
-    { name: 'estimatedDays', type: 'group', fields: [
-      { name: 'min', type: 'number' },
-      { name: 'max', type: 'number' },
-    ]},
+    {
+      name: 'estimatedDays',
+      type: 'group',
+      fields: [
+        { name: 'min', type: 'number' },
+        { name: 'max', type: 'number' },
+      ],
+    },
   ],
 }
 ```
 
 ### 10.13 Form Submissions (Contact Form)
+
 - Uses Payload's **Form Builder plugin**
 - Admin can view submissions, export CSV
 - Email notification on submit
 
 ### 10.14 Redirects
+
 - Uses Payload's **Redirects plugin**
 - UI in admin to add/remove redirects
 - 301 (permanent) or 302 (temporary)
 
 ### 10.15 Other Plugins Installed
 
-| Plugin | Purpose |
-|--------|---------|
-| `@payloadcms/plugin-stripe` | Stripe sync (for Phase 2 international) |
-| `@payloadcms/plugin-seo` | Per-page SEO meta fields |
-| `@payloadcms/plugin-search` | Full-text search |
-| `@payloadcms/plugin-redirects` | URL redirect management |
-| `@payloadcms/plugin-nested-docs` | Nested categories |
-| `@payloadcms/plugin-form-builder` | Forms + submissions |
-| `@payloadcms/db-vercel-postgres` | Vercel Postgres adapter (or `@payloadcms/db-postgres` + Neon) |
+| Plugin                            | Purpose                                                       |
+| --------------------------------- | ------------------------------------------------------------- |
+| `@payloadcms/plugin-stripe`       | Stripe sync (for Phase 2 international)                       |
+| `@payloadcms/plugin-seo`          | Per-page SEO meta fields                                      |
+| `@payloadcms/plugin-search`       | Full-text search                                              |
+| `@payloadcms/plugin-redirects`    | URL redirect management                                       |
+| `@payloadcms/plugin-nested-docs`  | Nested categories                                             |
+| `@payloadcms/plugin-form-builder` | Forms + submissions                                           |
+| `@payloadcms/db-vercel-postgres`  | Vercel Postgres adapter (or `@payloadcms/db-postgres` + Neon) |
 | `@payloadcms/storage-vercel-blob` | Vercel Blob for media (or `@payloadcms/storage-s3` for R2/S3) |
-| `@payloadcms/next` | Next.js integration utilities |
+| `@payloadcms/next`                | Next.js integration utilities                                 |
 
 ### Globals (Singletons)
 
 #### Header (`src/globals/Header.ts`)
+
 ```ts
 fields: [
-  { name: 'navItems', type: 'array', fields: [
-    { name: 'label', type: 'text' },
-    { name: 'type', type: 'select', options: ['link', 'megaMenu', 'dropdown'] },
-    { name: 'url', type: 'text' },
-    { name: 'children', type: 'array', fields: [
+  {
+    name: 'navItems',
+    type: 'array',
+    fields: [
       { name: 'label', type: 'text' },
+      {
+        name: 'type',
+        type: 'select',
+        options: ['link', 'megaMenu', 'dropdown'],
+      },
       { name: 'url', type: 'text' },
-      { name: 'image', type: 'upload', relationTo: 'media' },
-    ]},
-  ]},
-  { name: 'announcementBar', type: 'group', fields: [
-    { name: 'enabled', type: 'checkbox' },
-    { name: 'text', type: 'text' },
-    { name: 'link', type: 'text' },
-  ]},
+      {
+        name: 'children',
+        type: 'array',
+        fields: [
+          { name: 'label', type: 'text' },
+          { name: 'url', type: 'text' },
+          { name: 'image', type: 'upload', relationTo: 'media' },
+        ],
+      },
+    ],
+  },
+  {
+    name: 'announcementBar',
+    type: 'group',
+    fields: [
+      { name: 'enabled', type: 'checkbox' },
+      { name: 'text', type: 'text' },
+      { name: 'link', type: 'text' },
+    ],
+  },
 ]
 ```
 
 #### Footer
+
 Similar to Header with column-based nav.
 
 #### Homepage
+
 ```ts
 fields: [
-  { name: 'hero', type: 'group', fields: [
-    { name: 'headline', type: 'text' },
-    { name: 'subheadline', type: 'textarea' },
-    { name: 'image', type: 'upload', relationTo: 'media' },
-    { name: 'cta', type: 'group', fields: [
+  {
+    name: 'hero',
+    type: 'group',
+    fields: [
+      { name: 'headline', type: 'text' },
+      { name: 'subheadline', type: 'textarea' },
+      { name: 'image', type: 'upload', relationTo: 'media' },
+      {
+        name: 'cta',
+        type: 'group',
+        fields: [
+          { name: 'label', type: 'text' },
+          { name: 'url', type: 'text' },
+        ],
+      },
+    ],
+  },
+  {
+    name: 'categoryGrid',
+    type: 'array',
+    fields: [
       { name: 'label', type: 'text' },
+      { name: 'image', type: 'upload', relationTo: 'media' },
       { name: 'url', type: 'text' },
-    ]},
-  ]},
-  { name: 'categoryGrid', type: 'array', fields: [
-    { name: 'label', type: 'text' },
-    { name: 'image', type: 'upload', relationTo: 'media' },
-    { name: 'url', type: 'text' },
-  ]},
-  { name: 'featuredCollection', type: 'relationship', relationTo: 'categories' },
-  { name: 'newArrivalsCollection', type: 'relationship', relationTo: 'categories' },
-  { name: 'bestSellersCollection', type: 'relationship', relationTo: 'categories' },
-  { name: 'brandStory', type: 'group', fields: [
-    { name: 'image', type: 'upload', relationTo: 'media' },
-    { name: 'headline', type: 'text' },
-    { name: 'body', type: 'textarea' },
-    { name: 'cta', type: 'group' },
-  ]},
-  { name: 'trustStrip', type: 'array', fields: [
-    { name: 'icon', type: 'text' },
-    { name: 'title', type: 'text' },
-    { name: 'subtitle', type: 'text' },
-  ]},
+    ],
+  },
+  {
+    name: 'featuredCollection',
+    type: 'relationship',
+    relationTo: 'categories',
+  },
+  {
+    name: 'newArrivalsCollection',
+    type: 'relationship',
+    relationTo: 'categories',
+  },
+  {
+    name: 'bestSellersCollection',
+    type: 'relationship',
+    relationTo: 'categories',
+  },
+  {
+    name: 'brandStory',
+    type: 'group',
+    fields: [
+      { name: 'image', type: 'upload', relationTo: 'media' },
+      { name: 'headline', type: 'text' },
+      { name: 'body', type: 'textarea' },
+      { name: 'cta', type: 'group' },
+    ],
+  },
+  {
+    name: 'trustStrip',
+    type: 'array',
+    fields: [
+      { name: 'icon', type: 'text' },
+      { name: 'title', type: 'text' },
+      { name: 'subtitle', type: 'text' },
+    ],
+  },
 ]
 ```
 
 #### Settings
+
 ```ts
 fields: [
   { name: 'siteName', type: 'text' },
@@ -1416,21 +1690,29 @@ fields: [
   { name: 'contactPhone', type: 'text' },
   { name: 'whatsappNumber', type: 'text' },
   { name: 'address', type: 'textarea' },
-  { name: 'socialLinks', type: 'group', fields: [
-    { name: 'instagram', type: 'text' },
-    { name: 'facebook', type: 'text' },
-    { name: 'youtube', type: 'text' },
-    { name: 'pinterest', type: 'text' },
-  ]},
+  {
+    name: 'socialLinks',
+    type: 'group',
+    fields: [
+      { name: 'instagram', type: 'text' },
+      { name: 'facebook', type: 'text' },
+      { name: 'youtube', type: 'text' },
+      { name: 'pinterest', type: 'text' },
+    ],
+  },
   { name: 'currency', type: 'text', defaultValue: 'INR' },
   { name: 'defaultShippingRate', type: 'number', defaultValue: 99 },
   { name: 'freeShippingThreshold', type: 'number', defaultValue: 999 },
-  { name: 'taxRate', type: 'number', defaultValue: 0 },  // GST-inclusive display
+  { name: 'taxRate', type: 'number', defaultValue: 0 }, // GST-inclusive display
   { name: 'codEnabled', type: 'checkbox', defaultValue: true },
-  { name: 'analytics', type: 'group', fields: [
-    { name: 'ga4Id', type: 'text' },
-    { name: 'metaPixelId', type: 'text' },
-  ]},
+  {
+    name: 'analytics',
+    type: 'group',
+    fields: [
+      { name: 'ga4Id', type: 'text' },
+      { name: 'metaPixelId', type: 'text' },
+    ],
+  },
 ]
 ```
 
@@ -1453,33 +1735,44 @@ export const Products: CollectionConfig = {
     defaultColumns: ['title', 'price', 'fabric', 'stockStatus', 'updatedAt'],
   },
   access: {
-    read: () => true,  // public can read published
+    read: () => true, // public can read published
     create: isAdminOrEditor,
     update: isAdminOrEditor,
     delete: isAdmin,
   },
   versions: { drafts: true },
   hooks: {
-    beforeChange: [
-      formatSlug,
-      computeStockStatus,
-      revalidateOnPublish,
-    ],
+    beforeChange: [formatSlug, computeStockStatus, revalidateOnPublish],
   },
   fields: [
     // ============ IDENTITY ============
     { name: 'title', type: 'text', required: true },
-    { name: 'slug', type: 'text', required: true, unique: true, index: true,
-      hooks: { beforeValidate: [formatSlug] } },
+    {
+      name: 'slug',
+      type: 'text',
+      required: true,
+      unique: true,
+      index: true,
+      hooks: { beforeValidate: [formatSlug] },
+    },
     { name: 'sku', type: 'text', required: true, unique: true, index: true },
     { name: 'vendor', type: 'text', defaultValue: 'Shagya' },
-    { name: 'status', type: 'select', options: ['draft', 'published', 'archived'], defaultValue: 'draft' },
+    {
+      name: 'status',
+      type: 'select',
+      options: ['draft', 'published', 'archived'],
+      defaultValue: 'draft',
+    },
     { name: 'tags', type: 'array', fields: [{ name: 'tag', type: 'text' }] },
 
     // ============ PRICING ============
     { name: 'price', type: 'number', required: true, min: 0 },
-    { name: 'compareAtPrice', type: 'number', min: 0,  // MRP for discount display
-      admin: { description: 'MRP. Leave empty if no discount.' } },
+    {
+      name: 'compareAtPrice',
+      type: 'number',
+      min: 0, // MRP for discount display
+      admin: { description: 'MRP. Leave empty if no discount.' },
+    },
     { name: 'taxIncluded', type: 'checkbox', defaultValue: true },
 
     // ============ INVENTORY ============
@@ -1487,30 +1780,57 @@ export const Products: CollectionConfig = {
     { name: 'stockQuantity', type: 'number', defaultValue: 0, min: 0 },
     { name: 'lowStockThreshold', type: 'number', defaultValue: 3 },
     { name: 'allowBackorder', type: 'checkbox', defaultValue: false },
-    { name: 'stockStatus', type: 'select', options: ['in_stock', 'low_stock', 'out_of_stock', 'backorder', 'discontinued'],
-      admin: { readOnly: true },  // computed by hook
+    {
+      name: 'stockStatus',
+      type: 'select',
+      options: [
+        'in_stock',
+        'low_stock',
+        'out_of_stock',
+        'backorder',
+        'discontinued',
+      ],
+      admin: { readOnly: true }, // computed by hook
     },
 
     // ============ MEDIA ============
     {
-      name: 'images', type: 'array', required: true, min: 1, fields: [
+      name: 'images',
+      type: 'array',
+      required: true,
+      min: 1,
+      fields: [
         { name: 'image', type: 'upload', relationTo: 'media', required: true },
         { name: 'alt', type: 'text', required: true },
         { name: 'isPrimary', type: 'checkbox', defaultValue: false },
-        { name: 'variant', type: 'text',  // ties image to a variant (color)
-          admin: { description: 'Color name this image belongs to (e.g. "Red")' } },
+        {
+          name: 'variant',
+          type: 'text', // ties image to a variant (color)
+          admin: {
+            description: 'Color name this image belongs to (e.g. "Red")',
+          },
+        },
         { name: 'order', type: 'number', defaultValue: 0 },
       ],
     },
-    { name: 'video', type: 'group', fields: [
-      { name: 'url', type: 'text' },
-      { name: 'type', type: 'select', options: ['youtube', 'vimeo', 'mp4'] },
-    ]},
+    {
+      name: 'video',
+      type: 'group',
+      fields: [
+        { name: 'url', type: 'text' },
+        { name: 'type', type: 'select', options: ['youtube', 'vimeo', 'mp4'] },
+      ],
+    },
 
     // ============ SARI-SPECIFIC CORE ============
     {
-      name: 'fabric', type: 'group', fields: [
-        { name: 'primary', type: 'select', required: true,
+      name: 'fabric',
+      type: 'group',
+      fields: [
+        {
+          name: 'primary',
+          type: 'select',
+          required: true,
           options: [
             { label: 'Pure Silk', value: 'pure_silk' },
             { label: 'Kanchipuram Silk', value: 'kanchipuram_silk' },
@@ -1529,16 +1849,22 @@ export const Products: CollectionConfig = {
             { label: 'Velvet', value: 'velvet' },
             { label: 'Tissue', value: 'tissue' },
             { label: 'Jamawar', value: 'jamawar' },
-          ]},
+          ],
+        },
         { name: 'description', type: 'textarea' },
         { name: 'weight_grams', type: 'number' },
-        { name: 'transparency', type: 'select',
-          options: ['opaque', 'semi_sheer', 'sheer'] },
+        {
+          name: 'transparency',
+          type: 'select',
+          options: ['opaque', 'semi_sheer', 'sheer'],
+        },
       ],
     },
 
     {
-      name: 'weaveType', type: 'select', required: true,
+      name: 'weaveType',
+      type: 'select',
+      required: true,
       options: [
         { label: 'Handloom', value: 'handloom' },
         { label: 'Powerloom', value: 'powerloom' },
@@ -1553,8 +1879,14 @@ export const Products: CollectionConfig = {
     },
 
     {
-      name: 'work', type: 'group', fields: [
-        { name: 'types', type: 'select', hasMany: true, required: true,
+      name: 'work',
+      type: 'group',
+      fields: [
+        {
+          name: 'types',
+          type: 'select',
+          hasMany: true,
+          required: true,
           options: [
             { label: 'Embroidered', value: 'embroidered' },
             { label: 'Printed', value: 'printed' },
@@ -1571,85 +1903,156 @@ export const Products: CollectionConfig = {
             { label: 'Beadwork', value: 'beadwork' },
             { label: 'Thread Work', value: 'thread' },
             { label: 'Plain', value: 'plain' },
-          ]},
-        { name: 'intensity', type: 'select',
-          options: ['fully_embroidered', 'semi_embroidered', 'border_only', 'pallu_only', 'plain'] },
+          ],
+        },
+        {
+          name: 'intensity',
+          type: 'select',
+          options: [
+            'fully_embroidered',
+            'semi_embroidered',
+            'border_only',
+            'pallu_only',
+            'plain',
+          ],
+        },
         { name: 'description', type: 'textarea' },
       ],
     },
 
     {
-      name: 'dimensions', type: 'group', fields: [
-        { name: 'length_meters', type: 'number', required: true, defaultValue: 5.5 },
+      name: 'dimensions',
+      type: 'group',
+      fields: [
+        {
+          name: 'length_meters',
+          type: 'number',
+          required: true,
+          defaultValue: 5.5,
+        },
         { name: 'width_inches', type: 'number' },
       ],
     },
 
     {
-      name: 'blousePiece', type: 'group', fields: [
-        { name: 'included', type: 'checkbox', required: true, defaultValue: true },
+      name: 'blousePiece',
+      type: 'group',
+      fields: [
+        {
+          name: 'included',
+          type: 'checkbox',
+          required: true,
+          defaultValue: true,
+        },
         { name: 'length_meters', type: 'number', defaultValue: 0.8 },
-        { name: 'type', type: 'select',
-          options: ['unstitched', 'pre_stitched', 'custom_available'] },
-        { name: 'fabric', type: 'text', admin: { description: 'e.g. "Matching Silk", "Running Blouse"' } },
+        {
+          name: 'type',
+          type: 'select',
+          options: ['unstitched', 'pre_stitched', 'custom_available'],
+        },
+        {
+          name: 'fabric',
+          type: 'text',
+          admin: { description: 'e.g. "Matching Silk", "Running Blouse"' },
+        },
         { name: 'stitchingAvailable', type: 'checkbox', defaultValue: false },
         { name: 'stitchingPrice', type: 'number' },
       ],
     },
 
     {
-      name: 'petticoat', type: 'group', fields: [
-        { name: 'included', type: 'checkbox', defaultValue: false },
-      ],
+      name: 'petticoat',
+      type: 'group',
+      fields: [{ name: 'included', type: 'checkbox', defaultValue: false }],
     },
 
     {
-      name: 'border', type: 'group', fields: [
-        { name: 'type', type: 'text', admin: { description: 'e.g. "Temple Border", "Contrast Border"' } },
+      name: 'border',
+      type: 'group',
+      fields: [
+        {
+          name: 'type',
+          type: 'text',
+          admin: { description: 'e.g. "Temple Border", "Contrast Border"' },
+        },
         { name: 'description', type: 'textarea' },
       ],
     },
 
     {
-      name: 'pallu', type: 'group', fields: [
-        { name: 'design', type: 'text', admin: { description: 'e.g. "Contrast Zari Pallu"' } },
+      name: 'pallu',
+      type: 'group',
+      fields: [
+        {
+          name: 'design',
+          type: 'text',
+          admin: { description: 'e.g. "Contrast Zari Pallu"' },
+        },
         { name: 'description', type: 'textarea' },
       ],
     },
 
     // ============ COLOR & VARIANTS ============
     {
-      name: 'primaryColor', type: 'text', required: true,  // for swatch
-      admin: { description: 'Primary color name for listing/sort' } },
+      name: 'primaryColor',
+      type: 'text',
+      required: true, // for swatch
+      admin: { description: 'Primary color name for listing/sort' },
+    },
     {
-      name: 'colorVariants', type: 'array', fields: [
+      name: 'colorVariants',
+      type: 'array',
+      fields: [
         { name: 'colorName', type: 'text', required: true },
-        { name: 'colorHex', type: 'text', admin: { description: 'Hex code for swatch (e.g. #c41e3a)' } },
+        {
+          name: 'colorHex',
+          type: 'text',
+          admin: { description: 'Hex code for swatch (e.g. #c41e3a)' },
+        },
         { name: 'sku', type: 'text', required: true },
-        { name: 'price', type: 'number' },  // optional override
+        { name: 'price', type: 'number' }, // optional override
         { name: 'compareAtPrice', type: 'number' },
         { name: 'stockQuantity', type: 'number', defaultValue: 0 },
-        { name: 'imageIndexes', type: 'array', fields: [
-          { name: 'index', type: 'number' },  // ref to images array index
-        ]},
+        {
+          name: 'imageIndexes',
+          type: 'array',
+          fields: [
+            { name: 'index', type: 'number' }, // ref to images array index
+          ],
+        },
         { name: 'isDefault', type: 'checkbox', defaultValue: false },
       ],
     },
     {
-      name: 'size', type: 'group', fields: [
+      name: 'size',
+      type: 'group',
+      fields: [
         { name: 'label', type: 'text', defaultValue: 'Free Size' },
-        { name: 'customLengthAvailable', type: 'checkbox', defaultValue: false },
+        {
+          name: 'customLengthAvailable',
+          type: 'checkbox',
+          defaultValue: false,
+        },
         { name: 'customLengthPrice', type: 'number' },
       ],
     },
 
     // ============ CATEGORIZATION ============
     {
-      name: 'categories', type: 'relationship', relationTo: 'categories', hasMany: true, required: true,
-      admin: { description: 'E.g. Silk Sarees, Wedding Sarees, Embroidered Sarees' },
+      name: 'categories',
+      type: 'relationship',
+      relationTo: 'categories',
+      hasMany: true,
+      required: true,
+      admin: {
+        description: 'E.g. Silk Sarees, Wedding Sarees, Embroidered Sarees',
+      },
     },
     {
-      name: 'occasion', type: 'select', hasMany: true, required: true,
+      name: 'occasion',
+      type: 'select',
+      hasMany: true,
+      required: true,
       options: [
         { label: 'Wedding', value: 'wedding' },
         { label: 'Festive', value: 'festive' },
@@ -1663,7 +2066,9 @@ export const Products: CollectionConfig = {
       ],
     },
     {
-      name: 'season', type: 'select', hasMany: true,
+      name: 'season',
+      type: 'select',
+      hasMany: true,
       options: [
         { label: 'Summer', value: 'summer' },
         { label: 'Winter', value: 'winter' },
@@ -1672,7 +2077,8 @@ export const Products: CollectionConfig = {
       ],
     },
     {
-      name: 'regionOfOrigin', type: 'select',
+      name: 'regionOfOrigin',
+      type: 'select',
       options: [
         { label: 'Kanchipuram', value: 'kanchipuram' },
         { label: 'Banaras/Varanasi', value: 'banaras' },
@@ -1689,9 +2095,17 @@ export const Products: CollectionConfig = {
 
     // ============ CARE ============
     {
-      name: 'careInstructions', type: 'group', fields: [
-        { name: 'instructions', type: 'textarea', required: true,
-          admin: { description: 'e.g. "Dry clean only. Store in muslin cloth."' } },
+      name: 'careInstructions',
+      type: 'group',
+      fields: [
+        {
+          name: 'instructions',
+          type: 'textarea',
+          required: true,
+          admin: {
+            description: 'e.g. "Dry clean only. Store in muslin cloth."',
+          },
+        },
         { name: 'washable', type: 'checkbox', defaultValue: false },
         { name: 'dryCleanRecommended', type: 'checkbox', defaultValue: true },
       ],
@@ -1699,7 +2113,9 @@ export const Products: CollectionConfig = {
 
     // ============ CERTIFICATIONS & TRUST ============
     {
-      name: 'certifications', type: 'select', hasMany: true,
+      name: 'certifications',
+      type: 'select',
+      hasMany: true,
       options: [
         { label: 'Silk Mark', value: 'silk_mark' },
         { label: 'Handloom Mark', value: 'handloom_mark' },
@@ -1708,25 +2124,34 @@ export const Products: CollectionConfig = {
       ],
     },
     {
-      name: 'craftStory', type: 'richText',  // Lexical editor
+      name: 'craftStory',
+      type: 'richText', // Lexical editor
       admin: { description: 'Story about the weaver/artisan/craft' },
     },
 
     // ============ MARKETING ============
     {
-      name: 'marketing', type: 'group', fields: [
+      name: 'marketing',
+      type: 'group',
+      fields: [
         { name: 'isNewArrival', type: 'checkbox', defaultValue: false },
         { name: 'isBestSeller', type: 'checkbox', defaultValue: false },
         { name: 'isLimitedEdition', type: 'checkbox', defaultValue: false },
         { name: 'launchDate', type: 'date' },
         { name: 'comboEligible', type: 'checkbox', defaultValue: false },
-        { name: 'badgeText', type: 'text', admin: { description: 'e.g. "Handpicked", "Staff Pick"' } },
+        {
+          name: 'badgeText',
+          type: 'text',
+          admin: { description: 'e.g. "Handpicked", "Staff Pick"' },
+        },
       ],
     },
 
     // ============ SEO (via SEO plugin) ============
     {
-      name: 'seo', type: 'group', fields: [
+      name: 'seo',
+      type: 'group',
+      fields: [
         { name: 'title', type: 'text' },
         { name: 'description', type: 'textarea' },
         { name: 'keywords', type: 'text' },
@@ -1736,15 +2161,21 @@ export const Products: CollectionConfig = {
 
     // ============ DESCRIPTION ============
     {
-      name: 'shortDescription', type: 'textarea',
-      admin: { description: 'One-liner for cards and previews' } },
+      name: 'shortDescription',
+      type: 'textarea',
+      admin: { description: 'One-liner for cards and previews' },
+    },
     {
-      name: 'description', type: 'richText',  // Lexical
+      name: 'description',
+      type: 'richText', // Lexical
     },
 
     // ============ ANALYTICS ============
     {
-      name: 'analytics', type: 'group', admin: { readOnly: true, position: 'sidebar' }, fields: [
+      name: 'analytics',
+      type: 'group',
+      admin: { readOnly: true, position: 'sidebar' },
+      fields: [
         { name: 'viewCount', type: 'number', defaultValue: 0 },
         { name: 'purchaseCount', type: 'number', defaultValue: 0 },
         { name: 'lastViewedAt', type: 'date' },
@@ -1755,6 +2186,7 @@ export const Products: CollectionConfig = {
 ```
 
 ### Example Product Document (simplified JSON)
+
 ```json
 {
   "id": "abc123",
@@ -1812,11 +2244,13 @@ export const Products: CollectionConfig = {
 ```
 
 ### Validation Hook Examples
+
 ```ts
 // Compute stock status before save
 const computeStockStatus: CollectionBeforeChangeHook = ({ data }) => {
   if (data.stockQuantity === 0) data.stockStatus = 'out_of_stock'
-  else if (data.stockQuantity <= (data.lowStockThreshold || 3)) data.stockStatus = 'low_stock'
+  else if (data.stockQuantity <= (data.lowStockThreshold || 3))
+    data.stockStatus = 'low_stock'
   else data.stockStatus = 'in_stock'
   return data
 }
@@ -1838,20 +2272,23 @@ const formatSlug: CollectionBeforeChangeHook = ({ data, operation }) => {
 ## 12. Variants & Options
 
 ### Recommended approach for sarees: nested colorVariants array
+
 Each saree has 1–3 color variants. Stored as an array on the Product (see
 Section 10.5 reasoning). The active variant is tracked in the cart as JSON.
 
 ### Cart variant representation
+
 ```ts
 type CartItem = {
   product: Product
   variant: { colorName: string; colorHex: string; sku: string }
   quantity: number
-  unitPrice: number  // snapshot at add-to-cart time
+  unitPrice: number // snapshot at add-to-cart time
 }
 ```
 
 ### PDP variant selector UX
+
 - Color swatches displayed (using `colorHex`)
 - Click swatch → updates main image gallery (filter `imageIndexes`)
 - Updates price if variant has price override
@@ -1863,27 +2300,31 @@ type CartItem = {
 ## 13. Categories & Taxonomy
 
 ### Category Types
+
 Each `Categories` document has a `type` field. Different `type` values
 behave differently in the storefront:
 
-| Type | Purpose | Examples |
-|------|---------|----------|
-| `fabric` | Filterable on PLP | Silk Sarees, Cotton Sarees, Georgette Sarees |
-| `occasion` | Filterable on PLP | Wedding, Festive, Party, Daily |
-| `work` | Filterable on PLP | Embroidered, Printed, Woven, Plain |
-| `collection` | Standalone page (PLP) | New Arrivals, Best Sellers, Sale |
-| `editorial` | Curated marketing collection | Bridal Edit, Summer Edit |
+| Type         | Purpose                      | Examples                                     |
+| ------------ | ---------------------------- | -------------------------------------------- |
+| `fabric`     | Filterable on PLP            | Silk Sarees, Cotton Sarees, Georgette Sarees |
+| `occasion`   | Filterable on PLP            | Wedding, Festive, Party, Daily               |
+| `work`       | Filterable on PLP            | Embroidered, Printed, Woven, Plain           |
+| `collection` | Standalone page (PLP)        | New Arrivals, Best Sellers, Sale             |
+| `editorial`  | Curated marketing collection | Bridal Edit, Summer Edit                     |
 
 ### Page Routing
-| Type | Route | Source |
-|------|-------|--------|
-| `collection` | `/collections/[slug]` | Single document |
-| `editorial` | `/collections/[slug]` | Single document |
+
+| Type                           | Route                                                        | Source          |
+| ------------------------------ | ------------------------------------------------------------ | --------------- |
+| `collection`                   | `/collections/[slug]`                                        | Single document |
+| `editorial`                    | `/collections/[slug]`                                        | Single document |
 | `fabric` / `occasion` / `work` | `/collections/[slug]` (but can be also a filter chip on PLP) | Single document |
 
 ### Filter Implementation
+
 The PLP at `/collections/[slug]` uses Payload's Local API to query
 products:
+
 ```ts
 const products = await payload.find({
   collection: 'products',
@@ -1891,7 +2332,7 @@ const products = await payload.find({
     and: [
       { status: { equals: 'published' } },
       { categories: { in: [categoryId] } },
-      { fabric: { primary: { equals: 'silk' } } },  // from filter UI
+      { fabric: { primary: { equals: 'silk' } } }, // from filter UI
       { price: { greater_than_equal: 1000, less_than_equal: 5000 } },
       { colorVariants: { exists: true } },
     ],
@@ -1909,12 +2350,12 @@ const products = await payload.find({
 > The page types and visual sections are **largely identical** to the
 > Shopify plan. The difference is the implementation:
 >
-> | Aspect | Shopify | Payload |
-> |--------|---------|---------|
-> | Theme | Liquid / Dawn | Next.js + Tailwind + shadcn/ui |
-> | Components | Liquid templates + JSON config | React Server Components + Client Components |
-> | Content | Metafields + theme settings | Payload fields + Layout Builder blocks |
-> | Data fetching | Liquid / AJAX | RSC `payload.find()` + Server Actions |
+> | Aspect        | Shopify                        | Payload                                     |
+> | ------------- | ------------------------------ | ------------------------------------------- |
+> | Theme         | Liquid / Dawn                  | Next.js + Tailwind + shadcn/ui              |
+> | Components    | Liquid templates + JSON config | React Server Components + Client Components |
+> | Content       | Metafields + theme settings    | Payload fields + Layout Builder blocks      |
+> | Data fetching | Liquid / AJAX                  | RSC `payload.find()` + Server Actions       |
 
 **The page sections (Homepage, PLP, PDP, Cart, Checkout, Account, static
 pages) are functionally identical to the Shopify plan.** Refer to
@@ -1922,6 +2363,7 @@ pages) are functionally identical to the Shopify plan.** Refer to
 for the full page-by-page breakdown.
 
 ### Key Payload-specific differences
+
 - **Homepage sections** are editable via the `Homepage` global in admin
 - **Static pages** (About, FAQ, etc.) use the **Layout Builder** — non-technical
   staff can add/remove sections
@@ -1937,6 +2379,7 @@ for the full page-by-page breakdown.
 > at `/admin` and requires zero frontend code.
 
 ### Default Admin Capabilities
+
 - **Dashboard** with collection counts
 - **List views** with search, filter, sort, pagination
 - **Edit views** with all fields rendered appropriately (text, select,
@@ -1949,32 +2392,35 @@ for the full page-by-page breakdown.
 - **User & role management**
 
 ### Custom Admin Components
+
 For saree-specific workflows, build custom React components that slot into
 the admin:
 
-| Component | Purpose |
-|-----------|---------|
-| `OrderStatusBadge` | Color-coded status indicator on order list |
-| `ProductImagePreview` | Reorder product images with drag-and-drop |
-| `InventoryQuickEdit` | Edit stock without opening full product |
-| `CouponUsageChart` | Show coupon usage over time |
+| Component               | Purpose                                                  |
+| ----------------------- | -------------------------------------------------------- |
+| `OrderStatusBadge`      | Color-coded status indicator on order list               |
+| `ProductImagePreview`   | Reorder product images with drag-and-drop                |
+| `InventoryQuickEdit`    | Edit stock without opening full product                  |
+| `CouponUsageChart`      | Show coupon usage over time                              |
 | `SareeAttributePreview` | Visual preview of saree attributes (fabric swatch, etc.) |
-| `LowStockAlert` | Dashboard widget showing low-stock products |
-| `DailySalesWidget` | Dashboard widget with revenue chart |
+| `LowStockAlert`         | Dashboard widget showing low-stock products              |
+| `DailySalesWidget`      | Dashboard widget with revenue chart                      |
 
 ### Custom Views
+
 - **Order Fulfillment View** — Kanban board: Pending → Processing → Shipped → Delivered
 - **Inventory Dashboard** — Stock levels at a glance, reorder alerts
 - **Customer 360** — Single page per customer showing orders, addresses, wishlist, notes
 
 ### Access Control Per Role
-| Role | Can Do |
-|------|--------|
-| `superAdmin` | Everything |
-| `admin` | All except user management |
-| `editor` | Products, pages, posts (no orders/customers) |
-| `fulfillment` | Orders, shipments (read-only on products) |
-| `support` | Customers, orders (read-only) |
+
+| Role          | Can Do                                       |
+| ------------- | -------------------------------------------- |
+| `superAdmin`  | Everything                                   |
+| `admin`       | All except user management                   |
+| `editor`      | Products, pages, posts (no orders/customers) |
+| `fulfillment` | Orders, shipments (read-only on products)    |
+| `support`     | Customers, orders (read-only)                |
 
 ---
 
@@ -1982,34 +2428,35 @@ the admin:
 
 ### Server Components vs Client Components
 
-| Component | Type | Why |
-|-----------|------|-----|
+| Component                  | Type                                     | Why                                                            |
+| -------------------------- | ---------------------------------------- | -------------------------------------------------------------- |
 | `Header` (with cart count) | Hybrid (server shell + client cart icon) | Initial render from server, cart count via client subscription |
-| `Footer` | Server | Static content from global |
-| `Homepage` | Server | Reads from Homepage global |
-| `Collection page` | Server | Direct DB query via `payload.find()` |
-| `PDP` | Server | Product data fetched server-side |
-| `ProductGallery` | **Client** | Image zoom, lightbox, swatch click |
-| `VariantSelector` | **Client** | Interactive state for selected color |
-| `AddToCartButton` | **Client** | Calls server action / cart store |
-| `CartDrawer` | **Client** | Cart state from Zustand |
-| `FilterSidebar` | **Client** | URL search params update |
-| `CheckoutForm` | **Client** | React Hook Form, multi-step state |
-| `AccountDashboard` | Server | Auth-aware data fetch |
-| `WishlistButton` | **Client** | Optimistic UI update |
+| `Footer`                   | Server                                   | Static content from global                                     |
+| `Homepage`                 | Server                                   | Reads from Homepage global                                     |
+| `Collection page`          | Server                                   | Direct DB query via `payload.find()`                           |
+| `PDP`                      | Server                                   | Product data fetched server-side                               |
+| `ProductGallery`           | **Client**                               | Image zoom, lightbox, swatch click                             |
+| `VariantSelector`          | **Client**                               | Interactive state for selected color                           |
+| `AddToCartButton`          | **Client**                               | Calls server action / cart store                               |
+| `CartDrawer`               | **Client**                               | Cart state from Zustand                                        |
+| `FilterSidebar`            | **Client**                               | URL search params update                                       |
+| `CheckoutForm`             | **Client**                               | React Hook Form, multi-step state                              |
+| `AccountDashboard`         | Server                                   | Auth-aware data fetch                                          |
+| `WishlistButton`           | **Client**                               | Optimistic UI update                                           |
 
 ### State Management
 
-| Concern | Tool |
-|---------|------|
-| Cart (client) | **Zustand** + persist to localStorage |
-| Cart (server, for logged-in users) | **Payload `carts` collection** |
-| UI state (modals, drawers) | Zustand |
-| Form state | **React Hook Form** |
-| Server data | **Next.js fetch + revalidate** (or TanStack Query) |
-| Auth state | **Better Auth cookies** (customer) + **Payload cookies** (admin) — read in Server Components |
+| Concern                            | Tool                                                                                         |
+| ---------------------------------- | -------------------------------------------------------------------------------------------- |
+| Cart (client)                      | **Zustand** + persist to localStorage                                                        |
+| Cart (server, for logged-in users) | **Payload `carts` collection**                                                               |
+| UI state (modals, drawers)         | Zustand                                                                                      |
+| Form state                         | **React Hook Form**                                                                          |
+| Server data                        | **Next.js fetch + revalidate** (or TanStack Query)                                           |
+| Auth state                         | **Better Auth cookies** (customer) + **Payload cookies** (admin) — read in Server Components |
 
 ### Cart Strategy
+
 - **Guest users**: Cart stored in localStorage + synced to cookie for SSR
   badge
 - **Logged-in users**: Cart persisted in `carts` Payload collection
@@ -2023,7 +2470,11 @@ the admin:
 import { getPayload } from 'payload'
 import config from '@payload-config'
 
-export async function addToCart(productId: string, variant: any, quantity: number) {
+export async function addToCart(
+  productId: string,
+  variant: any,
+  quantity: number,
+) {
   const customer = await getCurrentCustomer()
   if (!customer) return { success: false, reason: 'not_logged_in' }
 
@@ -2035,6 +2486,7 @@ export async function addToCart(productId: string, variant: any, quantity: numbe
 ```
 
 ### Data Fetching Pattern (RSC)
+
 ```ts
 // src/app/(frontend)/products/[slug]/page.tsx
 import { getPayload } from 'payload'
@@ -2067,11 +2519,13 @@ export const revalidate = 3600  // revalidate every hour
 ```
 
 ### Live Preview
+
 Payload supports **Live Preview** out of the box. When an admin edits a
 page/post in the admin panel, they see the storefront update in real time
 next to the edit form. No setup beyond the `@payloadcms/next` package.
 
 ### Draft Mode
+
 Next.js `draftMode()` + Payload `drafts: true` lets admins preview
 unpublished products/pages before they go live.
 
@@ -2080,12 +2534,14 @@ unpublished products/pages before they go live.
 ## 17. Cart & Checkout Flow
 
 ### Checkout Architecture
+
 Unlike Shopify (which provides a pre-built, PCI-compliant checkout), we
 build a **custom checkout** that talks to **Razorpay** for payment
 processing. Razorpay handles the actual card entry + PCI compliance; we
 build the surrounding UX.
 
 ### Flow
+
 ```
 1. Browse → Add to Cart (Server Action)
 2. View Cart (RSC + Client for interactions)
@@ -2105,6 +2561,7 @@ build the surrounding UX.
 ### Razorpay Integration
 
 #### Step 1: Server-side order creation
+
 ```ts
 // src/app/api/razorpay/create-order/route.ts
 import Razorpay from 'razorpay'
@@ -2118,7 +2575,7 @@ const razorpay = new Razorpay({
 export async function POST(req: Request) {
   const { amount, currency = 'INR' } = await req.json()
   const order = await razorpay.orders.create({
-    amount: amount * 100,  // paise
+    amount: amount * 100, // paise
     currency,
     receipt: `rcpt_${Date.now()}`,
   })
@@ -2127,6 +2584,7 @@ export async function POST(req: Request) {
 ```
 
 #### Step 2: Client-side checkout trigger
+
 ```tsx
 'use client'
 import { useEffect } from 'react'
@@ -2148,7 +2606,11 @@ export function RazorpayCheckout({ order, customer }) {
       name: 'Shagya',
       description: `Order #${order.receipt}`,
       order_id: order.id,
-      prefill: { name: customer.name, email: customer.email, contact: customer.phone },
+      prefill: {
+        name: customer.name,
+        email: customer.email,
+        contact: customer.phone,
+      },
       theme: { color: '#0a0a0a' },
       handler: async (response) => {
         // Verify on server
@@ -2168,6 +2630,7 @@ export function RazorpayCheckout({ order, customer }) {
 ```
 
 #### Step 3: Server-side verification (CRITICAL)
+
 ```ts
 // src/app/api/razorpay/verify/route.ts
 import crypto from 'crypto'
@@ -2175,7 +2638,12 @@ import { getPayload } from 'payload'
 import config from '@payload-config'
 
 export async function POST(req: Request) {
-  const { razorpay_order_id, razorpay_payment_id, razorpay_signature, orderData } = await req.json()
+  const {
+    razorpay_order_id,
+    razorpay_payment_id,
+    razorpay_signature,
+    orderData,
+  } = await req.json()
 
   const expected = crypto
     .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET!)
@@ -2183,7 +2651,10 @@ export async function POST(req: Request) {
     .digest('hex')
 
   if (expected !== razorpay_signature) {
-    return Response.json({ success: false, error: 'Invalid signature' }, { status: 400 })
+    return Response.json(
+      { success: false, error: 'Invalid signature' },
+      { status: 400 },
+    )
   }
 
   // Signature valid → create Order in DB
@@ -2210,6 +2681,7 @@ export async function POST(req: Request) {
 ```
 
 #### Step 4: Webhook handler (for failed payments, refunds, etc.)
+
 ```ts
 // src/app/api/webhooks/razorpay/route.ts
 import crypto from 'crypto'
@@ -2249,6 +2721,7 @@ export async function POST(req: Request) {
 ```
 
 ### COD Flow
+
 1. Customer selects COD
 2. Server creates Order with `payment.status: 'pending'`, `fulfillment.status: 'pending'`
 3. Confirmation email sent with "Pay on delivery" message
@@ -2257,6 +2730,7 @@ export async function POST(req: Request) {
 6. Admin updates order status as fulfilled
 
 ### Multi-step Checkout UI
+
 - Use **React Hook Form** + **Zod** for validation
 - Stepper UI: Contact → Shipping → Payment → Review
 - Save progress in session (so refresh doesn't lose data)
@@ -2273,21 +2747,21 @@ export async function POST(req: Request) {
 
 ### Why Better Auth (over Payload's built-in for customers)
 
-| Feature | Payload Built-in Auth | Better Auth |
-|---------|----------------------|-------------|
-| Email + password | ✅ Built-in | ✅ Built-in |
-| Social login (Google, Facebook, Apple) | ❌ Manual integration | ✅ **30+ built-in** |
-| Phone OTP (popular in India) | ❌ Manual | ✅ **Built-in plugin** |
-| 2FA / TOTP | ❌ Manual | ✅ **Built-in plugin** |
-| Passkeys (WebAuthn) | ❌ Manual | ✅ **Built-in plugin** |
-| Magic link (passwordless email) | ❌ Manual | ✅ **Built-in plugin** |
-| Multi-session per user | ❌ Manual | ✅ **Built-in plugin** |
-| JWT / API keys for mobile | ❌ Manual | ✅ **Built-in plugin** |
-| Bot detection + rate limiting | ❌ Manual | ✅ **Built-in** |
-| Anonymous → upgrade to user | ❌ Manual | ✅ **Built-in plugin** |
-| Roles & permissions | ✅ Field-level | ✅ `organization` plugin + RBAC |
-| Migration path to mobile app | Hard | ✅ JWT / API keys native |
-| Maintenance burden | Low (Payload) | Low (open source) |
+| Feature                                | Payload Built-in Auth | Better Auth                     |
+| -------------------------------------- | --------------------- | ------------------------------- |
+| Email + password                       | ✅ Built-in           | ✅ Built-in                     |
+| Social login (Google, Facebook, Apple) | ❌ Manual integration | ✅ **30+ built-in**             |
+| Phone OTP (popular in India)           | ❌ Manual             | ✅ **Built-in plugin**          |
+| 2FA / TOTP                             | ❌ Manual             | ✅ **Built-in plugin**          |
+| Passkeys (WebAuthn)                    | ❌ Manual             | ✅ **Built-in plugin**          |
+| Magic link (passwordless email)        | ❌ Manual             | ✅ **Built-in plugin**          |
+| Multi-session per user                 | ❌ Manual             | ✅ **Built-in plugin**          |
+| JWT / API keys for mobile              | ❌ Manual             | ✅ **Built-in plugin**          |
+| Bot detection + rate limiting          | ❌ Manual             | ✅ **Built-in**                 |
+| Anonymous → upgrade to user            | ❌ Manual             | ✅ **Built-in plugin**          |
+| Roles & permissions                    | ✅ Field-level        | ✅ `organization` plugin + RBAC |
+| Migration path to mobile app           | Hard                  | ✅ JWT / API keys native        |
+| Maintenance burden                     | Low (Payload)         | Low (open source)               |
 
 **Verdict**: For a customer-facing Indian saree site where phone OTP and
 Google login are table stakes, Better Auth saves 4–6 weeks of custom
@@ -2345,18 +2819,18 @@ import {
   admin as adminPlugin,
   organization,
 } from 'better-auth/plugins'
-import { resend } from './resend'  // email sender
+import { resend } from './resend' // email sender
 
 // Shared Postgres pool (same DB Payload uses)
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL!,  // Neon / self-hosted / etc.
+  connectionString: process.env.DATABASE_URL!, // Neon / self-hosted / etc.
 })
 
 export const auth = betterAuth({
   database: pool,
 
   baseURL: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
-  secret: process.env.BETTER_AUTH_SECRET!,  // openssl rand -base64 32
+  secret: process.env.BETTER_AUTH_SECRET!, // openssl rand -base64 32
 
   // ── Email + password (built-in) ─────────────────────
   emailAndPassword: {
@@ -2412,11 +2886,11 @@ export const auth = betterAuth({
 
   // ── Session config ──────────────────────────────────
   session: {
-    expiresIn: 60 * 60 * 24 * 7,  // 7 days
-    updateAge: 60 * 60 * 24,       // refresh every 24 hours
+    expiresIn: 60 * 60 * 24 * 7, // 7 days
+    updateAge: 60 * 60 * 24, // refresh every 24 hours
     cookieCache: {
       enabled: true,
-      maxAge: 60 * 5,              // 5 min cache (reduces DB hits)
+      maxAge: 60 * 5, // 5 min cache (reduces DB hits)
     },
   },
 
@@ -2430,7 +2904,7 @@ export const auth = betterAuth({
       role: {
         type: 'string',
         defaultValue: 'customer',
-        input: false,  // don't let user set this
+        input: false, // don't let user set this
       },
     },
   },
@@ -2441,10 +2915,13 @@ export const auth = betterAuth({
     phoneNumber({
       sendOTP: async ({ phoneNumber, code }) => {
         // Use MSG91 or Twilio to send OTP via SMS
-        await sendSms(phoneNumber, `Your Shagya code is: ${code}. Valid for 10 minutes.`)
+        await sendSms(
+          phoneNumber,
+          `Your Shagya code is: ${code}. Valid for 10 minutes.`,
+        )
       },
       otpLength: 6,
-      expiresIn: 600,  // 10 minutes
+      expiresIn: 600, // 10 minutes
       allowedAttempts: 5,
     }),
 
@@ -2476,7 +2953,7 @@ export const auth = betterAuth({
           html: `<p>Click to sign in: <a href="${url}">${url}</a></p>`,
         })
       },
-      expiresIn: 600,  // 10 min
+      expiresIn: 600, // 10 min
     }),
 
     // Admin plugin (manage customers from a Better Auth dashboard)
@@ -2489,7 +2966,7 @@ export const auth = betterAuth({
     anonymous(),
 
     // IMPORTANT: must be last
-    nextCookies(),  // sets cookies in Server Actions
+    nextCookies(), // sets cookies in Server Actions
   ],
 
   // ── Database hooks (sync with Payload) ──────────────
@@ -2510,7 +2987,10 @@ export const auth = betterAuth({
                 betterAuthUserId: user.id,
                 email: user.email,
                 firstName: user.firstName || user.name?.split(' ')[0] || '',
-                lastName: user.lastName || user.name?.split(' ').slice(1).join(' ') || '',
+                lastName:
+                  user.lastName ||
+                  user.name?.split(' ').slice(1).join(' ') ||
+                  '',
                 phone: user.phone || '',
                 marketingOptIn: false,
               },
@@ -2585,6 +3065,7 @@ export const { GET, POST } = toNextJsHandler(auth)
 ```
 
 That's it. Better Auth now exposes all endpoints at `/api/auth/*`:
+
 - `POST /api/auth/sign-up/email` — email signup
 - `POST /api/auth/sign-in/email` — email login
 - `POST /api/auth/sign-in/social` — OAuth (Google, Facebook, Apple)
@@ -2613,7 +3094,9 @@ export async function proxy(request: NextRequest) {
   const sessionCookie = getSessionCookie(request)
 
   const protectedPaths = ['/account', '/checkout', '/admin']
-  const isProtected = protectedPaths.some(p => request.nextUrl.pathname.startsWith(p))
+  const isProtected = protectedPaths.some((p) =>
+    request.nextUrl.pathname.startsWith(p),
+  )
 
   if (isProtected && !sessionCookie) {
     const url = request.nextUrl.clone()
@@ -2683,7 +3166,7 @@ export const {
   signUp,
   signOut,
   useSession,
-  socialSignIn,  // Google, Facebook, Apple
+  socialSignIn, // Google, Facebook, Apple
 } = authClient
 ```
 
@@ -2730,15 +3213,18 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="max-w-md mx-auto p-6">
-      <h1 className="text-2xl font-semibold mb-6">Sign in to Shagya</h1>
+    <div className="mx-auto max-w-md p-6">
+      <h1 className="mb-6 text-2xl font-semibold">Sign in to Shagya</h1>
 
       {/* Social login */}
-      <div className="space-y-2 mb-6">
+      <div className="mb-6 space-y-2">
         <button onClick={handleGoogleLogin} className="btn-google w-full">
           Continue with Google
         </button>
-        <button onClick={() => signIn.social({ provider: 'facebook' })} className="btn-fb w-full">
+        <button
+          onClick={() => signIn.social({ provider: 'facebook' })}
+          className="btn-fb w-full"
+        >
           Continue with Facebook
         </button>
         <button onClick={handlePhoneLogin} className="btn-phone w-full">
@@ -2754,28 +3240,34 @@ export default function LoginPage() {
           type="email"
           placeholder="Email"
           value={email}
-          onChange={e => setEmail(e.target.value)}
+          onChange={(e) => setEmail(e.target.value)}
           required
         />
         <input
           type="password"
           placeholder="Password"
           value={password}
-          onChange={e => setPassword(e.target.value)}
+          onChange={(e) => setPassword(e.target.value)}
           required
         />
-        {error && <p className="text-red-500 text-sm">{error}</p>}
+        {error && <p className="text-sm text-red-500">{error}</p>}
         <button type="submit" disabled={loading} className="btn-primary w-full">
           {loading ? 'Signing in...' : 'Sign in with Email'}
         </button>
       </form>
 
-      <div className="mt-4 text-sm text-center space-y-1">
-        <a href="/account/forgot-password" className="text-gray-600 hover:underline">
+      <div className="mt-4 space-y-1 text-center text-sm">
+        <a
+          href="/account/forgot-password"
+          className="text-gray-600 hover:underline"
+        >
           Forgot password?
         </a>
         <p className="text-gray-600">
-          New here? <a href="/account/register" className="text-black font-medium">Create account</a>
+          New here?{' '}
+          <a href="/account/register" className="font-medium text-black">
+            Create account
+          </a>
         </p>
       </div>
     </div>
@@ -2821,14 +3313,14 @@ export default function PhoneLoginPage() {
   }
 
   return (
-    <div className="max-w-md mx-auto p-6">
-      <h1 className="text-2xl font-semibold mb-6">Sign in with Phone</h1>
+    <div className="mx-auto max-w-md p-6">
+      <h1 className="mb-6 text-2xl font-semibold">Sign in with Phone</h1>
       {step === 'phone' ? (
         <>
           <input
             type="tel"
             value={phone}
-            onChange={e => setPhone(e.target.value)}
+            onChange={(e) => setPhone(e.target.value)}
             placeholder="+91 9876543210"
           />
           <button onClick={sendOtp} disabled={loading} className="btn-primary">
@@ -2841,11 +3333,15 @@ export default function PhoneLoginPage() {
           <input
             type="text"
             value={otp}
-            onChange={e => setOtp(e.target.value)}
+            onChange={(e) => setOtp(e.target.value)}
             placeholder="6-digit OTP"
             maxLength={6}
           />
-          <button onClick={verifyOtp} disabled={loading} className="btn-primary">
+          <button
+            onClick={verifyOtp}
+            disabled={loading}
+            className="btn-primary"
+          >
             Verify & Sign in
           </button>
         </>
@@ -2866,13 +3362,21 @@ export default async function AccountPage() {
   if (!customer) redirect('/account/login')
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="mx-auto max-w-4xl p-6">
       <h1>Welcome, {customer.firstName}!</h1>
-      <div className="grid grid-cols-2 gap-4 mt-6">
-        <a href="/account/orders" className="card">My Orders ({customer.totalOrders})</a>
-        <a href="/account/addresses" className="card">Addresses</a>
-        <a href="/account/wishlist" className="card">Wishlist</a>
-        <a href="/account/profile" className="card">Profile</a>
+      <div className="mt-6 grid grid-cols-2 gap-4">
+        <a href="/account/orders" className="card">
+          My Orders ({customer.totalOrders})
+        </a>
+        <a href="/account/addresses" className="card">
+          Addresses
+        </a>
+        <a href="/account/wishlist" className="card">
+          Wishlist
+        </a>
+        <a href="/account/profile" className="card">
+          Profile
+        </a>
       </div>
     </div>
   )
@@ -2913,12 +3417,12 @@ export async function sendSms(phone: string, message: string) {
   const response = await fetch('https://control.msg91.com/api/v5/flow/', {
     method: 'POST',
     headers: {
-      'authkey': process.env.MSG91_AUTH_KEY!,
+      authkey: process.env.MSG91_AUTH_KEY!,
       'content-type': 'application/json',
     },
     body: JSON.stringify({
       sender: 'SHAGYA',
-      route: '4',  // transactional
+      route: '4', // transactional
       country: '91',
       sms: [{ message, to: phone.replace('+91', '') }],
     }),
@@ -2935,7 +3439,7 @@ import twilio from 'twilio'
 
 const client = twilio(
   process.env.TWILIO_ACCOUNT_SID,
-  process.env.TWILIO_AUTH_TOKEN
+  process.env.TWILIO_AUTH_TOKEN,
 )
 
 export async function sendSms(phone: string, message: string) {
@@ -2950,18 +3454,21 @@ export async function sendSms(phone: string, message: string) {
 ### 18.10 OAuth Provider Setup (Quick Reference)
 
 **Google** (most popular in India):
+
 1. Go to https://console.cloud.google.com
 2. Create OAuth 2.0 Client ID
 3. Authorized redirect URI: `https://shagyabrand.com/api/auth/callback/google`
 4. Add `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` to `.env`
 
 **Facebook**:
+
 1. Go to https://developers.facebook.com
 2. Create app → Add Facebook Login product
 3. Valid OAuth Redirect URI: `https://shagyabrand.com/api/auth/callback/facebook`
 4. Add `FACEBOOK_APP_ID` and `FACEBOOK_APP_SECRET` to `.env`
 
 **Apple** (required for iOS App Store, recommended for premium feel):
+
 1. https://developer.apple.com → Certificates, Identifiers & Profiles
 2. Create Service ID for "Sign in with Apple"
 3. Generate private key, create JWT client secret
@@ -2984,6 +3491,7 @@ npx @better-auth/cli@latest generate --output ./schema.sql
 ```
 
 Tables created in the same Postgres DB:
+
 - `user` — customers
 - `session` — active sessions
 - `account` — OAuth provider accounts
@@ -3015,32 +3523,33 @@ export default async function AccountPage() {
 
 ### 18.13 Account Features (Customer-Facing)
 
-| Feature | Implementation | Status |
-|---------|---------------|--------|
-| Email + password login | Better Auth built-in | ✅ MVP |
-| Google login | Better Auth socialProviders | ✅ MVP |
-| Facebook login | Better Auth socialProviders | ✅ MVP |
-| Apple login | Better Auth socialProviders | ✅ MVP |
-| Phone OTP login | Better Auth `phoneNumber` plugin | ✅ MVP |
-| Magic link (email) | Better Auth `magicLink` plugin | ✅ MVP |
-| Passkey (WebAuthn) | Better Auth `passkey` plugin | ⭐ Phase 2 |
-| 2FA (TOTP) | Better Auth `twoFactor` plugin | ⭐ Phase 2 |
-| Email verification | Better Auth built-in | ✅ MVP |
-| Password reset | Better Auth built-in | ✅ MVP |
-| Dashboard | Server Component reads Payload customer | ✅ MVP |
-| Order history | Reads Payload orders via `betterAuthUserId` | ✅ MVP |
-| Address book | Stored in Payload `customers.addresses` | ✅ MVP |
-| Wishlist | Stored in Payload `customers.wishlist` | ✅ MVP |
-| Profile edit | Syncs back to Better Auth via hook | ✅ MVP |
-| Marketing opt-in | Stored in Payload `customers.marketingOptIn` | ✅ MVP |
-| Multi-device sessions | Better Auth `multiSession` plugin | ⭐ Phase 2 |
-| Account deletion (GDPR) | Soft delete + scheduled hard delete | ⭐ Phase 2 |
+| Feature                 | Implementation                               | Status     |
+| ----------------------- | -------------------------------------------- | ---------- |
+| Email + password login  | Better Auth built-in                         | ✅ MVP     |
+| Google login            | Better Auth socialProviders                  | ✅ MVP     |
+| Facebook login          | Better Auth socialProviders                  | ✅ MVP     |
+| Apple login             | Better Auth socialProviders                  | ✅ MVP     |
+| Phone OTP login         | Better Auth `phoneNumber` plugin             | ✅ MVP     |
+| Magic link (email)      | Better Auth `magicLink` plugin               | ✅ MVP     |
+| Passkey (WebAuthn)      | Better Auth `passkey` plugin                 | ⭐ Phase 2 |
+| 2FA (TOTP)              | Better Auth `twoFactor` plugin               | ⭐ Phase 2 |
+| Email verification      | Better Auth built-in                         | ✅ MVP     |
+| Password reset          | Better Auth built-in                         | ✅ MVP     |
+| Dashboard               | Server Component reads Payload customer      | ✅ MVP     |
+| Order history           | Reads Payload orders via `betterAuthUserId`  | ✅ MVP     |
+| Address book            | Stored in Payload `customers.addresses`      | ✅ MVP     |
+| Wishlist                | Stored in Payload `customers.wishlist`       | ✅ MVP     |
+| Profile edit            | Syncs back to Better Auth via hook           | ✅ MVP     |
+| Marketing opt-in        | Stored in Payload `customers.marketingOptIn` | ✅ MVP     |
+| Multi-device sessions   | Better Auth `multiSession` plugin            | ⭐ Phase 2 |
+| Account deletion (GDPR) | Soft delete + scheduled hard delete          | ⭐ Phase 2 |
 
 ### 18.14 Better Auth Admin Plugin (Optional)
 
 Better Auth has its own `admin` plugin that gives you a separate admin
 dashboard for managing customers (not products — that's still Payload).
 Useful for support team to:
+
 - View customer list
 - Impersonate customers (for debugging)
 - Ban/unban accounts
@@ -3056,11 +3565,12 @@ admin({
 ```
 
 Access at `/admin-auth` (separate from Payload's `/admin`):
+
 - `/admin-auth/users` — list of all customers
 - `/admin-auth/users/:id` — view/edit customer
 - `/admin-auth/sessions` — active sessions
 
-**Note**: This is a *complement* to Payload's admin, not a replacement.
+**Note**: This is a _complement_ to Payload's admin, not a replacement.
 Use Payload for products/orders/content; use Better Auth admin for
 customer management (sessions, bans, impersonation).
 
@@ -3072,11 +3582,14 @@ rebuild auth:
 
 ```ts
 // In mobile app, exchange Better Auth session for JWT
-const { token } = await auth.api.getToken({ headers: { cookie: sessionCookie } })
+const { token } = await auth.api.getToken({
+  headers: { cookie: sessionCookie },
+})
 // Mobile app uses token in Authorization: Bearer <token>
 ```
 
 Or use API keys for server-to-server:
+
 ```ts
 const apiKey = await auth.api.createApiKey({ name: 'Mobile App', userId })
 ```
@@ -3111,6 +3624,7 @@ runs in the same Next.js process as Payload — no extra infrastructure.
 ### 18.18 Admin Auth (UNCHANGED)
 
 To be crystal clear: **Payload's admin panel auth is unchanged**.
+
 - Admin users (your team) log in at `/admin` using Payload's built-in auth
 - This is intentional — Payload's admin is built around its own auth
 - Customers never see or interact with Payload's auth
@@ -3121,6 +3635,7 @@ To be crystal clear: **Payload's admin panel auth is unchanged**.
 ## 19. Payment Integration — Razorpay + Stripe
 
 ### Why Razorpay (not Stripe) for India
+
 - **Stripe doesn't fully support India** for domestic payments (only
   international cards)
 - **Razorpay** is purpose-built for India: UPI, NetBanking, all major
@@ -3128,6 +3643,7 @@ To be crystal clear: **Payload's admin panel auth is unchanged**.
 - **Razorpay supports international** for cross-border too
 
 ### Razorpay Setup
+
 1. Create Razorpay account: https://razorpay.com
 2. KYC verification (PAN, GST, bank account)
 3. Get API keys (test + live)
@@ -3142,6 +3658,7 @@ To be crystal clear: **Payload's admin panel auth is unchanged**.
 6. Test with test cards
 
 ### Payment Methods (Razorpay)
+
 - **Cards**: Visa, MC, Amex, RuPay, Maestro
 - **UPI**: GPay, PhonePe, Paytm, BHIM (most popular in India)
 - **Net Banking**: 50+ banks
@@ -3151,12 +3668,14 @@ To be crystal clear: **Payload's admin panel auth is unchanged**.
 - **Pay Later**: LazyPay, Simpl, ICICI (Phase 2)
 
 ### Stripe (Phase 2 — International)
+
 - Use Payload's **official Stripe plugin** for international
 - Same Products sync both ways
 - Stripe handles all payment processing, Payload handles all data
 - Activate Stripe when launching international shipping
 
 ### COD Implementation
+
 - Toggle in `Settings` global (`codEnabled`)
 - COD surcharge: `₹49` (optional, configurable)
 - Customer enters address, selects COD
@@ -3170,16 +3689,18 @@ To be crystal clear: **Payload's admin panel auth is unchanged**.
 ## 20. Shipping & Fulfillment
 
 ### Shipping Zones
+
 - Configured in `ShippingZones` collection
 - Editable in admin (no code change)
 - India: Zone 1 (Metro), Zone 2 (Tier 1), Zone 3 (Tier 2/3)
 - Phase 2: International zones (USA, UK, etc.)
 
 ### Rate Calculation
+
 ```ts
 function calculateShipping(state: string, cartSubtotal: number) {
   const zones = await payload.find({ collection: 'shipping-zones' })
-  const zone = zones.docs.find(z => z.states.includes(state))
+  const zone = zones.docs.find((z) => z.states.includes(state))
   if (!zone) return { rate: 99, estimatedDays: { min: 5, max: 7 } }
   if (cartSubtotal >= zone.freeShippingThreshold) {
     return { rate: 0, estimatedDays: zone.estimatedDays }
@@ -3189,6 +3710,7 @@ function calculateShipping(state: string, cartSubtotal: number) {
 ```
 
 ### Shiprocket Integration
+
 - **API client** in `src/lib/shiprocket.ts`
 - **Auto-create shipment** in Shiprocket when order is marked "processing"
 - **Webhook** from Shiprocket updates `fulfillment.status` and `awbCode`
@@ -3213,6 +3735,7 @@ const shiprocket = {
 ```
 
 ### Fulfillment Workflow
+
 1. Order created (`status: pending`, `fulfillment.status: pending`)
 2. Payment confirmed (`payment.status: captured`)
 3. Admin reviews in admin panel
@@ -3228,6 +3751,7 @@ const shiprocket = {
 ## 21. Returns & Exchange
 
 ### Custom Returns Portal
+
 - Customer initiates return from order detail page
 - Returns stored in `Returns` collection (Phase 2) or in Order's
   `returnRequest` group (MVP)
@@ -3235,6 +3759,7 @@ const shiprocket = {
 - Refund issued via Razorpay (auto if approved)
 
 ### Return Flow
+
 1. Customer goes to `/account/orders/[id]`
 2. Clicks "Request Return"
 3. Selects items + reason + photos
@@ -3246,13 +3771,15 @@ const shiprocket = {
 9. Refund processed (auto via Razorpay or manual)
 
 ### Refund via Razorpay
+
 ```ts
 const refund = await razorpay.payments.refund(paymentId, {
-  amount: refundAmount * 100,  // paise
+  amount: refundAmount * 100, // paise
 })
 ```
 
 ### Return Policy (encoded in admin)
+
 - 14-day return window
 - Unused, unwashed, with tags
 - Customer pays return shipping (₹99 deducted from refund)
@@ -3264,6 +3791,7 @@ const refund = await razorpay.payments.refund(paymentId, {
 ## 22. Email & SMS
 
 ### Email (Resend)
+
 - **Transactional**: Order confirmations, shipping, delivery, password reset
   - React Email templates
   - Sent via Resend API
@@ -3274,6 +3802,7 @@ const refund = await razorpay.payments.refund(paymentId, {
   - Double opt-in for compliance
 
 ### Email Templates (React Email)
+
 - `OrderConfirmation.tsx` — Order details, items, total, expected delivery
 - `OrderShipped.tsx` — Tracking link, courier
 - `OrderDelivered.tsx` — Thank you, review request
@@ -3284,6 +3813,7 @@ const refund = await razorpay.payments.refund(paymentId, {
 - `Newsletter.tsx` — Marketing email template
 
 ### SMS (MSG91 or Twilio)
+
 - **Transactional**:
   - Order placed
   - Order shipped (with tracking link)
@@ -3294,6 +3824,7 @@ const refund = await razorpay.payments.refund(paymentId, {
   - New collection launch
 
 ### Email Deliverability Setup
+
 - SPF, DKIM, DMARC records configured
 - Verified sending domain (e.g., `email.shagyabrand.com`)
 - Dedicated IP (Phase 2)
@@ -3304,18 +3835,21 @@ const refund = await razorpay.payments.refund(paymentId, {
 ## 23. Search & Discovery
 
 ### MVP: Postgres Full-Text Search
+
 - Built into Postgres — no extra service
 - Search across: `title`, `description`, `fabric.primary`, `tags`
 - Use Payload's **Search Plugin** to set up search indexes
 - Simple search box with results page
 
 ### Phase 2: Algolia or Meilisearch
+
 - When catalog exceeds ~200 products
 - Typo tolerance, instant search, faceting
 - Algolia: $0.50 per 1000 records + $0.50 per 1000 search requests
 - Meilisearch: Self-host or Meilisearch Cloud (free tier)
 
 ### PLP Filters (collection page)
+
 - **Price range** (slider, ₹0–₹50,000)
 - **Fabric** (checkboxes from categories of type `fabric`)
 - **Color** (color swatches from primaryColor field)
@@ -3328,6 +3862,7 @@ URL state preserved via `useSearchParams`:
 `/collections/silk-sarees?fabric=silk&price=1000-5000&color=red`
 
 ### Sort Options
+
 - Featured (default)
 - Newest
 - Price: Low → High
@@ -3340,7 +3875,9 @@ URL state preserved via `useSearchParams`:
 ## 24. SEO Requirements
 
 ### Next.js Metadata API
+
 Per-page metadata via `generateMetadata`:
+
 ```ts
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const product = await getProduct(params.slug)
@@ -3359,15 +3896,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 ```
 
 ### Sitemap (`app/sitemap.ts`)
+
 - Auto-generated from Payload collections
 - Includes: homepage, all products, all collections, all pages, blog posts
 - Submitted to Google Search Console
 
 ### Robots.txt (`app/robots.ts`)
+
 - Allow all crawlers
 - Disallow `/admin`, `/api`, `/account`, `/cart`, `/checkout`
 
 ### Structured Data (JSON-LD)
+
 - **Product** schema on PDP (name, image, price, availability, rating)
 - **BreadcrumbList** on PLP and PDP
 - **Organization** on homepage
@@ -3376,6 +3916,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 - **LocalBusiness** on contact page (if applicable)
 
 ### Performance for SEO
+
 - **RSC + ISR** → near-instant TTFB
 - **next/image** → auto WebP, responsive, lazy load
 - **next/font** → optimized font loading
@@ -3383,6 +3924,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 - Core Web Vitals targets: LCP < 2.5s, FID < 100ms, CLS < 0.1
 
 ### 301 Redirects
+
 - Managed in `Redirects` collection (admin UI)
 - Applied via Next.js middleware
 
@@ -3391,33 +3933,37 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 ## 25. Analytics & Tracking
 
 ### PostHog (Recommended over GA4 for indie)
+
 - Privacy-friendly, GDPR-compliant by default
 - Funnels, retention, feature flags, session recording
 - Free up to 1M events/month
 - Self-host option available
 
 ### GA4 + Meta Pixel (Standard)
+
 - Standard e-commerce events
 - Conversion tracking for ads
 - Required for most ad platforms
 
 ### Key Events to Track
-| Event | Tool | Trigger |
-|-------|------|---------|
-| `page_view` | PostHog + GA4 + Meta | Any page |
-| `view_product` | All | PDP |
-| `add_to_cart` | All | Add to cart |
-| `view_cart` | All | Cart page |
-| `begin_checkout` | All | Checkout start |
-| `add_payment_info` | All | Payment method selected |
-| `purchase` | All | Order placed (with order data) |
-| `search` | All | Search submitted |
-| `sign_up` | All | Customer registered |
-| `add_to_wishlist` | All | Wishlist add |
-| `newsletter_signup` | All | Email submitted |
-| `contact_submit` | All | Form submitted |
+
+| Event               | Tool                 | Trigger                        |
+| ------------------- | -------------------- | ------------------------------ |
+| `page_view`         | PostHog + GA4 + Meta | Any page                       |
+| `view_product`      | All                  | PDP                            |
+| `add_to_cart`       | All                  | Add to cart                    |
+| `view_cart`         | All                  | Cart page                      |
+| `begin_checkout`    | All                  | Checkout start                 |
+| `add_payment_info`  | All                  | Payment method selected        |
+| `purchase`          | All                  | Order placed (with order data) |
+| `search`            | All                  | Search submitted               |
+| `sign_up`           | All                  | Customer registered            |
+| `add_to_wishlist`   | All                  | Wishlist add                   |
+| `newsletter_signup` | All                  | Email submitted                |
+| `contact_submit`    | All                  | Form submitted                 |
 
 ### Server-Side Tracking
+
 - Use PostHog/GA4 Measurement Protocol for server events
 - More reliable (ad-blocker proof)
 - Better for attribution
@@ -3429,6 +3975,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 Same as Shopify plan, but with **full control** over implementation.
 
 ### Built-in Trust (Payload Advantages)
+
 - **Custom domain** (not `.myshopify.com`)
 - **SSL** (Vercel automatic)
 - **Privacy-first** (PostHog, no third-party cookies required)
@@ -3436,6 +3983,7 @@ Same as Shopify plan, but with **full control** over implementation.
 - **Transparent pricing** (no per-order fees to vendor)
 
 ### Implementation
+
 - **Trust badges** in Footer + PDP (Razorpay Secure, SSL, 100% Authentic)
 - **Money-back guarantee** prominently displayed
 - **Customer reviews** (Phase 2 — Reviews collection)
@@ -3448,17 +3996,20 @@ Same as Shopify plan, but with **full control** over implementation.
 ## 27. Internationalization (Phase 2)
 
 ### Multi-Language
+
 - Payload's built-in **Localization** (field-level)
 - Add `localized: true` to any field
 - Languages: English (default), Hindi, Marathi, Tamil, etc.
 - Locale prefix in URLs: `/en/products/...`, `/hi/products/...`
 
 ### Multi-Currency
+
 - Display in user's preferred currency (IP geolocation)
 - Razorpay + Stripe handle conversion
 - Internal storage in INR, display layer converts
 
 ### International Shipping
+
 - Add international zones to `ShippingZones`
 - Use Shiprocket International or DHL/FedEx
 - Customs documentation automated
@@ -3469,6 +4020,7 @@ Same as Shopify plan, but with **full control** over implementation.
 ## 28. Performance & Caching
 
 ### RSC + ISR
+
 - All public pages are React Server Components
 - Static generation with revalidation
 - ISR triggers via Payload `afterChange` hook
@@ -3477,20 +4029,26 @@ Same as Shopify plan, but with **full control** over implementation.
 // src/hooks/revalidatePage.ts
 import { revalidatePath, revalidateTag } from 'next/cache'
 
-export const revalidatePage: CollectionAfterChangeHook = ({ doc, previousDoc, operation }) => {
+export const revalidatePage: CollectionAfterChangeHook = ({
+  doc,
+  previousDoc,
+  operation,
+}) => {
   if (operation === 'update' && doc._status === 'published') {
     revalidatePath(`/products/${doc.slug}`)
-    revalidatePath('/')  // might affect homepage if featured
+    revalidatePath('/') // might affect homepage if featured
     revalidateTag('products')
   }
 }
 ```
 
 ### Edge Caching
+
 - Vercel CDN caches static pages at the edge
 - Custom Cache-Control headers per route
 
 ### Image Optimization
+
 - Vercel Image Optimization (built-in)
 - WebP/AVIF auto-format
 - Responsive `srcset`
@@ -3498,25 +4056,28 @@ export const revalidatePage: CollectionAfterChangeHook = ({ doc, previousDoc, op
 - `priority` for above-the-fold images
 
 ### Database Query Optimization
+
 - Indexes on frequently queried fields (slug, sku, status)
 - Use `select` to fetch only needed fields
 - Use `depth: 0` when not populating relationships
 - Pagination (default 10, max 100)
 
 ### Caching Layers
-| Layer | Cached | TTL |
-|-------|--------|-----|
-| Vercel CDN | Static pages, images, JS, CSS | Long |
-| Next.js Data Cache | `payload.find()` results | 60s (configurable) |
-| Browser | Static assets | 1 year |
-| localStorage | Guest cart | Persistent |
-| Payload `carts` | Logged-in cart | Persistent |
+
+| Layer              | Cached                        | TTL                |
+| ------------------ | ----------------------------- | ------------------ |
+| Vercel CDN         | Static pages, images, JS, CSS | Long               |
+| Next.js Data Cache | `payload.find()` results      | 60s (configurable) |
+| Browser            | Static assets                 | 1 year             |
+| localStorage       | Guest cart                    | Persistent         |
+| Payload `carts`    | Logged-in cart                | Persistent         |
 
 ---
 
 ## 29. Security
 
 ### Payload Built-in Security
+
 - **CSRF protection** (built into Payload)
 - **XSS protection** (React auto-escapes)
 - **SQL injection** (Payload uses Drizzle ORM with parameterized queries)
@@ -3525,6 +4086,7 @@ export const revalidatePage: CollectionAfterChangeHook = ({ doc, previousDoc, op
 - **Access control** at field, document, and operation level
 
 ### Application Security
+
 - **Environment variables** in Vercel (never in code)
 - **API route authentication** check for sensitive endpoints
 - **Webhook signature verification** (Razorpay, Shiprocket)
@@ -3535,6 +4097,7 @@ export const revalidatePage: CollectionAfterChangeHook = ({ doc, previousDoc, op
 - **Dependency scanning** (GitHub Dependabot, Snyk)
 
 ### Data Security
+
 - **Database encryption at rest** (Neon/Vercel Postgres)
 - **Backups** (daily, automated by Neon)
 - **PII handling** (GDPR compliance for EU customers)
@@ -3546,6 +4109,7 @@ export const revalidatePage: CollectionAfterChangeHook = ({ doc, previousDoc, op
 ## 30. Content Workflow
 
 ### Editorial Workflow (Built into Payload)
+
 - **Drafts**: Create unpublished drafts
 - **Autosave**: Auto-save every few seconds
 - **Versioning**: View and restore previous versions
@@ -3555,17 +4119,20 @@ export const revalidatePage: CollectionAfterChangeHook = ({ doc, previousDoc, op
 - **Live Preview**: See real-time changes in storefront
 
 ### Roles
-| Role | Can Publish | Can Edit Drafts | Can Create |
-|------|-------------|------------------|------------|
-| Editor | ✅ | ✅ | ✅ |
-| Fulfillment | ❌ | ❌ | ❌ (orders only) |
-| Support | ❌ | ❌ | ❌ (read only) |
+
+| Role        | Can Publish | Can Edit Drafts | Can Create       |
+| ----------- | ----------- | --------------- | ---------------- |
+| Editor      | ✅          | ✅              | ✅               |
+| Fulfillment | ❌          | ❌              | ❌ (orders only) |
+| Support     | ❌          | ❌              | ❌ (read only)   |
 
 ### Approval Workflow (Phase 2 — Payload Enterprise)
+
 - Multi-step approval for high-value content
 - "Editor drafts → Manager approves → Publishes"
 
 ### Marketing Workflow
+
 1. Marketing team drafts homepage banner in admin
 2. Saves as draft, previews live
 3. Sets scheduled publish date
@@ -3581,6 +4148,7 @@ export const revalidatePage: CollectionAfterChangeHook = ({ doc, previousDoc, op
 > data migration setup.
 
 ### Phase 1: Foundation & Setup (Week 1–2)
+
 - [ ] Initialize Next.js 16 + Payload 3.x project (`pnpx create-payload-app`)
 - [ ] Pin versions in `package.json`:
   - `next: ^16.2.0`
@@ -3615,6 +4183,7 @@ export const revalidatePage: CollectionAfterChangeHook = ({ doc, previousDoc, op
 **Deliverable**: Working Payload admin + Next.js 16 frontend + Better Auth (customers) wired up
 
 ### Phase 2: Schema Design (Week 2–3)
+
 - [ ] Define all collections: Users, Customers, Products, Categories, Orders, Carts, Media, Pages, Coupons, ShippingZones, FormSubmissions, Redirects
 - [ ] Define all globals: Header, Footer, Homepage, Settings, SEODefaults
 - [ ] Install plugins: SEO, Search, Redirects, Form Builder, Nested Docs
@@ -3626,6 +4195,7 @@ export const revalidatePage: CollectionAfterChangeHook = ({ doc, previousDoc, op
 **Deliverable**: Full database schema, working admin
 
 ### Phase 3: Frontend — Storefront (Week 3–5)
+
 - [ ] Build homepage (read from Homepage global)
 - [ ] Build collection/PLP with filters + sort
 - [ ] Build PDP with image gallery + variant selector
@@ -3641,6 +4211,7 @@ export const revalidatePage: CollectionAfterChangeHook = ({ doc, previousDoc, op
 **Deliverable**: Browsable, navigable storefront
 
 ### Phase 4: Checkout & Payments (Week 5–7)
+
 - [ ] Razorpay account setup + KYC
 - [ ] Razorpay SDK integration
 - [ ] Build checkout flow (multi-step form)
@@ -3658,6 +4229,7 @@ export const revalidatePage: CollectionAfterChangeHook = ({ doc, previousDoc, op
 **Deliverable**: Working end-to-end checkout
 
 ### Phase 5: Shipping & Operations (Week 7–8)
+
 - [ ] Shiprocket account setup
 - [ ] Shiprocket API integration
 - [ ] Auto-create shipment on order processing
@@ -3671,6 +4243,7 @@ export const revalidatePage: CollectionAfterChangeHook = ({ doc, previousDoc, op
 **Deliverable**: Fulfillment workflow operational
 
 ### Phase 6: Auth & Customer Features (Week 8–9)
+
 - [ ] Customer registration
 - [ ] Customer login
 - [ ] Password reset
@@ -3683,6 +4256,7 @@ export const revalidatePage: CollectionAfterChangeHook = ({ doc, previousDoc, op
 **Deliverable**: Complete customer experience
 
 ### Phase 7: Content & Marketing (Week 9–10)
+
 - [ ] Build About, Contact, FAQ, Size Guide pages (Layout Builder)
 - [ ] Contact form (Form Builder plugin)
 - [ ] Newsletter popup + Resend integration
@@ -3694,6 +4268,7 @@ export const revalidatePage: CollectionAfterChangeHook = ({ doc, previousDoc, op
 **Deliverable**: Marketing-ready
 
 ### Phase 8: SEO, Analytics & Trust (Week 10–11)
+
 - [ ] Sitemap (`app/sitemap.ts`)
 - [ ] Robots.txt (`app/robots.ts`)
 - [ ] Structured data (JSON-LD)
@@ -3707,6 +4282,7 @@ export const revalidatePage: CollectionAfterChangeHook = ({ doc, previousDoc, op
 **Deliverable**: Trust + tracking in place
 
 ### Phase 9: Testing & QA (Week 11–12)
+
 - [ ] E2E tests (Playwright) for critical flows
 - [ ] Unit tests (Vitest) for pricing/cart logic
 - [ ] Cross-browser testing
@@ -3721,6 +4297,7 @@ export const revalidatePage: CollectionAfterChangeHook = ({ doc, previousDoc, op
 **Deliverable**: Production-ready
 
 ### Phase 10: Launch (Week 12–14)
+
 - [ ] DNS configured
 - [ ] SSL verified
 - [ ] Final test order
@@ -3741,11 +4318,11 @@ export const revalidatePage: CollectionAfterChangeHook = ({ doc, previousDoc, op
 
 ### TL;DR — Quick Comparison
 
-| Scenario | Shopify Basic | Payload Tier 0 | Payload Tier 1 | Payload Tier 2 |
-|----------|---------------|----------------|----------------|----------------|
-| **0 orders (just launched)** | **₹1,994/mo** | **₹0/mo** ✨ | **₹670/mo** | **₹7,100/mo** |
-| **100 orders × ₹4,000 (₹4L revenue)** | **₹9,994/mo** | **₹8,000/mo** | **₹8,670/mo** | **₹15,100/mo** |
-| **500 orders × ₹4,000 (₹20L revenue)** | **₹41,994/mo** | **₹40,000/mo** | **₹40,670/mo** | **₹47,100/mo** |
+| Scenario                                 | Shopify Basic    | Payload Tier 0   | Payload Tier 1   | Payload Tier 2   |
+| ---------------------------------------- | ---------------- | ---------------- | ---------------- | ---------------- |
+| **0 orders (just launched)**             | **₹1,994/mo**    | **₹0/mo** ✨     | **₹670/mo**      | **₹7,100/mo**    |
+| **100 orders × ₹4,000 (₹4L revenue)**    | **₹9,994/mo**    | **₹8,000/mo**    | **₹8,670/mo**    | **₹15,100/mo**   |
+| **500 orders × ₹4,000 (₹20L revenue)**   | **₹41,994/mo**   | **₹40,000/mo**   | **₹40,670/mo**   | **₹47,100/mo**   |
 | **2,000 orders × ₹4,000 (₹80L revenue)** | **₹1,61,994/mo** | **₹1,60,000/mo** | **₹1,60,670/mo** | **₹1,67,100/mo** |
 
 **Key insight:** Payload Tier 0 (free) saves **₹1,994/month** from day one
@@ -3757,63 +4334,63 @@ platforms; the savings come from the **fixed cost component**.
 
 #### Tier 0 — Free Tier ($0/month)
 
-| Service | Free Tier Limit | Cost |
-|---------|----------------|------|
-| Vercel Hobby | 100 GB bandwidth, 100 GB-hr compute | $0 |
-| Neon Postgres Free | 0.5 GB, 190 compute hrs/mo | $0 |
-| Vercel Blob Free | 1 GB storage, 100 GB bandwidth | $0 |
-| Resend Free | 100 emails/day, 3K/mo | $0 |
-| Sentry Developer Free | 5K errors/mo | $0 |
-| PostHog Cloud Free | 1M events/mo | $0 |
-| Cloudflare DNS + CDN | Unlimited | $0 |
-| GitHub private repo | Unlimited | $0 |
-| Razorpay | 2% per transaction | variable |
-| **Total fixed** | | **$0** |
+| Service               | Free Tier Limit                     | Cost     |
+| --------------------- | ----------------------------------- | -------- |
+| Vercel Hobby          | 100 GB bandwidth, 100 GB-hr compute | $0       |
+| Neon Postgres Free    | 0.5 GB, 190 compute hrs/mo          | $0       |
+| Vercel Blob Free      | 1 GB storage, 100 GB bandwidth      | $0       |
+| Resend Free           | 100 emails/day, 3K/mo               | $0       |
+| Sentry Developer Free | 5K errors/mo                        | $0       |
+| PostHog Cloud Free    | 1M events/mo                        | $0       |
+| Cloudflare DNS + CDN  | Unlimited                           | $0       |
+| GitHub private repo   | Unlimited                           | $0       |
+| Razorpay              | 2% per transaction                  | variable |
+| **Total fixed**       |                                     | **$0**   |
 
 **When to use:** MVP launch, <500 orders/mo, single admin user, willing
 to accept 1–2s cold start on Neon free tier.
 
 #### Tier 1 — Self-Hosted on Hetzner ($8/month)
 
-| Service | Spec | Cost |
-|---------|------|------|
-| Hetzner Cloud CX21 | 4 GB RAM, 2 vCPU, 40 GB SSD | €5.39/mo |
-| Postgres | Self-hosted on same VPS | $0 |
-| Next.js + Payload | Self-hosted (Node.js 22 LTS + PM2) | $0 |
-| Cloudflare DNS + CDN | Free | $0 |
-| Hetzner Snapshots (backups) | +20% of server | ~$1.16/mo |
-| Domain (.in) | Annual | ~$1/mo |
-| Resend Free | 100 emails/day | $0 |
-| Razorpay | 2% per transaction | variable |
-| **Total fixed** | | **~$8/mo (~₹670)** |
+| Service                     | Spec                               | Cost               |
+| --------------------------- | ---------------------------------- | ------------------ |
+| Hetzner Cloud CX21          | 4 GB RAM, 2 vCPU, 40 GB SSD        | €5.39/mo           |
+| Postgres                    | Self-hosted on same VPS            | $0                 |
+| Next.js + Payload           | Self-hosted (Node.js 22 LTS + PM2) | $0                 |
+| Cloudflare DNS + CDN        | Free                               | $0                 |
+| Hetzner Snapshots (backups) | +20% of server                     | ~$1.16/mo          |
+| Domain (.in)                | Annual                             | ~$1/mo             |
+| Resend Free                 | 100 emails/day                     | $0                 |
+| Razorpay                    | 2% per transaction                 | variable           |
+| **Total fixed**             |                                    | **~$8/mo (~₹670)** |
 
 **When to use:** 500–5,000 orders/mo, want predictable flat cost, willing
 to do basic Linux sysadmin, 1–3 team members.
 
 #### Tier 2 — Managed (Vercel Pro + Neon Launch) ($85/month)
 
-| Service | Plan | Cost |
-|---------|------|------|
-| Vercel Pro | $20/seat/mo | $20/mo |
-| Neon Launch | $19/mo, 10 GB | $19/mo |
-| Vercel Blob Pro | $0.30/GB | ~$5–10/mo |
-| Resend Pro | 50K emails/mo | $20/mo |
-| Sentry Team (optional) | 50K errors/mo | $26/mo |
-| Cloudflare | Free | $0 |
-| Razorpay | 2% per transaction | variable |
-| **Total fixed** | | **~$85–95/mo (~₹7,100–7,900)** |
+| Service                | Plan               | Cost                           |
+| ---------------------- | ------------------ | ------------------------------ |
+| Vercel Pro             | $20/seat/mo        | $20/mo                         |
+| Neon Launch            | $19/mo, 10 GB      | $19/mo                         |
+| Vercel Blob Pro        | $0.30/GB           | ~$5–10/mo                      |
+| Resend Pro             | 50K emails/mo      | $20/mo                         |
+| Sentry Team (optional) | 50K errors/mo      | $26/mo                         |
+| Cloudflare             | Free               | $0                             |
+| Razorpay               | 2% per transaction | variable                       |
+| **Total fixed**        |                    | **~$85–95/mo (~₹7,100–7,900)** |
 
 **When to use:** 500+ orders/mo AND team > 3, or premium support needed,
 or want zero DevOps.
 
 ### Monthly Cost Breakdown — Shopify
 
-| Plan | India Pricing | Notes |
-|------|---------------|-------|
-| **Shopify Starter** | ₹399/month | Limited, for solopreneurs |
-| **Shopify Basic** | ₹1,994/month | Standard plan, 2% online transaction fee (additional) |
-| **Shopify** | ₹6,494/month | 1% online transaction fee (additional) |
-| **Shopify Advanced** | ₹19,499/month | 0.5% online transaction fee (additional) |
+| Plan                 | India Pricing | Notes                                                 |
+| -------------------- | ------------- | ----------------------------------------------------- |
+| **Shopify Starter**  | ₹399/month    | Limited, for solopreneurs                             |
+| **Shopify Basic**    | ₹1,994/month  | Standard plan, 2% online transaction fee (additional) |
+| **Shopify**          | ₹6,494/month  | 1% online transaction fee (additional)                |
+| **Shopify Advanced** | ₹19,499/month | 0.5% online transaction fee (additional)              |
 
 > **Note on Shopify transaction fees:** Shopify charges an "online
 > transaction fee" on top of the payment gateway fee. If you use Shopify
@@ -3822,33 +4399,33 @@ or want zero DevOps.
 
 ### Detailed Comparison: 100 orders/month, AOV ₹4,000 (₹4L revenue)
 
-| Cost Component | Shopify Basic | Payload Tier 0 | Payload Tier 1 | Payload Tier 2 |
-|----------------|---------------|----------------|----------------|----------------|
-| Platform/hosting | ₹1,994 | **₹0** | ₹670 | ₹7,900 |
-| Transaction fees | 2% × ₹4,00,000 = ₹8,000 | 2% × ₹4,00,000 = ₹8,000 | ₹8,000 | ₹8,000 |
-| Email (transactional) | Included | ₹0 | ₹0 | Included in $20 Resend |
-| Email (marketing) | Klaviyo: ₹1,500/mo | Free tier | Free tier | Free tier |
-| Reviews app | Judge.me: ₹800/mo | Free (Phase 2) | Free (Phase 2) | Free (Phase 2) |
-| SMS | Shopify SMS: ₹500 | Pay per use (MSG91) | Pay per use | Pay per use |
-| Apps (avg) | ₹2,000–5,000 | ₹0 | ₹0 | ₹0 |
-| **Total monthly** | **~₹14,800** | **~₹8,000** | **~₹8,670** | **~₹15,900** |
-| **Annual** | **~₹1,77,600** | **~₹96,000** | **~₹1,04,040** | **~₹1,90,800** |
-| **Annual savings vs Shopify** | — | **₹81,600** | **₹73,560** | -₹13,200 |
+| Cost Component                | Shopify Basic           | Payload Tier 0          | Payload Tier 1 | Payload Tier 2         |
+| ----------------------------- | ----------------------- | ----------------------- | -------------- | ---------------------- |
+| Platform/hosting              | ₹1,994                  | **₹0**                  | ₹670           | ₹7,900                 |
+| Transaction fees              | 2% × ₹4,00,000 = ₹8,000 | 2% × ₹4,00,000 = ₹8,000 | ₹8,000         | ₹8,000                 |
+| Email (transactional)         | Included                | ₹0                      | ₹0             | Included in $20 Resend |
+| Email (marketing)             | Klaviyo: ₹1,500/mo      | Free tier               | Free tier      | Free tier              |
+| Reviews app                   | Judge.me: ₹800/mo       | Free (Phase 2)          | Free (Phase 2) | Free (Phase 2)         |
+| SMS                           | Shopify SMS: ₹500       | Pay per use (MSG91)     | Pay per use    | Pay per use            |
+| Apps (avg)                    | ₹2,000–5,000            | ₹0                      | ₹0             | ₹0                     |
+| **Total monthly**             | **~₹14,800**            | **~₹8,000**             | **~₹8,670**    | **~₹15,900**           |
+| **Annual**                    | **~₹1,77,600**          | **~₹96,000**            | **~₹1,04,040** | **~₹1,90,800**         |
+| **Annual savings vs Shopify** | —                       | **₹81,600**             | **₹73,560**    | -₹13,200               |
 
 ### Detailed Comparison: 500 orders/month, AOV ₹4,000 (₹20L revenue)
 
-| Cost Component | Shopify Basic | Payload Tier 0 | Payload Tier 1 | Payload Tier 2 |
-|----------------|---------------|----------------|----------------|----------------|
-| Platform/hosting | ₹1,994 | **₹0** | ₹670 | ₹7,900 |
-| Transaction fees | 2% × ₹20,00,000 = ₹40,000 | 2% × ₹20,00,000 = ₹40,000 | ₹40,000 | ₹40,000 |
-| Email (transactional) | Included | **₹0 (within 100/day limit)** | ₹0 | Included |
-| Email (marketing) | Klaviyo: ₹1,500/mo | Free tier | Free tier | Free tier |
-| Reviews app | Judge.me: ₹800/mo | Free (Phase 2) | Free (Phase 2) | Free (Phase 2) |
-| SMS | ~₹1,500 | Pay per use | Pay per use | Pay per use |
-| Apps (avg) | ₹3,000 | ₹0 | ₹0 | ₹0 |
-| **Total monthly** | **~₹48,800** | **~₹40,000** | **~₹40,670** | **~₹47,900** |
-| **Annual** | **~₹5,85,600** | **~₹4,80,000** | **~₹4,88,040** | **~₹5,74,800** |
-| **Annual savings vs Shopify** | — | **₹1,05,600** | **₹97,560** | **₹10,800** |
+| Cost Component                | Shopify Basic             | Payload Tier 0                | Payload Tier 1 | Payload Tier 2 |
+| ----------------------------- | ------------------------- | ----------------------------- | -------------- | -------------- |
+| Platform/hosting              | ₹1,994                    | **₹0**                        | ₹670           | ₹7,900         |
+| Transaction fees              | 2% × ₹20,00,000 = ₹40,000 | 2% × ₹20,00,000 = ₹40,000     | ₹40,000        | ₹40,000        |
+| Email (transactional)         | Included                  | **₹0 (within 100/day limit)** | ₹0             | Included       |
+| Email (marketing)             | Klaviyo: ₹1,500/mo        | Free tier                     | Free tier      | Free tier      |
+| Reviews app                   | Judge.me: ₹800/mo         | Free (Phase 2)                | Free (Phase 2) | Free (Phase 2) |
+| SMS                           | ~₹1,500                   | Pay per use                   | Pay per use    | Pay per use    |
+| Apps (avg)                    | ₹3,000                    | ₹0                            | ₹0             | ₹0             |
+| **Total monthly**             | **~₹48,800**              | **~₹40,000**                  | **~₹40,670**   | **~₹47,900**   |
+| **Annual**                    | **~₹5,85,600**            | **~₹4,80,000**                | **~₹4,88,040** | **~₹5,74,800** |
+| **Annual savings vs Shopify** | —                         | **₹1,05,600**                 | **₹97,560**    | **₹10,800**    |
 
 > **⚠️ At 500 orders/month, Tier 0's free email tier (100/day) might be
 > tight. Razorpay may send more transactional emails than 100/day during
@@ -3860,12 +4437,12 @@ or want zero DevOps.
 AOV: ₹4,000. Team: 1 founder initially, 2 by month 9.
 
 | Month | Orders | Shopify Basic (₹/mo) | Payload Tier 0 (₹/mo) | Payload Tier 1 (₹/mo) | Payload Tier 2 (₹/mo) | Tier 0 Savings |
-|-------|--------|----------------------|------------------------|------------------------|------------------------|----------------|
-| 1 | 20 | ₹3,594 | **₹1,600** | ₹2,270 | ₹8,700 | **₹1,994** |
-| 3 | 60 | ₹5,394 | **₹4,800** | ₹5,470 | ₹11,900 | **₹594** |
-| 6 | 100 | ₹7,994 | **₹8,000** | ₹8,670 | ₹15,100 | **−₹6** ⚠️ |
-| 9 | 150 | ₹11,994 | ₹12,000 | ₹12,670 | ₹19,100 | **−₹6** ⚠️ |
-| 12 | 200 | ₹15,994 | ₹16,000 | ₹16,670 | ₹23,100 | **−₹6** ⚠️ |
+| ----- | ------ | -------------------- | --------------------- | --------------------- | --------------------- | -------------- |
+| 1     | 20     | ₹3,594               | **₹1,600**            | ₹2,270                | ₹8,700                | **₹1,994**     |
+| 3     | 60     | ₹5,394               | **₹4,800**            | ₹5,470                | ₹11,900               | **₹594**       |
+| 6     | 100    | ₹7,994               | **₹8,000**            | ₹8,670                | ₹15,100               | **−₹6** ⚠️     |
+| 9     | 150    | ₹11,994              | ₹12,000               | ₹12,670               | ₹19,100               | **−₹6** ⚠️     |
+| 12    | 200    | ₹15,994              | ₹16,000               | ₹16,670               | ₹23,100               | **−₹6** ⚠️     |
 
 **Observation:** At low order volumes, **Tier 0 saves you the Shopify
 subscription** (₹1,994/mo) every month regardless of orders. As order
@@ -3878,45 +4455,46 @@ fees on top of Razorpay.** If you're on Shopify Basic, Shopify's 2% online
 transaction fee is **on top of** the Razorpay 2% — so effective rate is
 **4%** per transaction vs Payload's flat **2%**.
 
-| Revenue | Shopify Effective Rate | Payload Rate | Effective Saving |
-|---------|------------------------|--------------|------------------|
-| ₹4L/mo | 4% = ₹16,000 fees | 2% = ₹8,000 fees | **₹8,000/mo** |
-| ₹20L/mo | 4% = ₹80,000 fees | 2% = ₹40,000 fees | **₹40,000/mo** |
-| ₹80L/mo | 4% = ₹3,20,000 fees | 2% = ₹1,60,000 fees | **₹1,60,000/mo** |
+| Revenue | Shopify Effective Rate | Payload Rate        | Effective Saving |
+| ------- | ---------------------- | ------------------- | ---------------- |
+| ₹4L/mo  | 4% = ₹16,000 fees      | 2% = ₹8,000 fees    | **₹8,000/mo**    |
+| ₹20L/mo | 4% = ₹80,000 fees      | 2% = ₹40,000 fees   | **₹40,000/mo**   |
+| ₹80L/mo | 4% = ₹3,20,000 fees    | 2% = ₹1,60,000 fees | **₹1,60,000/mo** |
 
 This is the **real** Payload cost advantage at scale.
 
 ### Break-Even Analysis
 
-| Item | Shopify | Payload Tier 0 |
-|------|---------|----------------|
-| Monthly platform fee | ₹1,994 | ₹0 |
-| Effective transaction rate (incl. Shopify fees) | 4% | 2% |
-| **Annual fixed cost saving** | — | **₹23,928/year** |
-| Custom dev cost (one-time) | ₹50K–1.5L | ₹3L–6L |
-| **Dev cost premium for Payload** | — | **+₹2L–4L** |
-| **Break-even point** | — | **~12–24 months** |
+| Item                                            | Shopify   | Payload Tier 0    |
+| ----------------------------------------------- | --------- | ----------------- |
+| Monthly platform fee                            | ₹1,994    | ₹0                |
+| Effective transaction rate (incl. Shopify fees) | 4%        | 2%                |
+| **Annual fixed cost saving**                    | —         | **₹23,928/year**  |
+| Custom dev cost (one-time)                      | ₹50K–1.5L | ₹3L–6L            |
+| **Dev cost premium for Payload**                | —         | **+₹2L–4L**       |
+| **Break-even point**                            | —         | **~12–24 months** |
 
 The upfront dev cost premium is recovered within **1–2 years** of
 operations. After that, Payload is significantly cheaper.
 
 ### When Each Option Wins
 
-| Scenario | Best Choice | Why |
-|----------|-------------|-----|
-| **New business, 0 orders, validating idea** | **Payload Tier 0** | ₹0/mo vs Shopify's ₹1,994/mo |
-| **Launch fast (< 4 weeks)** | **Shopify Basic** | Pre-built checkout, less dev work |
-| **< 100 orders/month, custom product schema** | **Payload Tier 0 or 1** | Saree-specific fields, no template lock |
-| **100–500 orders/month, single admin** | **Payload Tier 0 or 1** | Cheaper than Shopify, scales |
-| **500–2000 orders/month, growing team** | **Payload Tier 1 (Hetzner)** | Predictable cost, full control |
-| **2000+ orders/month, team > 5** | **Payload Tier 2** | Premium support, zero DevOps |
-| **International launch (NRI)** | **Payload + Stripe** | Multi-currency, lower fees than Shopify |
-| **Strict < 2-week deadline** | **Shopify Basic** | Faster to launch |
-| **Non-technical client, no dev team** | **Shopify Basic** | Less ongoing maintenance |
+| Scenario                                      | Best Choice                  | Why                                     |
+| --------------------------------------------- | ---------------------------- | --------------------------------------- |
+| **New business, 0 orders, validating idea**   | **Payload Tier 0**           | ₹0/mo vs Shopify's ₹1,994/mo            |
+| **Launch fast (< 4 weeks)**                   | **Shopify Basic**            | Pre-built checkout, less dev work       |
+| **< 100 orders/month, custom product schema** | **Payload Tier 0 or 1**      | Saree-specific fields, no template lock |
+| **100–500 orders/month, single admin**        | **Payload Tier 0 or 1**      | Cheaper than Shopify, scales            |
+| **500–2000 orders/month, growing team**       | **Payload Tier 1 (Hetzner)** | Predictable cost, full control          |
+| **2000+ orders/month, team > 5**              | **Payload Tier 2**           | Premium support, zero DevOps            |
+| **International launch (NRI)**                | **Payload + Stripe**         | Multi-currency, lower fees than Shopify |
+| **Strict < 2-week deadline**                  | **Shopify Basic**            | Faster to launch                        |
+| **Non-technical client, no dev team**         | **Shopify Basic**            | Less ongoing maintenance                |
 
 ### Migration Costs
 
 If you start on Shopify and want to move to Payload later:
+
 - **Data export**: Shopify exports products, customers, orders as CSV — easy to import to Payload
 - **URL redirects**: Map old `/products/slug` to new `/products/slug` via Payload Redirects plugin
 - **Domain**: Point DNS to new server
@@ -3924,6 +4502,7 @@ If you start on Shopify and want to move to Payload later:
 - **Estimated migration cost**: ₹1,50,000–3,00,000 one-time
 
 If you start on Payload and want to move to Shopify later:
+
 - **Data export**: Postgres → CSV → Shopify import (straightforward)
 - **URL redirects**: 301 redirects in Shopify admin
 - **Checkout**: Replace custom Razorpay with Shopify Payments
@@ -3948,6 +4527,7 @@ is in rebuilding the UI, not the data.
    Payload, or scale within Payload tiers
 
 **Path:**
+
 - **Months 1–6**: Tier 0 ($0/mo) — launch, validate, build catalog
 - **Months 6–12**: Tier 1 ($8/mo) — predictable cost, more control
 - **Year 2+**: Tier 2 ($85/mo) — when team grows and revenue justifies it
@@ -3961,6 +4541,7 @@ matters.
 ## 33. Launch Checklist
 
 ### Pre-Launch (1 week before)
+
 - [ ] All collections + globals defined
 - [ ] All products uploaded (with images, variants, categories, saree fields)
 - [ ] All static pages live (About, FAQ, Size Guide, etc.)
@@ -3998,6 +4579,7 @@ matters.
 - [ ] Documentation written (how to add product, process order, etc.)
 
 ### Launch Day
+
 - [ ] Final test order placed (all payment methods)
 - [ ] Site accessible publicly
 - [ ] All emails + SMS sending correctly
@@ -4007,6 +4589,7 @@ matters.
 - [ ] Announcement ready (social, email)
 
 ### Post-Launch (First week)
+
 - [ ] Monitor daily analytics
 - [ ] Respond to customer feedback
 - [ ] Fix any reported bugs
@@ -4019,6 +4602,7 @@ matters.
 ## 34. Post-MVP Roadmap
 
 ### Month 1–3
+
 - [ ] Blog launch (Payload Posts collection)
 - [ ] Product reviews & ratings
 - [ ] Recently viewed products
@@ -4029,6 +4613,7 @@ matters.
 - [ ] A/B testing (Vercel Edge Config or PostHog)
 
 ### Month 3–6
+
 - [ ] Custom blouse stitching service (with measurements form)
 - [ ] International shipping (Stripe integration)
 - [ ] Multi-currency display
@@ -4041,6 +4626,7 @@ matters.
 - [ ] 200+ SKU catalog
 
 ### Month 6–12
+
 - [ ] Native mobile app (React Native + Payload API)
 - [ ] AR/VR saree try-on
 - [ ] 360° product viewer
@@ -4058,6 +4644,7 @@ matters.
 > ⚠️ These decisions block launch. Need client sign-off before implementation begins.
 
 ### Brand & Identity
+
 - [ ] **Brand name** — Final brand name?
 - [ ] **Domain** — `.in` or `.com`? (Both?)
 - [ ] **Logo** — Ready? Need design?
@@ -4066,6 +4653,7 @@ matters.
 - [ ] **Tagline** — Need help crafting?
 
 ### Catalog
+
 - [ ] **Initial product count** — How many SKUs at launch?
 - [ ] **Photography ready?** — White background + model shots?
 - [ ] **Product descriptions** — Client provides or need copywriting?
@@ -4073,6 +4661,7 @@ matters.
 - [ ] **Inventory** — Stock ready? Where stored?
 
 ### Operations
+
 - [ ] **Shipping partner** — Shiprocket or different?
 - [ ] **Pickup location** — Where does Shiprocket pick up?
 - [ ] **Fulfillment team** — In-house or 3PL?
@@ -4081,6 +4670,7 @@ matters.
 - [ ] **Customer support** — Who handles? Hours?
 
 ### Payments & Legal
+
 - [ ] **Business entity** — Registered? GST? (Required for Razorpay)
 - [ ] **Bank account** — For Razorpay payouts
 - [ ] **PAN card** — For Razorpay KYC
@@ -4128,6 +4718,7 @@ matters.
 - [ ] **Better Auth email templates** — Use defaults or design custom React Email templates?
 
 ### Marketing
+
 - [ ] **Launch budget** — Paid ads for first 3 months?
 - [ ] **Social media** — Active Instagram account?
 - [ ] **Email list** — Existing customers to migrate?
@@ -4135,6 +4726,7 @@ matters.
 - [ ] **PR** — Press contacts? Launch announcement?
 
 ### Timeline & Budget
+
 - [ ] **Launch deadline** — Specific date?
 - [ ] **Dev budget** — Comfortable with custom dev cost (~₹3-6L upfront)?
 - [ ] **Ongoing dev** — Will need dev support post-launch (Payload + Next.js
@@ -4143,6 +4735,7 @@ matters.
 - [ ] **Content budget** — If not ready (descriptions, FAQs, etc.)
 
 ### International
+
 - [ ] **International shipping in MVP?** — Or India-only for first 3 months?
 - [ ] **NRI focus** — Target countries for Phase 2?
 - [ ] **Multi-language?** — Hindi, Tamil, etc.?
@@ -4154,39 +4747,39 @@ matters.
 > Each layer has tier-appropriate choices. See Section 4 for the full
 > tier comparison and Section 32 for cost analysis.
 
-| Layer | Tier 0 (Free) | Tier 1 (Hetzner $8/mo) | Tier 2 (Managed $85/mo) |
-|-------|---------------|------------------------|-------------------------|
-| **CMS** | Payload CMS 3.x | Payload CMS 3.x | Payload CMS 3.x |
-| **Frontend** | Next.js 16 (App Router, Turbopack) | Next.js 16 (App Router, Turbopack) | Next.js 16 (App Router, Turbopack) |
-| **Language** | TypeScript 5.7+ (strict) | TypeScript 5.7+ (strict) | TypeScript 5.7+ (strict) |
-| **Hosting** | Vercel Hobby | Hetzner CX21 VPS | Vercel Pro |
-| **Database** | Neon (free) | Self-hosted Postgres on Hetzner | Neon Launch |
-| **File Storage** | Vercel Blob (1 GB free) | Cloudflare R2 (free egress) or local disk | Vercel Blob Pro / R2 |
-| **Auth (Admin)** | Payload built-in | Payload built-in | Payload built-in |
-| **Auth (Customer)** | Better Auth + plugins | Better Auth + plugins | Better Auth + plugins |
-| **CDN + DNS** | Cloudflare (free) | Cloudflare (free) | Cloudflare (free) |
-| **SSL** | Vercel (auto) | Let's Encrypt via Certbot | Vercel (auto) |
-| **Payments (India)** | Razorpay (2% per txn) | Razorpay (2% per txn) | Razorpay (2% per txn) |
-| **Payments (International)** | Stripe (Phase 2) | Stripe (Phase 2) | Stripe (Phase 2) |
-| **Email (transactional)** | Resend Free (100/day) | Resend Free (100/day) | Resend Pro (50K/mo) |
-| **Email (marketing)** | Resend / Loops.so (free tier) | Resend / Loops.so (free tier) | Resend / Loops.so (free tier) |
-| **SMS** | MSG91 / Twilio (pay per use) | MSG91 / Twilio (pay per use) | MSG91 / Twilio (pay per use) |
-| **Search** | Postgres FTS | Postgres FTS | Postgres FTS (MVP) → Algolia (Phase 2) |
-| **Forms** | Payload Form Builder plugin | Payload Form Builder plugin | Payload Form Builder plugin |
-| **SEO** | Payload SEO plugin | Payload SEO plugin | Payload SEO plugin |
-| **Redirects** | Payload Redirects plugin | Payload Redirects plugin | Payload Redirects plugin |
-| **Image** | Vercel Image Optimization | Next.js Image + Cloudflare | Vercel Image Optimization |
-| **Styling** | Tailwind CSS v4 + shadcn/ui | Tailwind CSS v4 + shadcn/ui | Tailwind CSS v4 + shadcn/ui |
-| **Forms (frontend)** | React Hook Form + Zod | React Hook Form + Zod | React Hook Form + Zod |
-| **State** | Zustand | Zustand | Zustand |
-| **Validation** | Zod | Zod | Zod |
-| **Testing** | Vitest + Playwright | Vitest + Playwright | Vitest + Playwright |
-| **Monitoring** | Vercel Logs (free) / Sentry Free | UptimeRobot + Hetzner logs | Sentry Team |
-| **Analytics** | PostHog Free + GA4 + Meta Pixel | PostHog Free + GA4 + Meta Pixel | PostHog Free + GA4 + Meta Pixel |
-| **Shipping** | Shiprocket | Shiprocket | Shiprocket |
-| **Linting** | ESLint + Prettier | ESLint + Prettier | ESLint + Prettier |
-| **CI/CD** | Vercel auto-deploy | GitHub Actions + SSH | Vercel auto-deploy |
-| **Backup** | Neon daily (7 days) | Hetzner snapshot daily | Neon daily + PITR |
+| Layer                        | Tier 0 (Free)                      | Tier 1 (Hetzner $8/mo)                    | Tier 2 (Managed $85/mo)                |
+| ---------------------------- | ---------------------------------- | ----------------------------------------- | -------------------------------------- |
+| **CMS**                      | Payload CMS 3.x                    | Payload CMS 3.x                           | Payload CMS 3.x                        |
+| **Frontend**                 | Next.js 16 (App Router, Turbopack) | Next.js 16 (App Router, Turbopack)        | Next.js 16 (App Router, Turbopack)     |
+| **Language**                 | TypeScript 5.7+ (strict)           | TypeScript 5.7+ (strict)                  | TypeScript 5.7+ (strict)               |
+| **Hosting**                  | Vercel Hobby                       | Hetzner CX21 VPS                          | Vercel Pro                             |
+| **Database**                 | Neon (free)                        | Self-hosted Postgres on Hetzner           | Neon Launch                            |
+| **File Storage**             | Vercel Blob (1 GB free)            | Cloudflare R2 (free egress) or local disk | Vercel Blob Pro / R2                   |
+| **Auth (Admin)**             | Payload built-in                   | Payload built-in                          | Payload built-in                       |
+| **Auth (Customer)**          | Better Auth + plugins              | Better Auth + plugins                     | Better Auth + plugins                  |
+| **CDN + DNS**                | Cloudflare (free)                  | Cloudflare (free)                         | Cloudflare (free)                      |
+| **SSL**                      | Vercel (auto)                      | Let's Encrypt via Certbot                 | Vercel (auto)                          |
+| **Payments (India)**         | Razorpay (2% per txn)              | Razorpay (2% per txn)                     | Razorpay (2% per txn)                  |
+| **Payments (International)** | Stripe (Phase 2)                   | Stripe (Phase 2)                          | Stripe (Phase 2)                       |
+| **Email (transactional)**    | Resend Free (100/day)              | Resend Free (100/day)                     | Resend Pro (50K/mo)                    |
+| **Email (marketing)**        | Resend / Loops.so (free tier)      | Resend / Loops.so (free tier)             | Resend / Loops.so (free tier)          |
+| **SMS**                      | MSG91 / Twilio (pay per use)       | MSG91 / Twilio (pay per use)              | MSG91 / Twilio (pay per use)           |
+| **Search**                   | Postgres FTS                       | Postgres FTS                              | Postgres FTS (MVP) → Algolia (Phase 2) |
+| **Forms**                    | Payload Form Builder plugin        | Payload Form Builder plugin               | Payload Form Builder plugin            |
+| **SEO**                      | Payload SEO plugin                 | Payload SEO plugin                        | Payload SEO plugin                     |
+| **Redirects**                | Payload Redirects plugin           | Payload Redirects plugin                  | Payload Redirects plugin               |
+| **Image**                    | Vercel Image Optimization          | Next.js Image + Cloudflare                | Vercel Image Optimization              |
+| **Styling**                  | Tailwind CSS v4 + shadcn/ui        | Tailwind CSS v4 + shadcn/ui               | Tailwind CSS v4 + shadcn/ui            |
+| **Forms (frontend)**         | React Hook Form + Zod              | React Hook Form + Zod                     | React Hook Form + Zod                  |
+| **State**                    | Zustand                            | Zustand                                   | Zustand                                |
+| **Validation**               | Zod                                | Zod                                       | Zod                                    |
+| **Testing**                  | Vitest + Playwright                | Vitest + Playwright                       | Vitest + Playwright                    |
+| **Monitoring**               | Vercel Logs (free) / Sentry Free   | UptimeRobot + Hetzner logs                | Sentry Team                            |
+| **Analytics**                | PostHog Free + GA4 + Meta Pixel    | PostHog Free + GA4 + Meta Pixel           | PostHog Free + GA4 + Meta Pixel        |
+| **Shipping**                 | Shiprocket                         | Shiprocket                                | Shiprocket                             |
+| **Linting**                  | ESLint + Prettier                  | ESLint + Prettier                         | ESLint + Prettier                      |
+| **CI/CD**                    | Vercel auto-deploy                 | GitHub Actions + SSH                      | Vercel auto-deploy                     |
+| **Backup**                   | Neon daily (7 days)                | Hetzner snapshot daily                    | Neon daily + PITR                      |
 
 **Code is identical across all tiers.** Only deployment target and
 infrastructure choices differ. Migration between tiers requires no code
@@ -4209,63 +4802,64 @@ plus Payload CMS best practices. Detailed findings are in `docs/research/`:
 - `sariSellingStrategy.md` — Pricing, conversion, retention analysis
 
 **Companion plan (alternative architecture)**:
+
 - `shagya-shopify.md` — Same business requirements on Shopify stack
 
 ## Appendix C: Glossary
 
-| Term | Definition |
-|------|------------|
-| **D2C** | Direct-to-Consumer — brand sells directly to end customers |
-| **Headless** | Decoupled frontend/backend — backend exposes APIs, frontend is separate |
-| **RSC** | React Server Components — Next.js feature for server-rendered React |
-| **ISR** | Incremental Static Regeneration — static pages that revalidate on data change |
-| **PLP** | Product Listing Page — category page with multiple products |
-| **PDP** | Product Detail Page — single product page |
-| **AOV** | Average Order Value — average revenue per order |
-| **COD** | Cash on Delivery — pay when item is delivered |
-| **UPI** | Unified Payments Interface — Indian real-time payment system |
-| **GST** | Goods and Services Tax — Indian consumption tax |
-| **MRP** | Maximum Retail Price — printed price, used to show discount |
-| **KYC** | Know Your Customer — identity verification for payment gateways |
-| **3PL** | Third-Party Logistics — outsourced fulfillment provider |
-| **NDR** | Non-Delivery Report — when courier can't deliver |
-| **BOGO** | Buy One Get One |
-| **CTA** | Call to Action |
-| **UTM** | Urchin Tracking Module — URL parameters for campaign tracking |
-| **WCAG** | Web Content Accessibility Guidelines |
-| **PWA** | Progressive Web App |
-| **Payload** | Code-first headless CMS / Next.js fullstack framework |
-| **Collection** | Payload's term for a database table |
-| **Global** | Payload's term for a singleton document (one instance, not many) |
-| **Hook** | Payload's middleware (beforeChange, afterChange, etc.) |
-| **Access Control** | Payload's permission system (per field, document, operation) |
-| **Lexical** | Payload's built-in rich text editor (by Meta) |
-| **Better Auth** | TypeScript-first auth framework (50+ plugins) — handles customer auth |
-| **OTP** | One-Time Password — used in phone/email verification (Better Auth built-in) |
-| **Passkey** | WebAuthn-based passwordless auth using device biometrics (Better Auth plugin) |
-| **2FA** | Two-Factor Authentication — TOTP via apps like Google Authenticator (Better Auth plugin) |
-| **Magic Link** | Passwordless email login — click link in email to sign in (Better Auth plugin) |
-| **TOTP** | Time-based One-Time Password — 6-digit code that rotates every 30s (RFC 6238) |
-| **OAuth** | Open Authorization — sign in with Google, Facebook, Apple etc. (Better Auth socialProviders) |
-| **WebAuthn** | Web Authentication standard — basis for passkeys, uses device biometrics |
-| **Turbopack** | Next.js's Rust-based bundler (stable in Next 16, default) |
-| **React Compiler** | Next.js 16+ feature for automatic memoization (replaces manual `useMemo`/`useCallback`) |
-| **Cache Components** | Next.js 16+ programming model using `'use cache'` directive + Partial Pre-Rendering |
-| **PPR** | Partial Pre-Rendering — Next.js hybrid of static + dynamic rendering per route |
-| **pgvector** | Postgres extension for vector similarity search (used in Postgres 18+ for AI features) |
-| **PostHog** | Privacy-friendly product analytics |
-| **Resend** | Modern email API service |
-| **Neon** | Serverless Postgres provider |
-| **Vercel Blob** | Vercel's CDN-backed file storage |
-| **Razorpay** | Indian payment gateway |
-| **Shiprocket** | Indian shipping aggregator |
-| **Saree** | Traditional Indian garment — long fabric draped over body |
-| **Kanchipuram** | South Indian silk weaving tradition |
-| **Banarasi** | North Indian silk weaving tradition (Varanasi) |
-| **Pallu** | Decorative end-piece of a saree |
-| **Blouse** | Fitted top worn with saree |
-| **Petticoat** | Underskirt worn under saree |
-| **Handloom** | Fabric woven by hand (vs powerloom) |
+| Term                 | Definition                                                                                   |
+| -------------------- | -------------------------------------------------------------------------------------------- |
+| **D2C**              | Direct-to-Consumer — brand sells directly to end customers                                   |
+| **Headless**         | Decoupled frontend/backend — backend exposes APIs, frontend is separate                      |
+| **RSC**              | React Server Components — Next.js feature for server-rendered React                          |
+| **ISR**              | Incremental Static Regeneration — static pages that revalidate on data change                |
+| **PLP**              | Product Listing Page — category page with multiple products                                  |
+| **PDP**              | Product Detail Page — single product page                                                    |
+| **AOV**              | Average Order Value — average revenue per order                                              |
+| **COD**              | Cash on Delivery — pay when item is delivered                                                |
+| **UPI**              | Unified Payments Interface — Indian real-time payment system                                 |
+| **GST**              | Goods and Services Tax — Indian consumption tax                                              |
+| **MRP**              | Maximum Retail Price — printed price, used to show discount                                  |
+| **KYC**              | Know Your Customer — identity verification for payment gateways                              |
+| **3PL**              | Third-Party Logistics — outsourced fulfillment provider                                      |
+| **NDR**              | Non-Delivery Report — when courier can't deliver                                             |
+| **BOGO**             | Buy One Get One                                                                              |
+| **CTA**              | Call to Action                                                                               |
+| **UTM**              | Urchin Tracking Module — URL parameters for campaign tracking                                |
+| **WCAG**             | Web Content Accessibility Guidelines                                                         |
+| **PWA**              | Progressive Web App                                                                          |
+| **Payload**          | Code-first headless CMS / Next.js fullstack framework                                        |
+| **Collection**       | Payload's term for a database table                                                          |
+| **Global**           | Payload's term for a singleton document (one instance, not many)                             |
+| **Hook**             | Payload's middleware (beforeChange, afterChange, etc.)                                       |
+| **Access Control**   | Payload's permission system (per field, document, operation)                                 |
+| **Lexical**          | Payload's built-in rich text editor (by Meta)                                                |
+| **Better Auth**      | TypeScript-first auth framework (50+ plugins) — handles customer auth                        |
+| **OTP**              | One-Time Password — used in phone/email verification (Better Auth built-in)                  |
+| **Passkey**          | WebAuthn-based passwordless auth using device biometrics (Better Auth plugin)                |
+| **2FA**              | Two-Factor Authentication — TOTP via apps like Google Authenticator (Better Auth plugin)     |
+| **Magic Link**       | Passwordless email login — click link in email to sign in (Better Auth plugin)               |
+| **TOTP**             | Time-based One-Time Password — 6-digit code that rotates every 30s (RFC 6238)                |
+| **OAuth**            | Open Authorization — sign in with Google, Facebook, Apple etc. (Better Auth socialProviders) |
+| **WebAuthn**         | Web Authentication standard — basis for passkeys, uses device biometrics                     |
+| **Turbopack**        | Next.js's Rust-based bundler (stable in Next 16, default)                                    |
+| **React Compiler**   | Next.js 16+ feature for automatic memoization (replaces manual `useMemo`/`useCallback`)      |
+| **Cache Components** | Next.js 16+ programming model using `'use cache'` directive + Partial Pre-Rendering          |
+| **PPR**              | Partial Pre-Rendering — Next.js hybrid of static + dynamic rendering per route               |
+| **pgvector**         | Postgres extension for vector similarity search (used in Postgres 18+ for AI features)       |
+| **PostHog**          | Privacy-friendly product analytics                                                           |
+| **Resend**           | Modern email API service                                                                     |
+| **Neon**             | Serverless Postgres provider                                                                 |
+| **Vercel Blob**      | Vercel's CDN-backed file storage                                                             |
+| **Razorpay**         | Indian payment gateway                                                                       |
+| **Shiprocket**       | Indian shipping aggregator                                                                   |
+| **Saree**            | Traditional Indian garment — long fabric draped over body                                    |
+| **Kanchipuram**      | South Indian silk weaving tradition                                                          |
+| **Banarasi**         | North Indian silk weaving tradition (Varanasi)                                               |
+| **Pallu**            | Decorative end-piece of a saree                                                              |
+| **Blouse**           | Fitted top worn with saree                                                                   |
+| **Petticoat**        | Underskirt worn under saree                                                                  |
+| **Handloom**         | Fabric woven by hand (vs powerloom)                                                          |
 
 ---
 

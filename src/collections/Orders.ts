@@ -248,7 +248,7 @@ export const Orders: CollectionConfig = {
         {
           name: 'variant',
           type: 'relationship',
-          relationTo: 'variants' as any,
+          relationTo: 'variants',
         },
         {
           name: 'quantity',

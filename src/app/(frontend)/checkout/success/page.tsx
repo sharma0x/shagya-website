@@ -58,7 +58,7 @@ function CheckoutSuccessContent() {
 
         <div className="flex flex-col gap-3">
           <Link
-            href="/account/orders"
+            href={`/account/orders/${orderNumber}`}
             className="bg-brand-600 hover:bg-brand-700 font-display flex h-11 w-full items-center justify-center gap-2 rounded-xl text-sm font-semibold text-white shadow-xs transition-all active:scale-95"
           >
             Track in My Orders

@@ -19,10 +19,26 @@ import {
 interface OrderItem {
   id: string
   product: {
-    title: string
+    name: string
     slug: string
-    images?: Array<{ image?: { url?: string } }>
+    gallery?: Array<{
+      image?:
+        | {
+            url?: string
+            sizes?: {
+              thumbnail?: { url?: string }
+              card?: { url?: string }
+            }
+          }
+        | string
+    }>
   }
+  variant?: {
+    id?: string
+    title?: string
+    size?: string
+    blouseCustomization?: string
+  } | null
   quantity: number
   unitPrice: number
   totalPrice: number
@@ -226,39 +242,55 @@ export default function OrdersPage() {
                         </h4>
                         <div className="space-y-4">
                           {order.items?.map((item) => {
+                            const firstImage = item.product?.gallery?.[0]?.image
                             const imageUrl =
-                              item.product?.images?.[0]?.image?.url
+                              typeof firstImage === 'object' &&
+                              firstImage !== null
+                                ? firstImage.url ||
+                                  firstImage.sizes?.thumbnail?.url
+                                : typeof firstImage === 'string'
+                                  ? firstImage
+                                  : undefined
+
                             return (
-                              <div
+                              <Link
+                                href={`/products/${item.product?.slug || '#'}`}
                                 key={item.id}
-                                className="flex items-center gap-4 rounded-xl border border-neutral-100 bg-white p-3"
+                                className="group hover:border-brand-200 hover:bg-brand-50/30 flex items-center gap-4 rounded-xl border border-neutral-100 bg-white p-3 transition-colors"
                               >
-                                <div className="h-16 w-12 shrink-0 overflow-hidden rounded-lg border border-neutral-100 bg-neutral-100">
+                                <div className="h-20 w-16 shrink-0 overflow-hidden rounded-lg border border-neutral-100 bg-neutral-100 transition-transform group-hover:scale-[1.02]">
                                   {imageUrl ? (
                                     <img
                                       src={imageUrl}
-                                      alt={item.product?.title}
+                                      alt={item.product?.name}
                                       className="h-full w-full object-cover"
                                     />
                                   ) : (
-                                    <div className="font-display flex h-full w-full items-center justify-center text-[10px] font-semibold text-neutral-400 uppercase">
-                                      Saree
+                                    <div className="font-display flex h-full w-full items-center justify-center p-1 text-center text-[10px] font-semibold text-neutral-400 uppercase">
+                                      No Image
                                     </div>
                                   )}
                                 </div>
                                 <div className="min-w-0 flex-1">
-                                  <h5 className="font-display truncate text-xs font-semibold text-neutral-900">
-                                    {item.product?.title || 'Handloom Saree'}
+                                  <h5 className="font-display group-hover:text-brand-700 truncate text-sm font-semibold text-neutral-900 transition-colors">
+                                    {item.product?.name || 'Handloom Saree'}
                                   </h5>
-                                  <p className="font-body mt-0.5 text-[10px] tracking-wider text-neutral-400 uppercase">
+                                  {item.variant && (
+                                    <p className="font-body mt-0.5 text-xs text-neutral-500">
+                                      {item.variant.title ||
+                                        item.variant.size ||
+                                        'Custom Option'}
+                                    </p>
+                                  )}
+                                  <p className="font-body mt-1 text-[10px] font-medium tracking-wider text-neutral-400 uppercase">
                                     Qty: {item.quantity} × ₹
                                     {item.unitPrice.toLocaleString('en-IN')}
                                   </p>
                                 </div>
-                                <div className="font-body pr-2 text-xs font-semibold text-neutral-950">
+                                <div className="font-body pr-2 text-xs font-bold text-neutral-900">
                                   ₹{item.totalPrice.toLocaleString('en-IN')}
                                 </div>
-                              </div>
+                              </Link>
                             )
                           })}
                         </div>
@@ -331,6 +363,14 @@ export default function OrdersPage() {
                                 {order.paymentId}
                               </span>
                             </div>
+                          </div>
+                          <div className="mt-4">
+                            <Link
+                              href={`/account/orders/${order.orderNumber}`}
+                              className="font-display flex w-full items-center justify-center gap-2 rounded-lg bg-neutral-900 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-neutral-800"
+                            >
+                              View Full Order Details
+                            </Link>
                           </div>
                         </div>
                       </div>

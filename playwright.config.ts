@@ -37,7 +37,7 @@ export default defineConfig({
           PAYLOAD_SECRET: 'e2e-test-secret-do-not-use',
           DATABASE_URL:
             process.env.DATABASE_URL ??
-            'postgres://shagya:shagya_dev@localhost:5432/shagya',
+            'postgres://shayga:shayga_dev@localhost:5432/shayga',
         },
       },
 })

@@ -255,6 +255,7 @@ export default function CheckoutPage() {
         }
 
         const data = await res.json()
+        useCart.getState().clearCart()
         router.push(`/checkout/success?orderNumber=${data.orderNumber}`)
       } else {
         // Razorpay checkout
@@ -317,6 +318,7 @@ export default function CheckoutPage() {
               }
 
               const data = await verifyRes.json()
+              useCart.getState().clearCart()
               router.push(`/checkout/success?orderNumber=${data.orderNumber}`)
             } catch (err: any) {
               setError(err.message || 'Payment verification failed')
@@ -352,6 +354,7 @@ export default function CheckoutPage() {
           }
 
           const data = await verifyRes.json()
+          useCart.getState().clearCart()
           router.push(`/checkout/success?orderNumber=${data.orderNumber}`)
           return
         }
