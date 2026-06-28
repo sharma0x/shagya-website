@@ -393,9 +393,13 @@ export default buildConfig({
   cors: [
     process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000',
     process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '',
+    process.env.VERCEL_BRANCH_URL
+      ? `https://${process.env.VERCEL_BRANCH_URL}`
+      : '',
     'https://shagya-website-sharma0x-4079-clow-work.vercel.app',
     'https://shagya-website.vercel.app',
     'https://shagya-website-clow-work.vercel.app',
+    'https://shagya-website-git-develop-clow-work.vercel.app',
   ].filter(Boolean),
 
   // ---------------------------------------------------------------------------
@@ -404,9 +408,13 @@ export default buildConfig({
   csrf: [
     process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000',
     process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '',
+    process.env.VERCEL_BRANCH_URL
+      ? `https://${process.env.VERCEL_BRANCH_URL}`
+      : '',
     'https://shagya-website-sharma0x-4079-clow-work.vercel.app',
     'https://shagya-website.vercel.app',
     'https://shagya-website-clow-work.vercel.app',
+    'https://shagya-website-git-develop-clow-work.vercel.app',
   ].filter(Boolean),
 
   // ---------------------------------------------------------------------------

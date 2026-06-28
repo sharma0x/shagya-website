@@ -25,10 +25,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/:path*',
-        headers: [
-          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
-          { key: 'X-Content-Type-Options', value: 'nosniff' },
-        ],
+        headers: [{ key: 'X-Content-Type-Options', value: 'nosniff' }],
       },
     ]
   },
