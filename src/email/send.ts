@@ -42,8 +42,33 @@ async function safeSend(
   try {
     await payload.sendEmail({ to, subject, html })
     payload.logger.info(`[Email] ✓ "${label}" → ${to}`)
+
+    await payload.create({
+      collection: 'email-logs',
+      data: {
+        to,
+        subject,
+        status: 'sent',
+        label,
+        html,
+      },
+      overrideAccess: true,
+    })
   } catch (err) {
     payload.logger.error(`[Email] ✗ "${label}" → ${to}: ${err}`)
+
+    await payload.create({
+      collection: 'email-logs',
+      data: {
+        to,
+        subject,
+        status: 'failed',
+        error: String(err),
+        label,
+        html,
+      },
+      overrideAccess: true,
+    })
   }
 }
 
