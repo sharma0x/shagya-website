@@ -88,7 +88,6 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"created_at" timestamp(3) with time zone DEFAULT now() NOT NULL
   );
   
-  ALTER TABLE "users" ADD COLUMN "totp_secret" varchar;
   ALTER TABLE "payload_locked_documents_rels" ADD COLUMN "email_logs_id" integer;
   ALTER TABLE "pages_blocks_categories_grid" ADD CONSTRAINT "pages_blocks_categories_grid_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."pages"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "pages_blocks_product_grid" ADD CONSTRAINT "pages_blocks_product_grid_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."pages"("id") ON DELETE cascade ON UPDATE no action;
@@ -149,7 +148,6 @@ export async function down({
   ALTER TABLE "email_templates" ALTER COLUMN "slug" SET DATA TYPE "public"."enum_email_templates_slug" USING "slug"::"public"."enum_email_templates_slug";
   DROP INDEX "payload_locked_documents_rels_email_logs_id_idx";
   ALTER TABLE "email_templates" ADD COLUMN "available_variables" varchar;
-  ALTER TABLE "users" DROP COLUMN "totp_secret";
   ALTER TABLE "payload_locked_documents_rels" DROP COLUMN "email_logs_id";
   DROP TYPE "public"."enum_email_logs_status";`)
 }
