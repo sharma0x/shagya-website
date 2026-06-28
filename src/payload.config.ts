@@ -374,7 +374,9 @@ export default buildConfig({
   // ---------------------------------------------------------------------------
   // Server
   // ---------------------------------------------------------------------------
-  serverURL: process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000',
+  serverURL: process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000',
 
   localization: {
     locales: ['en'],
