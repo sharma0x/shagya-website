@@ -40,6 +40,7 @@ import { Wishlist } from './collections/Wishlist'
 import { Navigation } from './collections/Navigation'
 import { Forms } from './collections/Forms'
 import { FormSubmissions } from './collections/FormSubmissions'
+import { NewsletterSubscribers } from './collections/NewsletterSubscribers'
 import { SiteSettings } from './globals/SiteSettings'
 import { EmailTemplates } from './collections/EmailTemplates'
 import sharp from 'sharp'
@@ -316,6 +317,7 @@ export default buildConfig({
     Posts,
     Forms,
     FormSubmissions,
+    NewsletterSubscribers,
   ],
 
   // ---------------------------------------------------------------------------
