@@ -14,6 +14,7 @@ import { searchPlugin } from '@payloadcms/plugin-search'
 import { seoPlugin } from '@payloadcms/plugin-seo'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import nodemailer from 'nodemailer'
+import { payloadTotp } from '@clocklimited/payload-2fa'
 import { Users } from './collections/Users'
 import { Products } from './collections/Products'
 import { Categories } from './collections/Categories'
@@ -333,6 +334,10 @@ export default buildConfig({
   // Plugins
   // ---------------------------------------------------------------------------
   plugins: [
+    payloadTotp({
+      collection: 'users',
+      forceSetup: true,
+    }),
     searchPlugin({
       collections: ['products', 'pages', 'posts'],
       syncDrafts: false,
