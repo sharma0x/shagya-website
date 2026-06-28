@@ -65,6 +65,15 @@ export const EmailLogs: CollectionConfig = {
         language: 'html',
       },
     },
+    {
+      name: 'preview',
+      type: 'ui',
+      admin: {
+        components: {
+          Field: '@/collections/components/EmailPreview#EmailPreview',
+        },
+      },
+    },
   ],
   timestamps: true,
 }

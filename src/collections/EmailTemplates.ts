@@ -144,6 +144,15 @@ export const EmailTemplates: CollectionConfig = {
         },
       },
     },
+    {
+      name: 'preview',
+      type: 'ui',
+      admin: {
+        components: {
+          Field: '@/collections/components/EmailPreview#EmailPreview',
+        },
+      },
+    },
   ],
   timestamps: true,
 }
