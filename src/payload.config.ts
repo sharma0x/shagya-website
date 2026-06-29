@@ -10,6 +10,7 @@ import { postgresAdapter } from '@payloadcms/db-postgres'
 import { resendAdapter } from '@payloadcms/email-resend'
 import { nodemailerAdapter } from '@payloadcms/email-nodemailer'
 import { s3Storage } from '@payloadcms/storage-s3'
+import { getServerURL, getAllowedOrigins } from './lib/env'
 import { searchPlugin } from '@payloadcms/plugin-search'
 import { seoPlugin } from '@payloadcms/plugin-seo'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
@@ -244,7 +245,7 @@ export default buildConfig({
     },
     livePreview: {
       url: ({ data, collectionConfig, globalConfig, req }) => {
-        let base = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'
+        let base = getServerURL()
 
         if (req && typeof req === 'object' && 'headers' in req) {
           const headers = req.headers as any
@@ -411,32 +412,12 @@ export default buildConfig({
   // ---------------------------------------------------------------------------
   // CORS — allow Next.js frontend and admin
   // ---------------------------------------------------------------------------
-  cors: [
-    process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000',
-    process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '',
-    process.env.VERCEL_BRANCH_URL
-      ? `https://${process.env.VERCEL_BRANCH_URL}`
-      : '',
-    'https://shagya-website-sharma0x-4079-clow-work.vercel.app',
-    'https://shagya-website.vercel.app',
-    'https://shagya-website-clow-work.vercel.app',
-    'https://shagya-website-git-develop-clow-work.vercel.app',
-  ].filter(Boolean),
+  cors: getAllowedOrigins(),
 
   // ---------------------------------------------------------------------------
   // CSRF — protect admin routes
   // ---------------------------------------------------------------------------
-  csrf: [
-    process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000',
-    process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '',
-    process.env.VERCEL_BRANCH_URL
-      ? `https://${process.env.VERCEL_BRANCH_URL}`
-      : '',
-    'https://shagya-website-sharma0x-4079-clow-work.vercel.app',
-    'https://shagya-website.vercel.app',
-    'https://shagya-website-clow-work.vercel.app',
-    'https://shagya-website-git-develop-clow-work.vercel.app',
-  ].filter(Boolean),
+  csrf: getAllowedOrigins(),
 
   // ---------------------------------------------------------------------------
   // Image Processing

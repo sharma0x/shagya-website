@@ -3,6 +3,7 @@ import { passkey } from '@better-auth/passkey'
 import { phoneNumber, twoFactor, magicLink } from 'better-auth/plugins'
 import { Pool } from 'pg'
 import { sendSMS } from './sms'
+import { getServerURL, getAllowedOrigins } from './env'
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -40,24 +41,8 @@ async function sendMagicLinkEmail(
 export const auth = betterAuth({
   database: pool,
   secret: process.env.BETTER_AUTH_SECRET || 'dev-secret-change-in-production',
-  baseURL:
-    process.env.BETTER_AUTH_URL &&
-    process.env.BETTER_AUTH_URL !== 'http://localhost:3000'
-      ? process.env.BETTER_AUTH_URL
-      : process.env.VERCEL_URL
-        ? `https://${process.env.VERCEL_URL}`
-        : 'http://localhost:3000',
-  trustedOrigins: [
-    'http://localhost:3000',
-    ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : []),
-    ...(process.env.VERCEL_PROJECT_PRODUCTION_URL
-      ? [`https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`]
-      : []),
-    ...(process.env.VERCEL_BRANCH_URL
-      ? [`https://${process.env.VERCEL_BRANCH_URL}`]
-      : []),
-    'https://shagya-website-git-develop-clow-work.vercel.app', // Fallback for the current preview branch
-  ],
+  baseURL: getServerURL(),
+  trustedOrigins: getAllowedOrigins(),
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: true,
@@ -111,10 +96,8 @@ export const auth = betterAuth({
     }),
     passkey({
       rpName: 'Shayga',
-      rpID: process.env.NEXT_PUBLIC_SERVER_URL
-        ? new URL(process.env.NEXT_PUBLIC_SERVER_URL).hostname
-        : 'localhost',
-      origin: process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000',
+      rpID: new URL(getServerURL()).hostname,
+      origin: getServerURL(),
     }),
     magicLink({
       sendMagicLink: async ({ email, url }) => {

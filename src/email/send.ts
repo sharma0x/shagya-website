@@ -1,5 +1,6 @@
 import type { Payload } from 'payload'
 import { renderEmail } from './render'
+import { getServerURL } from '@/lib/env'
 import {
   buildItemsTable,
   buildPricingTable,
@@ -13,8 +14,8 @@ import {
 
 // ─── Internal helpers ─────────────────────────────────────────────────────────
 
-async function getStoreUrl(): Promise<string> {
-  return process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'
+async function getBaseURL(): Promise<string> {
+  return getServerURL()
 }
 
 async function getAdminEmail(payload: Payload): Promise<string> {
@@ -171,7 +172,7 @@ export async function sendOrderPlacedEmails(
   if (!order) return
 
   const [storeUrl, adminEmail, customerName] = await Promise.all([
-    getStoreUrl(),
+    getBaseURL(),
     getAdminEmail(payload),
     resolveCustomerName(payload, order.customerEmail),
   ])
@@ -238,7 +239,7 @@ export async function sendOrderStatusEmails(
   if (!order) return
 
   const [storeUrl, adminEmail, customerName] = await Promise.all([
-    getStoreUrl(),
+    getBaseURL(),
     getAdminEmail(payload),
     resolveCustomerName(payload, order.customerEmail),
   ])
@@ -283,7 +284,7 @@ export async function sendWelcomeEmail(
   customerEmail: string,
   customerName: string,
 ): Promise<void> {
-  const storeUrl = await getStoreUrl()
+  const storeUrl = await getBaseURL()
   const { subject, html } = await renderEmail(payload, 'welcome-customer', {
     customerName: customerName || customerEmail.split('@')[0],
     storeUrl,
@@ -301,7 +302,7 @@ export async function sendVerificationEmail(
   customerName: string,
   verificationUrl: string,
 ): Promise<void> {
-  const storeUrl = await getStoreUrl()
+  const storeUrl = await getBaseURL()
   const { subject, html } = await renderEmail(payload, 'verify-email', {
     customerName: customerName || to.split('@')[0],
     verificationUrl,
@@ -319,7 +320,7 @@ export async function sendMagicLinkEmail(
   to: string,
   verificationUrl: string,
 ): Promise<void> {
-  const storeUrl = await getStoreUrl()
+  const storeUrl = await getBaseURL()
   const { subject, html } = await renderEmail(payload, 'magic-link', {
     verificationUrl,
     storeUrl,

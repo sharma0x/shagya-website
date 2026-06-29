@@ -1,5 +1,6 @@
 import { TOTPField as TOTPField_3eb2cc20d1a2569c2ccbafcee15bd128 } from '@clocklimited/payload-2fa/rsc'
 import { EmailBodyDescription as EmailBodyDescription_8b8e431ee91cb6caae56cb2f79c82e08 } from '@/collections/components/EmailBodyDescription'
+import { EmailPreview as EmailPreview_9317a29a01bc72e02b8fe764c8a0a759 } from '@/collections/components/EmailPreview'
 import { RscEntryLexicalCell as RscEntryLexicalCell_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc'
 import { RscEntryLexicalField as RscEntryLexicalField_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc'
 import { LexicalDiffComponent as LexicalDiffComponent_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc'
@@ -44,6 +45,8 @@ export const importMap = {
     TOTPField_3eb2cc20d1a2569c2ccbafcee15bd128,
   '@/collections/components/EmailBodyDescription#EmailBodyDescription':
     EmailBodyDescription_8b8e431ee91cb6caae56cb2f79c82e08,
+  '@/collections/components/EmailPreview#EmailPreview':
+    EmailPreview_9317a29a01bc72e02b8fe764c8a0a759,
   '@payloadcms/richtext-lexical/rsc#RscEntryLexicalCell':
     RscEntryLexicalCell_44fe37237e0ebf4470c9990d8cb7b07e,
   '@payloadcms/richtext-lexical/rsc#RscEntryLexicalField':
