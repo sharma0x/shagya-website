@@ -183,6 +183,18 @@ db-migrate: ## Run pending database migrations
 	pnpm payload migrate
 	pnpm dlx @better-auth/cli migrate --config src/lib/auth.ts -y
 
+db-migrate-preview: ## Run pending database migrations against preview environment
+	@if [ ! -f .env.preview ]; then echo "❌ .env.preview not found."; exit 1; fi
+	@set -a && . ./.env.preview && set +a && pnpm payload migrate
+	@set -a && . ./.env.preview && set +a && pnpm dlx @better-auth/cli migrate --config src/lib/auth.ts -y
+
+db-migrate-prod: ## Run pending database migrations against production environment
+	@if [ ! -f .env.production ]; then echo "❌ .env.production not found."; exit 1; fi
+	@echo "⚠️  WARNING: You are about to migrate PRODUCTION."
+	@read -p "Are you sure? [y/N] " ans && [ $${ans:-N} = y ]
+	@set -a && . ./.env.production && set +a && pnpm payload migrate
+	@set -a && . ./.env.production && set +a && pnpm dlx @better-auth/cli migrate --config src/lib/auth.ts -y
+
 db-migrate-create: ## Create a new migration (MSG='description')
 	@if [ -z "$(MSG)" ]; then \
 		echo "Error: MSG is required. Usage: make db-migrate-create MSG='add products table'"; \

@@ -24,11 +24,10 @@ jobs:
 
       - name: Run database migrations
         run: |
+          set -a
+          . .vercel/.env.production.local
           npx payload migrate
           npx @better-auth/cli migrate --config src/lib/auth.ts -y
-        env:
-          DATABASE_URL: ${{ secrets.NEON_DATABASE_URL_PROD }}
-          PAYLOAD_SECRET: ${{ secrets.PAYLOAD_SECRET }}
 
       - run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
         env:

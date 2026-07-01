@@ -30,6 +30,7 @@ jobs:
           set -a
           . .vercel/.env.preview.local
           npx payload migrate
+          npx @better-auth/cli migrate --config src/lib/auth.ts -y
 
       - run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
         env:
