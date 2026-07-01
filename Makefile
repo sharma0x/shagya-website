@@ -5,8 +5,8 @@
         lint format typecheck \
         test test-watch test-coverage test-e2e test-all \
         infra-up infra-down infra-logs infra-reset \
-        seed \
-        db-migrate db-migrate-create db-seed db-generate-types \
+        seed-local seed-preview seed-production \
+        db-migrate db-migrate-create db-generate-types \
         release \
         setup clean clean-all
 
@@ -19,7 +19,9 @@ help: ## Show this help message
 	@echo "============================"
 	@echo ""
 	@echo "Quick start:"
-	@echo "  make seed             Seed database: download images → seed data + credentials"
+	@echo "  make seed-local       Seed local database (download images + seed data)"
+	@echo "  make seed-preview     Seed preview database (download images + seed data)"
+	@echo "  make seed-production  Seed production database (download images + seed data)"
 	@echo ""
 	@echo "Installation:"
 	@echo "  make install          Install all dependencies"
@@ -52,7 +54,6 @@ help: ## Show this help message
 	@echo "Database:"
 	@echo "  make db-migrate       Run pending migrations"
 	@echo "  make db-migrate-create Create a new migration (MSG='description')"
-	@echo "  make db-seed          Seed only (no infra/migration steps)"
 	@echo "  make db-generate-types Generate Payload TypeScript types"
 	@echo ""
 	@echo "Utilities:"
@@ -149,10 +150,37 @@ ifneq ($(SEED_ADMIN_PASSWORD),)
   SEED_PASSWORD = $(SEED_ADMIN_PASSWORD)
 endif
 
-seed: ## Seed database: download images → seed data → print credentials
+# ============================================================================
+# Database
+# ============================================================================
+
+db-migrate: ## Run pending database migrations
+	pnpm payload migrate
+	pnpm dlx @better-auth/cli migrate --config src/lib/auth.ts -y
+
+db-migrate-preview: ## Run pending database migrations against preview environment
+	@if [ ! -f infra/.env.preview ]; then echo "❌ infra/.env.preview not found."; exit 1; fi
+	pnpm dlx @dotenvx/dotenvx run -f infra/.env.preview -o -- pnpm payload migrate
+	pnpm dlx @dotenvx/dotenvx run -f infra/.env.preview -o -- pnpm dlx @better-auth/cli migrate --config src/lib/auth.ts -y
+
+db-migrate-prod: ## Run pending database migrations against production environment
+	@if [ ! -f infra/.env.production ]; then echo "❌ infra/.env.production not found."; exit 1; fi
+	@echo "⚠️  WARNING: You are about to migrate PRODUCTION."
+	@read -p "Are you sure? [y/N] " ans && [ $${ans:-N} = y ]
+	pnpm dlx @dotenvx/dotenvx run -f infra/.env.production -o -- pnpm payload migrate
+	pnpm dlx @dotenvx/dotenvx run -f infra/.env.production -o -- pnpm dlx @better-auth/cli migrate --config src/lib/auth.ts -y
+
+db-migrate-create: ## Create a new migration (MSG='description')
+	@if [ -z "$(MSG)" ]; then \
+		echo "Error: MSG is required. Usage: make db-migrate-create MSG='add products table'"; \
+		exit 1; \
+	fi
+	pnpm payload migrate:create "$(MSG)"
+
+seed-local: ## Seed local database: download images → seed data → print credentials
 	@echo ""
 	@echo "========================================"
-	@echo "  Shayga — Seed Database"
+	@echo "  Shayga — Seed Local Database"
 	@echo "========================================"
 	@echo ""
 	@echo "Step 1/2  Downloading seed images (skips existing)..."
@@ -171,51 +199,59 @@ seed: ## Seed database: download images → seed data → print credentials
 	@echo "========================================"
 	@echo ""
 
-# ============================================================================
-# Database
-# ============================================================================
+seed-preview: ## Seed preview database: download images → seed data → print credentials
+	@if [ ! -f infra/.env.preview ]; then echo "❌ infra/.env.preview not found."; exit 1; fi
+	@echo ""
+	@echo "========================================"
+	@echo "  Shayga — Seed Preview Database"
+	@echo "========================================"
+	@echo ""
+	@echo "Step 1/2  Downloading seed images (skips existing)..."
+	@bash scripts/download-images.sh
+	@echo ""
+	@echo "Step 2/2  Seeding database with dummy data..."
+	@pnpm dlx @dotenvx/dotenvx run -f infra/.env.preview -o -- env SEED_ADMIN_EMAIL="$(SEED_EMAIL)" SEED_ADMIN_PASSWORD="$(SEED_PASSWORD)" node --import tsx/esm scripts/seed.ts
+	@echo ""
+	@echo "========================================"
+	@echo "  Seed complete!"
+	@echo "========================================"
+	@echo "  Email:    $(SEED_EMAIL)"
+	@echo "  Password: $(SEED_PASSWORD)"
+	@echo "========================================"
+	@echo ""
 
-db-migrate: ## Run pending database migrations
-	pnpm payload migrate
-	pnpm dlx @better-auth/cli migrate --config src/lib/auth.ts -y
-
-db-migrate-preview: ## Run pending database migrations against preview environment
-	@if [ ! -f .env.preview ]; then echo "❌ .env.preview not found."; exit 1; fi
-	@set -a && . ./.env.preview && set +a && pnpm payload migrate
-	@set -a && . ./.env.preview && set +a && pnpm dlx @better-auth/cli migrate --config src/lib/auth.ts -y
-
-db-migrate-prod: ## Run pending database migrations against production environment
-	@if [ ! -f .env.production ]; then echo "❌ .env.production not found."; exit 1; fi
-	@echo "⚠️  WARNING: You are about to migrate PRODUCTION."
+seed-production: ## Seed production database: download images → seed data → print credentials
+	@if [ ! -f infra/.env.production ]; then echo "❌ infra/.env.production not found."; exit 1; fi
+	@echo "⚠️  WARNING: You are about to seed PRODUCTION."
 	@read -p "Are you sure? [y/N] " ans && [ $${ans:-N} = y ]
-	@set -a && . ./.env.production && set +a && pnpm payload migrate
-	@set -a && . ./.env.production && set +a && pnpm dlx @better-auth/cli migrate --config src/lib/auth.ts -y
+	@echo ""
+	@echo "========================================"
+	@echo "  Shayga — Seed Production Database"
+	@echo "========================================"
+	@echo ""
+	@echo "Step 1/2  Downloading seed images (skips existing)..."
+	@bash scripts/download-images.sh
+	@echo ""
+	@echo "Step 2/2  Seeding database with dummy data..."
+	@pnpm dlx @dotenvx/dotenvx run -f infra/.env.production -o -- env SEED_ADMIN_EMAIL="$(SEED_EMAIL)" SEED_ADMIN_PASSWORD="$(SEED_PASSWORD)" node --import tsx/esm scripts/seed.ts
+	@echo ""
+	@echo "========================================"
+	@echo "  Seed complete!"
+	@echo "========================================"
+	@echo "  Email:    $(SEED_EMAIL)"
+	@echo "  Password: $(SEED_PASSWORD)"
+	@echo "========================================"
+	@echo ""
 
-db-migrate-create: ## Create a new migration (MSG='description')
-	@if [ -z "$(MSG)" ]; then \
-		echo "Error: MSG is required. Usage: make db-migrate-create MSG='add products table'"; \
-		exit 1; \
-	fi
-	pnpm payload migrate:create "$(MSG)"
+db-sync-media-preview: ## Re-upload local images to preview R2 (sources infra/.env.preview)
+	@if [ ! -f infra/.env.preview ]; then echo "❌ infra/.env.preview not found."; exit 1; fi
+	pnpm dlx @dotenvx/dotenvx run -f infra/.env.preview -o -- node --import tsx/esm scripts/sync-media-to-r2.ts
 
-db-seed: ## Seed database with sample data (uses .env)
-	@set -a && [ -f .env ] && . ./.env; set +a && pnpm seed
-
-db-seed-preview: ## Seed preview DB + R2 (sources .env.preview, no --env-file override)
-	@if [ ! -f .env.preview ]; then \
-		echo "❌ .env.preview not found."; \
-		exit 1; \
-	fi
-	@set -a && . ./.env.preview && set +a && \
-		node --import tsx/esm scripts/seed.ts
-
-db-sync-media-preview: ## Re-upload local images to preview R2 (sources .env.preview)
-	@if [ ! -f .env.preview ]; then \
-		echo "❌ .env.preview not found."; \
-		exit 1; \
-	fi
-	@set -a && . ./.env.preview && set +a && \
-		node --import tsx/esm scripts/sync-media-to-r2.ts
+db-sync-media-prod: ## Re-upload local images to production R2 (sources infra/.env.production)
+	@if [ ! -f infra/.env.production ]; then echo "❌ infra/.env.production not found."; exit 1; fi
+	@echo "⚠️  WARNING: You are about to sync media to PRODUCTION R2."
+	@read -p "Are you sure? [y/N] " ans && [ $${ans:-N} = y ]
+	pnpm dlx @dotenvx/dotenvx run -f infra/.env.production -o -- node --import tsx/esm scripts/sync-media-to-r2.ts
 
 db-generate-types: ## Generate Payload TypeScript types from schema
 	pnpm generate:types
