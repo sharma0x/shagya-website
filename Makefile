@@ -19,7 +19,7 @@ help: ## Show this help message
 	@echo "============================"
 	@echo ""
 	@echo "Quick start:"
-	@echo "  make seed             Full seed: start infra → migrate → images → data + credentials"
+	@echo "  make seed             Seed database: download images → seed data + credentials"
 	@echo ""
 	@echo "Installation:"
 	@echo "  make install          Install all dependencies"
@@ -139,39 +139,35 @@ infra-reset: ## Reset infrastructure (delete all data)
 # Seed (one-stop command — works on a completely fresh database)
 # ============================================================================
 
-seed: ## Full seed: start infra → migrate → download images → seed data → print credentials
+SEED_EMAIL = admin@shayga.in
+ifneq ($(SEED_ADMIN_EMAIL),)
+  SEED_EMAIL = $(SEED_ADMIN_EMAIL)
+endif
+
+SEED_PASSWORD = admin123
+ifneq ($(SEED_ADMIN_PASSWORD),)
+  SEED_PASSWORD = $(SEED_ADMIN_PASSWORD)
+endif
+
+seed: ## Seed database: download images → seed data → print credentials
 	@echo ""
 	@echo "========================================"
-	@echo "  Shayga — Full Dev Seed"
+	@echo "  Shayga — Seed Database"
 	@echo "========================================"
 	@echo ""
-	@echo "Step 1/4  Starting infrastructure..."
-	docker compose -f infra/dev-services.yml up -d
-	@echo ""
-	@echo "Step 2/4  Waiting for PostgreSQL to be ready..."
-	@until docker exec shayga-pg pg_isready -U shayga -d shayga >/dev/null 2>&1; do \
-		printf "."; sleep 1; \
-	done
-	@printf " ready\n"
-	@echo ""
-	@echo "Step 3/4  Running database migrations..."
-	@set -a; [ -f .env ] && . ./.env; set +a; pnpm payload migrate
-	@echo "          Running Better Auth migrations..."
-	@set -a; [ -f .env ] && . ./.env; set +a; pnpm dlx @better-auth/cli migrate --config src/lib/auth.ts -y
-	@echo ""
-	@echo "Step 4/4  Downloading seed images (skips existing)..."
+	@echo "Step 1/2  Downloading seed images (skips existing)..."
 	@bash scripts/download-images.sh
 	@echo ""
-	@echo "         Seeding database with dummy data..."
-	pnpm seed
+	@echo "Step 2/2  Seeding database with dummy data..."
+	@SEED_ADMIN_EMAIL="$(SEED_EMAIL)" SEED_ADMIN_PASSWORD="$(SEED_PASSWORD)" pnpm seed
 	@echo ""
 	@echo "========================================"
 	@echo "  Seed complete!"
 	@echo "========================================"
 	@echo "  App:      http://localhost:3000"
 	@echo "  Admin:    http://localhost:3000/admin"
-	@echo "  Email:    admin@shayga.com"
-	@echo "  Password: admin123"
+	@echo "  Email:    $(SEED_EMAIL)"
+	@echo "  Password: $(SEED_PASSWORD)"
 	@echo "========================================"
 	@echo ""
 

@@ -104,6 +104,28 @@ services:
         max-size: '10m'
         max-file: '3'
 
+  # ---------------------------------------------------------------------------
+  # Adminer — Database management UI (lightweight phpMyAdmin alternative)
+  # ---------------------------------------------------------------------------
+  # URL: http://localhost:8080
+  # Connect to: postgres (hostname), shayga (database), shayga (user), shayga_dev (password)
+  # System: PostgreSQL
+  # ===========================================================================
+  adminer:
+    image: adminer:latest
+    container_name: shayga-adminer
+    restart: unless-stopped
+    ports:
+      - '8080:8080'
+    depends_on:
+      postgres:
+        condition: service_healthy
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '10m'
+        max-file: '3'
+
 volumes:
   pgdata:
     name: shayga-pgdata
