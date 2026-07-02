@@ -5,6 +5,7 @@ import { AlertCircle, Check, ChevronDown, Loader2, MapPin } from 'lucide-react'
 import { ALL_COUNTRIES, DEFAULT_COUNTRY, OTHER_COUNTRY_VALUE } from '@/lib/countries'
 import { INDIAN_STATES } from '@/lib/indian-states'
 import type { CitySearchResult } from '@/lib/india-post'
+import { PhoneInput } from '@/components/ui/phone-input'
 
 export interface AddressFormData {
   fullName: string
@@ -208,12 +209,10 @@ export function AddressForm({
           <label className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase">
             Phone Number
           </label>
-          <input
-            type="tel"
+          <PhoneInput
             required
             value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            className={textInputClass}
+            onChange={setPhone}
             placeholder={initialData?.phone ? undefined : '10-digit mobile'}
           />
         </div>
