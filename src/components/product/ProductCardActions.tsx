@@ -98,7 +98,7 @@ export function ProductCardActions({
           isCompact ? 'h-7 flex-1' : 'h-8 flex-1',
           added
             ? 'bg-green-500 text-white'
-            : 'bg-neutral-900 text-white hover:bg-neutral-800',
+            : 'bg-brand-600 text-white hover:bg-brand-700',
         )}
       >
         {added ? (
@@ -116,7 +116,7 @@ export function ProductCardActions({
       <button
         onClick={handleBuyNow}
         className={cn(
-          'font-display flex items-center justify-center rounded-md border border-neutral-900 bg-white text-[10px] font-semibold text-neutral-900 transition-colors hover:bg-neutral-50 active:scale-95',
+          'font-display flex items-center justify-center rounded-md border border-brand-200 bg-white text-[10px] font-semibold text-brand-700 transition-colors hover:border-brand-300 hover:bg-brand-50 active:scale-95',
           isCompact ? 'h-7 flex-1' : 'h-8 flex-1',
         )}
       >

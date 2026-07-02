@@ -120,7 +120,7 @@ export function ProductCard({
         <div
           className={cn(
             'relative overflow-hidden bg-neutral-100',
-            isCompact ? 'aspect-[4/5] rounded-lg' : 'aspect-[3/4] rounded-lg',
+            isCompact ? 'aspect-[4/5] rounded-lg' : 'aspect-[4/5] rounded-lg',
           )}
         >
           <Image
@@ -146,14 +146,11 @@ export function ProductCard({
         </div>
 
         {/* Info */}
-        <div className={cn(isCompact ? 'mt-1.5' : 'mt-2')}>
-          <p className="font-body truncate text-[10px] font-semibold tracking-wider text-neutral-500 uppercase">
-            {product.weave}
-          </p>
+        <div className={cn(isCompact ? 'mt-1' : 'mt-1')}>
           <p
             className={cn(
               'font-display line-clamp-2 font-medium text-neutral-900',
-              isCompact ? 'mt-0.5 text-[11px] leading-tight' : 'mt-0.5 text-xs leading-tight',
+              isCompact ? 'text-[11px] leading-tight' : 'text-xs leading-tight',
             )}
           >
             {product.name}
@@ -163,7 +160,7 @@ export function ProductCard({
           <div
             className={cn(
               'flex flex-wrap items-baseline gap-1.5',
-              isCompact ? 'mt-1' : 'mt-1.5',
+              isCompact ? 'mt-0.5' : 'mt-0.5',
             )}
           >
             <span
@@ -199,7 +196,7 @@ export function ProductCard({
 
       {/* Actions — always visible */}
       {showActions && (
-        <div className={cn(isCompact ? 'mt-1.5' : 'mt-2')}>
+        <div className={cn(isCompact ? 'mt-1' : 'mt-1.5')}>
           <ProductCardActions
             productId={product.id}
             productName={product.name}
