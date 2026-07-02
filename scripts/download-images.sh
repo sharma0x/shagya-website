@@ -19,6 +19,22 @@ BASE="https://images.pexels.com/photos"
 
 mkdir -p "$PROD" "$BLOG" "$HERO" "$AVTR"
 
+# Check if we already have the expected number of files in all folders
+count_files() {
+  local dir="$1"
+  find "$dir" -maxdepth 1 -type f -name "*.jpg" 2>/dev/null | wc -l | tr -d ' '
+}
+
+PROD_COUNT=$(count_files "$PROD")
+BLOG_COUNT=$(count_files "$BLOG")
+HERO_COUNT=$(count_files "$HERO")
+AVTR_COUNT=$(count_files "$AVTR")
+
+if [ "$PROD_COUNT" -eq 20 ] && [ "$BLOG_COUNT" -eq 5 ] && [ "$HERO_COUNT" -eq 3 ] && [ "$AVTR_COUNT" -eq 3 ]; then
+  echo "  ✅  All 31 seed images are already present. Skipping download check."
+  exit 0
+fi
+
 # Returns 0 (true) when the file is missing or suspiciously small (< 8 KB).
 needs_download() {
   local f="$1"

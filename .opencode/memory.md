@@ -375,3 +375,26 @@ Payload's `upload` plugin `url` field is computed dynamically at query time base
 ### Seed Link Failure Warning
 
 During seeding, some image uploads may fail with `ValidationError: filename` from Payload Drizzle adapter. This happens when a file with the same filename already exists in the DB (from a previous failed seed run). The seed script skips these gracefully — just re-run with `NEXT_PUBLIC_SERVER_URL` set correctly and the previously-uploaded images will still work.
+
+---
+
+## TSX / Node.js 23.5+ Compatibility
+
+### Migration ENOENT error on Node 23.5+
+
+If you receive an error like `Error: Error creating migration: ENOENT: no such file or directory, open 'node:crypto?tsx-namespace=...'` when running migrations or TS scripts via `tsx` on Node.js v23.5.0 or later (e.g. Node 25.6.0):
+
+This is caused by a namespace-resolution bug in `tsx` versions `>=4.22.0` where it appends `?tsx-namespace=` query parameters to Node's built-in modules (like `node:crypto`).
+
+**Correct fix** — Pin `tsx` to `4.21.0` in `package.json` and add a pnpm override:
+
+```json
+  "devDependencies": {
+    "tsx": "4.21.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "tsx": "4.21.0"
+    }
+  }
+```

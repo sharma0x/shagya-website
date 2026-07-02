@@ -23,7 +23,7 @@ describe('Seed data', () => {
 
   describe('Admin user', () => {
     it('has correct email', () => {
-      expect(adminUser.email).toBe('admin@shayga.com')
+      expect(adminUser.email).toBe('admin@shayga.in')
     })
 
     it('has super-admin role', () => {

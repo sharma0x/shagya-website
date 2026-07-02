@@ -637,6 +637,13 @@ async function main(): Promise<void> {
     process.exit(1)
   }
 
+  if (!process.env.SEED_ADMIN_EMAIL || !process.env.SEED_ADMIN_PASSWORD) {
+    console.error(
+      '❌ Error: SEED_ADMIN_EMAIL and SEED_ADMIN_PASSWORD environment variables are required and must be defined in your env file.\n',
+    )
+    process.exit(1)
+  }
+
   const payload = await getPayload({ config })
 
   try {
@@ -653,6 +660,19 @@ async function main(): Promise<void> {
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1)
     console.log(`\n🎉 Seed complete! (${elapsed}s)`)
+
+    console.log('\n========================================')
+    console.log('  Seed complete!')
+    console.log('========================================')
+    console.log(
+      `  App:      ${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'}`,
+    )
+    console.log(
+      `  Admin:    ${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'}/admin`,
+    )
+    console.log(`  Email:    ${process.env.SEED_ADMIN_EMAIL}`)
+    console.log(`  Password: ${process.env.SEED_ADMIN_PASSWORD}`)
+    console.log('========================================\n')
   } catch (error) {
     console.error('\n❌ Seed failed:', error)
     process.exit(1)
