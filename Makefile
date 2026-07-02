@@ -6,6 +6,7 @@
         test test-watch test-coverage test-e2e test-all \
         infra-up infra-down infra-logs infra-reset \
         seed-local seed-preview seed-production \
+        reset-local reset-preview-dangerous reset-production-dangerous \
         db-migrate db-migrate-create db-generate-types \
         release \
         setup clean clean-all
@@ -22,6 +23,10 @@ help: ## Show this help message
 	@echo "  make seed-local       Seed local database (download images + seed data)"
 	@echo "  make seed-preview     Seed preview database (download images + seed data)"
 	@echo "  make seed-production  Seed production database (download images + seed data)"
+	@echo ""
+	@echo "  make reset-local      Reset local database & MinIO storage"
+	@echo "  make reset-preview-dangerous Reset preview database & R2 storage"
+	@echo "  make reset-production-dangerous Reset production database & R2 storage"
 	@echo ""
 	@echo "Installation:"
 	@echo "  make install          Install all dependencies"
@@ -140,16 +145,6 @@ infra-reset: ## Reset infrastructure (delete all data)
 # Seed (one-stop command — works on a completely fresh database)
 # ============================================================================
 
-SEED_EMAIL = admin@shayga.in
-ifneq ($(SEED_ADMIN_EMAIL),)
-  SEED_EMAIL = $(SEED_ADMIN_EMAIL)
-endif
-
-SEED_PASSWORD = admin123
-ifneq ($(SEED_ADMIN_PASSWORD),)
-  SEED_PASSWORD = $(SEED_ADMIN_PASSWORD)
-endif
-
 # ============================================================================
 # Database
 # ============================================================================
@@ -177,7 +172,7 @@ db-migrate-create: ## Create a new migration (MSG='description')
 	fi
 	pnpm payload migrate:create "$(MSG)"
 
-seed-local: ## Seed local database: download images → seed data → print credentials
+seed-local: ## Seed local database: download images → seed data
 	@echo ""
 	@echo "========================================"
 	@echo "  Shayga — Seed Local Database"
@@ -187,19 +182,9 @@ seed-local: ## Seed local database: download images → seed data → print cred
 	@bash scripts/download-images.sh
 	@echo ""
 	@echo "Step 2/2  Seeding database with dummy data..."
-	@SEED_ADMIN_EMAIL="$(SEED_EMAIL)" SEED_ADMIN_PASSWORD="$(SEED_PASSWORD)" pnpm seed
-	@echo ""
-	@echo "========================================"
-	@echo "  Seed complete!"
-	@echo "========================================"
-	@echo "  App:      http://localhost:3000"
-	@echo "  Admin:    http://localhost:3000/admin"
-	@echo "  Email:    $(SEED_EMAIL)"
-	@echo "  Password: $(SEED_PASSWORD)"
-	@echo "========================================"
-	@echo ""
+	@pnpm seed
 
-seed-preview: ## Seed preview database: download images → seed data → print credentials
+seed-preview: ## Seed preview database: download images → seed data
 	@if [ ! -f infra/.env.preview ]; then echo "❌ infra/.env.preview not found."; exit 1; fi
 	@echo ""
 	@echo "========================================"
@@ -210,17 +195,9 @@ seed-preview: ## Seed preview database: download images → seed data → print 
 	@bash scripts/download-images.sh
 	@echo ""
 	@echo "Step 2/2  Seeding database with dummy data..."
-	@pnpm dlx @dotenvx/dotenvx run -f infra/.env.preview -o -- env SEED_ADMIN_EMAIL="$(SEED_EMAIL)" SEED_ADMIN_PASSWORD="$(SEED_PASSWORD)" node --import tsx/esm scripts/seed.ts
-	@echo ""
-	@echo "========================================"
-	@echo "  Seed complete!"
-	@echo "========================================"
-	@echo "  Email:    $(SEED_EMAIL)"
-	@echo "  Password: $(SEED_PASSWORD)"
-	@echo "========================================"
-	@echo ""
+	@pnpm dlx @dotenvx/dotenvx run -f infra/.env.preview -o -- node --import tsx/esm scripts/seed.ts
 
-seed-production: ## Seed production database: download images → seed data → print credentials
+seed-production: ## Seed production database: download images → seed data
 	@if [ ! -f infra/.env.production ]; then echo "❌ infra/.env.production not found."; exit 1; fi
 	@echo "⚠️  WARNING: You are about to seed PRODUCTION."
 	@read -p "Are you sure? [y/N] " ans && [ $${ans:-N} = y ]
@@ -233,15 +210,7 @@ seed-production: ## Seed production database: download images → seed data → 
 	@bash scripts/download-images.sh
 	@echo ""
 	@echo "Step 2/2  Seeding database with dummy data..."
-	@pnpm dlx @dotenvx/dotenvx run -f infra/.env.production -o -- env SEED_ADMIN_EMAIL="$(SEED_EMAIL)" SEED_ADMIN_PASSWORD="$(SEED_PASSWORD)" node --import tsx/esm scripts/seed.ts
-	@echo ""
-	@echo "========================================"
-	@echo "  Seed complete!"
-	@echo "========================================"
-	@echo "  Email:    $(SEED_EMAIL)"
-	@echo "  Password: $(SEED_PASSWORD)"
-	@echo "========================================"
-	@echo ""
+	@pnpm dlx @dotenvx/dotenvx run -f infra/.env.production -o -- node --import tsx/esm scripts/seed.ts
 
 db-sync-media-preview: ## Re-upload local images to preview R2 (sources infra/.env.preview)
 	@if [ ! -f infra/.env.preview ]; then echo "❌ infra/.env.preview not found."; exit 1; fi
@@ -255,6 +224,36 @@ db-sync-media-prod: ## Re-upload local images to production R2 (sources infra/.e
 
 db-generate-types: ## Generate Payload TypeScript types from schema
 	pnpm generate:types
+
+reset-local: ## Reset local infrastructure (nuke local DB + local MinIO bucket)
+	@echo ""
+	@echo "========================================"
+	@echo "  Shayga — Reset Local Infrastructure"
+	@echo "========================================"
+	@echo ""
+	@node --env-file=.env --import tsx/esm scripts/reset-infra.ts
+
+reset-preview-dangerous: ## Reset preview infrastructure (nuke preview DB + preview R2 bucket)
+	@if [ ! -f infra/.env.preview ]; then echo "❌ infra/.env.preview not found."; exit 1; fi
+	@echo "⚠️  WARNING: You are about to RESET PREVIEW database and storage."
+	@read -p "Are you sure? Type 'DANGEROUS' to confirm: " ans && [ "$$ans" = "DANGEROUS" ]
+	@echo ""
+	@echo "========================================"
+	@echo "  Shayga — Reset Preview Infrastructure"
+	@echo "========================================"
+	@echo ""
+	pnpm dlx @dotenvx/dotenvx run -f infra/.env.preview -o -- node --import tsx/esm scripts/reset-infra.ts
+
+reset-production-dangerous: ## Reset production infrastructure (nuke production DB + prod R2 bucket)
+	@if [ ! -f infra/.env.production ]; then echo "❌ infra/.env.production not found."; exit 1; fi
+	@echo "⚠️  WARNING: You are about to RESET PRODUCTION database and storage."
+	@read -p "Are you sure? Type 'DANGEROUS' to confirm: " ans && [ "$$ans" = "DANGEROUS" ]
+	@echo ""
+	@echo "========================================"
+	@echo "  Shayga — Reset Production Infrastructure"
+	@echo "========================================"
+	@echo ""
+	pnpm dlx @dotenvx/dotenvx run -f infra/.env.production -o -- node --import tsx/esm scripts/reset-infra.ts
 
 # ============================================================================
 # Release (semantic-release)
