@@ -86,15 +86,15 @@ export async function GET(request: Request): Promise<NextResponse> {
       where.cityOfOrigin = { contains: city }
     }
 
-    const color = searchParams.get('color')
+    const color = getCommaParam(searchParams, 'color')
     const size = searchParams.get('size')
 
     const payload = await getPayload({ config })
 
     // Color/Size filters require variant sub-query
-    if (color || size) {
+    if (color.length > 0 || size) {
       const variantWhere: Record<string, any> = {}
-      if (color) variantWhere.color = { equals: color }
+      if (color.length > 0) variantWhere.color = { in: color }
       if (size) variantWhere.size = { equals: size }
 
       const variants = await payload.find({

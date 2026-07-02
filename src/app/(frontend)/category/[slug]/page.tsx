@@ -170,12 +170,12 @@ export default async function CategoryPage({
   const where = buildWhere(sParams, slug)
 
   // Variant-based filters (color, size) — sub-query
-  const colorParam = (sParams.color as string) || ''
+  const colorParam = getCommaParam(sParams, 'color')
   const sizeParam = (sParams.size as string) || ''
 
-  if (colorParam || sizeParam) {
+  if (colorParam.length > 0 || sizeParam) {
     const variantWhere: Record<string, any> = {}
-    if (colorParam) variantWhere.color = { equals: colorParam }
+    if (colorParam.length > 0) variantWhere.color = { in: colorParam }
     if (sizeParam) variantWhere.size = { equals: sizeParam }
 
     const matchingVariants = await payload.find({

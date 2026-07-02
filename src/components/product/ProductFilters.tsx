@@ -5,6 +5,9 @@ import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { Filter, X, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { RangeSlider } from '@/components/ui/range-slider'
+import { COLOR_PALETTE } from '@/lib/colors'
+
+const INITIAL_COLOR_COUNT = 12
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -183,8 +186,9 @@ export function ProductFilters({
     searchParams.get('deliveryTime') || '',
   )
   const [city, setCity] = useState(searchParams.get('city') || '')
-  const [color, setColor] = useState(searchParams.get('color') || '')
+  const [color, setColor] = useState<string[]>(getParamArray('color'))
   const [size, setSize] = useState(searchParams.get('size') || '')
+  const [showAllColors, setShowAllColors] = useState(false)
 
   // --- Facet fetching ---
   const fetchFacets = useCallback(async () => {
@@ -240,7 +244,7 @@ export function ProductFilters({
     if (minDiscount) params.set('minDiscount', minDiscount)
     if (deliveryTime) params.set('deliveryTime', deliveryTime)
     if (city) params.set('city', city)
-    if (color) params.set('color', color)
+    if (color.length) params.set('color', color.join(','))
     if (size) params.set('size', size)
     // Preserve sort, reset page to 1
     const sort = searchParams.get('sort')
@@ -266,7 +270,7 @@ export function ProductFilters({
     setMinDiscount('')
     setDeliveryTime('')
     setCity('')
-    setColor('')
+    setColor([])
     setSize('')
     const sort = searchParams.get('sort')
     const params = new URLSearchParams()
@@ -285,7 +289,7 @@ export function ProductFilters({
     !!minDiscount ||
     !!deliveryTime ||
     !!city ||
-    !!color ||
+    color.length > 0 ||
     !!size
 
   const activeCount =
@@ -296,7 +300,7 @@ export function ProductFilters({
     (minDiscount ? 1 : 0) +
     (deliveryTime ? 1 : 0) +
     (city ? 1 : 0) +
-    (color ? 1 : 0) +
+    color.length +
     (size ? 1 : 0)
 
   const getFacetCount = (list: FacetCount[] | undefined, value: string) => {
@@ -490,33 +494,48 @@ export function ProductFilters({
         expanded={expandedSections.color}
         onToggle={() => toggleSection('color')}
       >
-        <input
-          type="text"
-          placeholder="e.g. Red, Gold, Maroon"
-          value={color}
-          onChange={(e) => setColor(e.target.value)}
-          className="font-body focus:border-brand-500 h-8 w-full rounded-lg border border-neutral-200 px-2 text-xs outline-none placeholder:text-neutral-300"
-        />
-        {facets?.colors && facets.colors.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {facets.colors.slice(0, 12).map((c) => (
+        <div className="grid grid-cols-3 gap-1.5">
+          {COLOR_PALETTE.slice(
+            0,
+            showAllColors ? COLOR_PALETTE.length : INITIAL_COLOR_COUNT,
+          ).map((c) => {
+            const isSelected = color.includes(c.value)
+            return (
               <button
                 key={c.value}
                 type="button"
                 onClick={() =>
-                  setColor(color === c.value ? '' : c.value)
+                  toggleArrayFilter(c.value, color, setColor)
                 }
                 className={cn(
-                  'font-body rounded-md px-2 py-0.5 text-[10px] transition-colors',
-                  color === c.value
-                    ? 'bg-brand-600 text-white'
-                    : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200',
+                  'flex items-center gap-1.5 rounded-lg px-1.5 py-1 text-left transition-colors',
+                  isSelected
+                    ? 'bg-brand-50 ring-1 ring-brand-300'
+                    : 'hover:bg-neutral-50',
                 )}
               >
-                {c.label} ({c.count})
+                <span
+                  className="h-3.5 w-3.5 shrink-0 rounded-sm border border-neutral-200"
+                  style={{ backgroundColor: c.hex }}
+                  title={c.label}
+                />
+                <span className="font-body truncate text-[10px] leading-tight text-neutral-700">
+                  {c.label}
+                </span>
               </button>
-            ))}
-          </div>
+            )
+          })}
+        </div>
+        {COLOR_PALETTE.length > INITIAL_COLOR_COUNT && (
+          <button
+            type="button"
+            onClick={() => setShowAllColors(!showAllColors)}
+            className="font-display text-brand-600 hover:text-brand-700 mt-2 text-[10px] font-semibold tracking-wider uppercase transition-colors"
+          >
+            {showAllColors
+              ? 'Show Less'
+              : `Show All ${COLOR_PALETTE.length} Colors`}
+          </button>
         )}
       </Section>
 
