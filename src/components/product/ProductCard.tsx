@@ -120,14 +120,14 @@ export function ProductCard({
         <div
           className={cn(
             'relative overflow-hidden bg-neutral-100',
-            isCompact ? 'aspect-[4/5] rounded-lg' : 'aspect-[4/5] rounded-lg',
+            isCompact ? 'aspect-[4/5] rounded-lg' : 'aspect-[4/5] rounded-md',
           )}
         >
           <Image
             src={imageUrl}
             alt={product.name}
             fill
-            sizes={isCompact ? '144px' : '(max-width: 640px) 50vw, 25vw'}
+            sizes={isCompact ? '128px' : '(max-width: 640px) 50vw, 25vw'}
             className="object-cover"
             unoptimized={imageUrl.startsWith('https://placehold.co')}
           />
@@ -146,46 +146,26 @@ export function ProductCard({
         </div>
 
         {/* Info */}
-        <div className={cn(isCompact ? 'mt-1' : 'mt-1')}>
-          <p
-            className={cn(
-              'font-display line-clamp-2 font-medium text-neutral-900',
-              isCompact ? 'text-[11px] leading-tight' : 'text-xs leading-tight',
-            )}
-          >
+        <div className="mt-0.5">
+          <p className="font-display truncate text-[10px] font-medium leading-tight text-neutral-900">
             {product.name}
           </p>
 
           {/* Price */}
-          <div
-            className={cn(
-              'flex flex-wrap items-baseline gap-1.5',
-              isCompact ? 'mt-0.5' : 'mt-0.5',
-            )}
-          >
-            <span
-              className={cn(
-                'font-display font-bold text-neutral-900',
-                isCompact ? 'text-xs' : 'text-sm',
-              )}
-            >
+          <div className="mt-0.5 flex flex-wrap items-baseline gap-1">
+            <span className="font-display text-xs font-bold text-neutral-900">
               ₹{(product.basePrice ?? 0).toLocaleString('en-IN')}
             </span>
             {product.compareAtPrice &&
               product.basePrice &&
               product.compareAtPrice > product.basePrice && (
                 <>
-                  <span
-                    className={cn(
-                      'font-body text-neutral-400 line-through',
-                      isCompact ? 'text-[10px]' : 'text-xs',
-                    )}
-                  >
+                  <span className="font-body text-[9px] text-neutral-400 line-through">
                     ₹{product.compareAtPrice.toLocaleString('en-IN')}
                   </span>
                   {discountPct && (
-                    <span className="font-display font-semibold text-amber-600 text-[10px]">
-                      ({discountPct}% OFF)
+                    <span className="font-display text-[9px] font-semibold text-amber-600">
+                      {discountPct}% OFF
                     </span>
                   )}
                 </>
@@ -196,7 +176,7 @@ export function ProductCard({
 
       {/* Actions — always visible */}
       {showActions && (
-        <div className={cn(isCompact ? 'mt-1' : 'mt-1.5')}>
+        <div className="mt-1">
           <ProductCardActions
             productId={product.id}
             productName={product.name}

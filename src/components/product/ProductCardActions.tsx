@@ -95,7 +95,7 @@ export function ProductCardActions({
         disabled={added}
         className={cn(
           'font-display flex items-center justify-center rounded-md text-[10px] font-semibold transition-all active:scale-95',
-          isCompact ? 'h-7 flex-1' : 'h-8 flex-1',
+          isCompact ? 'h-6 flex-1' : 'h-7 flex-1',
           added
             ? 'bg-green-500 text-white'
             : 'bg-brand-600 text-white hover:bg-brand-700',
@@ -116,11 +116,12 @@ export function ProductCardActions({
       <button
         onClick={handleBuyNow}
         className={cn(
-          'font-display flex items-center justify-center rounded-md border border-brand-200 bg-white text-[10px] font-semibold text-brand-700 transition-colors hover:border-brand-300 hover:bg-brand-50 active:scale-95',
-          isCompact ? 'h-7 flex-1' : 'h-8 flex-1',
+          'font-display flex items-center justify-center gap-1 rounded-md border border-brand-200 bg-white text-[10px] font-semibold text-brand-700 transition-colors hover:border-brand-300 hover:bg-brand-50 active:scale-95',
+          isCompact ? 'h-6 flex-1' : 'h-7 flex-1',
         )}
       >
         <Zap className="h-3 w-3" />
+        {isCompact ? 'Buy' : 'Buy Now'}
       </button>
     </div>
   )
