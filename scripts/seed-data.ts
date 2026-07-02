@@ -43,6 +43,8 @@ export interface SeedProduct {
   borderType: string
   weavePattern: string
   occasion: string
+  cityOfOrigin: string
+  deliveryTime: string
   gstPercent: number
   shippingPrice: number
   imagePath: string
@@ -428,6 +430,8 @@ export const products: SeedProduct[] = [
     weavePattern:
       'Kadhwa (cutwork) technique — each motif woven independently without floating threads',
     occasion: 'Wedding, Reception, Diwali',
+    cityOfOrigin: 'Varanasi, Uttar Pradesh',
+    deliveryTime: 'within-5-days',
     gstPercent: 5,
     shippingPrice: 0,
     description:
@@ -459,6 +463,8 @@ export const products: SeedProduct[] = [
     weavePattern:
       'Korvai technique — body and border woven separately then interlocked for strength',
     occasion: 'Bridal, Wedding Reception, Seemandham',
+    cityOfOrigin: 'Kanchipuram, Tamil Nadu',
+    deliveryTime: 'within-7-days',
     gstPercent: 5,
     shippingPrice: 0,
     description:
@@ -489,6 +495,8 @@ export const products: SeedProduct[] = [
     weavePattern:
       'Jamdani supplementary weft technique — motifs float above the ground weave',
     occasion: 'Daily Wear, Office, Casual Lunch',
+    cityOfOrigin: 'Phulia, West Bengal',
+    deliveryTime: 'within-2-days',
     gstPercent: 5,
     shippingPrice: 100,
     description:
@@ -519,6 +527,8 @@ export const products: SeedProduct[] = [
     weavePattern:
       'Bandhani tie-dye — each dot hand-tied with thread before dyeing, untied to reveal the pattern',
     occasion: 'Navratri, Garba, Festive, Wedding Guest',
+    cityOfOrigin: 'Bhuj, Gujarat',
+    deliveryTime: 'within-5-days',
     gstPercent: 5,
     shippingPrice: 0,
     description:
@@ -549,6 +559,8 @@ export const products: SeedProduct[] = [
     weavePattern:
       'Chanderi weave — silk warp with cotton weft creating sheer, glossy texture',
     occasion: 'Office, Day Wedding, Puja, Lunch Party',
+    cityOfOrigin: 'Chanderi, Madhya Pradesh',
+    deliveryTime: 'by-tomorrow',
     gstPercent: 5,
     shippingPrice: 0,
     description:
@@ -580,6 +592,8 @@ export const products: SeedProduct[] = [
     weavePattern:
       'Double Ikat — both warp and weft resist-dyed before weaving, pattern emerges at intersection',
     occasion: 'Bridal, Heirloom Collection, Museum-Quality Investment',
+    cityOfOrigin: 'Patan, Gujarat',
+    deliveryTime: '7-plus-days',
     gstPercent: 5,
     shippingPrice: 0,
     description:
@@ -611,6 +625,8 @@ export const products: SeedProduct[] = [
     weavePattern:
       'Srikalahasti style Kalamkari — freehand drawing with bamboo kalam (pen) using natural dyes',
     occasion: 'Art Exhibition, Cultural Event, Brunch, Museum Visit',
+    cityOfOrigin: 'Srikalahasti, Andhra Pradesh',
+    deliveryTime: 'within-5-days',
     gstPercent: 5,
     shippingPrice: 0,
     description:
@@ -642,6 +658,8 @@ export const products: SeedProduct[] = [
     weavePattern:
       'Tapestry weave — each color change requires manual thread insertion, no power loom can replicate',
     occasion: 'Wedding, Paithani Festival, Maharashtra Day, Reception',
+    cityOfOrigin: 'Yeola, Maharashtra',
+    deliveryTime: 'within-7-days',
     gstPercent: 5,
     shippingPrice: 0,
     description:
@@ -673,6 +691,8 @@ export const products: SeedProduct[] = [
     weavePattern:
       'Plain weave with zari stripe insertion — simplicity as sophistication',
     occasion: 'Daily Wear, Office, Puja, Casual Outing',
+    cityOfOrigin: 'Maheshwar, Madhya Pradesh',
+    deliveryTime: 'by-tomorrow',
     gstPercent: 5,
     shippingPrice: 100,
     description:
@@ -704,6 +724,8 @@ export const products: SeedProduct[] = [
     weavePattern:
       'Jacquard-loom figured weave — the pallu is a tapestry of miniature figurative panels',
     occasion: "Heritage Event, Wedding, Collector's Piece, Cultural Exhibition",
+    cityOfOrigin: 'Bishnupur, West Bengal',
+    deliveryTime: 'within-7-days',
     gstPercent: 5,
     shippingPrice: 0,
     description:
@@ -734,6 +756,8 @@ export const products: SeedProduct[] = [
     weavePattern:
       'Organza base with hand-embroidered chikankari — Lucknowi craft on translucent silk',
     occasion: 'Cocktail, Sangeet, Summer Wedding, High Tea',
+    cityOfOrigin: 'Lucknow, Uttar Pradesh',
+    deliveryTime: 'within-7-days',
     gstPercent: 5,
     shippingPrice: 0,
     description:
@@ -764,6 +788,8 @@ export const products: SeedProduct[] = [
     weavePattern:
       'Single Ikat — warp threads resist-dyed before weaving creating the distinctive blurred-edge geometric patterns',
     occasion: 'Office, Conference, Day Event, Contemporary Wedding Guest',
+    cityOfOrigin: 'Pochampally, Telangana',
+    deliveryTime: 'within-2-days',
     gstPercent: 5,
     shippingPrice: 0,
     description:
@@ -794,6 +820,8 @@ export const products: SeedProduct[] = [
     weavePattern:
       'Hand-spun (khadi) yarn, hand-woven on pit loom — zero electricity used in production',
     occasion: 'Daily Wear, Sustainable Fashion, Travel, Beach Wedding',
+    cityOfOrigin: 'Bhuj, Gujarat',
+    deliveryTime: 'within-2-days',
     gstPercent: 5,
     shippingPrice: 100,
     description:
@@ -823,6 +851,8 @@ export const products: SeedProduct[] = [
     weavePattern:
       'Kota Doria — unique square-check weave (khat) created by onion-juice starching technique',
     occasion: 'Summer Wedding, Day Event, Lunch, Resort Wear',
+    cityOfOrigin: 'Kota, Rajasthan',
+    deliveryTime: 'by-tomorrow',
     gstPercent: 5,
     shippingPrice: 0,
     description:
@@ -853,6 +883,8 @@ export const products: SeedProduct[] = [
     weavePattern:
       'Crepe weave from Mysore silk — distinctive crinkled texture that adds volume to the drape',
     occasion: 'Wedding Guest, Reception, Diwali Party, Award Function',
+    cityOfOrigin: 'Mysore, Karnataka',
+    deliveryTime: 'within-5-days',
     gstPercent: 5,
     shippingPrice: 0,
     description:
@@ -883,6 +915,8 @@ export const products: SeedProduct[] = [
     weavePattern:
       'Wild tussar silk — naturally textured golden-beige with slubs — paired with hand embroidery',
     occasion: 'Art Opening, Cultural Event, Day Wedding, Lunch Party',
+    cityOfOrigin: 'Bhagalpur, Bihar',
+    deliveryTime: 'within-5-days',
     gstPercent: 5,
     shippingPrice: 0,
     description:
@@ -913,6 +947,8 @@ export const products: SeedProduct[] = [
     weavePattern:
       "Fine count cotton (100s) with supplementary zari — Andhra Pradesh's finest handloom",
     occasion: 'Office, Puja, Family Gathering, Casual Outing',
+    cityOfOrigin: 'Venkatagiri, Andhra Pradesh',
+    deliveryTime: 'within-2-days',
     gstPercent: 5,
     shippingPrice: 100,
     description:
@@ -944,6 +980,8 @@ export const products: SeedProduct[] = [
       'Vintage silk sarees upcycled with Kantha embroidery — two sarees stitched together with running stitch',
     occasion:
       'Art Collector, Sustainable Fashion, Cultural Event, Gallery Opening',
+    cityOfOrigin: 'Bolpur, West Bengal',
+    deliveryTime: 'within-7-days',
     gstPercent: 5,
     shippingPrice: 0,
     description:
@@ -973,6 +1011,8 @@ export const products: SeedProduct[] = [
     weavePattern:
       'Bandha (tie-dye ikat) from Odisha — both warp and weft resist-dyed before weaving',
     occasion: 'Daily Wear, Cultural Event, Office, Travel',
+    cityOfOrigin: 'Sambalpur, Odisha',
+    deliveryTime: 'within-2-days',
     gstPercent: 5,
     shippingPrice: 100,
     description:
@@ -1003,6 +1043,8 @@ export const products: SeedProduct[] = [
     weavePattern:
       'Silk base with gota patti appliqué — gold and silver ribbons cut and shaped into motifs',
     occasion: 'Mehendi, Sangeet, Festive, Wedding Guest',
+    cityOfOrigin: 'Jaipur, Rajasthan',
+    deliveryTime: 'within-5-days',
     gstPercent: 5,
     shippingPrice: 0,
     description:
