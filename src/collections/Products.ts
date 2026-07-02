@@ -44,6 +44,53 @@ export const Products: CollectionConfig = {
         return data
       },
     ],
+    afterChange: [
+      async ({ doc, previousDoc, req }) => {
+        // Trigger back-in-stock notifications when product goes from OOS to in-stock
+        const wasOOS =
+          (previousDoc as any)?.quantity === 0 &&
+          (previousDoc as any)?.trackQuantity
+        const nowInStock =
+          (doc as any)?.quantity > 0 && (doc as any)?.trackQuantity
+
+        if (wasOOS && nowInStock) {
+          try {
+            const requests = await req.payload.find({
+              collection: 'back-in-stock-requests',
+              where: {
+                product: { equals: (doc as any).id },
+                notified: { equals: false },
+              },
+              limit: 100,
+            } as any)
+
+            for (const r of requests.docs as any[]) {
+              try {
+                const { sendBackInStockEmail } = await import(
+                  '@/email/send'
+                )
+                await sendBackInStockEmail(
+                  req.payload,
+                  r.email,
+                  doc as any,
+                )
+                await req.payload.update({
+                  collection: 'back-in-stock-requests',
+                  id: r.id,
+                  data: { notified: true },
+                } as any)
+              } catch {
+                // Skip failed notifications — don't block the hook
+              }
+            }
+          } catch {
+            // Hook failure must not block product save
+          }
+        }
+
+        return doc
+      },
+    ],
   },
   versions: {
     drafts: {
@@ -250,6 +297,15 @@ export const Products: CollectionConfig = {
       type: 'number',
       min: 0,
       defaultValue: 5,
+    },
+    {
+      name: 'purchaseCount',
+      type: 'number',
+      min: 0,
+      defaultValue: 0,
+      admin: {
+        description: 'Auto-incremented on confirmed orders. Used for trending/popular ranking.',
+      },
     },
     {
       name: 'allowBackorder',

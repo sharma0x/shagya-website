@@ -3,6 +3,8 @@ import { ArrowRight, ArrowUpRight } from 'lucide-react'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import { NewsletterForm } from '@/components/newsletter/NewsletterForm'
+import { RecommendationRow } from '@/components/product/RecommendationRow'
+import { getTrendingProducts } from '@/lib/recommendations'
 import { HeroGallery, type HeroImage } from '@/components/homepage/HeroGallery'
 import { SkeletonImage } from '@/components/ui/SkeletonImage'
 import { RefreshRouteOnSave } from '@/components/live-preview/RefreshRouteOnSave'
@@ -257,6 +259,8 @@ export default async function HomePage({ searchParams }: Props) {
     depth: 1,
   })
   const dbPosts = postsRes.docs
+
+  const trendingProducts = await getTrendingProducts(6)
 
   const categoryFallbackImages: Record<string, string> = {
     silk: ph(750, 1000, '69254e', 'f5e8ee', 'Silk'),
@@ -568,6 +572,26 @@ export default async function HomePage({ searchParams }: Props) {
 
         return null
       })}
+
+      {/* Trending Products */}
+      {trendingProducts.length > 0 && (
+        <section className="scroll-reveal">
+          <div className="container-page py-16 sm:py-24 md:py-32">
+            <h2 className="font-display text-3xl font-semibold tracking-tight text-neutral-900">
+              Trending Now
+            </h2>
+            <p className="font-body mt-3 max-w-xl text-sm leading-relaxed text-neutral-500">
+              The most loved sarees by our customers.
+            </p>
+            <div className="mt-8">
+              <RecommendationRow
+                title=""
+                products={trendingProducts}
+              />
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Promise Band is kept at bottom as a global element */}
       <section className="scroll-reveal bg-brand-950">
