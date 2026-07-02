@@ -13,13 +13,19 @@ function getImageUrl(product: any): string {
   if (g?.image && typeof g.image === 'object') {
     return g.image.sizes?.card?.url || g.image.url || ''
   }
-  return ph(600, 750, '69254e', 'f5e8ee', product.name || 'Saree')
+  return ph(600, 800, '69254e', 'f5e8ee', product.name || 'Saree')
 }
 
 function getDiscountPercent(product: any): number | null {
-  if (product.compareAtPrice && product.compareAtPrice > 0 && product.basePrice && product.compareAtPrice > product.basePrice) {
+  if (
+    product.compareAtPrice &&
+    product.compareAtPrice > 0 &&
+    product.basePrice &&
+    product.compareAtPrice > product.basePrice
+  ) {
     return Math.round(
-      ((product.compareAtPrice - product.basePrice) / product.compareAtPrice) * 100,
+      ((product.compareAtPrice - product.basePrice) / product.compareAtPrice) *
+        100,
     )
   }
   return null
@@ -60,15 +66,13 @@ export function ProductCard({
     product.trackQuantity === true && (product.quantity ?? 0) <= 0
 
   const isCompact = variant === 'compact'
-  const isRow = variant === 'row'
 
-  if (isRow) {
-    // Row variant — used on wishlist page
+  if (variant === 'row') {
     return (
       <div className={cn('flex gap-4', className)}>
         <Link
           href={`/products/${product.slug}`}
-          className="relative h-32 w-24 shrink-0 overflow-hidden rounded-xl bg-neutral-100"
+          className="relative h-32 w-24 shrink-0 overflow-hidden rounded-lg bg-neutral-100"
         >
           <Image
             src={imageUrl}
@@ -92,7 +96,7 @@ export function ProductCard({
             </p>
           </div>
           <div className="flex items-center justify-between">
-            <div className="font-display text-sm font-semibold text-brand-700">
+            <div className="font-display text-sm font-semibold text-neutral-900">
               ₹{(product.basePrice ?? 0).toLocaleString('en-IN')}
             </div>
             {showActions && (
@@ -101,7 +105,6 @@ export function ProductCard({
                 productName={product.name}
                 product={product}
                 isOutOfStock={isOOS}
-                variant="compact"
               />
             )}
           </div>
@@ -110,85 +113,82 @@ export function ProductCard({
     )
   }
 
-  // Grid + Compact variants
   return (
-    <div className={cn('group block', className)}>
-      <Link
-        href={`/products/${product.slug}`}
-        className="block"
-      >
+    <div className={cn('group', className)}>
+      <Link href={`/products/${product.slug}`} className="block">
+        {/* Image */}
         <div
           className={cn(
-            'relative overflow-hidden bg-neutral-100 transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-md',
-            isCompact ? 'aspect-[4/5] rounded-lg' : 'aspect-[4/5] rounded-xl',
+            'relative overflow-hidden bg-neutral-100',
+            isCompact ? 'aspect-[4/5] rounded-lg' : 'aspect-[3/4] rounded-lg',
           )}
         >
           <Image
             src={imageUrl}
             alt={product.name}
             fill
-            sizes={isCompact ? '160px' : '(max-width: 640px) 50vw, 25vw'}
+            sizes={isCompact ? '144px' : '(max-width: 640px) 50vw, 25vw'}
             className="object-cover"
             unoptimized={imageUrl.startsWith('https://placehold.co')}
           />
-          {/* Wishlist + Stock overlay */}
-          <div className="absolute top-2 right-2 z-10 flex flex-col items-end gap-1">
-            {showWishlist && <WishlistButton productId={product.id as number} />}
-            <StockBadge
-              quantity={product.quantity ?? 0}
-              trackQuantity={product.trackQuantity ?? false}
-              lowStockThreshold={product.lowStockThreshold ?? 5}
-            />
-          </div>
+          {showWishlist && (
+            <div className="absolute top-1.5 right-1.5 z-10">
+              <WishlistButton productId={product.id as number} />
+            </div>
+          )}
+          {isOOS && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/5">
+              <span className="font-display rounded-md bg-white/90 px-2.5 py-0.5 text-[10px] font-semibold text-neutral-700 shadow-sm">
+                Out of Stock
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Info */}
-        <div className={cn(isCompact ? 'mt-2 px-0.5' : 'mt-3 px-1')}>
-          <p
-            className={cn(
-              'font-display font-semibold text-neutral-900 transition-colors group-hover:text-brand-700',
-              isCompact ? 'line-clamp-2 text-xs' : 'line-clamp-2 text-sm',
-            )}
-          >
-            {product.name}
+        <div className={cn(isCompact ? 'mt-1.5' : 'mt-2')}>
+          <p className="font-body truncate text-[10px] font-semibold tracking-wider text-neutral-500 uppercase">
+            {product.weave}
           </p>
           <p
             className={cn(
-              'font-body text-neutral-400',
-              isCompact ? 'mt-0.5 text-[10px]' : 'mt-0.5 text-xs',
+              'font-display line-clamp-2 font-medium text-neutral-900',
+              isCompact ? 'mt-0.5 text-[11px] leading-tight' : 'mt-0.5 text-xs leading-tight',
             )}
           >
-            {product.weave} · {product.fabric}
+            {product.name}
           </p>
 
           {/* Price */}
           <div
             className={cn(
-              'font-display flex flex-wrap items-baseline gap-1.5 font-semibold text-brand-700',
-              isCompact ? 'mt-1 text-xs' : 'mt-1.5 text-sm',
+              'flex flex-wrap items-baseline gap-1.5',
+              isCompact ? 'mt-1' : 'mt-1.5',
             )}
           >
-            <span>₹{(product.basePrice ?? 0).toLocaleString('en-IN')}</span>
+            <span
+              className={cn(
+                'font-display font-bold text-neutral-900',
+                isCompact ? 'text-xs' : 'text-sm',
+              )}
+            >
+              ₹{(product.basePrice ?? 0).toLocaleString('en-IN')}
+            </span>
             {product.compareAtPrice &&
               product.basePrice &&
               product.compareAtPrice > product.basePrice && (
                 <>
                   <span
                     className={cn(
-                      'font-normal text-neutral-400 line-through',
+                      'font-body text-neutral-400 line-through',
                       isCompact ? 'text-[10px]' : 'text-xs',
                     )}
                   >
                     ₹{product.compareAtPrice.toLocaleString('en-IN')}
                   </span>
                   {discountPct && (
-                    <span
-                      className={cn(
-                        'font-semibold text-green-600',
-                        isCompact ? 'text-[10px]' : 'text-xs',
-                      )}
-                    >
-                      {discountPct}% OFF
+                    <span className="font-display font-semibold text-amber-600 text-[10px]">
+                      ({discountPct}% OFF)
                     </span>
                   )}
                 </>
@@ -197,15 +197,15 @@ export function ProductCard({
         </div>
       </Link>
 
-      {/* Add to Cart + Buy Now — outside the Link */}
-      {showActions && !isOOS && (
-        <div className={cn(isCompact ? 'px-0.5' : 'px-1')}>
+      {/* Actions — always visible */}
+      {showActions && (
+        <div className={cn(isCompact ? 'mt-1.5' : 'mt-2')}>
           <ProductCardActions
             productId={product.id}
             productName={product.name}
             product={product}
             isOutOfStock={isOOS}
-            variant={variant}
+            variant={isCompact ? 'compact' : 'grid'}
           />
         </div>
       )}

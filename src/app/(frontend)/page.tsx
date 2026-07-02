@@ -420,7 +420,7 @@ export default async function HomePage({ searchParams }: Props) {
                   </Link>
                 )}
               </div>
-              <div className="mt-14 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+              <div className="mt-10 grid grid-cols-2 gap-x-2 gap-y-4 sm:gap-x-3 sm:gap-y-6 lg:grid-cols-4">
                 {gridProducts.length > 0 ? (
                   gridProducts.map((p) => (
                     <ProductCard
