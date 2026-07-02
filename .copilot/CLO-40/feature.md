@@ -1,73 +1,114 @@
-# CLO-40: Search Experience Enhancements
+# CLO-40: Unified Product Card + Quick Actions
 
 ## Overview
 
-Add search autocomplete dropdown to the search bar, no-results recommendations ("try category X instead"), and typo-tolerant "did you mean...?" suggestions.
+Replace 6 duplicated product card implementations with a single reusable `ProductCard` component. Make cards compact (shorter), add "Add to Cart" and "Buy Now" quick-action buttons on every card. This eliminates 200+ lines of duplicated code across the project.
 
 ## Stack Constraints
 
-- **Frontend**: Next.js 16 App Router, React 19, Tailwind v4
-- **Backend**: Payload 3.x search plugin (already configured for products, pages, posts)
-- **API**: Existing `/api/search?q=` endpoint
-- **No new packages**: Use existing search infrastructure, no Elasticsearch/Meilisearch
-- **Design**: Match existing SearchCommand modal styling
+- **Frontend**: Next.js 16 App Router, React 19, Tailwind v4, OKLCH tokens
+- **Cart State**: Zustand store (`src/lib/store/cart.ts`) — already handles `addItem(product, quantity, variant)`
+- **Variant Strategy**: Default variant = `size: 'Free', blouseSize: 'Unstitched'` for quick-add
+- **Design**: Match existing PDP ProductActions styling, keep cards compact
 
 ## OOP / DRY Principles
 
-- Search autocomplete reuses existing `/api/search` endpoint (add `limit=5` for suggestions)
-- Did-you-mean uses simple Levenshtein distance against known product names (no external library — implement inline)
-- No-results recommendations reuse existing category data from `/api/categories`
-- Single `<SearchSuggestions />` component handles autocomplete + spellcheck + no-results
+- **Single `ProductCard` component** in `src/components/product/` — used by ALL pages
+- Props: `product`, `variant` (`'grid' | 'compact' | 'row'`), `showWishlist`, `showActions`
+- Grid variant = category/collection/search (4-col grid)
+- Compact variant = recommendation rows (horizontal scroll, w-40)
+- Row variant = wishlist page (full-width row with move-to-cart)
+- This eliminates duplicate card HTML in 6 files
+- Add-to-cart uses the existing Zustand store — no new API calls
+- Buy Now = addItem + router.push('/checkout')
 
 ## Acceptance Criteria
 
-### 1. Search Autocomplete Dropdown
-- [ ] Header search input (currently opens command palette) shows dropdown on typing
-- [ ] Dropdown: top 5 product/posts results with thumbnail + name + price
-- [ ] Fetches via API: `GET /api/search?q={query}&limit=5` (add `limit` param)
-- [ ] Keyboard navigation: arrow keys + Enter to select
-- [ ] Click outside to close
-- [ ] Debounced: 300ms delay before fetch
-- [ ] "View all results for '{query}'" link at bottom → navigates to `/search?q=`
+### 1. Reusable ProductCard Component
+- [x] Create `src/components/product/ProductCard.tsx`
+- [x] Props: `product`, `variant`, `showWishlist`, `showActions`, `className`
+- [x] Three variants: `grid`, `compact`, `row`
+- [x] Replace all 6 duplicate card instances with this component
+- [x] Server-component compatible (client wrapper for action buttons)
 
-### 2. No-Results Recommendations
-- [ ] When search returns 0 results, show: "No results for '{query}'. Try these categories:"
-- [ ] Show 4 category links (top categories or semantically close ones)
-- [ ] Show "Popular searches" chips: Silk, Banarasi, Cotton, Handloom, Bridal
-- [ ] Offer "Browse all products" link
+### 2. Compact Card Design
+- [x] Image: `aspect-[4/5]` instead of `aspect-[3/4]` (slightly shorter)
+- [x] Name: `text-xs` (was `text-sm`) single line clamp
+- [x] Price: `text-xs` with discount inline
+- [x] Padding: `p-0` on wrapper, `mt-2` spacing
+- [x] Grid gap: `gap-3` (was `gap-4/y-10`)
+- [x] Cards are ~20-30% shorter vertically
 
-### 3. Did-You-Mean Spell Correction
-- [ ] On 0 results: run Levenshtein check against known product names
-- [ ] If a close match found (distance ≤ 2), show "Did you mean {suggestion}?"
-- [ ] Clicking suggestion navigates to search with corrected query
-- [ ] Known names cached from product `name` field on server startup/first request
+### 3. Add to Cart Button on Cards
+- [x] `ProductCardActions` client wrapper — wraps buttons in a `'use client'` shell
+- [x] "Add to Cart" button: calls `useCart().addItem(product, 1, defaultVariant)`
+- [x] Default variant: `{ size: 'Free', blouseSize: 'Unstitched' }`
+- [x] Button appears on hover (desktop) or below image (mobile)
+- [x] Green "Added ✓" feedback for 1.5s after click
+- [x] Button disabled if product is out of stock (uses `product.quantity <= 0 && product.trackQuantity`)
 
-### 4. Search Results Page Improvements
-- [ ] `/search` page: add filter sidebar (reuse ProductFilters without category-specific sections)
-- [ ] Split results: "Products (X)" tab + "Stories (Y)" tab (already partially done)
-- [ ] Show result count + search time display (optional)
+### 4. Buy Now Button on Cards
+- [x] "Buy Now" button: same addItem + `router.push('/checkout')`
+- [x] Appears next to "Add to Cart" on hover
+- [x] Distinct style (outline vs filled) to differentiate from Add to Cart
+
+### 5. Cart Quantity Controls
+- [x] **Already implemented** in CartDrawer.tsx — +/- buttons with min 1, max 10
+- [x] No changes needed for this feature
+- [x] Verify working: increment/decrement calls `updateQuantity()` in Zustand store
+
+### 6. Replace All Card Instances
+- [x] Category page (`category/[slug]/page.tsx`) — grid variant
+- [x] Collection page (`collections/[slug]/page.tsx`) — grid variant
+- [x] Homepage productGrid (`page.tsx`) — grid variant
+- [x] Search page (`search/page.tsx`) — grid variant
+- [x] RecommendationRow (`RecommendationRow.tsx`) — compact variant
+- [x] Wishlist page (`wishlist/page.tsx`) — row variant
 
 ## Technical Notes
 
 ### Files to Create
-- `src/components/search/SearchDropdown.tsx` — autocomplete dropdown
-- `src/lib/search-suggestions.ts` — Levenshtein distance + cached product names
+- `src/components/product/ProductCard.tsx` — unified product card (server component)
+- `src/components/product/ProductCardActions.tsx` — client wrapper with add-to-cart + buy now buttons
 
 ### Files to Modify
-- `src/components/layout/Header.tsx` — replace command palette trigger with search input + autocomplete
-- `src/app/api/search/route.ts` — add `limit` query param support
-- `src/app/(frontend)/search/page.tsx` — add no-results UI, did-you-mean, filter sidebar
+- `src/app/(frontend)/category/[slug]/page.tsx` — replace inline card with `<ProductCard />`
+- `src/app/(frontend)/collections/[slug]/page.tsx` — replace inline card
+- `src/app/(frontend)/search/page.tsx` — replace inline card
+- `src/app/(frontend)/page.tsx` — replace homepage productGrid card
+- `src/app/(frontend)/wishlist/page.tsx` — replace inline card
+- `src/components/product/RecommendationRow.tsx` — replace inline card
 
-### Levenshtein Implementation
+### ProductCard Component API
 ```typescript
-// Simple inline — no dependency needed
-function levenshtein(a: string, b: string): number {
-  const m = a.length, n = b.length
-  const dp = Array.from({ length: m + 1 }, (_, i) => [i])
-  for (let j = 0; j <= n; j++) dp[0][j] = j
-  for (let i = 1; i <= m; i++)
-    for (let j = 1; j <= n; j++)
-      dp[i][j] = a[i-1] === b[j-1] ? dp[i-1][j-1] : 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1])
-  return dp[m][n]
+interface ProductCardProps {
+  product: {
+    id: string | number
+    name: string
+    slug: string
+    basePrice: number
+    compareAtPrice?: number | null
+    weave?: string | null
+    fabric?: string | null
+    gallery?: any
+    quantity?: number | null
+    trackQuantity?: boolean | null
+  }
+  variant?: 'grid' | 'compact' | 'row'
+  showWishlist?: boolean
+  showActions?: boolean  // add-to-cart + buy now buttons
+  className?: string
 }
 ```
+
+### How Quick-Add Handles Variants
+```
+User clicks "Add to Cart" on a card
+  → ProductCardActions (client component)
+  → const { addItem } = useCart()
+  → addItem(product, 1, { size: 'Free', blouseSize: 'Unstitched' })
+  → Zustand store updates cart
+  → Button shows "Added ✓" for 1.5s
+```
+
+The user can always go to PDP to select specific size/blouse options. Quick-add is for impulse purchases with defaults.

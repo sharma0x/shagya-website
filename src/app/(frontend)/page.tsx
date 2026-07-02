@@ -3,6 +3,7 @@ import { ArrowRight, ArrowUpRight } from 'lucide-react'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import { NewsletterForm } from '@/components/newsletter/NewsletterForm'
+import { ProductCard } from '@/components/product/ProductCard'
 import { RecommendationRow } from '@/components/product/RecommendationRow'
 import { getTrendingProducts } from '@/lib/recommendations'
 import { HeroGallery, type HeroImage } from '@/components/homepage/HeroGallery'
@@ -419,50 +420,17 @@ export default async function HomePage({ searchParams }: Props) {
                   </Link>
                 )}
               </div>
-              <div className="mt-14 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
+              <div className="mt-14 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
                 {gridProducts.length > 0 ? (
-                  gridProducts.map((p) => {
-                    const imageUrl =
-                      p.gallery?.[0]?.image &&
-                      typeof p.gallery[0].image === 'object'
-                        ? p.gallery[0].image.sizes?.card?.url ||
-                          p.gallery[0].image.url
-                        : ph(600, 800, '69254e', 'f5e8ee', p.name)
-
-                    return (
-                      <Link
-                        key={p.id}
-                        href={`/products/${p.slug}`}
-                        className="group block"
-                      >
-                        <div className="relative overflow-hidden rounded-xl shadow-sm transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-md">
-                          <ImagePanel
-                            src={imageUrl || ''}
-                            alt={p.name}
-                            className="aspect-[3/4] w-full transition-transform duration-500 group-hover:scale-[1.04]"
-                            rounded="rounded-xl"
-                          />
-                        </div>
-                        <div className="mt-4 px-1">
-                          <p className="font-display group-hover:text-brand-700 text-base font-semibold text-neutral-900 transition-colors">
-                            {p.name}
-                          </p>
-                          <p className="font-body mt-0.5 text-xs text-neutral-500">
-                            {p.weave} · {p.fabric}
-                          </p>
-                          <div className="text-brand-700 font-display mt-2 flex flex-wrap items-baseline gap-2 text-sm font-semibold">
-                            <span>₹{p.basePrice.toLocaleString('en-IN')}</span>
-                            {p.compareAtPrice &&
-                              p.compareAtPrice > p.basePrice && (
-                                <span className="text-xs font-normal text-neutral-400 line-through">
-                                  ₹{p.compareAtPrice.toLocaleString('en-IN')}
-                                </span>
-                              )}
-                          </div>
-                        </div>
-                      </Link>
-                    )
-                  })
+                  gridProducts.map((p) => (
+                    <ProductCard
+                      key={p.id}
+                      product={p}
+                      variant="grid"
+                      showWishlist={false}
+                      showActions
+                    />
+                  ))
                 ) : (
                   <p className="col-span-4 py-16 text-center text-sm text-neutral-400">
                     New pieces arriving soon.

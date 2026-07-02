@@ -4,6 +4,11 @@
 
 Add shipment tracking, customer self-service cancellation, returns/RMA workflow, GST invoice PDF generation, and one-click reorder functionality.
 
+## Already Implemented (from CLO-40)
+
+- **Cart quantity +/- controls**: Fully implemented in CartDrawer.tsx (lines 118-151) — increment/decrement with min 1, max 10, client-side via Zustand store's `updateQuantity()`. No changes needed.
+- **Add to Cart on product cards**: Implemented via `ProductCardActions` client wrapper in CLO-40.
+
 ## Stack Constraints
 
 - **Frontend**: Next.js 16 App Router, React 19, existing order detail page
