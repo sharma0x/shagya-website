@@ -146,6 +146,11 @@ export function ProductFilters({
     if (minDiscount) params.set('minDiscount', minDiscount)
     if (deliveryTime) params.set('deliveryTime', deliveryTime)
     if (city) params.set('city', city)
+
+    // Preserve sort param from current URL
+    const sort = searchParams.get('sort')
+    if (sort) params.set('sort', sort)
+
     if (preserveParams) {
       const preserve = new URLSearchParams(preserveParams)
       preserve.forEach((v, k) => {
@@ -181,7 +186,11 @@ export function ProductFilters({
     setMinDiscount('')
     setDeliveryTime('')
     setCity('')
-    router.push(preserveParams ? `${pathname}?${preserveParams}` : pathname)
+    const sort = searchParams.get('sort')
+    const params = new URLSearchParams()
+    if (sort) params.set('sort', sort)
+    const qs = params.toString()
+    router.push(qs ? `${pathname}?${qs}` : pathname)
   }
 
   const hasActiveFilters =

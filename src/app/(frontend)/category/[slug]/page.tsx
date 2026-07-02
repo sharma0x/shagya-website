@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { Suspense } from 'react'
 import { ArrowLeft } from 'lucide-react'
 import { getPayload } from 'payload'
 import config from '@payload-config'
@@ -88,15 +89,25 @@ function buildWhere(sParams: FilterParams, slug: string) {
     where.weave = { equals: slug.toLowerCase() }
   }
 
-  // Multi-select filters from query params
+  // Multi-select filters from query params (merge with slug-based)
   const fabricFilter = getCommaParam(sParams, 'fabric')
   if (fabricFilter.length > 0) {
-    where.fabric = { in: fabricFilter }
+    if (fabrics.includes(slug.toLowerCase())) {
+      const merged = [...new Set([slug.toLowerCase(), ...fabricFilter])]
+      where.fabric = { in: merged }
+    } else {
+      where.fabric = { in: fabricFilter }
+    }
   }
 
   const weaveFilter = getCommaParam(sParams, 'weave')
   if (weaveFilter.length > 0) {
-    where.weave = { in: weaveFilter }
+    if (weavesList.includes(slug.toLowerCase())) {
+      const merged = [...new Set([slug.toLowerCase(), ...weaveFilter])]
+      where.weave = { in: merged }
+    } else {
+      where.weave = { in: weaveFilter }
+    }
   }
 
   const patternFilter = getCommaParam(sParams, 'pattern')
@@ -244,7 +255,9 @@ export default async function CategoryPage({
 
         <div className="mt-8 flex flex-col gap-8 lg:flex-row">
           {/* Sidebar Filters */}
-          <ProductFilters variant="sidebar" />
+          <Suspense fallback={<div className="hidden lg:block w-60 shrink-0" />}>
+            <ProductFilters variant="sidebar" />
+          </Suspense>
 
           {/* Main Content */}
           <div className="flex-1">
@@ -258,6 +271,54 @@ export default async function CategoryPage({
                   <span className="text-xs text-neutral-400">Sort by:</span>
                   <SortSelect defaultValue={sortParam} />
                 </div>
+              </div>
+            </div>
+
+            {/* Quick Filters */}
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <span className="text-xs text-neutral-400">Quick:</span>
+              <div className="flex gap-1.5">
+                {['All', 'Banarasi', 'Kanchipuram', 'Chanderi', 'On Sale'].map(
+                  (label) => {
+                    const params = new URLSearchParams(sParams as Record<string, string>)
+                    const isActive = (() => {
+                      switch (label) {
+                        case 'All':
+                          return !params.get('weave') && !params.get('onSale')
+                        case 'Banarasi':
+                        case 'Kanchipuram':
+                        case 'Chanderi':
+                          return params.get('weave') === label.toLowerCase()
+                        case 'On Sale':
+                          return params.get('onSale') === 'true'
+                        default:
+                          return false
+                      }
+                    })()
+                    if (label === 'All') {
+                      params.delete('weave')
+                      params.delete('onSale')
+                    } else if (label === 'On Sale') {
+                      params.set('onSale', isActive ? 'false' : 'true')
+                    } else {
+                      params.set('weave', isActive ? '' : label.toLowerCase())
+                    }
+                    const qs = params.toString()
+                    return (
+                      <Link
+                        key={label}
+                        href={qs ? `?${qs}` : '?'}
+                        className={`font-body rounded-lg px-3 py-1 text-xs font-medium transition-colors ${
+                          isActive
+                            ? 'bg-brand-600 text-white'
+                            : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+                        }`}
+                      >
+                        {label}
+                      </Link>
+                    )
+                  },
+                )}
               </div>
             </div>
 

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
+import { Suspense } from 'react'
 import { ArrowLeft } from 'lucide-react'
 import { getPayload } from 'payload'
 import config from '@payload-config'
@@ -151,7 +152,9 @@ export default async function CollectionDetailPage({
         </div>
 
         <div className="mt-8 flex flex-col gap-8 lg:flex-row">
-          <ProductFilters variant="sidebar" />
+          <Suspense fallback={<div className="hidden lg:block w-60 shrink-0" />}>
+            <ProductFilters variant="sidebar" />
+          </Suspense>
 
           <div className="flex-1">
             <div className="border-b border-neutral-100 pb-6">
