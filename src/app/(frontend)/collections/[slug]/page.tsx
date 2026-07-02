@@ -1,10 +1,11 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { Suspense } from 'react'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import { notFound } from 'next/navigation'
+import { cn } from '@/lib/utils'
 import { SortSelect } from '@/components/ui/sort-select'
 import { ProductFilters } from '@/components/product/ProductFilters'
 import { WishlistButton } from '@/components/product/WishlistButton'
@@ -123,13 +124,52 @@ export default async function CollectionDetailPage({
 
   const where = buildWhere(sParams, collection.id)
 
+  // Variant-based filters (color, size)
+  const colorParam = (sParams.color as string) || ''
+  const sizeParam = (sParams.size as string) || ''
+
+  if (colorParam || sizeParam) {
+    const variantWhere: Record<string, any> = {}
+    if (colorParam) variantWhere.color = { equals: colorParam }
+    if (sizeParam) variantWhere.size = { equals: sizeParam }
+
+    const matchingVariants = await payload.find({
+      collection: 'variants',
+      where: variantWhere,
+      limit: 500,
+      pagination: false,
+    })
+
+    const productIds = [
+      ...new Set(matchingVariants.docs.map((v: any) => v.product)),
+    ]
+    if (productIds.length > 0) {
+      where.id = { in: productIds }
+    } else {
+      where.id = { in: [0] }
+    }
+  }
+
+  // Pagination
+  const page = Math.max(
+    1,
+    parseInt((sParams.page as string) || '1', 10),
+  )
+  const prodLimit = Math.max(
+    1,
+    Math.min(50, parseInt((sParams.limit as string) || '20', 10)),
+  )
+
   const productsRes = await payload.find({
     collection: 'products',
     where,
     sort,
-    limit: 100,
+    page,
+    limit: prodLimit,
   })
   const products = productsRes.docs
+  const totalDocs = productsRes.totalDocs
+  const totalPages = productsRes.totalPages
 
   return (
     <div className="bg-surface min-h-screen py-10">
@@ -160,7 +200,11 @@ export default async function CollectionDetailPage({
             <div className="border-b border-neutral-100 pb-6">
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div className="flex items-center gap-4 text-sm text-neutral-500">
-                  <span>{products.length} sarees in this collection</span>
+                  <span>
+                    {totalDocs > 0
+                      ? `Showing ${(page - 1) * prodLimit + 1}–${Math.min(page * prodLimit, totalDocs)} of ${totalDocs} sarees`
+                      : '0 sarees in this collection'}
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-neutral-400">Sort by:</span>
@@ -238,6 +282,66 @@ export default async function CollectionDetailPage({
                     </Link>
                   )
                 })}
+              </div>
+            )}
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="mt-10 flex items-center justify-center gap-2">
+                {page > 1 && (
+                  <Link
+                    href={(() => {
+                      const p = new URLSearchParams(sParams as Record<string, string>)
+                      p.set('page', String(page - 1))
+                      return `?${p.toString()}`
+                    })()}
+                    className="font-display flex h-8 items-center gap-1 rounded-lg border border-neutral-200 px-3 text-xs font-semibold text-neutral-600 transition-colors hover:bg-neutral-50"
+                  >
+                    <ChevronLeft className="h-3 w-3" />
+                    Prev
+                  </Link>
+                )}
+                {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+                  const pageNum =
+                    totalPages <= 7
+                      ? i + 1
+                      : page <= 4
+                        ? i + 1
+                        : page >= totalPages - 3
+                          ? totalPages - 6 + i
+                          : page - 3 + i
+                  return (
+                    <Link
+                      key={pageNum}
+                      href={(() => {
+                        const p = new URLSearchParams(sParams as Record<string, string>)
+                        p.set('page', String(pageNum))
+                        return `?${p.toString()}`
+                      })()}
+                      className={cn(
+                        'font-body flex h-8 w-8 items-center justify-center rounded-lg text-xs font-medium transition-colors',
+                        pageNum === page
+                          ? 'bg-brand-600 text-white'
+                          : 'text-neutral-600 hover:bg-neutral-100',
+                      )}
+                    >
+                      {pageNum}
+                    </Link>
+                  )
+                })}
+                {page < totalPages && (
+                  <Link
+                    href={(() => {
+                      const p = new URLSearchParams(sParams as Record<string, string>)
+                      p.set('page', String(page + 1))
+                      return `?${p.toString()}`
+                    })()}
+                    className="font-display flex h-8 items-center gap-1 rounded-lg border border-neutral-200 px-3 text-xs font-semibold text-neutral-600 transition-colors hover:bg-neutral-50"
+                  >
+                    Next
+                    <ChevronRight className="h-3 w-3" />
+                  </Link>
+                )}
               </div>
             )}
           </div>
