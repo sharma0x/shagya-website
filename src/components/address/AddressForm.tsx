@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { AlertCircle, ChevronDown, Loader2 } from 'lucide-react'
+import { useState, useCallback } from 'react'
+import { AlertCircle, Check, ChevronDown, Loader2 } from 'lucide-react'
 import { ALL_COUNTRIES, DEFAULT_COUNTRY, OTHER_COUNTRY_VALUE } from '@/lib/countries'
 import { INDIAN_STATES } from '@/lib/indian-states'
 
@@ -52,6 +52,11 @@ export function AddressForm({
   const [customCountry, setCustomCountry] = useState('')
   const [isDefault, setIsDefault] = useState(initialData?.isDefault ?? false)
 
+  const [verifyingPincode, setVerifyingPincode] = useState(false)
+  const [pincodeVerified, setPincodeVerified] = useState(false)
+  const [pincodeError, setPincodeError] = useState('')
+  const [verifiedPincode, setVerifiedPincode] = useState(initialData?.pincode ?? '')
+
   const isOtherCountry = country === OTHER_COUNTRY_VALUE
 
   const handleCountryChange = (value: string) => {
@@ -59,6 +64,58 @@ export function AddressForm({
       setState('')
     }
     setCountry(value)
+  }
+
+  const handlePincodeBlur = useCallback(async () => {
+    const trimmed = pincode.trim()
+    if (trimmed.length !== 6) return
+    if (trimmed === verifiedPincode && pincodeVerified) return
+    if (!/^[1-9][0-9]{5}$/.test(trimmed)) {
+      setPincodeError('Invalid pincode format')
+      return
+    }
+
+    setVerifyingPincode(true)
+    setPincodeError('')
+    setPincodeVerified(false)
+
+    try {
+      const res = await fetch('/api/pincode/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pincode: trimmed }),
+      })
+
+      const body = await res.json()
+
+      if (!res.ok || body.error) {
+        setPincodeError(body.error || 'Pincode not found')
+        return
+      }
+
+      const data = body.data
+      setPincodeVerified(true)
+      setVerifiedPincode(trimmed)
+
+      setCity(data.city)
+      setState(data.state)
+      setCountry('India')
+
+      setPincodeError('')
+    } catch {
+      setPincodeError('Could not verify pincode. Try again.')
+    } finally {
+      setVerifyingPincode(false)
+    }
+  }, [pincode, verifiedPincode, pincodeVerified])
+
+  const handlePincodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, '').slice(0, 6)
+    setPincode(value)
+    if (value !== verifiedPincode) {
+      setPincodeVerified(false)
+      setPincodeError('')
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -192,15 +249,33 @@ export function AddressForm({
           <label className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase">
             Pincode
           </label>
-          <input
-            type="text"
-            required
-            pattern="^[1-9][0-9]{5}$"
-            value={pincode}
-            onChange={(e) => setPincode(e.target.value)}
-            className={textInputClass}
-            placeholder="6-digit PIN"
-          />
+          <div className="relative">
+            <input
+              type="text"
+              required
+              inputMode="numeric"
+              pattern="^[1-9][0-9]{5}$"
+              value={pincode}
+              onChange={handlePincodeChange}
+              onBlur={handlePincodeBlur}
+              className={`${textInputClass} ${pincodeVerified ? 'border-brand-600 bg-brand-50/10 pr-8' : ''}`}
+              placeholder="6-digit PIN"
+            />
+            {verifyingPincode && (
+              <Loader2 className="pointer-events-none absolute top-1/2 right-2.5 h-3.5 w-3.5 -translate-y-1/2 animate-spin text-neutral-400" />
+            )}
+            {pincodeVerified && !verifyingPincode && (
+              <Check className="pointer-events-none absolute top-1/2 right-2.5 h-3.5 w-3.5 -translate-y-1/2 text-emerald-500" />
+            )}
+          </div>
+          {pincodeError && (
+            <p className="mt-1 text-xs text-red-600">{pincodeError}</p>
+          )}
+          {pincodeVerified && !pincodeError && (
+            <p className="mt-1 text-xs text-emerald-600">
+              Verified &mdash; city &amp; state auto-filled. You can edit if needed.
+            </p>
+          )}
         </div>
       </div>
 
