@@ -5,11 +5,11 @@ import { Mail, Loader2, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface NotifyMeButtonProps {
-  productId: string | number
+  productSlug: string
   className?: string
 }
 
-export function NotifyMeButton({ productId, className }: NotifyMeButtonProps) {
+export function NotifyMeButton({ productSlug, className }: NotifyMeButtonProps) {
   const [email, setEmail] = useState('')
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -23,7 +23,7 @@ export function NotifyMeButton({ productId, className }: NotifyMeButtonProps) {
 
     try {
       const res = await fetch(
-        `/api/products/${productId}/notify-back-in-stock`,
+        `/api/products/${productSlug}/notify-back-in-stock`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
