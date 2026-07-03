@@ -1,77 +1,55 @@
-# CLO-41: Checkout Enhancements
+# CLO-41: Guest Checkout + Order Notes
 
 ## Overview
 
-Add guest checkout (no account required), shipping cost estimation by pincode, free shipping threshold display, minimum order value enforcement, and order notes/special instructions.
+Add guest checkout with mandatory phone OTP verification that auto-creates a Better Auth account. Address comes first on the checkout page, then email/phone/OTP for guests below it. Receiver name/phone are optional. Order notes textarea added.
 
 ## Stack Constraints
 
-- **Frontend**: Next.js 16 App Router, React 19, existing checkout page (3-step: address → shipping → payment)
-- **Backend**: Payload 3.x, existing Orders/Addresses/Carts collections
-- **Auth**: Better Auth — currently requires auth for checkout
-- **Existing Reusable**: AddressForm, PhoneInput, ZipCodeVerify
+- **Auth**: Better Auth — auto-register after phone OTP verified
+- **SMS**: Existing Twilio via `sendSMS()` in `src/lib/sms.ts`
+- **OTP Storage**: In-memory `Map` with 5-min TTL (keyed by phone + email)
+- **Frontend**: Next.js 16 App Router, existing checkout page structure
+- **Design**: Match existing checkout design (rounded-xl, brand colors, AddressForm pattern)
 
 ## OOP / DRY Principles
 
-- Guest checkout creates temporary session stored in Zustand, NOT in Payload DB
-- Shipping estimator reuses existing pincode verification API
-- Free shipping threshold reads from SiteSettings (add `freeShippingThreshold` field)
-- Min order value check in a shared validation util used by cart + checkout
-- Guest order flow reuses existing order creation logic + adds optional guest path
+- OTP logic in a single utility (`src/lib/otp.ts`) — shared by guest checkout + future password reset
+- GuestCheckout component handles email + phone + OTP state, not the main checkout page
+- Auto-register reuses existing `auth-sync.ts` hook (fires on Better Auth user create)
+- Order notes: simple text field, no new collection needed
 
 ## Acceptance Criteria
 
-### 1. Guest Checkout
-- [ ] Checkout page: add "Continue as Guest" option (no login required)
-- [ ] Guest email/pincode form replaces the auth requirement
-- [ ] Guest data stored temporarily in Zustand store (not persisted to DB until order creation)
-- [ ] Guest order: email used as `customerEmail`, phone as `phone` on order
-- [ ] Optional: offer "Create an account to track your order" after guest order placed
-- [ ] Guest session clears on order success or tab close
+### 1. Guest Checkout Flow
+- [ ] Address section always visible (AddressForm component)
+- [ ] Receiver Name + Receiver Phone fields (optional, below address)
+- [ ] Guest-only section: Full Name + Email + Phone + OTP (below receiver fields)
+- [ ] Logged-in users see only address + receiver fields + notes
+- [ ] Phone OTP: 6-digit, sent via Twilio SMS, stored in memory, 5-min expiry
+- [ ] After OTP verified: Better Auth account auto-created via `/api/checkout/verify-otp`
+- [ ] If phone already registered → auto-login (no re-register)
+- [ ] OTP field and Send OTP button shown inline on same page
 
-### 2. Shipping Cost Estimation
-- [ ] Checkout page: pincode input → "Estimate Shipping" button
-- [ ] Calls `/api/pincode/verify` (existing) to validate pincode
-- [ ] Shows estimated shipping cost + delivery days based on product's deliveryTime + shippingPrice
-- [ ] Shipper dynamically calculated: local (free for certain zones) vs national (shippingPrice)
-- [ ] Display: "Estimated delivery by July 5" (date math from deliveryTime value)
+### 2. Order Notes
+- [ ] "Delivery Instructions" textarea on checkout page
+- [ ] `notes` field added to Orders collection
 
-### 3. Free Shipping Threshold
-- [ ] SiteSettings: add `freeShippingThreshold` number field (e.g., 2999)
-- [ ] Cart drawer: message "Add ₹{remaining} more for FREE shipping!"
-- [ ] Checkout: auto-apply free shipping when subtotal ≥ threshold
-- [ ] Progress bar: visual "₹X / ₹2999 to free shipping"
-
-### 4. Minimum Order Value
-- [ ] SiteSettings: add `minOrderValue` field (default 0)
-- [ ] Cart: disable "Proceed to Checkout" if cart total < minOrderValue
-- [ ] Checkout: server-side validation that order meets minimum
-- [ ] Error message: "Minimum order value is ₹{value}"
-
-### 5. Order Notes
-- [ ] AddressForm (or checkout step): "Delivery Instructions" textarea
-- [ ] Stored as `notes` field on Orders collection
-- [ ] Shown in order confirmation email, admin order detail
-- [ ] Orders collection: add `notes` text field
-
-### 6. GST Invoice Preference
-- [ ] Checkout: "I need a GST invoice" checkbox (optional)
-- [ ] If checked: show GSTIN input field
-- [ ] Orders collection: add `gstin` and `needsInvoice` fields
-- [ ] Order confirmation: mention "GST invoice will be emailed within 24h"
+### 3. Pricing Display
+- [ ] Product's `shippingPrice` shown as shipping cost
+- [ ] Product's `deliveryTime` shown as ETA
+- [ ] Red note below total: "`* Excluding delivery charges`"
+- [ ] Delhivery integration removed from scope
 
 ## Technical Notes
 
 ### Files to Create
-- `src/lib/store/guest-checkout.ts` — Zustand store for guest checkout data
-- `src/lib/shipping.ts` — shipping cost calculator + delivery ETA
-- `src/components/checkout/ShippingEstimate.tsx` — pincode → shipping estimate widget
-- `src/components/checkout/FreeShippingBar.tsx` — progress bar component
+- `src/lib/otp.ts` — OTP generation, storage, verification utility
+- `src/app/api/checkout/send-otp/route.ts` — Send OTP endpoint
+- `src/app/api/checkout/verify-otp/route.ts` — Verify OTP + auto-register endpoint
+- `src/components/checkout/GuestCheckout.tsx` — Guest name/email/phone/OTP form
 
 ### Files to Modify
-- `src/app/(frontend)/checkout/page.tsx` — add guest path, shipping estimate, order notes, progress bar
-- `src/collections/Orders.ts` — add `notes`, `gstin`, `needsInvoice`, `isGuest` fields
-- `src/collections/Orders.ts` — add `guestEmail` field for guest orders without customer relation
-- `src/globals/SiteSettings.ts` — add `freeShippingThreshold`, `minOrderValue`
-- `src/components/cart/CartDrawer.tsx` — add free shipping progress bar
-- `src/lib/store/cart.ts` — add free shipping threshold check
+- `src/lib/sms.ts` — Add `sendOTP()` function
+- `src/app/(frontend)/checkout/page.tsx` — Add guest flow, receiver fields, order notes, red note
+- `src/collections/Orders.ts` — Add `notes` text field

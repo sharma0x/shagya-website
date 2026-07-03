@@ -261,6 +261,14 @@ export const Orders: CollectionConfig = {
       type: 'text',
     },
     {
+      name: 'notes',
+      type: 'text',
+      label: 'Delivery Instructions',
+      admin: {
+        description: 'Customer notes or delivery instructions',
+      },
+    },
+    {
       name: 'shippingAddress',
       type: 'group',
       fields: addressGroup.fields,
