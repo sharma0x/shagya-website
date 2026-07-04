@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { AlertCircle, ChevronDown, Loader2 } from 'lucide-react'
+import { useCallback, useRef, useState } from 'react'
+import { AlertCircle, Check, ChevronDown, Loader2 } from 'lucide-react'
 import {
   ALL_COUNTRIES,
   DEFAULT_COUNTRY,
@@ -74,6 +74,18 @@ export function AddressForm({
   )
   const [isDefault, setIsDefault] = useState(initialData?.isDefault ?? false)
 
+  const [verifyingPincode, setVerifyingPincode] = useState(false)
+  const [pincodeVerified, setPincodeVerified] = useState(false)
+  const [pincodeError, setPincodeError] = useState('')
+  const [verifiedPincode, setVerifiedPincode] = useState(
+    initialData?.pincode ?? '',
+  )
+
+  // Monotonic request token. Each call to handlePincodeBlur increments the
+  // ref. When a response resolves, it only mutates state if its token is the
+  // latest one — otherwise a stale response can clobber a newer one.
+  const requestTokenRef = useRef(0)
+
   const isOtherCountry = country === OTHER_COUNTRY_VALUE
   const isIndia = country === DEFAULT_COUNTRY
 
@@ -82,6 +94,67 @@ export function AddressForm({
       setState('')
     }
     setCountry(value)
+  }
+
+  const handlePincodeBlur = useCallback(async () => {
+    const trimmed = pincode.trim()
+    if (trimmed.length !== 6) return
+    if (trimmed === verifiedPincode && pincodeVerified) return
+    if (!/^[1-9][0-9]{5}$/.test(trimmed)) {
+      setPincodeError('Invalid pincode format')
+      return
+    }
+
+    const token = ++requestTokenRef.current
+    setVerifyingPincode(true)
+    setPincodeError('')
+    setPincodeVerified(false)
+
+    try {
+      const res = await fetch('/api/pincode/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pincode: trimmed }),
+      })
+
+      // A newer call has started — drop this stale response.
+      if (token !== requestTokenRef.current) return
+
+      const body = await res.json()
+
+      if (token !== requestTokenRef.current) return
+
+      if (!res.ok || body.error) {
+        setPincodeError(body.error || 'Pincode not found')
+        return
+      }
+
+      const data = body.data
+      setPincodeVerified(true)
+      setVerifiedPincode(trimmed)
+
+      setCity(data.city)
+      setState(data.state)
+      setCountry('India')
+
+      setPincodeError('')
+    } catch {
+      if (token !== requestTokenRef.current) return
+      setPincodeError('Could not verify pincode. Try again.')
+    } finally {
+      if (token === requestTokenRef.current) {
+        setVerifyingPincode(false)
+      }
+    }
+  }, [pincode, verifiedPincode, pincodeVerified])
+
+  const handlePincodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, '').slice(0, 6)
+    setPincode(value)
+    if (value !== verifiedPincode) {
+      setPincodeVerified(false)
+      setPincodeError('')
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -245,16 +318,48 @@ export function AddressForm({
           >
             Pincode
           </label>
-          <input
-            id="address-pincode"
-            type="text"
-            required
-            pattern={isIndia ? '^[1-9][0-9]{5}$' : undefined}
-            value={pincode}
-            onChange={(e) => setPincode(e.target.value)}
-            className={textInputClass}
-            placeholder="6-digit PIN"
-          />
+          <div className="relative">
+            <input
+              id="address-pincode"
+              type="text"
+              required
+              inputMode="numeric"
+              pattern={isIndia ? '^[1-9][0-9]{5}$' : undefined}
+              value={pincode}
+              onChange={handlePincodeChange}
+              onBlur={handlePincodeBlur}
+              aria-describedby="address-pincode-status"
+              className={`${textInputClass} ${pincodeVerified ? 'border-brand-600 bg-brand-50/10 pr-8' : ''}`}
+              placeholder="6-digit PIN"
+            />
+            {verifyingPincode && (
+              <Loader2 className="pointer-events-none absolute top-1/2 right-2.5 h-3.5 w-3.5 -translate-y-1/2 animate-spin text-neutral-400" />
+            )}
+            {pincodeVerified && !verifyingPincode && (
+              <Check className="text-success pointer-events-none absolute top-1/2 right-2.5 h-3.5 w-3.5 -translate-y-1/2" />
+            )}
+          </div>
+          {pincodeError && (
+            <p
+              id="address-pincode-status"
+              role="status"
+              aria-live="polite"
+              className="text-error mt-1 text-xs"
+            >
+              {pincodeError}
+            </p>
+          )}
+          {pincodeVerified && !pincodeError && (
+            <p
+              id="address-pincode-status"
+              role="status"
+              aria-live="polite"
+              className="text-success mt-1 text-xs"
+            >
+              Verified &mdash; city &amp; state auto-filled. You can edit if
+              needed.
+            </p>
+          )}
         </div>
       </div>
 
