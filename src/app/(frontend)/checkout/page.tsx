@@ -80,6 +80,19 @@ export default function CheckoutPage() {
   const [actionLoading, setActionLoading] = useState(false)
   const [error, setError] = useState('')
   const [orderNotes, setOrderNotes] = useState('')
+  const [storeReady, setStoreReady] = useState(false)
+
+  // Wait for Zustand persist hydration from localStorage
+  useEffect(() => {
+    if (useCart.persist.hasHydrated()) {
+      setStoreReady(true)
+    } else {
+      const unsub = useCart.persist.onFinishHydration(() => {
+        setStoreReady(true)
+      })
+      return () => unsub()
+    }
+  }, [])
 
   // Guest checkout
   const [guestData, setGuestData] = useState<{
@@ -98,7 +111,7 @@ export default function CheckoutPage() {
 
   // Load cart and addresses
   useEffect(() => {
-    if (isPending) return
+    if (isPending || !storeReady) return
 
     if (!isLoggedIn) {
       // Guest — load cart from Zustand local store
@@ -189,7 +202,7 @@ export default function CheckoutPage() {
     }
 
     loadData()
-  }, [sessionData, isPending, router])
+  }, [sessionData, isPending, router, storeReady])
 
   const handleAddNewAddress = async (data: AddressFormData) => {
     setActionLoading(true)
@@ -428,7 +441,7 @@ export default function CheckoutPage() {
     }
   }
 
-  if (loading || isPending) {
+  if (loading || isPending || !storeReady) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
         <Loader2 className="text-brand-600 h-8 w-8 animate-spin" />
