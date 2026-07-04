@@ -2,7 +2,11 @@
 
 import { useState } from 'react'
 import { AlertCircle, ChevronDown, Loader2 } from 'lucide-react'
-import { ALL_COUNTRIES, DEFAULT_COUNTRY, OTHER_COUNTRY_VALUE } from '@/lib/countries'
+import {
+  ALL_COUNTRIES,
+  DEFAULT_COUNTRY,
+  OTHER_COUNTRY_VALUE,
+} from '@/lib/countries'
 import { INDIAN_STATES } from '@/lib/indian-states'
 
 export interface AddressFormData {
@@ -32,6 +36,19 @@ const inputClass =
 const textInputClass =
   'font-body focus:border-brand-500 h-10 w-full rounded-xl border border-neutral-200 pl-3 text-sm outline-none'
 
+const ALL_COUNTRY_VALUES = new Set(ALL_COUNTRIES.map((c) => c.value))
+
+function resolveCountryState(country?: string): {
+  country: string
+  customCountry: string
+} {
+  if (!country) return { country: DEFAULT_COUNTRY, customCountry: '' }
+  if (ALL_COUNTRY_VALUES.has(country)) {
+    return { country, customCountry: '' }
+  }
+  return { country: OTHER_COUNTRY_VALUE, customCountry: country }
+}
+
 export function AddressForm({
   initialData,
   onSubmit,
@@ -48,14 +65,19 @@ export function AddressForm({
   const [city, setCity] = useState(initialData?.city ?? '')
   const [state, setState] = useState(initialData?.state ?? '')
   const [pincode, setPincode] = useState(initialData?.pincode ?? '')
-  const [country, setCountry] = useState(initialData?.country || DEFAULT_COUNTRY)
-  const [customCountry, setCustomCountry] = useState('')
+  const [country, setCountry] = useState(
+    () => resolveCountryState(initialData?.country).country,
+  )
+  const [customCountry, setCustomCountry] = useState(
+    () => resolveCountryState(initialData?.country).customCountry,
+  )
   const [isDefault, setIsDefault] = useState(initialData?.isDefault ?? false)
 
   const isOtherCountry = country === OTHER_COUNTRY_VALUE
+  const isIndia = country === DEFAULT_COUNTRY
 
   const handleCountryChange = (value: string) => {
-    if (value !== 'India') {
+    if (value !== DEFAULT_COUNTRY) {
       setState('')
     }
     setCountry(value)
@@ -86,10 +108,14 @@ export function AddressForm({
       )}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <label className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase">
+          <label
+            htmlFor="address-fullName"
+            className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase"
+          >
             Full Name
           </label>
           <input
+            id="address-fullName"
             type="text"
             required
             value={fullName}
@@ -99,10 +125,14 @@ export function AddressForm({
           />
         </div>
         <div>
-          <label className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase">
+          <label
+            htmlFor="address-phone"
+            className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase"
+          >
             Phone Number
           </label>
           <input
+            id="address-phone"
             type="tel"
             required
             value={phone}
@@ -114,24 +144,34 @@ export function AddressForm({
       </div>
 
       <div>
-        <label className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase">
+        <label
+          htmlFor="address-line1"
+          className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase"
+        >
           Address Line 1
         </label>
         <input
+          id="address-line1"
           type="text"
           required
           value={line1}
           onChange={(e) => setLine1(e.target.value)}
           className={textInputClass}
-          placeholder={initialData?.line1 ? undefined : 'House/Flat No., Street, Area'}
+          placeholder={
+            initialData?.line1 ? undefined : 'House/Flat No., Street, Area'
+          }
         />
       </div>
 
       <div>
-        <label className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase">
+        <label
+          htmlFor="address-line2"
+          className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase"
+        >
           Address Line 2 (Optional)
         </label>
         <input
+          id="address-line2"
           type="text"
           value={line2}
           onChange={(e) => setLine2(e.target.value)}
@@ -142,10 +182,14 @@ export function AddressForm({
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div>
-          <label className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase">
+          <label
+            htmlFor="address-city"
+            className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase"
+          >
             City
           </label>
           <input
+            id="address-city"
             type="text"
             required
             value={city}
@@ -155,12 +199,16 @@ export function AddressForm({
           />
         </div>
         <div>
-          <label className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase">
+          <label
+            htmlFor="address-state"
+            className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase"
+          >
             State
           </label>
-          {country === 'India' ? (
+          {isIndia ? (
             <div className="relative">
               <select
+                id="address-state"
                 required
                 value={state}
                 onChange={(e) => setState(e.target.value)}
@@ -179,6 +227,7 @@ export function AddressForm({
             </div>
           ) : (
             <input
+              id="address-state"
               type="text"
               required
               value={state}
@@ -189,13 +238,17 @@ export function AddressForm({
           )}
         </div>
         <div>
-          <label className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase">
+          <label
+            htmlFor="address-pincode"
+            className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase"
+          >
             Pincode
           </label>
           <input
+            id="address-pincode"
             type="text"
             required
-            pattern="^[1-9][0-9]{5}$"
+            pattern={isIndia ? '^[1-9][0-9]{5}$' : undefined}
             value={pincode}
             onChange={(e) => setPincode(e.target.value)}
             className={textInputClass}
@@ -205,11 +258,15 @@ export function AddressForm({
       </div>
 
       <div>
-        <label className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase">
+        <label
+          htmlFor="address-country"
+          className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase"
+        >
           Country
         </label>
         <div className="relative">
           <select
+            id="address-country"
             value={country}
             onChange={(e) => handleCountryChange(e.target.value)}
             className={`${inputClass} select-none`}
@@ -224,6 +281,7 @@ export function AddressForm({
         </div>
         {isOtherCountry && (
           <input
+            id="address-customCountry"
             type="text"
             required
             value={customCountry}
@@ -238,12 +296,15 @@ export function AddressForm({
         <div className="flex items-center gap-2">
           <input
             type="checkbox"
-            id="isDefault"
+            id="address-isDefault"
             checked={isDefault}
             onChange={(e) => setIsDefault(e.target.checked)}
             className="accent-brand-600 rounded border-neutral-300"
           />
-          <label htmlFor="isDefault" className="font-body text-xs text-neutral-600">
+          <label
+            htmlFor="address-isDefault"
+            className="font-body text-xs text-neutral-600"
+          >
             Set as default shipping address
           </label>
         </div>
