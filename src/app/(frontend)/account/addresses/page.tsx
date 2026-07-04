@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useSession } from '@/lib/auth-client'
+import { AddressForm, type AddressFormData } from '@/components/address/AddressForm'
 import {
   ArrowLeft,
   Edit,
@@ -12,7 +13,6 @@ import {
   Check,
   Plus,
   Loader2,
-  AlertCircle,
 } from 'lucide-react'
 
 interface Address {
@@ -40,14 +40,6 @@ export default function AddressesPage() {
   // Form states
   const [editingAddress, setEditingAddress] = useState<Address | null>(null)
   const [showForm, setShowForm] = useState(false)
-  const [fullName, setFullName] = useState('')
-  const [phone, setPhone] = useState('')
-  const [line1, setLine1] = useState('')
-  const [line2, setLine2] = useState('')
-  const [city, setCity] = useState('')
-  const [state, setState] = useState('')
-  const [pincode, setPincode] = useState('')
-  const [isDefaultAddress, setIsDefaultAddress] = useState(false)
 
   // Load addresses
   useEffect(() => {
@@ -76,34 +68,17 @@ export default function AddressesPage() {
 
   const openAddForm = () => {
     setEditingAddress(null)
-    setFullName('')
-    setPhone('')
-    setLine1('')
-    setLine2('')
-    setCity('')
-    setState('')
-    setPincode('')
-    setIsDefaultAddress(false)
     setShowForm(true)
     setError('')
   }
 
   const openEditForm = (addr: Address) => {
     setEditingAddress(addr)
-    setFullName(addr.fullName)
-    setPhone(addr.phone)
-    setLine1(addr.line1)
-    setLine2(addr.line2 || '')
-    setCity(addr.city)
-    setState(addr.state)
-    setPincode(addr.pincode)
-    setIsDefaultAddress(addr.isDefault)
     setShowForm(true)
     setError('')
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = async (data: AddressFormData) => {
     setActionLoading(true)
     setError('')
 
@@ -117,14 +92,15 @@ export default function AddressesPage() {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          fullName,
-          phone,
-          line1,
-          line2,
-          city,
-          state,
-          pincode,
-          isDefault: isDefaultAddress,
+          fullName: data.fullName,
+          phone: data.phone,
+          line1: data.line1,
+          line2: data.line2,
+          city: data.city,
+          state: data.state,
+          pincode: data.pincode,
+          country: data.country,
+          isDefault: data.isDefault,
         }),
       })
 
@@ -243,150 +219,14 @@ export default function AddressesPage() {
             <h3 className="font-display mb-6 text-sm font-semibold tracking-wider text-neutral-900 uppercase">
               {editingAddress ? 'Edit Address' : 'Add New Address'}
             </h3>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {error && (
-                <div className="flex items-start gap-2.5 rounded-xl border border-red-100 bg-red-50 p-4 text-xs text-red-700">
-                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-                  <span>{error}</span>
-                </div>
-              )}
-
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase">
-                    Full Name
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    className="font-body focus:border-brand-500 h-10 w-full rounded-xl border border-neutral-200 pl-3 text-sm outline-none"
-                    placeholder="Aarav Sharma"
-                  />
-                </div>
-                <div>
-                  <label className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase">
-                    Phone Number
-                  </label>
-                  <input
-                    type="tel"
-                    required
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="font-body focus:border-brand-500 h-10 w-full rounded-xl border border-neutral-200 pl-3 text-sm outline-none"
-                    placeholder="98765 43210"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase">
-                  Address Line 1
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={line1}
-                  onChange={(e) => setLine1(e.target.value)}
-                  className="font-body focus:border-brand-500 h-10 w-full rounded-xl border border-neutral-200 pl-3 text-sm outline-none"
-                  placeholder="House/Flat No., Street, Locality"
-                />
-              </div>
-
-              <div>
-                <label className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase">
-                  Address Line 2 (Optional)
-                </label>
-                <input
-                  type="text"
-                  value={line2}
-                  onChange={(e) => setLine2(e.target.value)}
-                  className="font-body focus:border-brand-500 h-10 w-full rounded-xl border border-neutral-200 pl-3 text-sm outline-none"
-                  placeholder="Landmark, Suite, etc."
-                />
-              </div>
-
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <div>
-                  <label className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase">
-                    City
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    className="font-body focus:border-brand-500 h-10 w-full rounded-xl border border-neutral-200 pl-3 text-sm outline-none"
-                    placeholder="Varanasi"
-                  />
-                </div>
-                <div>
-                  <label className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase">
-                    State
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={state}
-                    onChange={(e) => setState(e.target.value)}
-                    className="font-body focus:border-brand-500 h-10 w-full rounded-xl border border-neutral-200 pl-3 text-sm outline-none"
-                    placeholder="Uttar Pradesh"
-                  />
-                </div>
-                <div>
-                  <label className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase">
-                    Pincode
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    pattern="^[1-9][0-9]{5}$"
-                    value={pincode}
-                    onChange={(e) => setPincode(e.target.value)}
-                    className="font-body focus:border-brand-500 h-10 w-full rounded-xl border border-neutral-200 pl-3 text-sm outline-none"
-                    placeholder="221001"
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 pt-2">
-                <input
-                  type="checkbox"
-                  id="isDefault"
-                  checked={isDefaultAddress}
-                  onChange={(e) => setIsDefaultAddress(e.target.checked)}
-                  className="accent-brand-600 animate-fade-in rounded border-neutral-300"
-                />
-                <label
-                  htmlFor="isDefault"
-                  className="font-body text-xs text-neutral-600"
-                >
-                  Set as default shipping address
-                </label>
-              </div>
-
-              <div className="flex justify-end gap-3 border-t border-neutral-100 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowForm(false)}
-                  className="font-display h-10 rounded-xl border border-neutral-200 px-4 text-xs font-semibold text-neutral-600 transition-colors hover:bg-neutral-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={actionLoading}
-                  className="font-display bg-brand-600 hover:bg-brand-700 inline-flex h-10 items-center gap-1.5 rounded-xl px-5 text-xs font-semibold text-white transition-all"
-                >
-                  {actionLoading && (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  )}
-                  {editingAddress ? 'Save Changes' : 'Add Address'}
-                </button>
-              </div>
-            </form>
+            <AddressForm
+              initialData={editingAddress ?? undefined}
+              onSubmit={handleSubmit}
+              isSubmitting={actionLoading}
+              submitLabel={editingAddress ? 'Save Changes' : 'Add Address'}
+              onCancel={() => setShowForm(false)}
+              error={error}
+            />
           </div>
         )}
 

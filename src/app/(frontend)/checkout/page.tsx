@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useSession } from '@/lib/auth-client'
 import { useCart } from '@/lib/store/cart'
 import { loadRazorpayScript } from '@/lib/razorpay'
+import { AddressForm, type AddressFormData } from '@/components/address/AddressForm'
 import {
   ArrowLeft,
   Check,
@@ -80,14 +81,6 @@ export default function CheckoutPage() {
 
   // New address form state
   const [showNewAddressForm, setShowNewAddressForm] = useState(false)
-  const [fullName, setFullName] = useState('')
-  const [phone, setPhone] = useState('')
-  const [line1, setLine1] = useState('')
-  const [line2, setLine2] = useState('')
-  const [city, setCity] = useState('')
-  const [state, setState] = useState('')
-  const [pincode, setPincode] = useState('')
-  const [isDefaultAddress, setIsDefaultAddress] = useState(false)
 
   // Payment State
   const [paymentMethod, setPaymentMethod] = useState<'razorpay' | 'cod'>(
@@ -162,8 +155,7 @@ export default function CheckoutPage() {
     loadData()
   }, [sessionData, isPending, router])
 
-  const handleAddNewAddress = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleAddNewAddress = async (data: AddressFormData) => {
     setActionLoading(true)
     setError('')
 
@@ -172,14 +164,15 @@ export default function CheckoutPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          fullName,
-          phone,
-          line1,
-          line2,
-          city,
-          state,
-          pincode,
-          isDefault: isDefaultAddress,
+          fullName: data.fullName,
+          phone: data.phone,
+          line1: data.line1,
+          line2: data.line2,
+          city: data.city,
+          state: data.state,
+          pincode: data.pincode,
+          country: data.country,
+          isDefault: data.isDefault,
         }),
       })
 
@@ -192,16 +185,6 @@ export default function CheckoutPage() {
       setAddresses([address, ...addresses])
       setSelectedAddressId(address.id)
       setShowNewAddressForm(false)
-
-      // Reset form
-      setFullName('')
-      setPhone('')
-      setLine1('')
-      setLine2('')
-      setCity('')
-      setState('')
-      setPincode('')
-      setIsDefaultAddress(false)
     } catch (err: any) {
       setError(err.message || 'Failed to save address')
     } finally {
@@ -478,139 +461,13 @@ export default function CheckoutPage() {
                 </div>
 
                 {showNewAddressForm ? (
-                  <form onSubmit={handleAddNewAddress} className="space-y-4">
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      <div>
-                        <label className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase">
-                          Full Name
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          value={fullName}
-                          onChange={(e) => setFullName(e.target.value)}
-                          className="font-body focus:border-brand-500 h-10 w-full rounded-xl border border-neutral-200 pl-3 text-sm outline-none"
-                          placeholder="Receiver name"
-                        />
-                      </div>
-                      <div>
-                        <label className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase">
-                          Phone Number
-                        </label>
-                        <input
-                          type="tel"
-                          required
-                          value={phone}
-                          onChange={(e) => setPhone(e.target.value)}
-                          className="font-body focus:border-brand-500 h-10 w-full rounded-xl border border-neutral-200 pl-3 text-sm outline-none"
-                          placeholder="10-digit mobile"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase">
-                        Address Line 1
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={line1}
-                        onChange={(e) => setLine1(e.target.value)}
-                        className="font-body focus:border-brand-500 h-10 w-full rounded-xl border border-neutral-200 pl-3 text-sm outline-none"
-                        placeholder="House/Flat No., Street, Area"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase">
-                        Address Line 2 (Optional)
-                      </label>
-                      <input
-                        type="text"
-                        value={line2}
-                        onChange={(e) => setLine2(e.target.value)}
-                        className="font-body focus:border-brand-500 h-10 w-full rounded-xl border border-neutral-200 pl-3 text-sm outline-none"
-                        placeholder="Landmark, Suite, etc."
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                      <div>
-                        <label className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase">
-                          City
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          value={city}
-                          onChange={(e) => setCity(e.target.value)}
-                          className="font-body focus:border-brand-500 h-10 w-full rounded-xl border border-neutral-200 pl-3 text-sm outline-none"
-                          placeholder="City"
-                        />
-                      </div>
-                      <div>
-                        <label className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase">
-                          State
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          value={state}
-                          onChange={(e) => setState(e.target.value)}
-                          className="font-body focus:border-brand-500 h-10 w-full rounded-xl border border-neutral-200 pl-3 text-sm outline-none"
-                          placeholder="State"
-                        />
-                      </div>
-                      <div>
-                        <label className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase">
-                          Pincode
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          pattern="^[1-9][0-9]{5}$"
-                          value={pincode}
-                          onChange={(e) => setPincode(e.target.value)}
-                          className="font-body focus:border-brand-500 h-10 w-full rounded-xl border border-neutral-200 pl-3 text-sm outline-none"
-                          placeholder="6-digit Indian PIN"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        id="isDefault"
-                        checked={isDefaultAddress}
-                        onChange={(e) => setIsDefaultAddress(e.target.checked)}
-                        className="accent-brand-600 rounded border-neutral-300"
-                      />
-                      <label
-                        htmlFor="isDefault"
-                        className="font-body text-xs text-neutral-600"
-                      >
-                        Set as default shipping address
-                      </label>
-                    </div>
-
-                    <div className="flex justify-end gap-3 pt-2">
-                      <button
-                        type="button"
-                        onClick={() => setShowNewAddressForm(false)}
-                        className="font-display h-10 rounded-xl border border-neutral-200 px-4 text-xs font-semibold text-neutral-600 transition-colors hover:bg-neutral-50"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="submit"
-                        disabled={actionLoading}
-                        className="font-display bg-brand-600 hover:bg-brand-700 h-10 rounded-xl px-5 text-xs font-semibold text-white transition-all"
-                      >
-                        {actionLoading ? 'Saving...' : 'Save & Select'}
-                      </button>
-                    </div>
-                  </form>
+                  <AddressForm
+                    onSubmit={handleAddNewAddress}
+                    isSubmitting={actionLoading}
+                    submitLabel="Save & Select"
+                    onCancel={() => setShowNewAddressForm(false)}
+                    error={error}
+                  />
                 ) : (
                   <div className="space-y-4">
                     {addresses.length === 0 ? (
