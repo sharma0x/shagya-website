@@ -431,7 +431,8 @@ export default function CheckoutPage() {
     }
   }
 
-  if (loading || isPending) {
+  // Only show loading on first render — never on session re-checks (window focus)
+  if (loading && !didLoad.current) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
         <Loader2 className="text-brand-600 h-8 w-8 animate-spin" />
