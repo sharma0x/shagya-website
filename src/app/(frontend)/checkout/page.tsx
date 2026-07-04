@@ -288,7 +288,17 @@ export default function CheckoutPage() {
           body: JSON.stringify({
             isCod: true,
             shippingAddress: selectedAddress,
-            phone: selectedAddress.phone,
+            phone: selectedAddress?.phone,
+            notes: orderNotes,
+            guestEmail: guestData?.email || '',
+            guestPhone: guestData?.phone || '',
+            cartItems: !isLoggedIn
+              ? effectiveCart?.items.map((i) => ({
+                  product: i.product.id,
+                  quantity: i.quantity,
+                  unitPrice: i.unitPrice,
+                }))
+              : undefined,
           }),
         })
 
@@ -311,6 +321,20 @@ export default function CheckoutPage() {
         const orderRes = await fetch('/api/razorpay/create-order', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            shippingAddress: selectedAddress,
+            phone: selectedAddress?.phone,
+            isCod: false,
+            guestEmail: guestData?.email || '',
+            guestPhone: guestData?.phone || '',
+            cartItems: !isLoggedIn
+              ? effectiveCart?.items.map((i) => ({
+                  product: i.product.id,
+                  quantity: i.quantity,
+                  unitPrice: i.unitPrice,
+                }))
+              : undefined,
+          }),
         })
 
         if (!orderRes.ok) {
