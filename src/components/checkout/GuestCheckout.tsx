@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import { Loader2, Check, AlertCircle, UserPlus } from 'lucide-react'
+import { PhoneInput, parsePhoneString } from '@/components/ui/phone-input'
 
 interface GuestCheckoutProps {
   onVerified: (data: {
@@ -27,7 +28,8 @@ export function GuestCheckout({ onVerified }: GuestCheckoutProps) {
 
   const handleSendOTP = useCallback(async () => {
     setError('')
-    if (!phone || phone.length < 10) {
+    const parsed = parsePhoneString(phone)
+    if (!parsed.number || parsed.number.length < 10) {
       setError('Please enter a valid 10-digit mobile number')
       return
     }
@@ -45,7 +47,7 @@ export function GuestCheckout({ onVerified }: GuestCheckoutProps) {
       const res = await fetch('/api/checkout/send-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, email }),
+        body: JSON.stringify({ phone: parsed.number, email }),
       })
       const data = await res.json()
       if (res.ok) {
@@ -74,12 +76,14 @@ export function GuestCheckout({ onVerified }: GuestCheckoutProps) {
       return
     }
 
+    const parsed = parsePhoneString(phone)
+
     setVerifying(true)
     try {
       const res = await fetch('/api/checkout/verify-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, otp, name, email }),
+        body: JSON.stringify({ phone: parsed.number, otp, name, email }),
       })
       const data = await res.json()
       if (res.ok && data.verified) {
@@ -183,15 +187,11 @@ export function GuestCheckout({ onVerified }: GuestCheckoutProps) {
           Phone Number
         </label>
         <div className="flex gap-2">
-          <input
-            type="tel"
-            required
-            inputMode="numeric"
+          <PhoneInput
             value={phone}
-            onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-            className={inputClass}
-            placeholder="10-digit mobile"
+            onChange={setPhone}
             disabled={otpSent}
+            className="flex-1"
           />
           <button
             type="button"
