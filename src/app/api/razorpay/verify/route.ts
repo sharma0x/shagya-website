@@ -76,8 +76,8 @@ export async function POST(request: Request) {
     if (isGuest && guestCartItems && guestCartItems.length > 0) {
       // Guest — use cart items from request body
       orderItems = guestCartItems.map((item: any) => ({
-        product: item.product,
-        variant: item.variant || null,
+        product: Number(item.product),
+        variant: item.variant ? Number(item.variant) : null,
         quantity: item.quantity || 1,
         unitPrice: item.unitPrice || 0,
         totalPrice: (item.unitPrice || 0) * (item.quantity || 1),
