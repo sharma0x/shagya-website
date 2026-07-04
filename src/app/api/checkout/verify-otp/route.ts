@@ -1,21 +1,25 @@
 import { NextResponse } from 'next/server'
-import { verifyOTP } from '@/lib/otp'
+import { verifyOTPToken, OTP_COOKIE_NAME } from '@/lib/otp'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 
 export async function POST(request: Request) {
   try {
-    const { phone, otp, name } = await request.json()
+    const body = await request.json()
+    const { phone, otp, name, email } = body
 
-    if (!phone || !otp || !name) {
+    if (!phone || !otp || !name || !email) {
       return NextResponse.json(
-        { error: 'Phone, OTP, and name are required' },
+        { error: 'Phone, OTP, name, and email are required' },
         { status: 400 },
       )
     }
 
-    const result = verifyOTP(phone, otp)
-    if (!result.valid || !result.email) {
+    // Read the OTP token from the cookie
+    const cookie = request.headers.get('cookie') || ''
+    const token = parseCookie(cookie, OTP_COOKIE_NAME)
+
+    if (!token || !verifyOTPToken(phone, otp, token)) {
       return NextResponse.json(
         { error: 'Invalid or expired OTP' },
         { status: 400 },
@@ -27,7 +31,7 @@ export async function POST(request: Request) {
     // Ensure a Customer record exists for this guest
     const existing = await payload.find({
       collection: 'customers',
-      where: { email: { equals: result.email } },
+      where: { email: { equals: email } },
       limit: 1,
     } as any)
 
@@ -35,7 +39,6 @@ export async function POST(request: Request) {
 
     if (existing.docs.length > 0) {
       customerId = existing.docs[0].id as string | number
-      // Update phone if not set
       if (!(existing.docs[0] as any).phone) {
         await payload.update({
           collection: 'customers',
@@ -46,19 +49,22 @@ export async function POST(request: Request) {
     } else {
       const created = await payload.create({
         collection: 'customers',
-        data: { email: result.email, name, phone },
+        data: { email, name, phone },
       } as any)
       customerId = created.id as string | number
     }
 
-    return NextResponse.json({
+    const res = NextResponse.json({
       success: true,
       verified: true,
       customerId,
-      email: result.email,
+      email,
       name,
       phone,
     })
+    // Clear the OTP cookie
+    res.cookies.delete(OTP_COOKIE_NAME)
+    return res
   } catch (error) {
     console.error('[API] POST /api/checkout/verify-otp error:', error)
     return NextResponse.json(
@@ -66,4 +72,9 @@ export async function POST(request: Request) {
       { status: 500 },
     )
   }
+}
+
+function parseCookie(cookieHeader: string, name: string): string | null {
+  const match = cookieHeader.match(new RegExp(`(?:^|;\\s*)${name}=([^;]+)`))
+  return match ? decodeURIComponent(match[1]) : null
 }

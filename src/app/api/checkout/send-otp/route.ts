@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
-import { generateOTP, storeOTP, hasPendingOTP } from '@/lib/otp'
-import { sendOTP } from '@/lib/sms'
-import { validateIndianPhone } from '@/lib/sms'
+import { generateOTP, createOTPToken, OTP_COOKIE_NAME, OTP_TTL_MS } from '@/lib/otp'
+import { sendOTP, validateIndianPhone } from '@/lib/sms'
 
 export async function POST(request: Request) {
   try {
@@ -21,18 +20,23 @@ export async function POST(request: Request) {
       )
     }
 
-    if (hasPendingOTP(phone)) {
-      return NextResponse.json(
-        { error: 'An OTP was already sent. Please wait before requesting a new one.' },
-        { status: 429 },
-      )
-    }
-
     const otp = generateOTP()
-    storeOTP(phone, email, otp)
+    const token = createOTPToken(phone, otp)
+
+    // In dev mode (no Twilio), log the OTP so you can see it
+    if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN) {
+      console.log(`[OTP] Dev mode — OTP for ${phone}: ${otp}`)
+    }
     await sendOTP(phone, otp)
 
-    return NextResponse.json({ success: true, message: 'OTP sent' })
+    const res = NextResponse.json({ success: true, message: 'OTP sent' })
+    res.cookies.set(OTP_COOKIE_NAME, token, {
+      httpOnly: true,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: OTP_TTL_MS / 1000,
+    })
+    return res
   } catch (error) {
     console.error('[API] POST /api/checkout/send-otp error:', error)
     return NextResponse.json(

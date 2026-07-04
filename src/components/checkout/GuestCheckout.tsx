@@ -79,7 +79,7 @@ export function GuestCheckout({ onVerified }: GuestCheckoutProps) {
       const res = await fetch('/api/checkout/verify-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, otp, name }),
+        body: JSON.stringify({ phone, otp, name, email }),
       })
       const data = await res.json()
       if (res.ok && data.verified) {

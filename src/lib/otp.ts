@@ -1,51 +1,54 @@
 /**
- * OTP utility — in-memory storage for phone verification.
- * Suitable for dev/single-instance. Migrate to Redis for production.
+ * OTP utility — cookie-based storage for phone verification.
+ * Uses httpOnly cookies with HMAC hashing — works across serverless instances.
  */
 
-interface OTPEntry {
-  otp: string
-  email: string
-  expiresAt: number
-}
+import crypto from 'crypto'
 
-const store = new Map<string, OTPEntry>()
-
+const COOKIE_NAME = 'shayga_otp'
 const TTL_MS = 5 * 60 * 1000 // 5 minutes
 
-function cleanExpired() {
-  const now = Date.now()
-  for (const [key, entry] of store) {
-    if (entry.expiresAt < now) store.delete(key)
-  }
+function getSecret(): string {
+  return process.env.BETTER_AUTH_SECRET || process.env.PAYLOAD_SECRET || 'fallback-dev-secret'
+}
+
+function hashOTP(phone: string, otp: string, expiresAt: number): string {
+  const data = `${phone}:${otp}:${expiresAt}`
+  const hmac = crypto.createHmac('sha256', getSecret()).update(data).digest('hex')
+  return `${expiresAt}:${hmac}`
+}
+
+function verifyHash(phone: string, otp: string, token: string): boolean {
+  const parts = token.split(':')
+  if (parts.length !== 2) return false
+  const expiresAt = parseInt(parts[0], 10)
+  if (Date.now() > expiresAt) return false
+  const expected = hashOTP(phone, otp, expiresAt)
+  return expected === token
 }
 
 export function generateOTP(): string {
   return String(Math.floor(100000 + Math.random() * 900000))
 }
 
-export function storeOTP(phone: string, email: string, otp: string): void {
-  cleanExpired()
-  store.set(phone, { otp, email, expiresAt: Date.now() + TTL_MS })
+/**
+ * Creates the OTP cookie value to set on the response.
+ */
+export function createOTPToken(phone: string, otp: string): string {
+  const expiresAt = Date.now() + TTL_MS
+  return hashOTP(phone, otp, expiresAt)
 }
 
-export function verifyOTP(
-  phone: string,
-  otp: string,
-): { valid: boolean; email?: string } {
-  cleanExpired()
-  const entry = store.get(phone)
-  if (!entry || entry.expiresAt < Date.now()) {
-    store.delete(phone)
-    return { valid: false }
+/**
+ * Verifies the OTP against the token from the cookie.
+ */
+export function verifyOTPToken(phone: string, otp: string, token: string): boolean {
+  try {
+    return verifyHash(phone, otp, token)
+  } catch {
+    return false
   }
-  if (entry.otp !== otp) return { valid: false }
-  store.delete(phone) // one-time use
-  return { valid: true, email: entry.email }
 }
 
-export function hasPendingOTP(phone: string): boolean {
-  cleanExpired()
-  const entry = store.get(phone)
-  return !!entry && entry.expiresAt > Date.now()
-}
+export const OTP_COOKIE_NAME = COOKIE_NAME
+export const OTP_TTL_MS = TTL_MS
