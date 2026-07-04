@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useSession } from '@/lib/auth-client'
@@ -119,9 +119,14 @@ export default function CheckoutPage() {
     'razorpay',
   )
 
-  // Load cart and addresses
+  // Load cart and addresses — run only once on mount
+  const didLoad = useRef(false)
+
   useEffect(() => {
+    if (didLoad.current) return
     if (isPending) return
+
+    didLoad.current = true
 
     if (!isLoggedIn) {
       setLoading(false)
@@ -187,8 +192,7 @@ export default function CheckoutPage() {
     }
 
     loadData()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionData, isPending])
+  }, [sessionData, isPending]) // didLoad ref prevents re-runs after first mount
 
   const handleAddNewAddress = async (data: AddressFormData) => {
     setActionLoading(true)
