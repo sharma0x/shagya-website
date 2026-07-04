@@ -24,9 +24,14 @@ export function ProductCardActions({
   variant = 'grid',
 }: ProductCardActionsProps) {
   const router = useRouter()
-  const { addItem } = useCart()
+  const { addItem, items } = useCart()
   const [added, setAdded] = useState(false)
+  const [buyNowClicked, setBuyNowClicked] = useState(false)
   const isCompact = variant === 'compact'
+
+  const isInCart = items.some(
+    (i) => i.product.id === Number(productId),
+  )
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -53,8 +58,10 @@ export function ProductCardActions({
   const handleBuyNow = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    if (isOutOfStock) return
-    addItem(
+    if (isOutOfStock || buyNowClicked) return
+    setBuyNowClicked(true)
+    if (!isInCart) {
+      addItem(
       {
         id: Number(productId),
         name: productName,
@@ -68,6 +75,7 @@ export function ProductCardActions({
       1,
       defaultVariant,
     )
+    }
     router.push('/checkout')
   }
 

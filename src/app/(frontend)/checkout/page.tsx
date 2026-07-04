@@ -85,8 +85,6 @@ export default function CheckoutPage() {
   const [guestData, setGuestData] = useState<{
     name: string; email: string; phone: string; customerId: string | number
   } | null>(null)
-  const [receiverName, setReceiverName] = useState('')
-  const [receiverPhone, setReceiverPhone] = useState('')
 
   const isLoggedIn = !!sessionData?.user
 
@@ -128,6 +126,8 @@ export default function CheckoutPage() {
         coupon: useCart.getState().coupon || undefined,
       })
       setLoading(false)
+      // Auto-show address form for guests
+      setShowNewAddressForm(true)
       return
     }
 
@@ -194,6 +194,27 @@ export default function CheckoutPage() {
   const handleAddNewAddress = async (data: AddressFormData) => {
     setActionLoading(true)
     setError('')
+
+    if (!isLoggedIn) {
+      // Guest — store address locally
+      const tempAddress = {
+        id: 'guest-addr',
+        fullName: data.fullName,
+        phone: data.phone,
+        line1: data.line1,
+        line2: data.line2 || '',
+        city: data.city,
+        state: data.state,
+        pincode: data.pincode,
+        country: data.country,
+        isDefault: false,
+      }
+      setAddresses([tempAddress])
+      setSelectedAddressId('guest-addr')
+      setShowNewAddressForm(false)
+      setActionLoading(false)
+      return
+    }
 
     try {
       const res = await fetch('/api/addresses', {
@@ -573,39 +594,6 @@ export default function CheckoutPage() {
 
                     {selectedAddressId && (
                       <>
-                        {/* Receiver name & phone (optional) */}
-                        <div className="mt-6 border-t border-neutral-100 pt-6">
-                          <h4 className="font-display mb-3 text-xs font-semibold tracking-wider text-neutral-500 uppercase">
-                            Receiver Details (Optional)
-                          </h4>
-                          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                            <div>
-                              <label className="font-display mb-1 block text-[10px] font-semibold tracking-wider text-neutral-500 uppercase">
-                                Receiver Name
-                              </label>
-                              <input
-                                type="text"
-                                value={receiverName}
-                                onChange={(e) => setReceiverName(e.target.value)}
-                                placeholder="If different from you"
-                                className="font-body focus:border-brand-500 h-10 w-full rounded-xl border border-neutral-200 px-3 text-sm outline-none"
-                              />
-                            </div>
-                            <div>
-                              <label className="font-display mb-1 block text-[10px] font-semibold tracking-wider text-neutral-500 uppercase">
-                                Receiver Phone
-                              </label>
-                              <input
-                                type="tel"
-                                value={receiverPhone}
-                                onChange={(e) => setReceiverPhone(e.target.value)}
-                                placeholder="If different from you"
-                                className="font-body focus:border-brand-500 h-10 w-full rounded-xl border border-neutral-200 px-3 text-sm outline-none"
-                              />
-                            </div>
-                          </div>
-                        </div>
-
                         {/* Guest checkout — phone OTP verification */}
                         {!isLoggedIn && !guestData && (
                           <div className="mt-6 border-t border-neutral-100 pt-6">
