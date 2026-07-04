@@ -64,7 +64,24 @@ export const Orders: CollectionConfig = {
       },
     ],
     beforeChange: [
-      async ({ data, operation, req }) => {
+      async ({ data, operation, originalDoc, req }) => {
+        // Auto-set status timestamps on update
+        if (operation === 'update' && originalDoc) {
+          const prevStatus = (originalDoc as any)?.status
+          const nextStatus = data?.status
+          if (prevStatus !== nextStatus) {
+            if (nextStatus === 'confirmed' && !data?.confirmedAt) {
+              data.confirmedAt = new Date().toISOString()
+            }
+            if (nextStatus === 'shipped' && !data?.shippedAt) {
+              data.shippedAt = new Date().toISOString()
+            }
+            if (nextStatus === 'delivered' && !data?.deliveredAt) {
+              data.deliveredAt = new Date().toISOString()
+            }
+          }
+        }
+
         if (operation === 'create' && !data?.orderNumber) {
           try {
             const existing = await req.payload.find({
@@ -267,6 +284,21 @@ export const Orders: CollectionConfig = {
       admin: {
         description: 'Customer notes or delivery instructions',
       },
+    },
+    {
+      name: 'confirmedAt',
+      type: 'date',
+      admin: { readOnly: true, description: 'Set when status changes to confirmed' },
+    },
+    {
+      name: 'shippedAt',
+      type: 'date',
+      admin: { readOnly: true, description: 'Set when status changes to shipped' },
+    },
+    {
+      name: 'deliveredAt',
+      type: 'date',
+      admin: { readOnly: true, description: 'Set when status changes to delivered' },
     },
     {
       name: 'shippingAddress',
