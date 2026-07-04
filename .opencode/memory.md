@@ -398,3 +398,64 @@ This is caused by a namespace-resolution bug in `tsx` versions `>=4.22.0` where 
     }
   }
 ```
+
+---
+
+## Vitest
+
+### `@vitest/coverage-v8` is missing from devDependencies
+
+The `vitest.config.ts` references `provider: 'v8'` but `@vitest/coverage-v8` is NOT in
+`devDependencies`. `pnpm test:coverage` and `make test-coverage` fail with
+"Cannot find dependency '@vitest/coverage-v8'". This is a pre-existing repo issue.
+
+Workaround for one-off reports: `pnpm add -D @vitest/coverage-v8@^4.1.9` then
+`git checkout package.json pnpm-lock.yaml` afterwards to keep the constraint
+"no new deps" intact. The package is installed in `node_modules` even after the
+revert (until `pnpm install` is run again).
+
+### Pre-existing test failures (unrelated to current PRs)
+
+These fail in `develop` and should be ignored when verifying a branch:
+
+- `src/components/layout/Header.test.tsx` — 2 failures
+- `src/collections/__tests__/Pages.test.ts` — 1 failure (block count off by 3)
+- `src/app/api/__tests__/search.test.ts` — 7 failures (FTS-related)
+
+Baseline before my work: 783 passing, 10 failing.
+
+### Mocking `fetch` in vitest
+
+For tests that call `global.fetch`, use `vi.stubGlobal('fetch', mockFn)`. The
+mock auto-resets between tests if you call `vi.restoreAllMocks()` in
+`beforeEach`/`afterEach`. Use `new Response(JSON.stringify(body), { status, headers })`
+to construct mocked responses.
+
+### Mocking module imports in route tests
+
+For testing API routes that import from `@/lib/*`, use top-level
+`vi.mock('@/lib/...', () => ({ ... }))` declarations BEFORE the route import.
+Then dynamic-import the route inside `beforeEach` so the mocks apply.
+
+Pattern (from `src/lib/__tests__/webhooks.test.ts` and
+`src/app/api/__tests__/products.test.ts`):
+
+```ts
+const mockFn = vi.fn()
+vi.mock('@/lib/some-module', () => ({
+  someFn: (...args) => mockFn(...args),
+}))
+
+let handler: typeof import('../route').POST
+beforeEach(async () => {
+  vi.clearAllMocks()
+  handler = (await import('../route')).POST
+})
+```
+
+### Test file location conventions
+
+- Lib code: `src/lib/foo.ts` → test at `src/lib/foo.test.ts` (NOT `__tests__/foo.test.ts`).
+  The repo's `vitest.config.ts` `include` matches `src/**/*.{test,spec}.{ts,tsx}` so
+  flat files work. Using `__tests__/foo.test.ts` makes the import path `../foo` wrong.
+- API routes: `src/app/api/path/route.ts` → test at `src/app/api/path/__tests__/route.test.ts`.
