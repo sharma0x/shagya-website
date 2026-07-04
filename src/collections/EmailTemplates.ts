@@ -15,6 +15,7 @@ export const EMAIL_TEMPLATE_SLUGS = [
   'verify-email',
   'magic-link',
   'back-in-stock',
+  'password-reset',
 ] as const
 
 export type TemplateSlug = (typeof EMAIL_TEMPLATE_SLUGS)[number]
@@ -75,6 +76,10 @@ const SLUG_META: Record<TemplateSlug, { label: string; hint: string }> = {
   'back-in-stock': {
     label: 'Back in Stock (Customer)',
     hint: '{{productName}} {{productUrl}} {{storeUrl}} {{storeName}}',
+  },
+  'password-reset': {
+    label: 'Password Reset (Customer)',
+    hint: '{{customerName}} {{passwordResetUrl}} {{storeUrl}}',
   },
 }
 

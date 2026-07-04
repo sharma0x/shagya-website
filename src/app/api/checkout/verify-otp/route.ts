@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { verifyOTPToken, OTP_COOKIE_NAME } from '@/lib/otp'
 import { getPayload } from 'payload'
 import config from '@payload-config'
+import { auth } from '@/lib/auth'
+import { Pool } from 'pg'
 
 export async function POST(request: Request) {
   try {
@@ -15,7 +17,6 @@ export async function POST(request: Request) {
       )
     }
 
-    // Read the OTP token from the cookie
     const cookie = request.headers.get('cookie') || ''
     const token = parseCookie(cookie, OTP_COOKIE_NAME)
 
@@ -28,7 +29,7 @@ export async function POST(request: Request) {
 
     const payload = await getPayload({ config })
 
-    // Ensure a Customer record exists for this guest
+    // 1. Ensure a Payload Customer record exists
     const existing = await payload.find({
       collection: 'customers',
       where: { email: { equals: email } },
@@ -54,15 +55,75 @@ export async function POST(request: Request) {
       customerId = created.id as string | number
     }
 
+    // 2. Create Better Auth account (no auto-login — requireEmailVerification is on)
+    //    Better Auth's databaseHooks.user.create.after calls syncCustomer(),
+    //    which links this new BA user to the Payload Customer by phone.
+    const randomPassword =
+      Math.random().toString(36).slice(2) +
+      Math.random().toString(36).slice(2) +
+      '!A1'
+
+    let accountCreated = false
+
+    try {
+      const signUpRequest = new Request(
+        'http://localhost:3000/api/auth/sign-up/email',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email,
+            password: randomPassword,
+            name,
+            phoneNumber: phone,
+          }),
+        },
+      )
+
+      const signUpResponse = await auth.handler(signUpRequest)
+
+      if (signUpResponse.ok) {
+        const signUpData = await signUpResponse.json()
+        const baUserId: string | undefined = signUpData.user?.id
+
+        if (baUserId) {
+          accountCreated = true
+
+          // 3. Mark phone as verified in Better Auth's user table
+          //    (bypasses phoneNumber plugin's input:false constraint)
+          try {
+            const pool = new Pool({
+              connectionString: process.env.DATABASE_URL,
+            })
+            await pool.query(
+              'UPDATE "user" SET phone_number_verified = true WHERE id = $1',
+              [baUserId],
+            )
+            await pool.end()
+          } catch (dbErr) {
+            console.warn(
+              '[verify-otp] Could not set phone_number_verified:',
+              dbErr,
+            )
+          }
+        }
+      }
+    } catch (signUpErr) {
+      console.warn(
+        '[verify-otp] Better Auth sign-up failed (likely already exists):',
+        signUpErr,
+      )
+    }
+
     const res = NextResponse.json({
       success: true,
       verified: true,
+      accountCreated,
       customerId,
       email,
       name,
       phone,
     })
-    // Clear the OTP cookie
     res.cookies.delete(OTP_COOKIE_NAME)
     return res
   } catch (error) {

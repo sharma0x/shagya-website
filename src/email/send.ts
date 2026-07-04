@@ -329,6 +329,25 @@ export async function sendMagicLinkEmail(
 }
 
 /**
+ * Sends a password-reset email.
+ * Called from Better Auth's `emailAndPassword.sendResetPassword`.
+ */
+export async function sendResetPasswordEmail(
+  payload: Payload,
+  to: string,
+  customerName: string,
+  passwordResetUrl: string,
+): Promise<void> {
+  const storeUrl = await getBaseURL()
+  const { subject, html } = await renderEmail(payload, 'password-reset', {
+    customerName: customerName || to.split('@')[0],
+    passwordResetUrl,
+    storeUrl,
+  })
+  await safeSend(payload, to, subject, html, 'password-reset')
+}
+
+/**
  * Sends a back-in-stock notification email.
  */
 export async function sendBackInStockEmail(
