@@ -394,6 +394,11 @@ export async function seedProducts(payload: Payload): Promise<void> {
         updateData.collections = collectionIds
       }
 
+      // Update color if missing (field was newly added)
+      if (!(doc as any).color) {
+        updateData.color = prod.color
+      }
+
       if (Object.keys(updateData).length > 0) {
         await (payload.update as any)({
           collection: 'products',

@@ -5,6 +5,9 @@ import { getPayload } from 'payload'
 import config from '@payload-config'
 import { notFound } from 'next/navigation'
 import { SortSelect } from '@/components/ui/sort-select'
+import { FilterSidebar } from '@/components/filters/FilterSidebar'
+import { ActiveFilterChips } from '@/components/filters/ActiveFilterChips'
+import { buildWhereClause } from '@/lib/filters/build-where-clause'
 
 const ph = (w: number, h: number, bg: string, fg: string, text: string) =>
   `https://placehold.co/${w}x${h}/${bg}/${fg}?text=${encodeURIComponent(text)}&font=lora`
@@ -62,7 +65,19 @@ export default async function CollectionDetailPage({
 
   const collection = colRes.docs[0]
 
-  // Query products matching this collection
+  // Build dynamic where clause from searchParams, scoped to this collection
+  const urlParams = new URLSearchParams()
+  for (const [key, value] of Object.entries(sParams)) {
+    if (typeof value === 'string') {
+      urlParams.set(key, value)
+    }
+  }
+  const where = buildWhereClause(urlParams, {
+    collections: { contains: collection.id },
+    status: { equals: 'published' },
+  })
+
+  // Handle sorting
   let sort = '-createdAt'
   if (sortParam === 'price-asc') {
     sort = 'basePrice'
@@ -72,10 +87,7 @@ export default async function CollectionDetailPage({
 
   const productsRes = await payload.find({
     collection: 'products',
-    where: {
-      collections: { contains: collection.id },
-      status: { equals: 'published' },
-    },
+    where,
     sort,
     limit: 100,
   })
@@ -115,71 +127,92 @@ export default async function CollectionDetailPage({
           </div>
         </div>
 
-        {/* Product Grid */}
-        {products.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <h3 className="font-display text-lg font-semibold text-neutral-800">
-              No products found
-            </h3>
-            <p className="font-body mt-2 text-sm text-neutral-500">
-              There are currently no products available in this collection.
-            </p>
-          </div>
-        ) : (
-          <div className="mt-10 grid grid-cols-2 gap-x-4 gap-y-10 sm:gap-x-6 sm:gap-y-12 lg:grid-cols-3 xl:grid-cols-4">
-            {products.map((p) => {
-              const imageUrl =
-                p.gallery?.[0]?.image && typeof p.gallery[0].image === 'object'
-                  ? p.gallery[0].image.sizes?.card?.url ||
-                    p.gallery[0].image.url
-                  : ph(600, 800, '69254e', 'f5e8ee', p.name)
+        {/* Active Filter Chips */}
+        <div className="mt-4">
+          <ActiveFilterChips />
+        </div>
 
-              return (
+        {/* Content: Sidebar + Product Grid */}
+        <div className="mt-6 flex gap-8">
+          <FilterSidebar />
+
+          {/* Product Grid */}
+          <div className="min-w-0 flex-1">
+            {products.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 text-center">
+                <h3 className="font-display text-lg font-semibold text-neutral-800">
+                  No products found
+                </h3>
+                <p className="font-body mt-2 text-sm text-neutral-500">
+                  There are currently no products available in this collection
+                  matching your filters.
+                </p>
                 <Link
-                  key={p.id}
-                  href={`/products/${p.slug}`}
-                  className="group block"
+                  href={`/collections/${slug}`}
+                  className="bg-brand-600 hover:bg-brand-700 font-display mt-6 inline-flex h-10 items-center justify-center rounded-xl px-5 text-xs font-semibold text-white transition-colors"
                 >
-                  <div className="relative overflow-hidden rounded-xl transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-md">
-                    <ImagePanel
-                      src={imageUrl || ''}
-                      alt={p.name}
-                      className="aspect-[3/4] w-full"
-                      rounded="none"
-                    />
-                  </div>
-                  <div className="mt-4 px-1">
-                    <p className="font-display group-hover:text-brand-700 text-sm font-semibold text-neutral-900 transition-colors">
-                      {p.name}
-                    </p>
-                    <p className="font-body mt-0.5 text-xs text-neutral-400">
-                      {p.weave} · {p.fabric}
-                    </p>
-                    <div className="text-brand-700 font-display mt-2 flex flex-wrap items-baseline gap-2 text-sm font-semibold">
-                      <span>₹{p.basePrice.toLocaleString('en-IN')}</span>
-                      {p.compareAtPrice && p.compareAtPrice > p.basePrice && (
-                        <>
-                          <span className="text-xs font-normal text-neutral-400 line-through">
-                            ₹{p.compareAtPrice.toLocaleString('en-IN')}
-                          </span>
-                          <span className="text-[11px] font-semibold text-green-600">
-                            (
-                            {Math.round(
-                              ((p.compareAtPrice - p.basePrice) /
-                                p.compareAtPrice) *
-                                100,
-                            )}
-                            % OFF)
-                          </span>
-                        </>
-                      )}
-                    </div>
-                  </div>
+                  Clear Filters
                 </Link>
-              )
-            })}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-x-4 gap-y-10 sm:gap-x-6 sm:gap-y-12 lg:grid-cols-3 xl:grid-cols-4">
+                {products.map((p) => {
+                  const imageUrl =
+                    p.gallery?.[0]?.image &&
+                    typeof p.gallery[0].image === 'object'
+                      ? p.gallery[0].image.sizes?.card?.url ||
+                        p.gallery[0].image.url
+                      : ph(600, 800, '69254e', 'f5e8ee', p.name)
+
+                  return (
+                    <Link
+                      key={p.id}
+                      href={`/products/${p.slug}`}
+                      className="group block"
+                    >
+                      <div className="relative overflow-hidden rounded-xl transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-md">
+                        <ImagePanel
+                          src={imageUrl || ''}
+                          alt={p.name}
+                          className="aspect-[3/4] w-full"
+                          rounded="none"
+                        />
+                      </div>
+                      <div className="mt-4 px-1">
+                        <p className="font-display group-hover:text-brand-700 text-sm font-semibold text-neutral-900 transition-colors">
+                          {p.name}
+                        </p>
+                        <p className="font-body mt-0.5 text-xs text-neutral-400">
+                          {p.weave} · {p.fabric}
+                        </p>
+                        <div className="text-brand-700 font-display mt-2 flex flex-wrap items-baseline gap-2 text-sm font-semibold">
+                          <span>₹{p.basePrice.toLocaleString('en-IN')}</span>
+                          {p.compareAtPrice &&
+                            p.compareAtPrice > p.basePrice && (
+                              <>
+                                <span className="text-xs font-normal text-neutral-400 line-through">
+                                  ₹{p.compareAtPrice.toLocaleString('en-IN')}
+                                </span>
+                                <span className="text-[11px] font-semibold text-green-600">
+                                  (
+                                  {Math.round(
+                                    ((p.compareAtPrice - p.basePrice) /
+                                      p.compareAtPrice) *
+                                      100,
+                                  )}
+                                  % OFF)
+                                </span>
+                              </>
+                            )}
+                        </div>
+                      </div>
+                    </Link>
+                  )
+                })}
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
     </div>
   )

@@ -35,6 +35,7 @@ export interface SeedProduct {
   fabric: string
   weave: string
   pattern: string
+  color: string
   basePrice: number
   compareAtPrice?: number
   description: string
@@ -418,6 +419,7 @@ export const products: SeedProduct[] = [
     fabric: 'silk',
     weave: 'banarasi',
     pattern: 'embroidered',
+    color: 'green',
     basePrice: 18500,
     compareAtPrice: 22000,
     blouseType: 'Running blouse with zari border',
@@ -427,7 +429,7 @@ export const products: SeedProduct[] = [
       '8-inch broad border with elephant and peacock motifs in real gold zari',
     weavePattern:
       'Kadhwa (cutwork) technique — each motif woven independently without floating threads',
-    occasion: 'Wedding, Reception, Diwali',
+    occasion: 'festive',
     gstPercent: 5,
     shippingPrice: 0,
     description:
@@ -449,6 +451,7 @@ export const products: SeedProduct[] = [
     fabric: 'silk',
     weave: 'kanchipuram',
     pattern: 'embroidered',
+    color: 'burgundy',
     basePrice: 24500,
     compareAtPrice: 32000,
     blouseType: 'Contrast blouse with temple motifs',
@@ -458,7 +461,7 @@ export const products: SeedProduct[] = [
       'Classic 6-inch Korvai temple border with gopuram (temple tower) and yali (mythical lion) motifs',
     weavePattern:
       'Korvai technique — body and border woven separately then interlocked for strength',
-    occasion: 'Bridal, Wedding Reception, Seemandham',
+    occasion: 'bridal',
     gstPercent: 5,
     shippingPrice: 0,
     description:
@@ -480,6 +483,7 @@ export const products: SeedProduct[] = [
     fabric: 'cotton',
     weave: 'tant',
     pattern: 'printed',
+    color: 'ivory',
     basePrice: 2400,
     compareAtPrice: 2900,
     blouseType: 'Running blouse in solid contrast color',
@@ -488,7 +492,7 @@ export const products: SeedProduct[] = [
     borderType: 'Thick contrasting border with double-line geometric pattern',
     weavePattern:
       'Jamdani supplementary weft technique — motifs float above the ground weave',
-    occasion: 'Daily Wear, Office, Casual Lunch',
+    occasion: 'daily-wear',
     gstPercent: 5,
     shippingPrice: 100,
     description:
@@ -510,6 +514,7 @@ export const products: SeedProduct[] = [
     fabric: 'silk',
     weave: 'bandhani',
     pattern: 'printed',
+    color: 'red',
     basePrice: 9500,
     compareAtPrice: 12000,
     blouseType: 'Contrast blouse in solid color matching border',
@@ -518,7 +523,7 @@ export const products: SeedProduct[] = [
     borderType: 'Fine bandhani dotted border with gota trim edge',
     weavePattern:
       'Bandhani tie-dye — each dot hand-tied with thread before dyeing, untied to reveal the pattern',
-    occasion: 'Navratri, Garba, Festive, Wedding Guest',
+    occasion: 'festive',
     gstPercent: 5,
     shippingPrice: 0,
     description:
@@ -540,6 +545,7 @@ export const products: SeedProduct[] = [
     fabric: 'blend',
     weave: 'chanderi',
     pattern: 'embroidered',
+    color: 'ivory',
     basePrice: 5500,
     compareAtPrice: 6800,
     blouseType: 'Matching blouse piece with zari border',
@@ -548,7 +554,7 @@ export const products: SeedProduct[] = [
     borderType: '1.5-inch gold zari border with delicate scalloped edge',
     weavePattern:
       'Chanderi weave — silk warp with cotton weft creating sheer, glossy texture',
-    occasion: 'Office, Day Wedding, Puja, Lunch Party',
+    occasion: 'casual',
     gstPercent: 5,
     shippingPrice: 0,
     description:
@@ -570,6 +576,7 @@ export const products: SeedProduct[] = [
     fabric: 'silk',
     weave: 'patola',
     pattern: 'printed',
+    color: 'multicolor',
     basePrice: 42000,
     compareAtPrice: 55000,
     blouseType: 'Plain silk blouse in dominant border color',
@@ -579,7 +586,7 @@ export const products: SeedProduct[] = [
       'Triple-layer border with diamond, floral, and elephant motif bands',
     weavePattern:
       'Double Ikat — both warp and weft resist-dyed before weaving, pattern emerges at intersection',
-    occasion: 'Bridal, Heirloom Collection, Museum-Quality Investment',
+    occasion: 'bridal',
     gstPercent: 5,
     shippingPrice: 0,
     description:
@@ -601,6 +608,7 @@ export const products: SeedProduct[] = [
     fabric: 'cotton',
     weave: 'kalamkari',
     pattern: 'painted',
+    color: 'multicolor',
     basePrice: 6500,
     compareAtPrice: 8000,
     blouseType: 'Solid blouse in natural base color',
@@ -610,7 +618,7 @@ export const products: SeedProduct[] = [
       'Narrative border depicting episodes from the Panchatantra fables',
     weavePattern:
       'Srikalahasti style Kalamkari — freehand drawing with bamboo kalam (pen) using natural dyes',
-    occasion: 'Art Exhibition, Cultural Event, Brunch, Museum Visit',
+    occasion: 'casual',
     gstPercent: 5,
     shippingPrice: 0,
     description:
@@ -632,6 +640,7 @@ export const products: SeedProduct[] = [
     fabric: 'silk',
     weave: 'paithani',
     pattern: 'embroidered',
+    color: 'green',
     basePrice: 16500,
     compareAtPrice: 21000,
     blouseType: 'Contrast blouse in pallu color',
@@ -641,7 +650,7 @@ export const products: SeedProduct[] = [
       'Oval buti border with peacock feather motifs in alternating gold and silver zari',
     weavePattern:
       'Tapestry weave — each color change requires manual thread insertion, no power loom can replicate',
-    occasion: 'Wedding, Paithani Festival, Maharashtra Day, Reception',
+    occasion: 'festive',
     gstPercent: 5,
     shippingPrice: 0,
     description:
@@ -663,6 +672,7 @@ export const products: SeedProduct[] = [
     fabric: 'blend',
     weave: 'maheshwari',
     pattern: 'solid',
+    color: 'gold',
     basePrice: 3200,
     compareAtPrice: 4000,
     blouseType: 'Matching blouse with border detail',
@@ -672,7 +682,7 @@ export const products: SeedProduct[] = [
       'Signature reversible Maheshwari border — gold zari on one side, colored silk on reverse',
     weavePattern:
       'Plain weave with zari stripe insertion — simplicity as sophistication',
-    occasion: 'Daily Wear, Office, Puja, Casual Outing',
+    occasion: 'daily-wear',
     gstPercent: 5,
     shippingPrice: 100,
     description:
@@ -694,6 +704,7 @@ export const products: SeedProduct[] = [
     fabric: 'silk',
     weave: 'baluchari',
     pattern: 'embroidered',
+    color: 'purple',
     basePrice: 22000,
     compareAtPrice: 28000,
     blouseType: 'Plain silk blouse in body color',
@@ -703,7 +714,7 @@ export const products: SeedProduct[] = [
       'Floral vine border with small animal motifs woven in gold and silver zari',
     weavePattern:
       'Jacquard-loom figured weave — the pallu is a tapestry of miniature figurative panels',
-    occasion: "Heritage Event, Wedding, Collector's Piece, Cultural Exhibition",
+    occasion: 'festive',
     gstPercent: 5,
     shippingPrice: 0,
     description:
@@ -725,6 +736,7 @@ export const products: SeedProduct[] = [
     fabric: 'silk',
     weave: 'ikkat',
     pattern: 'embroidered',
+    color: 'pink',
     basePrice: 12500,
     blouseType: 'Embroidered blouse piece in matching organza',
     palluDetails:
@@ -733,7 +745,7 @@ export const products: SeedProduct[] = [
       'Delicate chikankari scalloped border with shadow-work technique',
     weavePattern:
       'Organza base with hand-embroidered chikankari — Lucknowi craft on translucent silk',
-    occasion: 'Cocktail, Sangeet, Summer Wedding, High Tea',
+    occasion: 'festive',
     gstPercent: 5,
     shippingPrice: 0,
     description:
@@ -755,6 +767,7 @@ export const products: SeedProduct[] = [
     fabric: 'blend',
     weave: 'ikkat',
     pattern: 'printed',
+    color: 'blue',
     basePrice: 4200,
     compareAtPrice: 5200,
     blouseType: 'Solid blouse in navy blue',
@@ -763,7 +776,7 @@ export const products: SeedProduct[] = [
     borderType: 'Triangular sawtooth ikat border with alternating color blocks',
     weavePattern:
       'Single Ikat — warp threads resist-dyed before weaving creating the distinctive blurred-edge geometric patterns',
-    occasion: 'Office, Conference, Day Event, Contemporary Wedding Guest',
+    occasion: 'casual',
     gstPercent: 5,
     shippingPrice: 0,
     description:
@@ -785,6 +798,7 @@ export const products: SeedProduct[] = [
     fabric: 'cotton',
     weave: 'tant',
     pattern: 'solid',
+    color: 'blue',
     basePrice: 2800,
     compareAtPrice: 3500,
     blouseType: 'Matching solid blouse',
@@ -793,7 +807,7 @@ export const products: SeedProduct[] = [
       'Simple selvedge edge — no added border, celebrating the fabric itself',
     weavePattern:
       'Hand-spun (khadi) yarn, hand-woven on pit loom — zero electricity used in production',
-    occasion: 'Daily Wear, Sustainable Fashion, Travel, Beach Wedding',
+    occasion: 'daily-wear',
     gstPercent: 5,
     shippingPrice: 100,
     description:
@@ -815,6 +829,7 @@ export const products: SeedProduct[] = [
     fabric: 'blend',
     weave: 'maheshwari',
     pattern: 'solid',
+    color: 'green',
     basePrice: 3800,
     compareAtPrice: 4500,
     blouseType: 'Matching blouse with border trim',
@@ -822,7 +837,7 @@ export const products: SeedProduct[] = [
     borderType: 'Fine gold zari border with delicate khat weave pattern',
     weavePattern:
       'Kota Doria — unique square-check weave (khat) created by onion-juice starching technique',
-    occasion: 'Summer Wedding, Day Event, Lunch, Resort Wear',
+    occasion: 'casual',
     gstPercent: 5,
     shippingPrice: 0,
     description:
@@ -844,6 +859,7 @@ export const products: SeedProduct[] = [
     fabric: 'crepe',
     weave: 'chanderi',
     pattern: 'solid',
+    color: 'blue',
     basePrice: 7800,
     compareAtPrice: 9500,
     blouseType: 'Contrast blouse in gold',
@@ -852,7 +868,7 @@ export const products: SeedProduct[] = [
     borderType: '4-inch gold zari border with peacock eye motif',
     weavePattern:
       'Crepe weave from Mysore silk — distinctive crinkled texture that adds volume to the drape',
-    occasion: 'Wedding Guest, Reception, Diwali Party, Award Function',
+    occasion: 'festive',
     gstPercent: 5,
     shippingPrice: 0,
     description:
@@ -874,6 +890,7 @@ export const products: SeedProduct[] = [
     fabric: 'silk',
     weave: 'tant',
     pattern: 'embroidered',
+    color: 'gold',
     basePrice: 8500,
     compareAtPrice: 10000,
     blouseType: 'Plain tussar blouse',
@@ -882,7 +899,7 @@ export const products: SeedProduct[] = [
     borderType: 'Simple selvedge with Kantha stitch detail',
     weavePattern:
       'Wild tussar silk — naturally textured golden-beige with slubs — paired with hand embroidery',
-    occasion: 'Art Opening, Cultural Event, Day Wedding, Lunch Party',
+    occasion: 'casual',
     gstPercent: 5,
     shippingPrice: 0,
     description:
@@ -904,6 +921,7 @@ export const products: SeedProduct[] = [
     fabric: 'cotton',
     weave: 'ikkat',
     pattern: 'printed',
+    color: 'pink',
     basePrice: 2200,
     compareAtPrice: 2800,
     blouseType: 'Matching blouse with border',
@@ -912,7 +930,7 @@ export const products: SeedProduct[] = [
     borderType: 'Thick gold zari border with leaf motif',
     weavePattern:
       "Fine count cotton (100s) with supplementary zari — Andhra Pradesh's finest handloom",
-    occasion: 'Office, Puja, Family Gathering, Casual Outing',
+    occasion: 'daily-wear',
     gstPercent: 5,
     shippingPrice: 100,
     description:
@@ -934,6 +952,7 @@ export const products: SeedProduct[] = [
     fabric: 'silk',
     weave: 'tant',
     pattern: 'embroidered',
+    color: 'multicolor',
     basePrice: 9500,
     blouseType: 'Plain silk blouse',
     palluDetails:
@@ -942,8 +961,7 @@ export const products: SeedProduct[] = [
       'Multiple rows of running stitch in graduating colors forming a complex border',
     weavePattern:
       'Vintage silk sarees upcycled with Kantha embroidery — two sarees stitched together with running stitch',
-    occasion:
-      'Art Collector, Sustainable Fashion, Cultural Event, Gallery Opening',
+    occasion: 'casual',
     gstPercent: 5,
     shippingPrice: 0,
     description:
@@ -965,6 +983,7 @@ export const products: SeedProduct[] = [
     fabric: 'cotton',
     weave: 'ikkat',
     pattern: 'printed',
+    color: 'orange',
     basePrice: 2800,
     blouseType: 'Matching blouse in solid earth tone',
     palluDetails:
@@ -972,7 +991,7 @@ export const products: SeedProduct[] = [
     borderType: 'Elephant and fish motif ikat border in rust and black',
     weavePattern:
       'Bandha (tie-dye ikat) from Odisha — both warp and weft resist-dyed before weaving',
-    occasion: 'Daily Wear, Cultural Event, Office, Travel',
+    occasion: 'daily-wear',
     gstPercent: 5,
     shippingPrice: 100,
     description:
@@ -994,6 +1013,7 @@ export const products: SeedProduct[] = [
     fabric: 'silk',
     weave: 'maheshwari',
     pattern: 'embellished',
+    color: 'pink',
     basePrice: 8500,
     compareAtPrice: 11000,
     blouseType: 'Contrast blouse with gota work',
@@ -1002,7 +1022,7 @@ export const products: SeedProduct[] = [
     borderType: 'Thick gota ribbon border with chain-stitch detail',
     weavePattern:
       'Silk base with gota patti appliqué — gold and silver ribbons cut and shaped into motifs',
-    occasion: 'Mehendi, Sangeet, Festive, Wedding Guest',
+    occasion: 'festive',
     gstPercent: 5,
     shippingPrice: 0,
     description:
