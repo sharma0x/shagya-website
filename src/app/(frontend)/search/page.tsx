@@ -227,47 +227,47 @@ export default async function SearchPage({
         </div>
 
         {/* Results */}
-        {q.trim() && (
-          <div className="mt-10">
-            {!hasResults ? (
-              <div className="flex flex-col items-center justify-center py-20 text-center">
-                <h3 className="font-display text-lg font-semibold text-neutral-800">
-                  No results found
-                </h3>
-                <p className="font-body mt-2 text-sm text-neutral-500">
-                  We couldn&apos;t find anything matching your search terms. Try
-                  searching for &quot;Silk&quot;, &quot;Banarasi&quot;, or
-                  &quot;Cotton&quot;.
-                </p>
-              </div>
-            ) : (
-              <>
-                {/* Toolbar + Filter chips (only show when products exist) */}
-                {products.length > 0 && (
-                  <>
-                    <div className="flex flex-col gap-4 border-b border-neutral-100 pb-6 sm:flex-row sm:items-center sm:justify-between">
-                      <div className="flex items-center gap-4 text-sm text-neutral-500">
-                        <span>{products.length} sarees found</span>
-                      </div>
-                      <div className="flex flex-wrap items-center gap-3">
-                        <span className="lg:hidden">
-                          <MobileFilterBar />
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-neutral-400">
-                            Sort by:
+        <FilterDrawerProvider>
+          {q.trim() && (
+            <div className="mt-10">
+              {!hasResults ? (
+                <div className="flex flex-col items-center justify-center py-20 text-center">
+                  <h3 className="font-display text-lg font-semibold text-neutral-800">
+                    No results found
+                  </h3>
+                  <p className="font-body mt-2 text-sm text-neutral-500">
+                    We couldn&apos;t find anything matching your search terms.
+                    Try searching for &quot;Silk&quot;, &quot;Banarasi&quot;, or
+                    &quot;Cotton&quot;.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  {/* Toolbar + Filter chips (only show when products exist) */}
+                  {products.length > 0 && (
+                    <>
+                      <div className="flex flex-col gap-4 border-b border-neutral-100 pb-6 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex items-center gap-4 text-sm text-neutral-500">
+                          <span>{products.length} sarees found</span>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-3">
+                          <span className="lg:hidden">
+                            <MobileFilterBar />
                           </span>
-                          <SortSelect defaultValue={sortParam} />
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-neutral-400">
+                              Sort by:
+                            </span>
+                            <SortSelect defaultValue={sortParam} />
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div className="mt-4">
-                      <ActiveFilterChips />
-                    </div>
-                  </>
-                )}
+                      <div className="mt-4">
+                        <ActiveFilterChips />
+                      </div>
+                    </>
+                  )}
 
-                <FilterDrawerProvider>
                   <div className="mt-6 flex gap-8">
                     {/* Only show sidebar when there are products */}
                     {products.length > 0 && <FilterSidebar />}
@@ -374,11 +374,11 @@ export default async function SearchPage({
                       )}
                     </div>
                   </div>
-                </FilterDrawerProvider>
-              </>
-            )}
-          </div>
-        )}
+                </>
+              )}
+            </div>
+          )}
+        </FilterDrawerProvider>
       </div>
     </div>
   )

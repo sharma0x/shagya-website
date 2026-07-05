@@ -159,53 +159,53 @@ export default async function CategoryPage({
 
   return (
     <div className="bg-surface min-h-screen py-10">
-      <div className="container-page">
-        {/* Back Link */}
-        <Link
-          href="/"
-          className="font-display hover:text-brand-700 inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-500 transition-colors"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          Back to Home
-        </Link>
+      <FilterDrawerProvider>
+        <div className="container-page">
+          {/* Back Link */}
+          <Link
+            href="/"
+            className="font-display hover:text-brand-700 inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-500 transition-colors"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            Back to Home
+          </Link>
 
-        {/* Hero Header */}
-        <div className="mt-8 border-b border-neutral-200 pb-10">
-          <h1 className="font-display text-4xl font-semibold tracking-tight text-neutral-900 md:text-5xl">
-            {title}
-          </h1>
-          <p className="font-body mt-4 max-w-3xl text-base leading-relaxed text-neutral-500">
-            {description}
-          </p>
-        </div>
-
-        {/* Toolbar */}
-        <div className="mt-8 flex flex-col gap-4 border-b border-neutral-100 pb-6 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-4 text-sm text-neutral-500">
-            <span>{products.length} products found</span>
+          {/* Hero Header */}
+          <div className="mt-8 border-b border-neutral-200 pb-10">
+            <h1 className="font-display text-4xl font-semibold tracking-tight text-neutral-900 md:text-5xl">
+              {title}
+            </h1>
+            <p className="font-body mt-4 max-w-3xl text-base leading-relaxed text-neutral-500">
+              {description}
+            </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            {/* Mobile Filter Button — shows inline below Sort by on mobile */}
-            <span className="lg:hidden">
-              <MobileFilterBar />
-            </span>
+          {/* Toolbar */}
+          <div className="mt-8 flex flex-col gap-4 border-b border-neutral-100 pb-6 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-4 text-sm text-neutral-500">
+              <span>{products.length} products found</span>
+            </div>
 
-            {/* Sort Dropdown */}
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-neutral-400">Sort by:</span>
-              <SortSelect defaultValue={sortParam} />
+            <div className="flex flex-wrap items-center gap-3">
+              {/* Mobile Filter Button — shows inline below Sort by on mobile */}
+              <span className="lg:hidden">
+                <MobileFilterBar />
+              </span>
+
+              {/* Sort Dropdown */}
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-neutral-400">Sort by:</span>
+                <SortSelect defaultValue={sortParam} />
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Active Filter Chips */}
-        <div className="mt-4">
-          <ActiveFilterChips />
-        </div>
+          {/* Active Filter Chips */}
+          <div className="mt-4">
+            <ActiveFilterChips />
+          </div>
 
-        {/* Content: Sidebar + Product Grid */}
-        <FilterDrawerProvider>
+          {/* Content: Sidebar + Product Grid */}
           <div className="mt-6 flex gap-8">
             <FilterSidebar />
 
@@ -289,8 +289,8 @@ export default async function CategoryPage({
               )}
             </div>
           </div>
-        </FilterDrawerProvider>
-      </div>
+        </div>
+      </FilterDrawerProvider>
     </div>
   )
 }
