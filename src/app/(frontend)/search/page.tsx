@@ -5,6 +5,8 @@ import { getPayload } from 'payload'
 import config from '@payload-config'
 import { SortSelect } from '@/components/ui/sort-select'
 import { FilterSidebar } from '@/components/filters/FilterSidebar'
+import { MobileFilterBar } from '@/components/filters/MobileFilterBar'
+import { FilterDrawerProvider } from '@/components/filters/filter-drawer-context'
 import { ActiveFilterChips } from '@/components/filters/ActiveFilterChips'
 import { buildWhereClause } from '@/lib/filters/build-where-clause'
 
@@ -247,11 +249,16 @@ export default async function SearchPage({
                       <div className="flex items-center gap-4 text-sm text-neutral-500">
                         <span>{products.length} sarees found</span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-neutral-400">
-                          Sort by:
+                      <div className="flex flex-wrap items-center gap-3">
+                        <span className="lg:hidden">
+                          <MobileFilterBar />
                         </span>
-                        <SortSelect defaultValue={sortParam} />
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-neutral-400">
+                            Sort by:
+                          </span>
+                          <SortSelect defaultValue={sortParam} />
+                        </div>
                       </div>
                     </div>
                     <div className="mt-4">
@@ -260,106 +267,114 @@ export default async function SearchPage({
                   </>
                 )}
 
-                <div className="mt-6 flex gap-8">
-                  {/* Only show sidebar when there are products */}
-                  {products.length > 0 && <FilterSidebar />}
+                <FilterDrawerProvider>
+                  <div className="mt-6 flex gap-8">
+                    {/* Only show sidebar when there are products */}
+                    {products.length > 0 && <FilterSidebar />}
 
-                  <div className="min-w-0 flex-1 space-y-16">
-                    {/* Sarees */}
-                    {products.length > 0 && (
-                      <section>
-                        <h2 className="font-display text-gold-600 mb-6 text-xs font-semibold tracking-[0.18em] uppercase">
-                          Sarees ({products.length})
-                        </h2>
-                        <div className="grid grid-cols-2 gap-x-4 gap-y-10 sm:gap-x-6 sm:gap-y-12 lg:grid-cols-3 xl:grid-cols-4">
-                          {products.map((p) => (
-                            <Link
-                              key={p.id}
-                              href={`/products/${p.slug}`}
-                              className="group block"
-                            >
-                              <div className="relative overflow-hidden rounded-xl transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-md">
-                                <ImagePanel
-                                  src={ph(600, 800, '69254e', 'f5e8ee', p.name)}
-                                  alt={p.name}
-                                  className="aspect-[3/4] w-full"
-                                  rounded="none"
-                                />
-                              </div>
-                              <div className="mt-4 px-1">
-                                <p className="font-display group-hover:text-brand-700 text-sm font-semibold text-neutral-900 transition-colors">
-                                  {p.name}
+                    <div className="min-w-0 flex-1 space-y-16">
+                      {/* Sarees */}
+                      {products.length > 0 && (
+                        <section>
+                          <h2 className="font-display text-gold-600 mb-6 text-xs font-semibold tracking-[0.18em] uppercase">
+                            Sarees ({products.length})
+                          </h2>
+                          <div className="grid grid-cols-2 gap-x-4 gap-y-10 sm:gap-x-6 sm:gap-y-12 lg:grid-cols-3 xl:grid-cols-4">
+                            {products.map((p) => (
+                              <Link
+                                key={p.id}
+                                href={`/products/${p.slug}`}
+                                className="group block"
+                              >
+                                <div className="relative overflow-hidden rounded-xl transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-md">
+                                  <ImagePanel
+                                    src={ph(
+                                      600,
+                                      800,
+                                      '69254e',
+                                      'f5e8ee',
+                                      p.name,
+                                    )}
+                                    alt={p.name}
+                                    className="aspect-[3/4] w-full"
+                                    rounded="none"
+                                  />
+                                </div>
+                                <div className="mt-4 px-1">
+                                  <p className="font-display group-hover:text-brand-700 text-sm font-semibold text-neutral-900 transition-colors">
+                                    {p.name}
+                                  </p>
+                                  <p className="font-body mt-0.5 text-xs text-neutral-400">
+                                    {p.weave} · {p.fabric}
+                                  </p>
+                                  {p.basePrice && (
+                                    <div className="text-brand-700 font-display mt-2 flex flex-wrap items-baseline gap-2 text-sm font-semibold">
+                                      <span>
+                                        ₹{p.basePrice.toLocaleString('en-IN')}
+                                      </span>
+                                      {p.compareAtPrice &&
+                                        p.compareAtPrice > p.basePrice && (
+                                          <>
+                                            <span className="text-xs font-normal text-neutral-400 line-through">
+                                              ₹
+                                              {p.compareAtPrice.toLocaleString(
+                                                'en-IN',
+                                              )}
+                                            </span>
+                                            <span className="text-[11px] font-semibold text-green-600">
+                                              (
+                                              {Math.round(
+                                                ((p.compareAtPrice -
+                                                  p.basePrice) /
+                                                  p.compareAtPrice) *
+                                                  100,
+                                              )}
+                                              % OFF)
+                                            </span>
+                                          </>
+                                        )}
+                                    </div>
+                                  )}
+                                </div>
+                              </Link>
+                            ))}
+                          </div>
+                        </section>
+                      )}
+
+                      {/* Journal */}
+                      {posts.length > 0 && (
+                        <section>
+                          <div className="rule-gold mb-6" />
+                          <h2 className="font-display text-gold-600 mb-6 text-xs font-semibold tracking-[0.18em] uppercase">
+                            Journal ({posts.length})
+                          </h2>
+                          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+                            {posts.map((post) => (
+                              <Link
+                                key={post.id}
+                                href={`/blog/${post.slug}`}
+                                className="group block"
+                              >
+                                <p className="font-display group-hover:text-brand-700 text-base font-semibold text-neutral-900 transition-colors">
+                                  {post.title}
                                 </p>
-                                <p className="font-body mt-0.5 text-xs text-neutral-400">
-                                  {p.weave} · {p.fabric}
-                                </p>
-                                {p.basePrice && (
-                                  <div className="text-brand-700 font-display mt-2 flex flex-wrap items-baseline gap-2 text-sm font-semibold">
-                                    <span>
-                                      ₹{p.basePrice.toLocaleString('en-IN')}
-                                    </span>
-                                    {p.compareAtPrice &&
-                                      p.compareAtPrice > p.basePrice && (
-                                        <>
-                                          <span className="text-xs font-normal text-neutral-400 line-through">
-                                            ₹
-                                            {p.compareAtPrice.toLocaleString(
-                                              'en-IN',
-                                            )}
-                                          </span>
-                                          <span className="text-[11px] font-semibold text-green-600">
-                                            (
-                                            {Math.round(
-                                              ((p.compareAtPrice -
-                                                p.basePrice) /
-                                                p.compareAtPrice) *
-                                                100,
-                                            )}
-                                            % OFF)
-                                          </span>
-                                        </>
-                                      )}
-                                  </div>
+                                {post.excerpt && (
+                                  <p className="font-body mt-2 line-clamp-2 text-sm text-neutral-500">
+                                    {post.excerpt}
+                                  </p>
                                 )}
-                              </div>
-                            </Link>
-                          ))}
-                        </div>
-                      </section>
-                    )}
-
-                    {/* Journal */}
-                    {posts.length > 0 && (
-                      <section>
-                        <div className="rule-gold mb-6" />
-                        <h2 className="font-display text-gold-600 mb-6 text-xs font-semibold tracking-[0.18em] uppercase">
-                          Journal ({posts.length})
-                        </h2>
-                        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-                          {posts.map((post) => (
-                            <Link
-                              key={post.id}
-                              href={`/blog/${post.slug}`}
-                              className="group block"
-                            >
-                              <p className="font-display group-hover:text-brand-700 text-base font-semibold text-neutral-900 transition-colors">
-                                {post.title}
-                              </p>
-                              {post.excerpt && (
-                                <p className="font-body mt-2 line-clamp-2 text-sm text-neutral-500">
-                                  {post.excerpt}
+                                <p className="font-display text-brand-700 mt-3 text-xs font-medium">
+                                  Read article →
                                 </p>
-                              )}
-                              <p className="font-display text-brand-700 mt-3 text-xs font-medium">
-                                Read article →
-                              </p>
-                            </Link>
-                          ))}
-                        </div>
-                      </section>
-                    )}
+                              </Link>
+                            ))}
+                          </div>
+                        </section>
+                      )}
+                    </div>
                   </div>
-                </div>
+                </FilterDrawerProvider>
               </>
             )}
           </div>

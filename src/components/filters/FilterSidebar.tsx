@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Filter } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { FilterSection } from './FilterSection'
 import { CheckboxFilter } from './CheckboxFilter'
@@ -9,6 +8,7 @@ import { PriceRangeFilter } from './PriceRangeFilter'
 import { ColorFilter } from './ColorFilter'
 import { FilterDrawer } from './FilterDrawer'
 import { useFilters } from './use-filters'
+import { useFilterDrawer } from './filter-drawer-context'
 import type { FilterOption } from './types'
 
 const WEAVE_OPTIONS: FilterOption[] = [
@@ -52,10 +52,23 @@ const OCCASION_OPTIONS: FilterOption[] = [
   { label: 'Daily Wear', value: 'daily-wear' },
 ]
 
-export function FilterSidebar({ className }: { className?: string }) {
+export function FilterSidebar({
+  className,
+  mobileOpen,
+  onMobileOpen,
+}: {
+  className?: string
+  mobileOpen?: boolean
+  onMobileOpen?: (open: boolean) => void
+}) {
   const { activeFilterCount } = useFilters()
-  const [mobileOpen, setMobileOpen] = useState(false)
+  const ctx = useFilterDrawer()
+  const [internalOpen, setInternalOpen] = useState(false)
   const [collections, setCollections] = useState<FilterOption[]>([])
+
+  // If explicit props provided, use those; otherwise fall back to context
+  const isOpen = mobileOpen ?? ctx.open ?? internalOpen
+  const setIsOpen = onMobileOpen ?? ctx.setOpen ?? setInternalOpen
 
   // Fetch collections from Payload API
   useEffect(() => {
@@ -114,23 +127,8 @@ export function FilterSidebar({ className }: { className?: string }) {
 
   return (
     <>
-      {/* Mobile trigger button */}
-      <button
-        onClick={() => setMobileOpen(true)}
-        className="hover:text-brand-700 inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-3.5 py-2 text-xs font-semibold text-neutral-700 transition-colors hover:bg-neutral-50 lg:hidden"
-        aria-label="Open filters"
-      >
-        <Filter className="h-3.5 w-3.5" />
-        Filters
-        {activeFilterCount > 0 && (
-          <span className="bg-brand-600 flex h-4 min-w-[16px] items-center justify-center rounded-full px-1 text-[10px] font-bold text-white">
-            {activeFilterCount}
-          </span>
-        )}
-      </button>
-
-      {/* Mobile drawer */}
-      <FilterDrawer isOpen={mobileOpen} onClose={() => setMobileOpen(false)}>
+      {/* Mobile filter drawer */}
+      <FilterDrawer isOpen={isOpen} onClose={() => setIsOpen(false)}>
         {sidebarContent}
       </FilterDrawer>
 
