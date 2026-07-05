@@ -1,11 +1,25 @@
+import {
+  ArrowRight,
+  Truck,
+  RotateCcw,
+  ShieldCheck,
+  Hand,
+  Leaf,
+} from 'lucide-react'
 import Link from 'next/link'
-import { ArrowRight, ArrowUpRight } from 'lucide-react'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import { NewsletterForm } from '@/components/newsletter/NewsletterForm'
-import { HeroGallery, type HeroImage } from '@/components/homepage/HeroGallery'
 import { SkeletonImage } from '@/components/ui/SkeletonImage'
 import { RefreshRouteOnSave } from '@/components/live-preview/RefreshRouteOnSave'
+import { SectionHeading } from '@/components/homepage/SectionHeading'
+import { ProductCard, ProductCarousel } from '@/components/homepage/ProductCard'
+import { CategoryCard } from '@/components/homepage/CategoryCard'
+import { TrustFeature } from '@/components/homepage/TrustFeature'
+import { OccasionButton } from '@/components/homepage/OccasionButton'
+import { TrendingColors } from '@/components/homepage/TrendingColors'
+import { InstagramGallery } from '@/components/homepage/InstagramGallery'
+import { TestimonialCard } from '@/components/homepage/TestimonialCard'
 
 const ph = (w: number, h: number, bg: string, fg: string, text: string) =>
   `https://placehold.co/${w}x${h}/${bg}/${fg}?text=${encodeURIComponent(text)}&font=lora`
@@ -40,13 +54,6 @@ function ImagePanel({
         unoptimized={src.startsWith('https://placehold.co')}
         loading={loading ?? 'lazy'}
       />
-      <div
-        className="pointer-events-none absolute inset-0 opacity-[0.08] mix-blend-overlay"
-        style={{
-          backgroundImage:
-            'repeating-linear-gradient(90deg, transparent 0 3px, oklch(0.13 0.04 346) 3px 4px)',
-        }}
-      />
       {caption && (
         <div className="absolute inset-x-0 bottom-0 flex items-end justify-between bg-gradient-to-t from-neutral-950/55 to-transparent p-5">
           <div>
@@ -63,107 +70,6 @@ function ImagePanel({
   )
 }
 
-function LexicalRenderer({ content }: { content: any }) {
-  if (!content || !content.root || !Array.isArray(content.root.children)) {
-    return null
-  }
-  return (
-    <div className="font-body space-y-4 text-[1.125rem] leading-relaxed text-neutral-600">
-      {content.root.children.map((block: any, idx: number) => {
-        if (block.type === 'paragraph' && Array.isArray(block.children)) {
-          return (
-            <p key={idx}>
-              {block.children.map((node: any, nIdx: number) => {
-                if (node.type === 'text') {
-                  return node.text
-                }
-                return null
-              })}
-            </p>
-          )
-        }
-        return null
-      })}
-    </div>
-  )
-}
-
-function WeaveFilmstrip({
-  categories,
-  heading,
-  subheading,
-}: {
-  categories: any[]
-  heading?: string
-  subheading?: string
-}) {
-  if (!categories || categories.length === 0) return null
-
-  // Duplicate categories to ensure enough items for infinite scroll
-  const dupCount = Math.max(2, Math.ceil(16 / categories.length))
-  const items = Array.from({ length: dupCount }).flatMap(() => categories)
-
-  return (
-    <section
-      aria-label="Weaves we carry"
-      className="bg-brand-50/40 border-y border-neutral-200 py-5"
-    >
-      <div className="overflow-hidden">
-        <div
-          className="filmstrip-track"
-          style={
-            {
-              '--filmstrip-gap': '1.25rem',
-              '--filmstrip-duration': '50s',
-            } as React.CSSProperties
-          }
-        >
-          {items.map((cat, i) => {
-            const img =
-              (cat.image && typeof cat.image === 'object'
-                ? cat.image.sizes?.card?.url || cat.image.url
-                : null) || ph(200, 150, '7a3a5d', 'f5e8ee', cat.name)
-
-            return (
-              <div
-                key={`${cat.id || cat.name}-${i}`}
-                className="relative flex h-28 w-44 shrink-0 items-end overflow-hidden rounded-lg bg-neutral-100 sm:h-32 sm:w-48"
-              >
-                <SkeletonImage
-                  src={img}
-                  alt={cat.name}
-                  fill
-                  sizes="192px"
-                  className="object-cover"
-                />
-                <div
-                  className="pointer-events-none absolute inset-0"
-                  style={{
-                    background:
-                      'linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.15) 55%, transparent 100%)',
-                  }}
-                />
-                <div className="relative z-10 p-3">
-                  <p className="font-display text-sm font-semibold text-white drop-shadow-sm">
-                    {cat.name}
-                  </p>
-                  <p className="mt-0.5 text-xs text-white/70">
-                    {cat.description
-                      ? cat.description.length > 25
-                        ? cat.description.substring(0, 22) + '...'
-                        : cat.description
-                      : 'Handwoven'}
-                  </p>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      </div>
-    </section>
-  )
-}
-
 type Props = {
   searchParams: Promise<{ preview?: string; id?: string }>
 }
@@ -173,6 +79,7 @@ export default async function HomePage({ searchParams }: Props) {
   const isPreview = preview === 'true' && id === 'site-settings'
   const payload = await getPayload({ config })
 
+  // ─── Fetch home page doc ─────────────────────────────
   const pageRes = await payload.find({
     collection: 'pages',
     where: { slug: { equals: 'home' } },
@@ -180,422 +87,645 @@ export default async function HomePage({ searchParams }: Props) {
   })
   const homeDoc = pageRes.docs[0]
 
+  // ─── Fetch products ──────────────────────────────────
   const productsRes = await payload.find({
     collection: 'products',
     where: { status: { equals: 'published' } },
-    limit: 12, // fetch enough for grids
+    limit: 24,
     sort: '-createdAt',
   })
   const dbProducts = productsRes.docs
 
-  // Hero gallery — product images padded with weave placeholders if needed
-  const WEAVE_FALLBACKS: HeroImage[] = [
-    {
-      src: ph(800, 1000, '69254e', 'f5e8ee', 'Kanchipuram+Silk'),
-      alt: 'A handwoven Kanchipuram silk saree in deep wine',
-      caption: 'Kanchipuram Silk',
-      region: 'Tamil Nadu',
-    },
-    {
-      src: ph(800, 1000, '7a3a5d', 'f5e8ee', 'Banarasi'),
-      alt: 'A handwoven Banarasi silk saree',
-      caption: 'Banarasi Silk',
-      region: 'Varanasi, UP',
-    },
-    {
-      src: ph(800, 1000, 'a97e34', 'fff8ec', 'Chanderi'),
-      alt: 'A Chanderi cotton saree in warm gold',
-      caption: 'Chanderi Cotton',
-      region: 'Madhya Pradesh',
-    },
-    {
-      src: ph(800, 1000, '4a6b5d', 'f0f5f1', 'Jamdani'),
-      alt: 'A Jamdani muslin saree from Bengal',
-      caption: 'Jamdani Muslin',
-      region: 'Dhaka, Bengal',
-    },
-    {
-      src: ph(800, 1000, '8b3a3a', 'fdf2f0', 'Patola'),
-      alt: 'A handwoven Patola silk saree from Gujarat',
-      caption: 'Patola Silk',
-      region: 'Patan, Gujarat',
-    },
-    {
-      src: ph(800, 1000, 'c47a4a', 'fff8ec', 'Phulkari'),
-      alt: 'A Phulkari embroidered dupatta from Punjab',
-      caption: 'Phulkari',
-      region: 'Punjab',
-    },
-  ]
-
-  const productHeroImages: HeroImage[] = dbProducts
-    .map((p) => {
-      const src =
-        p.gallery?.[0]?.image && typeof p.gallery[0].image === 'object'
-          ? p.gallery[0].image.sizes?.card?.url || p.gallery[0].image.url || ''
-          : ''
-      return { src, alt: p.name, caption: p.name, region: p.weave }
-    })
-    .filter((img) => img.src !== '')
-
-  const heroImages: HeroImage[] =
-    productHeroImages.length >= 3
-      ? productHeroImages.slice(0, 6)
-      : [...productHeroImages, ...WEAVE_FALLBACKS].slice(0, 6)
-
+  // ─── Fetch categories ────────────────────────────────
   const categoriesRes = await payload.find({
     collection: 'categories',
     limit: 20,
   })
   const dbCategories = categoriesRes.docs
 
+  // ─── Fetch posts ─────────────────────────────────────
   const postsRes = await payload.find({
     collection: 'posts',
     where: { status: { equals: 'published' } },
-    limit: 4,
+    limit: 3,
     sort: '-publishedAt',
     depth: 1,
   })
   const dbPosts = postsRes.docs
 
-  const categoryFallbackImages: Record<string, string> = {
-    silk: ph(750, 1000, '69254e', 'f5e8ee', 'Silk'),
-    cotton: ph(750, 1000, 'a97e34', 'fff8ec', 'Cotton'),
-    handloom: ph(750, 1000, '7a3a5d', 'f5e8ee', 'Handloom'),
+  // ─── Helper to split products into sections ──────────
+  function productsSlice(start: number, count: number) {
+    return dbProducts.slice(start, start + count)
   }
 
-  // Track product iteration so multiple product grids show distinct products
-  let productOffset = 0
+  // ─── Extract CMS block headings ──────────────────────
+  const contentBlocks = homeDoc?.content ?? []
+  const heroBlock = contentBlocks.find((b: any) => b.blockType === 'hero') as
+    | {
+        heading?: string | null
+        subheading?: string | null
+        ctaText?: string | null
+        ctaLink?: string | null
+        blockType: 'hero'
+      }
+    | undefined
+  const categoriesBlock = contentBlocks.find(
+    (b: any) => b.blockType === 'categoriesGrid',
+  ) as
+    | {
+        heading?: string | null
+        subheading?: string | null
+        blockType: 'categoriesGrid'
+      }
+    | undefined
+  const productBlocks = contentBlocks.filter(
+    (b: any) => b.blockType === 'productGrid',
+  ) as {
+    heading?: string | null
+    subheading?: string | null
+    ctaText?: string | null
+    ctaLink?: string | null
+    limit?: number | null
+    blockType: 'productGrid'
+  }[]
+  const postBlock = contentBlocks.find(
+    (b: any) => b.blockType === 'postGrid',
+  ) as
+    | {
+        heading?: string | null
+        ctaText?: string | null
+        ctaLink?: string | null
+        blockType: 'postGrid'
+      }
+    | undefined
+  const testimonialBlock = contentBlocks.find(
+    (b: any) => b.blockType === 'testimonials',
+  ) as
+    | {
+        heading?: string | null
+        blockType: 'testimonials'
+      }
+    | undefined
+
+  const TRUST_FEATURES = [
+    {
+      icon: <Truck className="h-5 w-5" />,
+      title: 'Free Shipping',
+      description: 'On all orders above ₹999',
+    },
+    {
+      icon: <RotateCcw className="h-5 w-5" />,
+      title: 'Easy Returns',
+      description: '15-day hassle-free returns',
+    },
+    {
+      icon: <ShieldCheck className="h-5 w-5" />,
+      title: 'Authentic Handloom',
+      description: 'Verified by our craft team',
+    },
+    {
+      icon: <Hand className="h-5 w-5" />,
+      title: 'Maker-Traced',
+      description: 'Know who wove your saree',
+    },
+    {
+      icon: <Leaf className="h-5 w-5" />,
+      title: 'Eco-Conscious',
+      description: 'Natural dyes & fair practices',
+    },
+  ]
+
+  const OCCASIONS = [
+    {
+      label: 'Wedding',
+      icon: (
+        <svg
+          className="h-7 w-7"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+        >
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+        </svg>
+      ),
+      href: '/category/all?occasion=wedding',
+    },
+    {
+      label: 'Festival',
+      icon: (
+        <svg
+          className="h-7 w-7"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+        >
+          <path d="M12 3l2 4h4l-3 3 1 4-4-2-4 2 1-4-3-3h4l2-4z" />
+        </svg>
+      ),
+      href: '/category/all?occasion=festive',
+    },
+    {
+      label: 'Daily Wear',
+      icon: (
+        <svg
+          className="h-7 w-7"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+        >
+          <path d="M6 6h12l2 4H4l2-4zM4 10h16v8a2 2 0 01-2 2H6a2 2 0 01-2-2v-8z" />
+        </svg>
+      ),
+      href: '/category/cotton',
+    },
+    {
+      label: 'Gifting',
+      icon: (
+        <svg
+          className="h-7 w-7"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+        >
+          <rect x="3" y="8" width="18" height="12" rx="2" />
+          <path d="M12 8v14M8 8a4 4 0 118 0" />
+        </svg>
+      ),
+      href: '/collections/gift-guide',
+    },
+    {
+      label: 'Party',
+      icon: (
+        <svg
+          className="h-7 w-7"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+        >
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 6v6l4 2" />
+        </svg>
+      ),
+      href: '/category/designer',
+    },
+  ]
+
+  // ─── Determine which product block is which ──────────
+  const productBlockLimit = (block: any) => block?.limit || 4
 
   return (
-    <div className="bg-surface">
+    <div className="overflow-hidden">
       {isPreview && <RefreshRouteOnSave />}
 
-      {homeDoc?.content?.map((block: any, idx: number) => {
-        if (block.blockType === 'hero') {
-          return (
-            <section
-              key={idx}
-              className="container-page pt-12 pb-16 sm:pt-16 sm:pb-24 md:pt-28 md:pb-40"
-            >
-              <div className="grid items-center gap-12 lg:grid-cols-12 lg:gap-20">
-                <div className="animate-slide-up max-w-xl lg:col-span-6">
-                  <h1 className="text-hero font-display font-semibold tracking-tight text-neutral-900">
-                    {block.heading}
-                  </h1>
-                  <p className="mt-6 max-w-[55ch] text-lg leading-relaxed text-neutral-600">
-                    {block.subheading}
-                  </p>
-                  <div className="mt-10 flex flex-col items-start gap-5 sm:flex-row sm:items-center">
-                    <Link
-                      href={block.ctaLink || '/category/all'}
-                      className="bg-brand-600 hover:bg-brand-700 focus-visible:ring-brand-400 inline-flex h-12 items-center gap-2 rounded-xl px-6 text-base font-semibold text-white transition-all focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-[0.97] sm:h-13 sm:px-7"
-                    >
-                      {block.ctaText || 'Shop the collection'}
-                      <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                    </Link>
-                    <Link
-                      href="/about"
-                      className="group flex min-h-[44px] items-center gap-2 text-base font-medium text-neutral-600 transition-colors hover:text-neutral-900"
-                    >
-                      Our craft story
-                      <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                    </Link>
-                  </div>
+      {/* ═══════════════════════════════════════════════════
+          SECTION 1: HERO — Full-bleed background image
+          ═══════════════════════════════════════════════════ */}
+      <section className="relative min-h-[80vh] overflow-hidden">
+        {/* Full-bleed background image */}
+        <div className="absolute inset-0">
+          <SkeletonImage
+            src="/images/hero/hero-main.png"
+            alt=""
+            fill
+            sizes="100vw"
+            className="object-cover"
+            loading="eager"
+            priority
+          />
+          {/* Dark overlay for text readability */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-transparent" />
+        </div>
 
-                  <div className="mt-14 flex items-center gap-6 text-sm text-neutral-500">
-                    <span>
-                      <span className="font-display font-semibold text-neutral-900">
-                        6 clusters
-                      </span>{' '}
-                      across India
-                    </span>
-                    <span className="h-4 w-px bg-neutral-300" />
-                    <span>
-                      <span className="font-display font-semibold text-neutral-900">
-                        Maker-traced
-                      </span>{' '}
-                      every piece
-                    </span>
-                    <span className="hidden h-4 w-px bg-neutral-300 sm:block" />
-                    <span className="hidden sm:inline">
-                      <span className="font-display font-semibold text-neutral-900">
-                        10 weaves
-                      </span>{' '}
-                      and counting
-                    </span>
-                  </div>
-                </div>
+        <div className="container-page relative flex min-h-[80vh] items-center py-20 sm:py-24 md:py-28">
+          <div className="max-w-2xl">
+            {/* Subtle branding tag */}
+            <div className="mb-6 flex items-center gap-2 text-xs font-medium tracking-[0.2em] text-white/70 uppercase">
+              <span className="bg-gold-400 h-px w-8" />
+              Shayga Handlooms
+            </div>
 
-                <div className="lg:col-span-6">
-                  <HeroGallery images={heroImages} />
-                </div>
+            {/* Tagline: "Timeless Elegance" black + "in every drape" brand color */}
+            <h1 className="font-display text-5xl leading-[1.1] font-black tracking-tight sm:text-6xl md:text-7xl lg:text-8xl">
+              <span className="text-white">Timeless</span>{' '}
+              <span className="text-white">Elegance</span>
+              <br />
+              <span className="text-gold-400">in every drape</span>
+            </h1>
+
+            <p className="mt-6 max-w-[50ch] text-base leading-relaxed text-white/80 sm:text-lg">
+              {heroBlock?.subheading ||
+                "Every saree carries the story of the hands that wove it. Direct from India's weaving clusters — no middlemen, no markup."}
+            </p>
+
+            {/* CTAs */}
+            <div className="mt-10 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
+              <Link
+                href={heroBlock?.ctaLink || '/category/all'}
+                className="group bg-gold-500 text-brand-950 hover:bg-gold-400 inline-flex h-13 items-center gap-2 rounded-xl px-7 text-base font-semibold transition-all active:scale-[0.97]"
+              >
+                {heroBlock?.ctaText || 'Shop the collection'}
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </Link>
+              <Link
+                href="/about"
+                className="group inline-flex h-13 items-center gap-2 text-base font-medium text-white/80 transition-colors hover:text-white"
+              >
+                Our craft story
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </Link>
+            </div>
+
+            {/* Stats bar */}
+            <div className="mt-12 flex items-center gap-8 text-sm text-white/60">
+              <div>
+                <span className="font-display block text-lg font-semibold text-white">
+                  6
+                </span>
+                <span className="text-xs">Weaving clusters</span>
               </div>
-            </section>
-          )
-        }
+              <div className="h-10 w-px bg-white/20" />
+              <div>
+                <span className="font-display block text-lg font-semibold text-white">
+                  10+
+                </span>
+                <span className="text-xs">Traditional weaves</span>
+              </div>
+              <div className="h-10 w-px bg-white/20" />
+              <div>
+                <span className="font-display block text-lg font-semibold text-white">
+                  100%
+                </span>
+                <span className="text-xs">Maker-traced</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
-        if (block.blockType === 'categoriesGrid') {
-          return (
-            <WeaveFilmstrip
-              key={idx}
-              categories={dbCategories}
-              heading={block.heading}
-              subheading={block.subheading}
+      {/* ═══════════════════════════════════════════════════
+          SECTION 2: TRUST FEATURES
+          ═══════════════════════════════════════════════════ */}
+      <section className="border-brand-100/40 bg-brand-50/30 border-y">
+        <div className="container-page py-6 sm:py-8">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5 md:gap-4">
+            {TRUST_FEATURES.map((feature) => (
+              <TrustFeature
+                key={feature.title}
+                icon={feature.icon}
+                title={feature.title}
+                description={feature.description}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════
+          SECTION 3: SHOP BY CATEGORY
+          ═══════════════════════════════════════════════════ */}
+      <section className="bg-white">
+        <div className="container-page py-16 sm:py-20 md:py-28">
+          <SectionHeading
+            title={categoriesBlock?.heading || 'Shop by Category'}
+            subtitle={
+              categoriesBlock?.subheading ||
+              'Explore our collection of handloom sarees, each woven with tradition and care'
+            }
+            viewAllHref="/category/all"
+            viewAllLabel="Browse All"
+          />
+
+          {dbCategories.length > 0 ? (
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+              {dbCategories.slice(0, 6).map((cat) => {
+                const imgUrl =
+                  cat.image && typeof cat.image === 'object'
+                    ? cat.image.sizes?.card?.url || cat.image.url
+                    : null
+                return (
+                  <CategoryCard
+                    key={cat.id}
+                    name={cat.name}
+                    slug={cat.slug}
+                    imageUrl={imgUrl}
+                  />
+                )
+              })}
+            </div>
+          ) : (
+            <p className="text-brand-700/50 py-16 text-center text-sm">
+              Categories coming soon.
+            </p>
+          )}
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════
+          SECTION 4: NEW ARRIVALS
+          ═══════════════════════════════════════════════════ */}
+      {productBlocks[0] && dbProducts.length > 0 && (
+        <section className="bg-brand-50/20">
+          <div className="container-page py-16 sm:py-20 md:py-28">
+            <SectionHeading
+              title={productBlocks[0].heading || 'New Arrivals'}
+              subtitle="Fresh off the loom — our latest handloom pieces, just landed"
+              viewAllHref={
+                productBlocks[0].ctaLink || '/category/all?sort=-createdAt'
+              }
+              viewAllLabel={productBlocks[0].ctaText || 'View All'}
             />
-          )
-        }
+            <ProductCarousel
+              products={productsSlice(0, productBlockLimit(productBlocks[0]))}
+              badge="new"
+            />
+          </div>
+        </section>
+      )}
 
-        if (block.blockType === 'textImage') {
-          const imgSrc =
-            block.image && typeof block.image === 'object'
-              ? block.image.sizes?.card?.url || block.image.url
-              : ph(800, 800, 'a97e34', 'fff8ec', 'Craft Story')
+      {/* ═══════════════════════════════════════════════════
+          SECTION 5: SHOP BY OCCASION
+          ═══════════════════════════════════════════════════ */}
+      <section className="bg-white">
+        <div className="container-page py-16 sm:py-20 md:py-28">
+          <SectionHeading
+            title="Shop by Occasion"
+            subtitle="Find the perfect saree for every moment"
+          />
+          <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-10 md:gap-14">
+            {OCCASIONS.map((occ) => (
+              <OccasionButton
+                key={occ.label}
+                label={occ.label}
+                icon={occ.icon}
+                href={occ.href}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
 
-          return (
-            <section
-              key={idx}
-              className="scroll-reveal border-y border-neutral-200 bg-neutral-50"
-            >
-              <div className="container-page grid items-center gap-8 py-16 sm:gap-12 sm:py-24 md:py-32 lg:grid-cols-12 lg:gap-20">
-                <div
-                  className={`lg:col-span-5 ${block.imagePosition === 'right' ? 'lg:order-2' : ''}`}
-                >
-                  <ImagePanel
-                    src={imgSrc}
-                    alt={block.heading}
-                    className="aspect-square w-full shadow-lg"
-                  />
-                </div>
-                <div
-                  className={`lg:col-span-7 ${block.imagePosition === 'right' ? 'lg:order-1' : ''}`}
-                >
-                  <div
-                    className="bg-gold-400 mb-5 h-px w-12"
-                    aria-hidden="true"
-                  />
-                  <h2 className="text-headline font-display font-semibold tracking-tight text-neutral-900">
-                    {block.heading}
-                  </h2>
-                  <div className="mt-6 max-w-[58ch]">
-                    {block.body ? (
-                      <LexicalRenderer content={block.body} />
-                    ) : null}
-                  </div>
-                </div>
-              </div>
-            </section>
-          )
-        }
+      {/* ═══════════════════════════════════════════════════
+          SECTION 6: BEST SELLERS
+          ═══════════════════════════════════════════════════ */}
+      {productBlocks[1] && dbProducts.length > 0 && (
+        <section className="bg-brand-50/20">
+          <div className="container-page py-16 sm:py-20 md:py-28">
+            <SectionHeading
+              title={productBlocks[1].heading || 'Best Sellers'}
+              subtitle="Our community's most-loved weaves — for good reason"
+              viewAllHref={productBlocks[1].ctaLink || '/category/all'}
+              viewAllLabel={productBlocks[1].ctaText || 'Shop All'}
+            />
+            <ProductCarousel
+              products={productsSlice(4, productBlockLimit(productBlocks[1]))}
+              badge="bestseller"
+            />
+          </div>
+        </section>
+      )}
 
-        if (block.blockType === 'productGrid') {
-          const pLimit = block.limit || 4
-          const gridProducts = dbProducts.slice(
-            productOffset,
-            productOffset + pLimit,
-          )
-          productOffset += pLimit // Advance offset so next product grid shows different products
+      {/* ═══════════════════════════════════════════════════
+          SECTION 7: TRENDING COLORS
+          ═══════════════════════════════════════════════════ */}
+      <section className="bg-white">
+        <div className="container-page py-16 sm:py-20 md:py-28">
+          <SectionHeading
+            title="Trending Colors"
+            subtitle="This season's most-loved shades"
+          />
+          <TrendingColors />
+        </div>
+      </section>
 
-          return (
-            <section
-              key={idx}
-              className="container-page scroll-reveal py-16 sm:py-24 md:py-32"
-            >
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-                <h2 className="text-headline font-display font-semibold tracking-tight text-neutral-900">
-                  {block.heading}
-                </h2>
-                {block.ctaText && block.ctaLink && (
+      {/* ═══════════════════════════════════════════════════
+          SECTION 8: TRENDING NOW (3rd product block)
+          ═══════════════════════════════════════════════════ */}
+      {productBlocks[2] && dbProducts.length > 0 && (
+        <section className="bg-brand-50/20">
+          <div className="container-page py-16 sm:py-20 md:py-28">
+            <SectionHeading
+              title={productBlocks[2].heading || 'Trending Now'}
+              subtitle="What everyone is loving this month"
+              viewAllHref={productBlocks[2].ctaLink || '/category/all'}
+              viewAllLabel={productBlocks[2].ctaText || 'Shop All'}
+            />
+            <ProductCarousel
+              products={productsSlice(8, productBlockLimit(productBlocks[2]))}
+            />
+          </div>
+        </section>
+      )}
+
+      {/* ═══════════════════════════════════════════════════
+          SECTION 9: BLOG POSTS
+          ═══════════════════════════════════════════════════ */}
+      {dbPosts.length > 0 && (
+        <section className="bg-white">
+          <div className="container-page py-16 sm:py-20 md:py-28">
+            <SectionHeading
+              title={postBlock?.heading || 'From the Loom'}
+              subtitle="Stories from India's weaving clusters"
+              viewAllHref={postBlock?.ctaLink || '/blog'}
+              viewAllLabel={postBlock?.ctaText || 'Read Journal'}
+            />
+            <div className="grid gap-6 md:grid-cols-3">
+              {dbPosts.slice(0, 3).map((post) => {
+                const thumbSrc =
+                  post.featuredImage && typeof post.featuredImage === 'object'
+                    ? (post.featuredImage as any).sizes?.thumbnail?.url ||
+                      (post.featuredImage as any).url
+                    : null
+                const postDate = post.publishedAt
+                  ? new Date(post.publishedAt).toLocaleDateString('en-IN', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                    })
+                  : ''
+                return (
                   <Link
-                    href={block.ctaLink}
-                    className="group font-display text-brand-700 hover:text-brand-800 flex min-h-[44px] items-center gap-1.5 text-sm font-semibold transition-colors"
+                    key={post.id}
+                    href={`/blog/${post.slug}`}
+                    className="group border-brand-100/50 flex flex-col overflow-hidden rounded-2xl border bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
                   >
-                    {block.ctaText}
-                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                  </Link>
-                )}
-              </div>
-              <div className="mt-14 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
-                {gridProducts.length > 0 ? (
-                  gridProducts.map((p) => {
-                    const imageUrl =
-                      p.gallery?.[0]?.image &&
-                      typeof p.gallery[0].image === 'object'
-                        ? p.gallery[0].image.sizes?.card?.url ||
-                          p.gallery[0].image.url
-                        : ph(600, 800, '69254e', 'f5e8ee', p.name)
-
-                    return (
-                      <Link
-                        key={p.id}
-                        href={`/products/${p.slug}`}
-                        className="group block"
-                      >
-                        <div className="relative overflow-hidden rounded-xl shadow-sm transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-md">
-                          <ImagePanel
-                            src={imageUrl || ''}
-                            alt={p.name}
-                            className="aspect-[3/4] w-full transition-transform duration-500 group-hover:scale-[1.04]"
-                            rounded="rounded-xl"
-                          />
-                        </div>
-                        <div className="mt-4 px-1">
-                          <p className="font-display group-hover:text-brand-700 text-base font-semibold text-neutral-900 transition-colors">
-                            {p.name}
-                          </p>
-                          <p className="font-body mt-0.5 text-xs text-neutral-500">
-                            {p.weave} · {p.fabric}
-                          </p>
-                          <div className="text-brand-700 font-display mt-2 flex flex-wrap items-baseline gap-2 text-sm font-semibold">
-                            <span>₹{p.basePrice.toLocaleString('en-IN')}</span>
-                            {p.compareAtPrice &&
-                              p.compareAtPrice > p.basePrice && (
-                                <span className="text-xs font-normal text-neutral-400 line-through">
-                                  ₹{p.compareAtPrice.toLocaleString('en-IN')}
-                                </span>
-                              )}
-                          </div>
-                        </div>
-                      </Link>
-                    )
-                  })
-                ) : (
-                  <p className="col-span-4 py-16 text-center text-sm text-neutral-400">
-                    New pieces arriving soon.
-                  </p>
-                )}
-              </div>
-            </section>
-          )
-        }
-
-        if (block.blockType === 'postGrid') {
-          const limit = block.limit || 2
-          const gridPosts = dbPosts.slice(0, limit)
-
-          return (
-            <section
-              key={idx}
-              className="scroll-reveal border-b border-neutral-200"
-            >
-              <div className="container-page py-16 sm:py-24 md:py-32">
-                <div className="grid gap-12 lg:grid-cols-12 lg:gap-20">
-                  <div className="lg:col-span-7">
-                    <h2 className="text-headline font-display font-semibold tracking-tight text-neutral-900">
-                      {block.heading}
-                    </h2>
-                    <ul className="mt-10 divide-y divide-neutral-200 border-y border-neutral-200">
-                      {gridPosts.length > 0 ? (
-                        gridPosts.map((post) => {
-                          const thumbSrc =
-                            post.featuredImage &&
-                            typeof post.featuredImage === 'object'
-                              ? (post.featuredImage as any).sizes?.thumbnail
-                                  ?.url || (post.featuredImage as any).url
-                              : null
-                          return (
-                            <li key={post.id}>
-                              <Link
-                                href={`/blog/${post.slug}`}
-                                className="group flex items-center gap-5 py-6 transition-colors"
-                              >
-                                {thumbSrc && (
-                                  <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-neutral-100">
-                                    <SkeletonImage
-                                      src={thumbSrc}
-                                      alt={post.title}
-                                      fill
-                                      sizes="80px"
-                                      className="object-cover transition-transform duration-500 group-hover:scale-105"
-                                    />
-                                  </div>
-                                )}
-                                <div className="min-w-0 flex-1">
-                                  <p className="font-display group-hover:text-brand-700 text-lg font-semibold text-neutral-900 transition-colors">
-                                    {post.title}
-                                  </p>
-                                  <p className="font-body mt-1 text-xs text-neutral-500">
-                                    {post.excerpt
-                                      ? post.excerpt.substring(0, 100) + '…'
-                                      : 'Read post'}
-                                  </p>
-                                </div>
-                                <ArrowUpRight className="group-hover:text-brand-700 h-5 w-5 shrink-0 text-neutral-400 transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                              </Link>
-                            </li>
-                          )
-                        })
-                      ) : (
-                        <li className="py-10 text-center text-sm text-neutral-400">
-                          Journal entries coming soon.
-                        </li>
-                      )}
-                    </ul>
-                    {block.ctaText && block.ctaLink && (
-                      <Link
-                        href={block.ctaLink}
-                        className="group font-display text-brand-700 hover:text-brand-800 mt-8 flex min-h-[44px] items-center gap-2 text-sm font-semibold transition-colors"
-                      >
-                        {block.ctaText}
-                        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                      </Link>
+                    {thumbSrc && (
+                      <div className="relative aspect-[16/10] overflow-hidden bg-neutral-100">
+                        <SkeletonImage
+                          src={thumbSrc}
+                          alt={post.title}
+                          fill
+                          sizes="(max-width: 768px) 100vw, 33vw"
+                          className="object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                      </div>
                     )}
-                  </div>
-
-                  <div className="lg:col-span-5">
-                    <div className="sticky top-28 rounded-2xl border border-neutral-200 bg-white p-8 shadow-sm md:p-10">
-                      <div className="rule-gold mb-6" />
-                      <h3 className="font-display text-2xl font-semibold tracking-tight text-neutral-900">
-                        A weekly note from the loom
+                    <div className="flex flex-1 flex-col p-5">
+                      {postDate && (
+                        <time className="text-brand-700/50 text-xs">
+                          {postDate}
+                        </time>
+                      )}
+                      <h3 className="font-display text-brand-950 group-hover:text-brand-700 mt-1.5 text-base font-semibold transition-colors">
+                        {post.title}
                       </h3>
-                      <p className="mt-3 max-w-[45ch] text-sm leading-relaxed text-neutral-600">
-                        One weave, one maker, one thing worth knowing. No
-                        marketing noise, no
-                        newsletters-that-are-really-sales-pitches. Unsubscribe
-                        anytime.
-                      </p>
-                      <NewsletterForm />
-                      <p className="mt-4 text-xs text-neutral-400">
-                        No spam. One email a week. Unsubscribe in one click.
-                      </p>
+                      {post.excerpt && (
+                        <p className="text-brand-700/70 mt-2 line-clamp-2 text-sm leading-relaxed">
+                          {post.excerpt}
+                        </p>
+                      )}
+                      <div className="mt-auto pt-4">
+                        <span className="text-brand-600 inline-flex items-center gap-1 text-xs font-medium">
+                          Read more
+                          <ArrowRight className="h-3 w-3" />
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              </div>
-            </section>
-          )
-        }
+                  </Link>
+                )
+              })}
+            </div>
+          </div>
+        </section>
+      )}
 
-        return null
-      })}
+      {/* ═══════════════════════════════════════════════════
+          SECTION 10: INSTAGRAM GALLERY
+          ═══════════════════════════════════════════════════ */}
+      <section className="bg-brand-50/20">
+        <div className="container-page py-16 sm:py-20 md:py-28">
+          <SectionHeading
+            title="Follow the Loom"
+            subtitle="@shayga — tag us for a chance to be featured"
+            viewAllHref="https://instagram.com/shayga"
+            viewAllLabel="Follow @shayga"
+          />
+          <InstagramGallery />
+        </div>
+      </section>
 
-      {/* Promise Band is kept at bottom as a global element */}
-      <section className="scroll-reveal bg-brand-950">
+      {/* ═══════════════════════════════════════════════════
+          SECTION 11: TESTIMONIALS
+          ═══════════════════════════════════════════════════ */}
+      <section className="bg-white">
+        <div className="container-page py-16 sm:py-20 md:py-28">
+          <SectionHeading
+            title={testimonialBlock?.heading || 'Loved by our community'}
+            subtitle="Real stories from saree lovers across India"
+          />
+
+          <div className="grid gap-6 md:grid-cols-3">
+            <TestimonialCard
+              quote="The Banarasi I ordered is absolutely stunning. You can feel the weight of real silk. Every time I wear it, I get compliments — and I love telling people it's directly from the weaver."
+              name="Ananya S."
+              location="Mumbai"
+              rating={5}
+            />
+            <TestimonialCard
+              quote="I was nervous buying a saree online without seeing it first, but the handloom certificate and detailed photos made it easy. The fabric is even more beautiful in person. Will definitely be back."
+              name="Priya M."
+              location="Bangalore"
+              rating={5}
+            />
+            <TestimonialCard
+              quote="What sets Shayga apart is knowing exactly which cluster my saree came from and who wove it. It transforms a piece of clothing into a story. My Chanderi is easily my most treasured possession now."
+              name="Rohini K."
+              location="Pune"
+              rating={5}
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════
+          SECTION 12: NEWSLETTER + FOOTER CTA
+          ═══════════════════════════════════════════════════ */}
+      <section className="bg-brand-950 relative overflow-hidden">
+        {/* Decorative pattern */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.04]"
+          aria-hidden="true"
+        >
+          <div
+            className="h-full w-full"
+            style={{
+              backgroundImage:
+                'radial-gradient(circle at 25% 25%, oklch(0.85 0.1 65) 0%, transparent 50%), radial-gradient(circle at 75% 75%, oklch(0.85 0.1 65) 0%, transparent 50%)',
+            }}
+          />
+        </div>
+
         <div className="rule-gold" />
-        <div className="container-page py-16 text-center sm:py-24 md:py-32">
-          <h2 className="text-headline font-display mx-auto max-w-3xl font-semibold tracking-tight text-white">
-            Every saree is signed by its maker
-          </h2>
-          <p className="mx-auto mt-6 max-w-[55ch] text-lg leading-relaxed text-neutral-300">
-            Handloom-verified. Maker-traced. No middleman markup, no warehouse
-            mystery stock — just the cloth, the cluster it came from, and a fair
-            price on both sides.
-          </p>
-          <div className="mt-10 flex flex-col items-center justify-center gap-5 sm:flex-row">
-            <Link
-              href="/category/silk"
-              className="text-brand-800 hover:bg-gold-200 focus-visible:ring-gold-300 flex h-12 items-center gap-2 rounded-xl bg-white px-6 text-base font-semibold transition-all focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-[0.97] sm:h-13 sm:px-7"
-            >
-              Begin browsing
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link
-              href="/about"
-              className="group flex min-h-[44px] items-center gap-2 text-base font-medium text-neutral-300 transition-colors hover:text-white"
-            >
-              Meet the weavers
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-            </Link>
+
+        <div className="container-page relative py-20 sm:py-28 md:py-36">
+          <div className="mx-auto max-w-2xl text-center">
+            <div className="bg-gold-500/20 mx-auto mb-6 flex h-12 w-12 items-center justify-center rounded-full">
+              <svg
+                className="text-gold-400 h-6 w-6"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+              >
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+              </svg>
+            </div>
+
+            <h2 className="font-display text-3xl font-semibold tracking-tight text-white sm:text-4xl md:text-5xl">
+              A weekly note from the loom
+            </h2>
+            <p className="text-brand-200/70 mx-auto mt-4 max-w-[50ch] text-base leading-relaxed">
+              One weave, one maker, one thing worth knowing. No marketing noise,
+              no newsletters-that-are-really-sales-pitches. Unsubscribe anytime.
+            </p>
+
+            <div className="mx-auto mt-8 max-w-md">
+              <NewsletterForm />
+            </div>
+
+            <p className="text-brand-400/60 mt-4 text-xs">
+              No spam. One email a week. Unsubscribe in one click.
+            </p>
+          </div>
+        </div>
+
+        <div className="rule-gold" />
+      </section>
+
+      {/* ═══════════════════════════════════════════════════
+          PROMISE BAND
+          ═══════════════════════════════════════════════════ */}
+      <section className="bg-brand-950 relative">
+        <div className="container-page py-16 text-center sm:py-20 md:py-24">
+          <div className="mx-auto max-w-3xl">
+            <h2 className="font-display text-2xl font-semibold tracking-tight text-white sm:text-3xl md:text-4xl">
+              Every saree is signed by its maker
+            </h2>
+            <p className="text-brand-200/70 mx-auto mt-5 max-w-[55ch] text-base leading-relaxed sm:text-lg">
+              Handloom-verified. Maker-traced. No middleman markup, no warehouse
+              mystery stock — just the cloth, the cluster it came from, and a
+              fair price on both sides.
+            </p>
+            <div className="mt-10 flex flex-col items-center justify-center gap-5 sm:flex-row">
+              <Link
+                href="/category/all"
+                className="text-brand-800 hover:bg-gold-100 inline-flex h-12 items-center gap-2 rounded-xl bg-white px-7 text-base font-semibold transition-all active:scale-[0.97] sm:h-13"
+              >
+                Begin browsing
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link
+                href="/about"
+                className="group text-brand-300 inline-flex h-12 items-center gap-2 text-base font-medium transition-colors hover:text-white sm:h-13"
+              >
+                Meet the weavers
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </Link>
+            </div>
           </div>
         </div>
       </section>
