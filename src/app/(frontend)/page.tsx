@@ -642,7 +642,43 @@ export default async function HomePage({ searchParams }: Props) {
       )}
 
       {/* ═══════════════════════════════════════════════════
-          SECTION 9: BLOG POSTS
+          SECTION 6: SHOP BY OCCASION + TRENDING COLORS
+          ═══════════════════════════════════════════════════ */}
+      <section className="bg-brand-50/20">
+        <div className="container-page py-10 sm:py-14 md:py-20">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 md:gap-10 lg:gap-14">
+            {/* ── Shop by Occasion ── */}
+            <div>
+              <SectionHeading
+                title="Shop by Occasion"
+                subtitle="Find the perfect saree"
+              />
+              <div className="flex flex-wrap gap-3">
+                {OCCASIONS.map((occ) => (
+                  <OccasionButton
+                    key={occ.label}
+                    label={occ.label}
+                    icon={occ.icon}
+                    href={occ.href}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* ── Trending Colors ── */}
+            <div>
+              <SectionHeading
+                title="Trending Colors"
+                subtitle="This season's most-loved shades"
+              />
+              <TrendingColors />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════
+          SECTION 7: BLOG POSTS
           ═══════════════════════════════════════════════════ */}
       {dbPosts.length > 0 && (
         <section className="bg-white">
@@ -714,7 +750,7 @@ export default async function HomePage({ searchParams }: Props) {
       )}
 
       {/* ═══════════════════════════════════════════════════
-          SECTION 10: INSTAGRAM GALLERY
+          SECTION 8: INSTAGRAM GALLERY
           ═══════════════════════════════════════════════════ */}
       <section className="bg-brand-50/20">
         <div className="container-page py-10 sm:py-14 md:py-20">
@@ -729,7 +765,7 @@ export default async function HomePage({ searchParams }: Props) {
       </section>
 
       {/* ═══════════════════════════════════════════════════
-          SECTION 11: TESTIMONIALS
+          SECTION 9: TESTIMONIALS
           ═══════════════════════════════════════════════════ */}
       <section className="bg-white">
         <div className="container-page py-10 sm:py-14 md:py-20">
@@ -762,7 +798,7 @@ export default async function HomePage({ searchParams }: Props) {
       </section>
 
       {/* ═══════════════════════════════════════════════════
-          SECTION 12: NEWSLETTER + PROMISE (side by side)
+          SECTION 10: NEWSLETTER + PROMISE (side by side)
           ═══════════════════════════════════════════════════ */}
       <section className="bg-brand-950 relative overflow-hidden">
         {/* Decorative pattern */}
