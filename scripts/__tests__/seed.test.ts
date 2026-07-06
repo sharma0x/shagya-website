@@ -107,8 +107,8 @@ describe('Seed data', () => {
   // ---------------------------------------------------------------------------
 
   describe('Products', () => {
-    it('has exactly 20 products', () => {
-      expect(products).toHaveLength(20)
+    it('has exactly 23 products', () => {
+      expect(products).toHaveLength(23)
     })
 
     it('each product has a name', () => {
@@ -193,6 +193,13 @@ describe('Seed data', () => {
       const names = products.map((p) => p.name)
       const uniqueNames = new Set(names)
       expect(uniqueNames.size).toBe(names.length)
+    })
+
+    it('has at least 3 products with compareAtPrice greater than basePrice', () => {
+      const discountProducts = products.filter(
+        (p) => p.compareAtPrice !== undefined && p.compareAtPrice > p.basePrice,
+      )
+      expect(discountProducts.length).toBeGreaterThanOrEqual(3)
     })
   })
 
