@@ -530,7 +530,6 @@ export default async function HomePage({ searchParams }: Props) {
             />
             <ProductCarousel
               products={productsSlice(4, productBlockLimit(productBlocks[1]))}
-              badge="bestseller"
             />
           </div>
         </section>
