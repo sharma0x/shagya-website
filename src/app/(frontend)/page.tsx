@@ -83,6 +83,7 @@ export default async function HomePage({ searchParams }: Props) {
     collection: 'pages',
     where: { slug: { equals: 'home' } },
     limit: 1,
+    depth: 1,
   })
   const homeDoc = pageRes.docs[0]
 
@@ -125,6 +126,7 @@ export default async function HomePage({ searchParams }: Props) {
         subheading?: string | null
         ctaText?: string | null
         ctaLink?: string | null
+        backgroundImage?: { url?: string | null } | number | null
         blockType: 'hero'
       }
     | undefined
@@ -277,6 +279,12 @@ export default async function HomePage({ searchParams }: Props) {
   // ─── Determine which product block is which ──────────
   const productBlockLimit = (block: any) => block?.limit || 4
 
+  const heroBackgroundUrl =
+    typeof heroBlock?.backgroundImage === 'object' &&
+    heroBlock.backgroundImage?.url
+      ? heroBlock.backgroundImage.url
+      : '/images/hero/hero-main.png'
+
   return (
     <div className="overflow-hidden">
       {isPreview && <RefreshRouteOnSave />}
@@ -288,7 +296,7 @@ export default async function HomePage({ searchParams }: Props) {
         {/* Full-bleed background image */}
         <div className="absolute inset-0">
           <SkeletonImage
-            src="/images/hero/hero-main.png"
+            src={heroBackgroundUrl}
             alt=""
             fill
             sizes="100vw"
@@ -309,11 +317,15 @@ export default async function HomePage({ searchParams }: Props) {
             </div>
 
             {/* Tagline */}
-            <h1 className="font-display text-3xl leading-[1.1] font-bold tracking-tight sm:text-4xl md:text-5xl">
-              <span className="text-white">Timeless</span>{' '}
-              <span className="text-white">Elegance</span>
-              <br />
-              <span className="text-brand-300">in every drape</span>
+            <h1 className="font-display text-3xl leading-[1.1] font-bold tracking-tight text-white sm:text-4xl md:text-5xl">
+              {heroBlock?.heading || (
+                <>
+                  <span className="text-white">Timeless</span>{' '}
+                  <span className="text-white">Elegance</span>
+                  <br />
+                  <span className="text-brand-300">in every drape</span>
+                </>
+              )}
             </h1>
 
             <p className="mt-3 max-w-[50ch] text-sm leading-relaxed text-white/80 sm:text-base">
