@@ -37,7 +37,7 @@ function ColorSwatch({
         className={cn(
           'rounded-full border-2 border-white shadow-sm transition-transform duration-300 group-hover:scale-110',
           compact
-            ? 'h-9 w-9 ring-0'
+            ? 'h-11 w-11 ring-0'
             : 'ring-brand-100/30 group-hover:ring-brand-300/50 h-14 w-14 ring-1 sm:h-16 sm:w-16',
         )}
         style={{ backgroundColor: hex }}
@@ -66,7 +66,7 @@ export function TrendingColors({ compact, className }: TrendingColorsProps) {
     <div
       className={cn(
         'flex flex-wrap justify-center',
-        compact ? 'gap-1.5' : 'gap-4 sm:gap-6',
+        compact ? 'gap-1' : 'gap-4 sm:gap-6',
         className,
       )}
     >

@@ -322,17 +322,17 @@ export default async function HomePage({ searchParams }: Props) {
             </p>
 
             {/* CTAs */}
-            <div className="mt-5 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
+            <div className="mt-5 flex flex-row flex-wrap items-center gap-3">
               <Link
                 href={heroBlock?.ctaLink || '/category/all'}
-                className="group bg-brand-600 hover:bg-brand-500 inline-flex h-10 items-center gap-2 rounded-xl px-5 text-sm font-semibold text-white transition-all active:scale-[0.97]"
+                className="group bg-brand-600 hover:bg-brand-500 inline-flex h-11 items-center gap-2 rounded-xl px-5 text-sm font-semibold text-white transition-all active:scale-[0.97]"
               >
                 {heroBlock?.ctaText || 'Shop the collection'}
                 <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
               </Link>
               <Link
                 href="/about"
-                className="group inline-flex h-10 items-center gap-2 text-sm font-medium text-white/80 transition-colors hover:text-white"
+                className="group text-brand-950 inline-flex h-11 items-center gap-2 rounded-xl border border-white/20 bg-white/90 px-5 text-sm font-semibold shadow-sm transition-all hover:bg-white active:scale-[0.97]"
               >
                 Our craft story
                 <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
@@ -370,7 +370,7 @@ export default async function HomePage({ searchParams }: Props) {
           SECTION 2: TRUST FEATURES
           ═══════════════════════════════════════════════════ */}
       <section className="border-brand-100/40 bg-brand-50/30 border-y">
-        <div className="flex flex-wrap items-baseline justify-center gap-x-6 gap-y-3 px-4 py-4 sm:gap-x-10 sm:py-5 md:gap-x-14 lg:gap-x-18">
+        <div className="flex flex-wrap items-baseline justify-start gap-x-6 gap-y-3 px-4 py-4 sm:justify-center sm:gap-x-10 sm:py-5 md:gap-x-14 lg:gap-x-18">
           {TRUST_FEATURES.map((feature) => (
             <div key={feature.title} className="flex items-start gap-2">
               <div className="text-brand-600 flex h-8 w-8 shrink-0 items-center justify-center sm:h-9 sm:w-9">
@@ -405,7 +405,7 @@ export default async function HomePage({ searchParams }: Props) {
           />
 
           {dbCategories.length > 0 ? (
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
               {dbCategories.slice(0, 6).map((cat) => {
                 const imgUrl =
                   cat.image && typeof cat.image === 'object'
@@ -435,7 +435,7 @@ export default async function HomePage({ searchParams }: Props) {
       {dbProducts.length > 0 && (
         <section className="bg-white">
           <div className="container-page py-10 sm:py-14 md:py-20">
-            <div className="grid grid-cols-1 gap-10 md:grid-cols-3 md:gap-6 lg:gap-10">
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-3 md:gap-6 lg:gap-10">
               {/* ── New Arrivals ── */}
               <div>
                 <SectionHeading
@@ -665,10 +665,10 @@ export default async function HomePage({ searchParams }: Props) {
         <div className="rule-gold" />
 
         <div className="container-page relative py-10 sm:py-14 md:py-20">
-          <div className="grid grid-cols-1 gap-12 md:grid-cols-2 md:gap-8">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 md:gap-8">
             {/* ── Promise ── */}
             <div>
-              <h2 className="font-display text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+              <h2 className="font-display text-2xl font-semibold tracking-tight text-white sm:text-4xl">
                 Every saree is signed by its maker
               </h2>
               <p className="text-brand-200/70 mt-4 max-w-[50ch] text-base leading-relaxed sm:text-lg">
@@ -696,7 +696,7 @@ export default async function HomePage({ searchParams }: Props) {
 
             {/* ── Newsletter ── */}
             <div>
-              <h2 className="font-display text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+              <h2 className="font-display text-2xl font-semibold tracking-tight text-white sm:text-4xl">
                 A weekly note
                 <br />
                 from the loom

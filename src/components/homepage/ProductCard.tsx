@@ -167,7 +167,7 @@ export function ProductCarousel({
         {products.map((p) => (
           <div
             key={p.id}
-            className="max-w-[260px] min-w-[220px] flex-shrink-0 snap-start sm:max-w-none sm:min-w-0"
+            className="max-w-[200px] min-w-[170px] flex-shrink-0 snap-start sm:max-w-none sm:min-w-0"
           >
             <ProductCard product={p} badge={badge} />
           </div>

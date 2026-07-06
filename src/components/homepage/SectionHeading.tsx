@@ -27,6 +27,7 @@ export function SectionHeading({
         className={cn(
           'bg-brand-600/30 mb-3 h-px w-10',
           align === 'center' && 'mx-auto',
+          align === 'left' && 'mx-auto sm:mx-0',
         )}
       />
 
@@ -36,14 +37,14 @@ export function SectionHeading({
           'flex flex-col gap-1',
           align === 'center'
             ? 'items-center text-center'
-            : 'sm:flex-row sm:items-end sm:justify-between',
+            : 'items-center text-center sm:flex-row sm:items-end sm:items-start sm:justify-between sm:text-left',
         )}
       >
         <h2
           className={cn(
             'font-display text-brand-950 font-semibold tracking-tight',
             size === 'sm'
-              ? 'text-xl md:text-2xl'
+              ? 'text-2xl md:text-2xl'
               : 'text-2xl md:text-3xl lg:text-4xl',
           )}
         >
@@ -73,7 +74,8 @@ export function SectionHeading({
           className={cn(
             'text-brand-700/70 mt-1 max-w-xl',
             size === 'sm' ? 'text-xs md:text-sm' : 'text-sm md:text-base',
-            align === 'center' && 'mx-auto',
+            align === 'center' && 'mx-auto text-center',
+            align === 'left' && 'mx-auto text-center sm:mx-0 sm:text-left',
           )}
         >
           {subtitle}
