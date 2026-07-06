@@ -20,6 +20,7 @@ import {
 import Link from 'next/link'
 import { getPayload } from 'payload'
 import config from '@payload-config'
+import type { Product } from '@/payload-types'
 import { NewsletterForm } from '@/components/newsletter/NewsletterForm'
 import { SkeletonImage } from '@/components/ui/SkeletonImage'
 import { RefreshRouteOnSave } from '@/components/live-preview/RefreshRouteOnSave'
@@ -159,7 +160,7 @@ export default async function HomePage({ searchParams }: Props) {
       depth: 1,
     })
   }
-  const newArrivals = newArrivalsRes.docs
+  const newArrivals = newArrivalsRes.docs as Product[]
 
   // Trending Now: most ordered products in last 30 days
   const newArrivalIds = new Set(newArrivals.map((p) => p.id))
@@ -181,7 +182,7 @@ export default async function HomePage({ searchParams }: Props) {
     .filter(([id]) => !newArrivalIds.has(id))
     .map(([id]) => id)
 
-  let trendingNowDocs: any[] = []
+  let trendingNowDocs: Product[] = []
   if (sortedProductIds.length > 0) {
     const topIds = sortedProductIds.slice(0, 2)
     const trendingRes = await payload.find({
@@ -190,7 +191,7 @@ export default async function HomePage({ searchParams }: Props) {
       limit: 2,
       depth: 1,
     })
-    trendingNowDocs = trendingRes.docs
+    trendingNowDocs = trendingRes.docs as Product[]
   }
   if (trendingNowDocs.length === 0) {
     const fallbackRes = await payload.find({
@@ -205,7 +206,7 @@ export default async function HomePage({ searchParams }: Props) {
       sort: '-createdAt',
       depth: 1,
     })
-    trendingNowDocs = fallbackRes.docs
+    trendingNowDocs = fallbackRes.docs as Product[]
   }
   const trendingNow = trendingNowDocs
 
@@ -229,7 +230,7 @@ export default async function HomePage({ searchParams }: Props) {
     sort: '-compareAtPrice',
     depth: 1,
   })
-  const bestOffers = bestOffersRes.docs
+  const bestOffers = (bestOffersRes.docs as Product[])
     .filter((p) => (p as any).compareAtPrice > (p as any).basePrice)
     .slice(0, 2)
 
@@ -702,7 +703,7 @@ export default async function HomePage({ searchParams }: Props) {
               viewAllLabel={productBlocks[1].ctaText || 'Shop All'}
             />
             <ProductCarousel
-              products={allProductsRes.docs.slice(
+              products={(allProductsRes.docs as Product[]).slice(
                 0,
                 productBlockLimit(productBlocks[1]),
               )}

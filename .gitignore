@@ -54,3 +54,7 @@ public/images/hero/
 public/images/blogs/
 public/images/avatars/
 public/images/screenshots/
+.copilot/
+.opencode/
+.superpowers/
+.agents/
