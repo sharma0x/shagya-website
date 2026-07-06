@@ -16,7 +16,9 @@ import { SectionHeading } from '@/components/homepage/SectionHeading'
 import { ProductCard, ProductCarousel } from '@/components/homepage/ProductCard'
 import { CategoryCard } from '@/components/homepage/CategoryCard'
 import { InstagramGallery } from '@/components/homepage/InstagramGallery'
+import { OccasionButton } from '@/components/homepage/OccasionButton'
 import { TestimonialCard } from '@/components/homepage/TestimonialCard'
+import { TrendingColors } from '@/components/homepage/TrendingColors'
 
 const ph = (w: number, h: number, bg: string, fg: string, text: string) =>
   `https://placehold.co/${w}x${h}/${bg}/${fg}?text=${encodeURIComponent(text)}&font=lora`
@@ -307,6 +309,86 @@ export default async function HomePage({ searchParams }: Props) {
 
   // ─── Determine which product block is which ──────────
   const productBlockLimit = (block: any) => block?.limit || 4
+
+  const OCCASIONS = [
+    {
+      label: 'Wedding',
+      icon: (
+        <svg
+          className="h-7 w-7"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+        >
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+        </svg>
+      ),
+      href: '/category/all?occasion=wedding',
+    },
+    {
+      label: 'Festival',
+      icon: (
+        <svg
+          className="h-7 w-7"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+        >
+          <path d="M12 3l2 4h4l-3 3 1 4-4-2-4 2 1-4-3-3h4l2-4z" />
+        </svg>
+      ),
+      href: '/category/all?occasion=festive',
+    },
+    {
+      label: 'Daily Wear',
+      icon: (
+        <svg
+          className="h-7 w-7"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+        >
+          <path d="M6 6h12l2 4H4l2-4zM4 10h16v8a2 2 0 01-2 2H6a2 2 0 01-2-2v-8z" />
+        </svg>
+      ),
+      href: '/category/cotton',
+    },
+    {
+      label: 'Gifting',
+      icon: (
+        <svg
+          className="h-7 w-7"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+        >
+          <rect x="3" y="8" width="18" height="12" rx="2" />
+          <path d="M12 8v14M8 8a4 4 0 118 0" />
+        </svg>
+      ),
+      href: '/collections/gift-guide',
+    },
+    {
+      label: 'Party',
+      icon: (
+        <svg
+          className="h-7 w-7"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+        >
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 6v6l4 2" />
+        </svg>
+      ),
+      href: '/category/designer',
+    },
+  ]
 
   const heroBackgroundUrl =
     typeof heroBlock?.backgroundImage === 'object' &&
