@@ -304,4 +304,30 @@ ${btn('{{verificationUrl}}', 'Sign In')}
 <p style="margin:28px 0 0;font-size:13px;color:#9B8E93;">If you didn't request this, you can safely ignore this email.</p>
 `),
   },
+  'back-in-stock': {
+    subject: "It's back! {{productName}} is in stock again",
+    body: wrap(`
+<h2 style="margin:0 0 6px;font-family:Georgia,serif;font-size:22px;font-weight:400;color:#6B2448;">Great news — it's back!</h2>
+<p style="margin:0 0 24px;font-size:14px;color:#6B5E63;padding-bottom:20px;border-bottom:1px solid #E8DDE2;"><strong>{{productName}}</strong> is back in stock at {{storeName}}. Handloom sarees are made in small batches — don't wait too long.</p>
+
+${btn('{{productUrl}}', 'View & Shop')}
+
+<p style="margin:28px 0 0;font-size:13px;color:#9B8E93;">You're getting this because you asked to be notified when this product was back in stock.</p>
+`),
+  },
+
+  // ── Customer: password reset ─────────────────────────────────────────────────
+  'password-reset': {
+    subject: 'Reset your Shayga password',
+    body: wrap(`
+<h2 style="margin:0 0 6px;font-family:Georgia,serif;font-size:22px;font-weight:400;color:#6B2448;">Reset your password</h2>
+<p style="margin:0 0 24px;font-size:14px;color:#6B5E63;padding-bottom:20px;border-bottom:1px solid #E8DDE2;">Hi {{customerName}}, we received a request to reset your Shayga account password.</p>
+
+<p style="margin:0 0 6px;font-size:14px;color:#6B5E63;">Click the button below to set a new password. This link is valid for 1 hour.</p>
+
+${btn('{{passwordResetUrl}}', 'Reset Password')}
+
+<p style="margin:28px 0 0;font-size:13px;color:#9B8E93;">If you didn't request this, you can safely ignore this email. Your current password will remain unchanged.</p>
+`),
+  },
 }

@@ -42,6 +42,7 @@ import { Navigation } from './collections/Navigation'
 import { Forms } from './collections/Forms'
 import { FormSubmissions } from './collections/FormSubmissions'
 import { NewsletterSubscribers } from './collections/NewsletterSubscribers'
+import { BackInStockRequests } from './collections/BackInStockRequests'
 import { InstagramPosts } from './collections/InstagramPosts'
 import { SiteSettings } from './globals/SiteSettings'
 import { EmailTemplates } from './collections/EmailTemplates'
@@ -320,6 +321,7 @@ export default buildConfig({
     Forms,
     FormSubmissions,
     NewsletterSubscribers,
+    BackInStockRequests,
     InstagramPosts,
   ],
 

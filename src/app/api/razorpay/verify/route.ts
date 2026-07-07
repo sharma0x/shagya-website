@@ -6,11 +6,7 @@ import crypto from 'crypto'
 
 export async function POST(request: Request) {
   try {
-    const session = await auth.api.getSession({ headers: request.headers })
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
+    const body = await request.json()
     const {
       razorpay_order_id,
       razorpay_payment_id,
@@ -20,7 +16,11 @@ export async function POST(request: Request) {
       phone,
       isCod = false,
       isMock = false,
-    } = await request.json()
+      notes = '',
+      guestEmail = '',
+      guestPhone = '',
+      cartItems: guestCartItems,
+    } = body
 
     if (!shippingAddress) {
       return NextResponse.json(
@@ -29,87 +29,151 @@ export async function POST(request: Request) {
       )
     }
 
+    const isGuest = !!guestEmail
+    let customerEmail = ''
+    let customerPhone = phone || ''
+    let customerId: string | number | null = null
+
+    if (isGuest) {
+      customerEmail = guestEmail
+      customerPhone = guestPhone || phone || ''
+    } else {
+      const session = await auth.api.getSession({ headers: request.headers })
+      if (!session?.user) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      }
+      customerEmail = session.user.email
+    }
+
     const payload = await getPayload({ config })
 
-    // Find the customer
+    // Find or create customer
     const customers = await payload.find({
       collection: 'customers',
-      where: {
-        betterAuthUserId: { equals: session.user.id },
-      },
+      where: isGuest
+        ? { email: { equals: customerEmail } }
+        : { betterAuthUserId: { equals: (await auth.api.getSession({ headers: request.headers }))?.user?.id || '' } },
       limit: 1,
-    })
+    } as any)
 
-    if (customers.docs.length === 0) {
+    if (isGuest && customers.docs.length === 0) {
+      // Guest customer might have been created by verify-otp, but if not, create now
+      const created = await payload.create({
+        collection: 'customers',
+        data: { email: customerEmail, phone: customerPhone },
+      } as any)
+      customerId = created.id as string | number
+    } else if (customers.docs.length > 0) {
+      customerId = customers.docs[0].id as string | number
+    } else {
       return NextResponse.json({ error: 'Customer not found' }, { status: 404 })
     }
 
-    const customer = customers.docs[0]
+    let orderItems: any[]
+    let subtotal = 0
+    let cartId: string | number | null = null
 
-    // Find the customer's cart to pull items and compute pricing
-    const carts = await payload.find({
-      collection: 'carts',
-      where: {
-        customer: { equals: customer.id },
-      },
-      limit: 1,
-    })
+    if (isGuest && guestCartItems && guestCartItems.length > 0) {
+      // Guest — use cart items from request body
+      orderItems = guestCartItems.map((item: any) => ({
+        product: Number(item.product),
+        variant: item.variant ? Number(item.variant) : null,
+        quantity: item.quantity || 1,
+        unitPrice: item.unitPrice || 0,
+        totalPrice: (item.unitPrice || 0) * (item.quantity || 1),
+      }))
+      subtotal = orderItems.reduce((a: number, i: any) => a + i.totalPrice, 0)
+    } else {
+      // Logged in — get cart from DB
+      const carts = await payload.find({
+        collection: 'carts',
+        where: { customer: { equals: customerId } },
+        limit: 1,
+      } as any)
 
-    if (
-      carts.docs.length === 0 ||
-      !carts.docs[0].items ||
-      carts.docs[0].items.length === 0
-    ) {
-      return NextResponse.json({ error: 'Cart is empty' }, { status: 400 })
+      const cart = carts.docs[0] as any
+
+      if (
+        carts.docs.length === 0 ||
+        !(cart as any).items ||
+        (cart as any).items.length === 0
+      ) {
+        return NextResponse.json({ error: 'Cart is empty' }, { status: 400 })
+      }
+
+      cartId = cart.id as string | number
+      subtotal =
+        (cart as any).subtotal ||
+        ((cart as any).items || []).reduce(
+          (acc: number, item: any) =>
+            acc + (item.unitPrice || 0) * (item.quantity || 1),
+          0,
+        )
+
+      orderItems = (cart.items || []).map((item: any) => {
+        const productId =
+          typeof item.product === 'object' && item.product !== null
+            ? item.product.id
+            : item.product
+        let variantId = null
+        if (item.variant) {
+          variantId =
+            typeof item.variant === 'object'
+              ? item.variant.id || null
+              : item.variant
+        }
+        return {
+          product: productId,
+          variant: variantId,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          totalPrice: item.unitPrice * item.quantity,
+        }
+      })
     }
-
-    const cart = carts.docs[0]
-
-    // Calculate subtotal, shipping, discount, total
-    const subtotal =
-      cart.subtotal ||
-      (cart.items || []).reduce((acc: number, item: any) => {
-        return acc + (item.unitPrice || 0) * (item.quantity || 1)
-      }, 0)
 
     const shipping = subtotal >= 5000 ? 0 : 150
 
     let discount = 0
-    if (cart.coupon) {
-      const couponId =
-        typeof cart.coupon === 'object' ? cart.coupon.id : cart.coupon
-      const coupon = await payload.findByID({
-        collection: 'coupons',
-        id: couponId,
-      })
-
-      if (coupon && coupon.isActive) {
-        if (coupon.type === 'percentage') {
-          discount = Math.round((subtotal * (coupon.value || 0)) / 100)
-          if (coupon.maxDiscount && discount > coupon.maxDiscount) {
-            discount = coupon.maxDiscount
+    // For logged-in users with coupon
+    if (!isGuest && cartId) {
+      const cart = await payload.findByID({
+        collection: 'carts',
+        id: cartId,
+        } as any) as any
+        if ((cart as any)?.coupon) {
+          const couponId =
+            typeof (cart as any).coupon === 'object' ? (cart as any).coupon.id : (cart as any).coupon
+          const coupon = await payload.findByID({
+            collection: 'coupons',
+            id: couponId,
+          } as any) as any
+          if (coupon && coupon.isActive) {
+          if (coupon.type === 'percentage') {
+            discount = Math.round((subtotal * (coupon.value || 0)) / 100)
+            if (coupon.maxDiscount && discount > coupon.maxDiscount)
+              discount = coupon.maxDiscount
+          } else if (coupon.type === 'fixed_amount') {
+            discount = coupon.value || 0
           }
-        } else if (coupon.type === 'fixed_amount') {
-          discount = coupon.value || 0
         }
       }
     }
 
     const total = Math.max(0, subtotal + shipping - discount)
 
-    // Verification step
+    // Payment verification
     let finalPaymentId = ''
     let orderStatus: 'confirmed' | 'pending' = 'pending'
 
     if (isCod) {
       finalPaymentId = 'COD'
-      orderStatus = 'pending' // COD orders start as pending verification
+      orderStatus = 'pending'
     } else {
       orderStatus = 'confirmed'
       finalPaymentId = razorpay_payment_id || 'MOCK_PAYMENT'
 
       if (!isMock) {
-        // Run signature verification for live payments
         const keySecret = process.env.RAZORPAY_KEY_SECRET || ''
         const expected = crypto
           .createHmac('sha256', keySecret)
@@ -125,44 +189,18 @@ export async function POST(request: Request) {
       }
     }
 
-    // Map cart items to order items schema
-    const orderItems = (cart.items || []).map((item: any) => {
-      const productId =
-        typeof item.product === 'object' && item.product !== null
-          ? item.product.id
-          : item.product
-
-      // Determine variant ID (could be relation ID inside variant JSON object or string)
-      let variantId = null
-      if (item.variant) {
-        if (typeof item.variant === 'object') {
-          variantId = item.variant.id || null
-        } else {
-          variantId = item.variant
-        }
-      }
-
-      return {
-        product: productId,
-        variant: variantId,
-        quantity: item.quantity,
-        unitPrice: item.unitPrice,
-        totalPrice: item.unitPrice * item.quantity,
-      }
-    })
-
-    // Create the order
-    const order = await payload.create({
+    const order: any = await payload.create({
       collection: 'orders',
       data: {
-        customerEmail: session.user.email,
-        phone: phone || customer.phone || '',
+        customerEmail,
+        phone: customerPhone,
         status: orderStatus,
         subtotal,
         shipping,
         discount,
         total,
         paymentId: finalPaymentId,
+        notes: notes || '',
         shippingAddress: {
           fullName: shippingAddress.fullName,
           phone: shippingAddress.phone,
@@ -186,18 +224,16 @@ export async function POST(request: Request) {
         },
         items: orderItems,
       },
-    })
+    } as any)
 
-    // Clear the cart
-    await payload.update({
-      collection: 'carts',
-      id: cart.id,
-      data: {
-        items: [],
-        subtotal: 0,
-        coupon: null,
-      },
-    })
+    // Clear cart for logged-in users
+    if (cartId) {
+      await payload.update({
+        collection: 'carts',
+        id: cartId,
+        data: { items: [], subtotal: 0, coupon: null },
+      } as any)
+    }
 
     return NextResponse.json({
       success: true,

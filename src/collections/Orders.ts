@@ -64,7 +64,24 @@ export const Orders: CollectionConfig = {
       },
     ],
     beforeChange: [
-      async ({ data, operation, req }) => {
+      async ({ data, operation, originalDoc, req }) => {
+        // Auto-set status timestamps on update
+        if (operation === 'update' && originalDoc) {
+          const prevStatus = (originalDoc as any)?.status
+          const nextStatus = data?.status
+          if (prevStatus !== nextStatus) {
+            if (nextStatus === 'confirmed' && !data?.confirmedAt) {
+              data.confirmedAt = new Date().toISOString()
+            }
+            if (nextStatus === 'shipped' && !data?.shippedAt) {
+              data.shippedAt = new Date().toISOString()
+            }
+            if (nextStatus === 'delivered' && !data?.deliveredAt) {
+              data.deliveredAt = new Date().toISOString()
+            }
+          }
+        }
+
         if (operation === 'create' && !data?.orderNumber) {
           try {
             const existing = await req.payload.find({
@@ -103,6 +120,41 @@ export const Orders: CollectionConfig = {
           | undefined
 
         if (!newStatus || prevStatus === newStatus) return doc
+
+        // Increment purchaseCount on products when order is confirmed
+        if (newStatus === 'confirmed' && prevStatus !== 'confirmed') {
+          const items = (doc as Record<string, unknown>).items as
+            | Array<{ product?: string | number; quantity?: number }>
+            | undefined
+          if (items && items.length > 0) {
+            for (const item of items) {
+              if (item.product) {
+                try {
+                  const product = await req.payload.findByID({
+                    collection: 'products',
+                    id:
+                      typeof item.product === 'string'
+                        ? item.product
+                        : String(item.product),
+                  } as any)
+                  if (product) {
+                    await req.payload.update({
+                      collection: 'products',
+                      id: product.id,
+                      data: {
+                        purchaseCount:
+                          ((product as any).purchaseCount || 0) +
+                          (item.quantity || 1),
+                      },
+                    } as any)
+                  }
+                } catch {
+                  // Don't block order processing for purchaseCount
+                }
+              }
+            }
+          }
+        }
 
         // Send transactional emails for the new status (fire-and-forget)
         const docId = (doc as Record<string, unknown>).id as string
@@ -224,6 +276,29 @@ export const Orders: CollectionConfig = {
     {
       name: 'paymentId',
       type: 'text',
+    },
+    {
+      name: 'notes',
+      type: 'text',
+      label: 'Delivery Instructions',
+      admin: {
+        description: 'Customer notes or delivery instructions',
+      },
+    },
+    {
+      name: 'confirmedAt',
+      type: 'date',
+      admin: { readOnly: true, description: 'Set when status changes to confirmed' },
+    },
+    {
+      name: 'shippedAt',
+      type: 'date',
+      admin: { readOnly: true, description: 'Set when status changes to shipped' },
+    },
+    {
+      name: 'deliveredAt',
+      type: 'date',
+      admin: { readOnly: true, description: 'Set when status changes to delivered' },
     },
     {
       name: 'shippingAddress',
