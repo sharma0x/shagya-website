@@ -1,26 +1,25 @@
-# CLO-10: Create Users collection (Payload admin auth)
+# CLO-10: Add filter sidebar to product listing pages
 
 ## Overview
 
-Users collection for admin/staff auth via Payload. Roles: super-admin, admin, editor, content-manager. Email+password login. Admin UI access control by role.
+Add a filter sidebar (left-aligned) to all product listing pages (`/category/[slug]`, `/collections/[slug]`, `/search`) with collapsible sections for Price Range, Weave, Fabric, Pattern, Occasion, Collection, and Color. All filter state driven by URL searchParams. Desktop: sticky sidebar (280px). Mobile: slide-over drawer. Active filter chips above the product grid with individual removal and "Clear All".
 
 ## Acceptance Criteria
 
-- [ ] Users collection with email+password auth via Payload's built-in auth
-- [ ] Role field with options: super-admin, admin, editor, content-manager
-- [ ] Access control restricts create/update/delete based on role
-- [ ] Super-admin has unrestricted access (can create, read, update, delete all)
-- [ ] Admin can create users and manage non-super-admin users
-- [ ] Editor and content-manager can read/update their own profile only
-- [ ] Only super-admin can assign/change the super-admin role
-- [ ] Token expiration configured (2 hours)
-- [ ] Login attempt lockout (5 attempts, 10 min lock)
-- [ ] Unit tests covering access control rules
+- [ ] FilterSidebar client component with 7 collapsible filter sections
+- [ ] All filter state managed via URL searchParams (no Zustand/Redux)
+- [ ] Desktop (lg+): sticky sidebar, 280px wide, next to product grid
+- [ ] Mobile/tablet: "Filters" button with active count badge opens left-sliding drawer
+- [ ] Active filter chips above product grid (individually removable) + "Clear All"
+- [ ] Category page uses FilterSidebar and dynamic Payload where clause
+- [ ] Collections page uses FilterSidebar within collection scope
+- [ ] Search page uses FilterSidebar (bypasses FTS when filters active)
+- [ ] SortSelect preserves all active filter params when changing sort
+- [ ] All components follow brand rules (OKLCH colors, quiet visual weight, Sora/Public Sans)
 
 ## Technical Notes
 
-- Existing file: `src/collections/Users.ts` — has basic auth with admin/editor/content-manager roles
-- Need to add `super-admin` to the role options
-- Access control functions need updating to handle super-admin tier
-- Payload's built-in auth handles password hashing, JWT, and session management
-- Config reference: `src/payload.config.ts` (admin.user = 'users')
+- Follow `SortSelect` pattern for URL state management
+- `Filter` icon from lucide-react is already imported (unused) in category page
+- No new dependencies required
+- Use `@base-ui/react` for accessible primitives

@@ -1,57 +1,76 @@
 # Target Architecture
 
-## Role Hierarchy
+## Component tree
 
 ```
-super-admin (unrestricted — all operations on all users)
-└── admin (manage non-super-admin users, assign non-super-admin roles)
-    ├── editor (self-read, self-update)
-    └── content-manager (self-read, self-update)
+Layout (server)
+└── Product Listing Page (server, async)
+    ├── Page header (title, description)
+    ├── Toolbar row
+    │   ├── Product count
+    │   ├── Active filter chips (client) ← NEW
+    │   │   └── Individually removable, shows "Clear All"
+    │   └── SortSelect (client, updated to preserve all filter params)
+    ├── Desktop: FilterSidebar (client, sticky, 280px)     ← NEW
+    │   └── FilterSection (collapsible)                     ← NEW
+    │       ├── CheckboxFilter (weave, fabric, pattern, etc.) ← NEW
+    │       ├── PriceRangeFilter (min/max INR inputs)        ← NEW
+    │       └── ColorFilter (color name checkboxes)          ← NEW
+    ├── Mobile: FilterButton + Drawer (slide-over)          ← NEW
+    │   └── Same FilterSidebar content in drawer
+    └── Product grid (server-rendered, 3-4 cols)
 ```
 
-## Users Collection — Target State
+## Data flow
 
 ```
-Users (collection)
-├── slug: 'users'
-├── auth: email+password (unchanged)
-├── admin: useAsTitle='email', group='Admin'
-├── timestamps: true
-├── fields:
-│   ├── name: text (required)
-│   └── role: select (required, default='editor')
-│       ├── super-admin
-│       ├── admin
-│       ├── editor
-│       └── content-manager
-│       access.update: super-admin only
-└── access:
-    ├── create: super-admin = all, admin = non-super-admin
-    ├── read: super-admin = all, admin = all, self = own only
-    ├── update: super-admin = all, admin = non-super-admin, self = own profile
-    ├── delete: super-admin = all, admin = non-super-admin
+User interacts with filter (checkbox / input / slider)
+       ↓
+FilterSidebar component updates URL searchParams via router.replace()
+       ↓
+Page re-renders (server component)
+       ↓
+Dynamic where clause builder reads all searchParams
+       ↓
+payload.find() with combined where clause + sort
+       ↓
+Products returned, grid re-renders
 ```
 
-## Access Control Matrix
-
-| Operation               | super-admin |        admin         | editor | content-manager |
-| ----------------------- | :---------: | :------------------: | :----: | :-------------: |
-| Create any user         |     ✅      | ✅ (non-super-admin) |   ❌   |       ❌        |
-| Read all users          |     ✅      |          ✅          |   ❌   |       ❌        |
-| Read own profile        |     ✅      |          ✅          |   ✅   |       ✅        |
-| Update any user         |     ✅      | ✅ (non-super-admin) |   ❌   |       ❌        |
-| Update own profile      |     ✅      |          ✅          |   ✅   |       ✅        |
-| Delete any user         |     ✅      | ✅ (non-super-admin) |   ❌   |       ❌        |
-| Assign super-admin role |     ✅      |          ❌          |   ❌   |       ❌        |
-
-## Data Flow
+### URL state shape
 
 ```
-1. User logs in via /api/users/login
-2. Payload validates credentials, returns JWT + user object (with role)
-3. Admin UI checks access control functions on each operation
-4. Field-level access on role: only super-admin can change roles
-5. Collection-level access enforces create/read/update/delete matrix
+/category/silk?weave=banarasi,kanchipuram&fabric=silk&priceRange_min=2000&priceRange_max=15000&pattern=embroidered&occasion=festive&color=red,gold&sort=price-asc
+```
+
+### Component dependency graph
+
+```
+FilterSidebar
+├── FilterSection (collapsible wrapper, toggle icon)
+│   ├── CheckboxFilter (generic: label, options[], paramName)
+│   ├── PriceRangeFilter (min/max inputs, debounced)
+│   └── ColorFilter (checkbox list with color names)
+├── ActiveFilterChips (shows active filters, removable)
+├── ClearAllButton (removes all filter params)
+└── FilterCountBadge (mobile-only, shows count on toggle button)
+```
+
+### Where clause builder (shared utility)
+
+```
+Input: URLSearchParams
+Output: Payload where object
+
+Mappings:
+  weave[]         → weave: { in: values }
+  fabric[]        → fabric: { in: values }
+  pattern[]       → pattern: { in: values }
+  occasion[]      → occasion: { in: values }
+  collection[]    → collections: { in: [ids] }
+  color[]         → color: { in: values }
+  priceRange_min  → basePrice: { greater_than_equal: value }
+  priceRange_max  → basePrice: { less_than_equal: value }
 ```
 
 [↑ Overview](./README.md)
