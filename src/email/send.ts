@@ -327,3 +327,22 @@ export async function sendMagicLinkEmail(
   })
   await safeSend(payload, to, subject, html, 'magic-link')
 }
+
+/**
+ * Sends a back-in-stock notification email.
+ */
+export async function sendBackInStockEmail(
+  payload: Payload,
+  to: string,
+  product: any,
+): Promise<void> {
+  const storeUrl = await getBaseURL()
+  const productUrl = `${storeUrl}/products/${product.slug}`
+  const { subject, html } = await renderEmail(payload, 'back-in-stock', {
+    productName: product.name || 'Product',
+    productUrl,
+    storeUrl,
+    storeName: 'Shayga',
+  })
+  await safeSend(payload, to, subject, html, 'back-in-stock')
+}

@@ -9,9 +9,9 @@ import {
   KeyRound,
   Mail,
   User,
-  Phone,
   AlertCircle,
 } from 'lucide-react'
+import { PhoneInput } from '@/components/ui/phone-input'
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -162,18 +162,15 @@ export default function RegisterPage() {
                 >
                   Phone Number (Optional)
                 </label>
-                <div className="relative mt-2">
-                  <input
+                <div className="mt-2">
+                  <PhoneInput
                     id="phone"
                     name="phone"
-                    type="tel"
-                    autoComplete="tel"
                     value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
-                    className="font-body focus:border-brand-500 h-11 w-full rounded-xl border border-neutral-200 bg-white pr-4 pl-10 text-sm text-neutral-900 transition-colors outline-none placeholder:text-neutral-400"
-                    placeholder="+91 98765 43210"
+                    onChange={setPhoneNumber}
+                    placeholder="98765 43210"
+                    className="h-11"
                   />
-                  <Phone className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-neutral-400" />
                 </div>
               </div>
 
