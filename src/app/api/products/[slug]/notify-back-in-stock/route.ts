@@ -4,10 +4,10 @@ import config from '@payload-config'
 
 export async function POST(
   request: Request,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: Promise<{ slug: string }> },
 ) {
   try {
-    const { id } = await params
+    const { slug } = await params
     const body = await request.json()
     const email = body.email?.trim().toLowerCase()
 
@@ -19,18 +19,17 @@ export async function POST(
 
     const product = await payload.findByID({
       collection: 'products',
-      id,
+      id: slug,
     } as any)
 
     if (!product) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 })
     }
 
-    // Check if already subscribed
     const existing = await payload.find({
       collection: 'back-in-stock-requests',
       where: {
-        product: { equals: id },
+        product: { equals: slug },
         email: { equals: email },
         notified: { equals: false },
       },
@@ -46,7 +45,7 @@ export async function POST(
 
     await payload.create({
       collection: 'back-in-stock-requests',
-      data: { product: id, email },
+      data: { product: slug, email },
     } as any)
 
     return NextResponse.json({
@@ -54,7 +53,7 @@ export async function POST(
       message: "We'll email you when this product is back in stock!",
     })
   } catch (error) {
-    console.error('[API] POST /api/products/[id]/notify-back-in-stock error:', error)
+    console.error('[API] POST /api/products/[slug]/notify-back-in-stock error:', error)
     return NextResponse.json(
       { error: 'Internal Server Error' },
       { status: 500 },
