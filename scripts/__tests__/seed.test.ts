@@ -15,6 +15,7 @@ import {
   navigations,
   siteSettingsData,
 } from '../seed-data'
+import type { SeedHeroBlock } from '../seed-data'
 
 describe('Seed data', () => {
   // ---------------------------------------------------------------------------
@@ -23,7 +24,7 @@ describe('Seed data', () => {
 
   describe('Admin user', () => {
     it('has correct email', () => {
-      expect(adminUser.email).toBe('admin@shayga.com')
+      expect(adminUser.email).toBe('admin@shayga.in')
     })
 
     it('has super-admin role', () => {
@@ -106,8 +107,8 @@ describe('Seed data', () => {
   // ---------------------------------------------------------------------------
 
   describe('Products', () => {
-    it('has exactly 20 products', () => {
-      expect(products).toHaveLength(20)
+    it('has exactly 23 products', () => {
+      expect(products).toHaveLength(23)
     })
 
     it('each product has a name', () => {
@@ -193,6 +194,13 @@ describe('Seed data', () => {
       const uniqueNames = new Set(names)
       expect(uniqueNames.size).toBe(names.length)
     })
+
+    it('has at least 3 products with compareAtPrice greater than basePrice', () => {
+      const discountProducts = products.filter(
+        (p) => p.compareAtPrice !== undefined && p.compareAtPrice > p.basePrice,
+      )
+      expect(discountProducts.length).toBeGreaterThanOrEqual(3)
+    })
   })
 
   // ---------------------------------------------------------------------------
@@ -241,6 +249,15 @@ describe('Seed data', () => {
     it('has correct template for FAQ page', () => {
       const faqPage = pages.find((p) => p.title === 'FAQ')
       expect(faqPage?.template).toBe('faq')
+    })
+
+    it('home page hero block has a background image path', () => {
+      const homePage = pages.find((p) => p.title === 'Home')
+      const heroBlock = homePage?.blocks.find(
+        (b): b is SeedHeroBlock => b.blockType === 'hero',
+      )
+      expect(heroBlock).toBeDefined()
+      expect(heroBlock?.imagePath).toBe('/images/hero/hero-main.png')
     })
   })
 
