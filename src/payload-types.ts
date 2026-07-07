@@ -93,6 +93,7 @@ export interface Config {
     forms: Form;
     'form-submissions': FormSubmission;
     'newsletter-subscribers': NewsletterSubscriber;
+    'instagram-posts': InstagramPost;
     search: Search;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
@@ -127,6 +128,7 @@ export interface Config {
     forms: FormsSelect<false> | FormsSelect<true>;
     'form-submissions': FormSubmissionsSelect<false> | FormSubmissionsSelect<true>;
     'newsletter-subscribers': NewsletterSubscribersSelect<false> | NewsletterSubscribersSelect<true>;
+    'instagram-posts': InstagramPostsSelect<false> | InstagramPostsSelect<true>;
     search: SearchSelect<false> | SearchSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -962,6 +964,24 @@ export interface NewsletterSubscriber {
   createdAt: string;
 }
 /**
+ * Cached Instagram posts fetched from the Instagram Graph API
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "instagram-posts".
+ */
+export interface InstagramPost {
+  id: number;
+  instagramId: string;
+  mediaUrl?: string | null;
+  thumbnailUrl?: string | null;
+  permalink?: string | null;
+  caption?: string | null;
+  mediaType?: ('IMAGE' | 'VIDEO' | 'CAROUSEL_ALBUM') | null;
+  sortOrder?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This is a collection of automatically created search results. These results are used by the global site search and will be updated automatically as documents in the CMS are created or updated.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1114,6 +1134,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'newsletter-subscribers';
         value: number | NewsletterSubscriber;
+      } | null)
+    | ({
+        relationTo: 'instagram-posts';
+        value: number | InstagramPost;
       } | null)
     | ({
         relationTo: 'search';
@@ -1802,6 +1826,21 @@ export interface FormSubmissionsSelect<T extends boolean = true> {
 export interface NewsletterSubscribersSelect<T extends boolean = true> {
   email?: T;
   status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "instagram-posts_select".
+ */
+export interface InstagramPostsSelect<T extends boolean = true> {
+  instagramId?: T;
+  mediaUrl?: T;
+  thumbnailUrl?: T;
+  permalink?: T;
+  caption?: T;
+  mediaType?: T;
+  sortOrder?: T;
   updatedAt?: T;
   createdAt?: T;
 }

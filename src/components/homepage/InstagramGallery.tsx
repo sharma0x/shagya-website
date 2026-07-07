@@ -1,39 +1,24 @@
+import { getPayload } from 'payload'
+import config from '@payload-config'
 import { cn } from '@/lib/utils'
 import { SkeletonImage } from '@/components/ui/SkeletonImage'
-
-const INSTAGRAM_POSTS = [
-  {
-    src: '/images/instagram/ig-1.png',
-    alt: 'Our latest saree collection on Instagram',
-    handle: '@shayga',
-  },
-  {
-    src: '/images/instagram/ig-2.png',
-    alt: 'Behind the scenes at the weaving cluster',
-    handle: '@shayga',
-  },
-  {
-    src: '/images/instagram/ig-3.png',
-    alt: 'Natural dye process',
-    handle: '@shayga',
-  },
-  {
-    src: '/images/instagram/ig-4.png',
-    alt: 'Handwoven texture close-up',
-    handle: '@shayga',
-  },
-  {
-    src: '/images/instagram/ig-5.png',
-    alt: 'Styled look from our community',
-    handle: '@shayga',
-  },
-]
 
 interface InstagramGalleryProps {
   className?: string
 }
 
-export function InstagramGallery({ className }: InstagramGalleryProps) {
+export async function InstagramGallery({ className }: InstagramGalleryProps) {
+  const payload = await getPayload({ config })
+  const result = await payload.find({
+    collection: 'instagram-posts',
+    sort: 'sortOrder',
+    limit: 5,
+  })
+
+  const posts = result.docs
+
+  if (posts.length === 0) return null
+
   return (
     <div
       className={cn(
@@ -41,18 +26,18 @@ export function InstagramGallery({ className }: InstagramGalleryProps) {
         className,
       )}
     >
-      {INSTAGRAM_POSTS.map((post, i) => (
+      {posts.map((post) => (
         <a
-          key={i}
-          href="https://instagram.com/shayga"
+          key={post.id}
+          href={post.permalink || 'https://instagram.com/shayga'}
           target="_blank"
           rel="noopener noreferrer"
           className="group relative block overflow-hidden rounded-xl bg-neutral-100 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg"
         >
           <div className="aspect-square">
             <SkeletonImage
-              src={post.src}
-              alt={post.alt}
+              src={post.thumbnailUrl || post.mediaUrl || ''}
+              alt={post.caption?.slice(0, 100) || 'Instagram post'}
               fill
               sizes="(max-width: 640px) 50vw, 20vw"
               className="object-cover transition-transform duration-500 group-hover:scale-105"
