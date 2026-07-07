@@ -38,7 +38,7 @@ coverage/
 test-results/
 
 # Payload
-src/payload-types.ts
+# src/payload-types.ts — committed as fallback for Vercel builds
 /uploads/
 /media/
 
