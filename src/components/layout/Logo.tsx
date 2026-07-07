@@ -29,7 +29,7 @@ export function Logo({
             wordmarkClassName,
           )}
         >
-          Shayga
+          SHAYGA - The Saree Studio
         </span>
       )}
     </>
@@ -47,7 +47,7 @@ export function Logo({
     <Link
       href={href}
       className="text-brand-600 hover:text-brand-700 inline-flex items-center gap-2.5 transition-colors"
-      aria-label="Shayga — home"
+      aria-label="SHAYGA - The Saree Studio — home"
     >
       {mark}
     </Link>

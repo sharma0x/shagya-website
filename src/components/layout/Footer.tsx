@@ -14,7 +14,7 @@ const footerLinks = {
     ],
   },
   company: {
-    title: 'Shayga',
+    title: 'SHAYGA - The Saree Studio',
     links: [
       { label: 'About Us', href: '/about' },
       { label: 'Journal', href: '/blog' },
@@ -82,7 +82,7 @@ export function Footer() {
         {/* Bottom Bar */}
         <div className="mt-12 flex flex-col items-center justify-between gap-6 border-t border-neutral-200 pt-8 sm:mt-16 sm:flex-row sm:gap-4">
           <p className="text-xs text-neutral-400">
-            &copy; {new Date().getFullYear()} Shayga. All rights reserved.
+            &copy; {new Date().getFullYear()} SHAYGA - The Saree Studio. All rights reserved.
           </p>
           <div className="flex items-center gap-3">
             <span className="text-xs text-neutral-400">We accept:</span>

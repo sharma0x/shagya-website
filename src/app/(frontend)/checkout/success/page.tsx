@@ -26,7 +26,7 @@ function CheckoutSuccessContent() {
           Order Confirmed
         </h2>
         <p className="font-body mt-2 text-sm text-neutral-500">
-          Thank you for choosing Shayga. Your handloom masterpiece is booked!
+          Thank you for choosing SHAYGA - The Saree Studio. Your handloom masterpiece is booked!
         </p>
 
         <div className="my-6 space-y-3 rounded-xl border border-neutral-100 bg-neutral-50 p-4 text-left">

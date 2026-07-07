@@ -70,7 +70,7 @@ export default function RegisterPage() {
           Create an account
         </h2>
         <p className="font-body mt-2 text-center text-sm text-neutral-500">
-          Join Shayga to track orders, manage addresses, and curate your
+          Join SHAYGA - The Saree Studio to track orders, manage addresses, and curate your
           wishlist
         </p>
       </div>

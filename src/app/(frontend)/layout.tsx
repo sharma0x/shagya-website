@@ -28,11 +28,11 @@ const notoSansDevanagari = Noto_Sans_Devanagari({
 
 export const metadata: Metadata = {
   title: {
-    template: '%s — Shayga',
-    default: 'Shayga — Handcrafted Indian Sarees',
+    template: '%s — SHAYGA - The Saree Studio',
+    default: 'SHAYGA - The Saree Studio — Handcrafted Indian Sarees',
   },
   description:
-    'Shop handcrafted Indian sarees at Shayga. Premium silk, cotton, and designer sarees with free shipping in India.',
+    'Shop handcrafted Indian sarees at SHAYGA - The Saree Studio. Premium silk, cotton, and designer sarees with free shipping in India.',
   keywords: [
     'sarees',
     'Indian sarees',
@@ -40,7 +40,7 @@ export const metadata: Metadata = {
     'handloom sarees',
     'designer sarees',
     'buy sarees online',
-    'Shayga',
+    'SHAYGA - The Saree Studio',
   ],
 }
 

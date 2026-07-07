@@ -340,7 +340,7 @@ function SearchPanel({ onClose }: { onClose: () => void }) {
                 </span>
               </div>
               <span className="font-body text-xs text-neutral-400">
-                Search by Shayga
+                Search by SHAYGA - The Saree Studio
               </span>
             </div>
           </div>
