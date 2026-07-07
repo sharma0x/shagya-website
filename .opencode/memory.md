@@ -453,6 +453,30 @@ beforeEach(async () => {
 })
 ```
 
+## NavigationLoader (Page Transition Loader)
+
+### Approach — link-click interception + usePathname
+
+Next.js App Router has no built-in `useNavigation()` loading state hook, and
+`nprogress` is designed for Pages Router events. The reliable pattern:
+
+1. **Intercept all internal `<a>` clicks** via a capture-phase `document` listener
+2. After a 120ms threshold, show a thin brand-colored bar at the top of the viewport
+3. When `usePathname()` changes (navigation complete), hide it immediately
+
+**Key details:**
+- 120ms threshold prevents flash on fast server-rendered navigations
+- `animate-loader-bar` keyframe sweeps the bar left→right with a variable width
+- Added to `src/app/(frontend)/layout.tsx` as a client component rendered inside the server layout
+- Skips external links, anchors, mailto:, tel:
+
+### Files changed
+- `src/app/(frontend)/globals.css` — added `@keyframes loader-bar`
+- `src/components/ui/NavigationLoader.tsx` — new client component
+- `src/app/(frontend)/layout.tsx` — rendered at top of `<body>`
+
+---
+
 ### Test file location conventions
 
 - Lib code: `src/lib/foo.ts` → test at `src/lib/foo.test.ts` (NOT `__tests__/foo.test.ts`).
