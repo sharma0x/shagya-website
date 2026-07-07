@@ -5,8 +5,9 @@ export const InstagramPosts: CollectionConfig = {
   admin: {
     useAsTitle: 'caption',
     group: 'Content',
-    defaultColumns: ['caption', 'mediaType', 'updatedAt'],
-    description: 'Cached Instagram posts fetched from the Instagram Graph API',
+    defaultColumns: ['caption', 'source', 'mediaType', 'updatedAt'],
+    description:
+      'Instagram posts shown on the homepage gallery. Synced automatically from the Instagram Graph API when configured, or added manually as fallback.',
   },
   access: {
     read: () => true,
@@ -16,33 +17,59 @@ export const InstagramPosts: CollectionConfig = {
   },
   fields: [
     {
+      name: 'source',
+      type: 'select',
+      options: [
+        { label: 'API sync', value: 'api' },
+        { label: 'Manual upload', value: 'manual' },
+      ],
+      defaultValue: 'api',
+      admin: {
+        readOnly: true,
+        position: 'sidebar',
+      },
+    },
+    {
       name: 'instagramId',
       type: 'text',
-      required: true,
       unique: true,
       index: true,
-      admin: { readOnly: true },
+      admin: {
+        readOnly: true,
+        condition: (_, siblingData) => siblingData?.source === 'manual',
+      },
+    },
+    {
+      name: 'image',
+      type: 'upload',
+      relationTo: 'media',
+      admin: {
+        condition: (_, siblingData) => siblingData?.source === 'manual',
+      },
     },
     {
       name: 'mediaUrl',
       type: 'text',
-      admin: { readOnly: true },
+      admin: {
+        readOnly: true,
+        condition: (_, siblingData) => siblingData?.source === 'manual',
+      },
     },
     {
       name: 'thumbnailUrl',
       type: 'text',
-      admin: { readOnly: true },
+      admin: {
+        condition: (_, siblingData) => siblingData?.source === 'manual',
+      },
     },
     {
       name: 'permalink',
       type: 'text',
-      admin: { readOnly: true },
     },
     {
       name: 'caption',
       type: 'textarea',
       maxLength: 500,
-      admin: { readOnly: true },
     },
     {
       name: 'mediaType',
@@ -53,13 +80,11 @@ export const InstagramPosts: CollectionConfig = {
         { label: 'Carousel', value: 'CAROUSEL_ALBUM' },
       ],
       defaultValue: 'IMAGE',
-      admin: { readOnly: true },
     },
     {
       name: 'sortOrder',
       type: 'number',
       defaultValue: 0,
-      admin: { readOnly: true },
     },
   ],
   timestamps: true,

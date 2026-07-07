@@ -964,14 +964,16 @@ export interface NewsletterSubscriber {
   createdAt: string;
 }
 /**
- * Cached Instagram posts fetched from the Instagram Graph API
+ * Instagram posts shown on the homepage gallery. Synced automatically from the Instagram Graph API when configured, or added manually as fallback.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "instagram-posts".
  */
 export interface InstagramPost {
   id: number;
-  instagramId: string;
+  source?: ('api' | 'manual') | null;
+  instagramId?: string | null;
+  image?: (number | null) | Media;
   mediaUrl?: string | null;
   thumbnailUrl?: string | null;
   permalink?: string | null;
@@ -1834,7 +1836,9 @@ export interface NewsletterSubscribersSelect<T extends boolean = true> {
  * via the `definition` "instagram-posts_select".
  */
 export interface InstagramPostsSelect<T extends boolean = true> {
+  source?: T;
   instagramId?: T;
+  image?: T;
   mediaUrl?: T;
   thumbnailUrl?: T;
   permalink?: T;

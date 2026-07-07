@@ -2,9 +2,21 @@ import { getPayload } from 'payload'
 import config from '@payload-config'
 import { cn } from '@/lib/utils'
 import { SkeletonImage } from '@/components/ui/SkeletonImage'
+import type { Media } from '@/payload-types'
 
 interface InstagramGalleryProps {
   className?: string
+}
+
+function getImageSrc(post: {
+  image?: number | Media | null
+  thumbnailUrl?: string | null
+  mediaUrl?: string | null
+}): string {
+  if (post.image && typeof post.image === 'object') {
+    return post.image.sizes?.card?.url || post.image.url || ''
+  }
+  return post.thumbnailUrl || post.mediaUrl || ''
 }
 
 export async function InstagramGallery({ className }: InstagramGalleryProps) {
@@ -36,7 +48,7 @@ export async function InstagramGallery({ className }: InstagramGalleryProps) {
         >
           <div className="aspect-square">
             <SkeletonImage
-              src={post.thumbnailUrl || post.mediaUrl || ''}
+              src={getImageSrc(post)}
               alt={post.caption?.slice(0, 100) || 'Instagram post'}
               fill
               sizes="(max-width: 640px) 50vw, 20vw"
