@@ -160,7 +160,7 @@ export async function generateMetadata({ params }: Props) {
 
   const post = result.docs[0] as any
   return {
-    title: `${post.title} — Shayga Journal`,
+    title: `${post.title} — SHAYGA - The Saree Studio Journal`,
     description:
       post.excerpt || `Read the latest story on our Indian handloom blog.`,
   }

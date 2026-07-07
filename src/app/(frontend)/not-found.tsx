@@ -76,6 +76,6 @@ export default function NotFound() {
 }
 
 export const metadata = {
-  title: 'Page Not Found — Shayga',
+  title: 'Page Not Found — SHAYGA - The Saree Studio',
   description: 'The page you are looking for does not exist.',
 }

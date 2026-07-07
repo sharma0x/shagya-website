@@ -1,5 +1,5 @@
 // =============================================================================
-// Shayga — Payload CMS Configuration
+// SHAYGA - The Saree Studio — Payload CMS Configuration
 // =============================================================================
 // This is the central configuration file for the entire backend.
 // All collections, globals, plugins, and admin settings live here.
@@ -196,7 +196,7 @@ export const extractSearchText = (doc: Record<string, unknown>): string => {
 // Email adapter — Mailpit (dev) or Resend (prod/staging)
 // Switch is driven by MAILPIT_SMTP_HOST: present → Mailpit, absent → Resend.
 // ---------------------------------------------------------------------------
-const FROM_NAME = process.env.EMAIL_FROM_NAME || 'Shayga'
+const FROM_NAME = process.env.EMAIL_FROM_NAME || 'SHAYGA - The Saree Studio'
 const FROM_ADDRESS = process.env.EMAIL_FROM_ADDRESS || 'noreply@shayga.in'
 
 const emailAdapter = process.env.MAILPIT_SMTP_HOST
@@ -241,7 +241,7 @@ export default buildConfig({
       },
     },
     meta: {
-      titleSuffix: '— Shayga',
+      titleSuffix: '— SHAYGA - The Saree Studio',
       icons: [{ url: '/favicon.ico' }],
     },
     livePreview: {

@@ -404,7 +404,7 @@ export default async function HomePage({ searchParams }: Props) {
             {/* Subtle branding tag */}
             <div className="mb-3 flex items-center gap-2 text-[10px] font-medium tracking-[0.2em] text-white/70 uppercase">
               <span className="bg-brand-400 h-px w-6" />
-              Shayga Handlooms
+              SHAYGA - The Saree Studio Handlooms
             </div>
 
             {/* Tagline */}
@@ -843,7 +843,7 @@ export default async function HomePage({ searchParams }: Props) {
                   rating={5}
                 />
                 <TestimonialCard
-                  quote="What sets Shayga apart is knowing exactly which cluster my saree came from and who wove it. It transforms a piece of clothing into a story. My Chanderi is easily my most treasured possession now."
+                  quote="What sets SHAYGA - The Saree Studio apart is knowing exactly which cluster my saree came from and who wove it. It transforms a piece of clothing into a story. My Chanderi is easily my most treasured possession now."
                   name="Rohini K."
                   location="Pune"
                   rating={5}

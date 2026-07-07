@@ -15,7 +15,7 @@ function wrap(content: string): string {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Shayga</title>
+<title>SHAYGA - The Saree Studio</title>
 </head>
 <body style="margin:0;padding:0;background-color:#FAF5F7;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;">
 <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#FAF5F7;">
@@ -81,7 +81,7 @@ function sectionLabel(text: string): string {
 export const DEFAULT_TEMPLATES: Record<TemplateSlug, EmailDefault> = {
   // ── Customer: order placed ─────────────────────────────────────────────────
   'order-placed-customer': {
-    subject: 'Order {{orderNumber}} received — Shayga',
+    subject: 'Order {{orderNumber}} received — SHAYGA - The Saree Studio',
     body: wrap(`
 <h2 style="margin:0 0 6px;font-family:Georgia,serif;font-size:22px;font-weight:400;color:#6B2448;">Thank you, {{customerName}}</h2>
 <p style="margin:0 0 24px;font-size:14px;color:#6B5E63;padding-bottom:20px;border-bottom:1px solid #E8DDE2;">We've received your order and will begin processing it as soon as payment is confirmed.</p>
@@ -107,7 +107,7 @@ ${btn('{{storeUrl}}/account/orders/{{orderNumber}}', 'Track Your Order')}
     subject: '[New Order] {{orderNumber}} — {{customerName}}',
     body: wrap(`
 <h2 style="margin:0 0 6px;font-family:Georgia,serif;font-size:20px;font-weight:400;color:#6B2448;">New Order Received</h2>
-<p style="margin:0 0 24px;font-size:14px;color:#6B5E63;padding-bottom:20px;border-bottom:1px solid #E8DDE2;">A new order has been placed on Shayga.</p>
+<p style="margin:0 0 24px;font-size:14px;color:#6B5E63;padding-bottom:20px;border-bottom:1px solid #E8DDE2;">A new order has been placed on SHAYGA - The Saree Studio.</p>
 
 <table cellpadding="0" cellspacing="0">
   ${kv('Order', '<strong>{{orderNumber}}</strong>')}
@@ -175,7 +175,7 @@ ${btn('{{storeUrl}}/account/orders/{{orderNumber}}', 'View Order')}
 
   // ── Customer: delivered ────────────────────────────────────────────────────
   'order-delivered-customer': {
-    subject: 'Your Shayga order has arrived — {{orderNumber}}',
+    subject: 'Your SHAYGA - The Saree Studio order has arrived — {{orderNumber}}',
     body: wrap(`
 <h2 style="margin:0 0 6px;font-family:Georgia,serif;font-size:22px;font-weight:400;color:#6B2448;">Your order has been delivered</h2>
 <p style="margin:0 0 24px;font-size:14px;color:#6B5E63;padding-bottom:20px;border-bottom:1px solid #E8DDE2;">Dear {{customerName}}, we're delighted that your order <strong>{{orderNumber}}</strong> has arrived.</p>
@@ -264,10 +264,10 @@ ${btn('{{adminOrderUrl}}', 'View in Admin')}
 
   // ── Customer: welcome ──────────────────────────────────────────────────────
   'welcome-customer': {
-    subject: 'Welcome to Shayga, {{customerName}}',
+    subject: 'Welcome to SHAYGA - The Saree Studio, {{customerName}}',
     body: wrap(`
 <h2 style="margin:0 0 6px;font-family:Georgia,serif;font-size:24px;font-weight:400;color:#6B2448;">Welcome, {{customerName}}</h2>
-<p style="margin:0 0 24px;font-size:14px;color:#6B5E63;padding-bottom:20px;border-bottom:1px solid #E8DDE2;">Thank you for joining Shayga — where every thread carries a story.</p>
+<p style="margin:0 0 24px;font-size:14px;color:#6B5E63;padding-bottom:20px;border-bottom:1px solid #E8DDE2;">Thank you for joining SHAYGA - The Saree Studio — where every thread carries a story.</p>
 
 <p style="margin:0 0 16px;font-size:14px;color:#6B5E63;">Your account is ready. Explore our collection of handcrafted sarees, each woven with care by master artisans across India.</p>
 
@@ -279,25 +279,25 @@ ${btn('{{storeUrl}}', 'Explore Collection')}
 
   // ── Customer: verify email ──────────────────────────────────────────────────
   'verify-email': {
-    subject: 'Verify your email — Shayga',
+    subject: 'Verify your email — SHAYGA - The Saree Studio',
     body: wrap(`
 <h2 style="margin:0 0 6px;font-family:Georgia,serif;font-size:22px;font-weight:400;color:#6B2448;">Verify your email</h2>
-<p style="margin:0 0 24px;font-size:14px;color:#6B5E63;padding-bottom:20px;border-bottom:1px solid #E8DDE2;">Hi {{customerName}}, welcome to Shayga. Please confirm your email address to activate your account.</p>
+<p style="margin:0 0 24px;font-size:14px;color:#6B5E63;padding-bottom:20px;border-bottom:1px solid #E8DDE2;">Hi {{customerName}}, welcome to SHAYGA - The Saree Studio. Please confirm your email address to activate your account.</p>
 
 <p style="margin:0 0 6px;font-size:14px;color:#6B5E63;">This link is valid for 1 hour.</p>
 
 ${btn('{{verificationUrl}}', 'Verify Email')}
 
-<p style="margin:28px 0 0;font-size:13px;color:#9B8E93;">If you didn't create an account with Shayga, you can safely ignore this email.</p>
+<p style="margin:28px 0 0;font-size:13px;color:#9B8E93;">If you didn't create an account with SHAYGA - The Saree Studio, you can safely ignore this email.</p>
 `),
   },
 
   // ── Customer: magic link sign-in ────────────────────────────────────────────
   'magic-link': {
-    subject: 'Sign in to Shayga',
+    subject: 'Sign in to SHAYGA - The Saree Studio',
     body: wrap(`
-<h2 style="margin:0 0 6px;font-family:Georgia,serif;font-size:22px;font-weight:400;color:#6B2448;">Sign in to Shayga</h2>
-<p style="margin:0 0 24px;font-size:14px;color:#6B5E63;padding-bottom:20px;border-bottom:1px solid #E8DDE2;">Use the button below to sign in to your Shayga account. This link is valid for 10 minutes.</p>
+<h2 style="margin:0 0 6px;font-family:Georgia,serif;font-size:22px;font-weight:400;color:#6B2448;">Sign in to SHAYGA - The Saree Studio</h2>
+<p style="margin:0 0 24px;font-size:14px;color:#6B5E63;padding-bottom:20px;border-bottom:1px solid #E8DDE2;">Use the button below to sign in to your SHAYGA - The Saree Studio account. This link is valid for 10 minutes.</p>
 
 ${btn('{{verificationUrl}}', 'Sign In')}
 

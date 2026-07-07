@@ -1,5 +1,5 @@
 // =============================================================================
-// Shayga — Database Seed Script (Dev Data)
+// SHAYGA - The Saree Studio — Database Seed Script (Dev Data)
 // =============================================================================
 // Usage: pnpm seed
 // Requires: Docker services running (make infra-up)
@@ -488,7 +488,7 @@ export async function seedPages(payload: Payload): Promise<void> {
           status: page.status,
           template: page.template,
           content: contentBlocks,
-          metaTitle: `${page.title} — Shayga`,
+          metaTitle: `${page.title} — SHAYGA - The Saree Studio`,
           metaDescription: page.heroSubheading,
         },
         overrideAccess: true,
@@ -715,7 +715,7 @@ export async function seedNavigation(payload: Payload): Promise<void> {
 async function main(): Promise<void> {
   const startTime = Date.now()
 
-  console.log('🌱 Shayga Database Seed')
+  console.log('🌱 SHAYGA - The Saree Studio Database Seed')
   console.log('══════════════════════════\n')
 
   // Check environment

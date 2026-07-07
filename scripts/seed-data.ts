@@ -1888,7 +1888,7 @@ export const instagramPosts: SeedInstagramPost[] = [
 // ---------------------------------------------------------------------------
 
 export const siteSettingsData = {
-  siteName: 'Shayga',
+  siteName: 'SHAYGA - The Saree Studio',
   tagline: 'Timeless Indian Sarees, Crafted with Love',
   contactEmail: 'hello@shayga.com',
   contactPhone: '+91 9876543210',
