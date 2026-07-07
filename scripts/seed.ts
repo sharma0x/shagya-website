@@ -20,6 +20,7 @@ import {
   pages,
   blogPosts,
   navigations,
+  instagramPosts,
   siteSettingsData,
   type SeedBlock,
 } from './seed-data'
@@ -581,6 +582,39 @@ export async function seedBrands(payload: Payload): Promise<void> {
   }
 }
 
+export async function seedInstagramPosts(payload: Payload): Promise<void> {
+  console.log(`\n📸 Seeding ${instagramPosts.length} Instagram posts...`)
+
+  for (const ig of instagramPosts) {
+    const existing = await (payload.find as any)({
+      collection: 'instagram-posts',
+      where: { caption: { equals: ig.caption } },
+      overrideAccess: true,
+    })
+
+    if (existing.totalDocs === 0) {
+      const imageId = await uploadMedia(payload, ig.imagePath, ig.caption)
+      await (payload.create as any)({
+        collection: 'instagram-posts',
+        data: {
+          source: 'manual',
+          image: imageId,
+          caption: ig.caption,
+          permalink: ig.permalink,
+          mediaType: 'IMAGE',
+          sortOrder: ig.sortOrder,
+        },
+        overrideAccess: true,
+      })
+      console.log(`  ✅ Created Instagram post: ${ig.caption.slice(0, 50)}…`)
+    } else {
+      console.log(
+        `  ⏭️  Instagram post already exists: ${ig.caption.slice(0, 50)}…`,
+      )
+    }
+  }
+}
+
 export async function seedBlogPosts(payload: Payload): Promise<void> {
   console.log(`\n📝 Seeding ${blogPosts.length} blog posts...`)
 
@@ -708,6 +742,7 @@ async function main(): Promise<void> {
     await seedCollections(payload)
     await seedTags(payload)
     await seedBrands(payload)
+    await seedInstagramPosts(payload)
     await seedProducts(payload)
     await seedPages(payload)
     await seedBlogPosts(payload)

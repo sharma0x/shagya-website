@@ -15,9 +15,10 @@ PROD="public/images/products"
 BLOG="public/images/blogs"
 HERO="public/images/hero"
 AVTR="public/images/avatars"
+IG="public/images/instagram"
 TEMP_DIR="/tmp/shayga-pinterest-dl"
 
-mkdir -p "$PROD" "$BLOG" "$HERO" "$AVTR"
+mkdir -p "$PROD" "$BLOG" "$HERO" "$AVTR" "$IG"
 
 # Quick skip check: if all expected files already exist and are ≥8KB, bail out
 all_exist() {
@@ -34,7 +35,7 @@ all_exist() {
   return 0
 }
 
-all_exist "$PROD" saree jpg 23 yes && all_exist "$BLOG" blog jpg 5 no && all_exist "$HERO" hero jpg 2 no && all_exist "$AVTR" avatar jpg 3 no && { echo "  ✅  All seed images already present. Skipping."; exit 0; }
+all_exist "$PROD" saree jpg 23 yes && all_exist "$BLOG" blog jpg 5 no && all_exist "$HERO" hero jpg 2 no && all_exist "$AVTR" avatar jpg 3 no && all_exist "$IG" ig jpg 5 no && { echo "  ✅  All seed images already present. Skipping."; exit 0; }
 
 # Download a batch from Pinterest to a temp dir, then rename sequentially.
 # Args: query dest_dir prefix ext count printf_fmt
@@ -82,6 +83,11 @@ download_batch "indian wedding saree model" "$HERO" hero jpg 2 "%d"
 # Avatar images — 3 square portraits (avatar-1.jpg to avatar-3.jpg)
 # ---------------------------------------------------------------------------
 download_batch "indian fashion model portrait" "$AVTR" avatar jpg 3 "%d"
+
+# ---------------------------------------------------------------------------
+# Instagram gallery images — 5 square photos (ig-1.jpg to ig-5.jpg)
+# ---------------------------------------------------------------------------
+download_batch "indian saree instagram style" "$IG" ig jpg 5 "%d"
 
 echo ""
 echo "  ✅  All seed images downloaded."
