@@ -23,6 +23,7 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [cartOpen, setCartOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
   const [announcement, setAnnouncement] = useState<{
     enabled: boolean
     text: string
@@ -30,6 +31,16 @@ export function Header() {
   const [wishlistCount, setWishlistCount] = useState(0)
   const { items } = useCart()
   const { data: sessionData } = useSession()
+
+  // Scroll listener for blur-on-scroll
+  useEffect(() => {
+    function onScroll() {
+      setScrolled(window.scrollY > 20)
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    onScroll()
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
 
   useEffect(() => {
     if (!sessionData?.user) return
@@ -66,11 +77,42 @@ export function Header() {
 
   return (
     <>
-      <header className="z-sticky glass-panel sticky top-0">
+      <header
+        className={cn(
+          'z-sticky sticky top-0 transition-all duration-300',
+          scrolled ? 'bg-white/95 shadow-sm backdrop-blur-xl' : 'glass-panel',
+        )}
+      >
         {/* Announcement */}
         {announcement?.enabled && (
-          <div className="bg-brand-600 font-body px-4 py-2 text-center text-xs text-white">
-            {announcement.text}
+          <div className="bg-brand-600 relative overflow-hidden px-4 py-2 text-center text-xs text-white">
+            {/* Decorative dots */}
+            <span
+              className="absolute top-1/2 left-4 hidden -translate-y-1/2 sm:block"
+              aria-hidden="true"
+            >
+              <span className="inline-block h-1 w-1 rounded-full bg-white/30" />
+              <span className="ml-1.5 inline-block h-1 w-1 rounded-full bg-white/30" />
+            </span>
+            <span
+              className="absolute top-1/2 right-4 hidden -translate-y-1/2 sm:block"
+              aria-hidden="true"
+            >
+              <span className="inline-block h-1 w-1 rounded-full bg-white/30" />
+              <span className="ml-1.5 inline-block h-1 w-1 rounded-full bg-white/30" />
+            </span>
+            <span className="relative inline-flex items-center gap-2">
+              <svg
+                className="text-gold-300 h-3 w-3 shrink-0"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+              </svg>
+              <span className="font-medium tracking-wide">
+                {announcement.text}
+              </span>
+            </span>
           </div>
         )}
 
@@ -168,17 +210,15 @@ export function Header() {
             : 'pointer-events-none translate-x-full opacity-0',
         )}
       >
-        <div className="container-page">
-          <div className="flex h-15 items-center justify-between gap-6 border-b border-neutral-200">
-            <Logo wordmarkClassName="text-neutral-900" />
-            <button
-              className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg p-2 text-neutral-600 transition-colors hover:bg-neutral-100"
-              onClick={() => setMobileMenuOpen(false)}
-              aria-label="Close menu"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
+        <div className="flex h-15 items-center justify-between border-b border-neutral-200 pr-1 pl-4">
+          <Logo wordmarkClassName="text-neutral-900" />
+          <button
+            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg p-2 text-neutral-600 transition-colors hover:bg-neutral-100"
+            onClick={() => setMobileMenuOpen(false)}
+            aria-label="Close menu"
+          >
+            <X className="h-5 w-5" />
+          </button>
         </div>
 
         <nav className="flex-1 overflow-y-auto px-6 py-10 sm:px-8">

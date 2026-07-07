@@ -5,8 +5,9 @@
         lint format typecheck \
         test test-watch test-coverage test-e2e test-all \
         infra-up infra-down infra-logs infra-reset \
-        seed \
-        db-migrate db-migrate-create db-seed db-generate-types \
+        seed-local seed-preview seed-production \
+        reset-local reset-preview-dangerous reset-production-dangerous \
+        db-migrate db-migrate-create db-generate-types \
         release \
         setup clean clean-all
 
@@ -19,7 +20,13 @@ help: ## Show this help message
 	@echo "============================"
 	@echo ""
 	@echo "Quick start:"
-	@echo "  make seed             Full seed: start infra → migrate → images → data + credentials"
+	@echo "  make seed-local       Seed local database (download images + seed data)"
+	@echo "  make seed-preview     Seed preview database (download images + seed data)"
+	@echo "  make seed-production  Seed production database (download images + seed data)"
+	@echo ""
+	@echo "  make reset-local      Reset local database & MinIO storage"
+	@echo "  make reset-preview-dangerous Reset preview database & R2 storage"
+	@echo "  make reset-production-dangerous Reset production database & R2 storage"
 	@echo ""
 	@echo "Installation:"
 	@echo "  make install          Install all dependencies"
@@ -52,7 +59,6 @@ help: ## Show this help message
 	@echo "Database:"
 	@echo "  make db-migrate       Run pending migrations"
 	@echo "  make db-migrate-create Create a new migration (MSG='description')"
-	@echo "  make db-seed          Seed only (no infra/migration steps)"
 	@echo "  make db-generate-types Generate Payload TypeScript types"
 	@echo ""
 	@echo "Utilities:"
@@ -139,42 +145,6 @@ infra-reset: ## Reset infrastructure (delete all data)
 # Seed (one-stop command — works on a completely fresh database)
 # ============================================================================
 
-seed: ## Full seed: start infra → migrate → download images → seed data → print credentials
-	@echo ""
-	@echo "========================================"
-	@echo "  Shayga — Full Dev Seed"
-	@echo "========================================"
-	@echo ""
-	@echo "Step 1/4  Starting infrastructure..."
-	docker compose -f infra/dev-services.yml up -d
-	@echo ""
-	@echo "Step 2/4  Waiting for PostgreSQL to be ready..."
-	@until docker exec shayga-pg pg_isready -U shayga -d shayga >/dev/null 2>&1; do \
-		printf "."; sleep 1; \
-	done
-	@printf " ready\n"
-	@echo ""
-	@echo "Step 3/4  Running database migrations..."
-	@set -a; [ -f .env ] && . ./.env; set +a; pnpm payload migrate
-	@echo "          Running Better Auth migrations..."
-	@set -a; [ -f .env ] && . ./.env; set +a; pnpm dlx @better-auth/cli migrate --config src/lib/auth.ts -y
-	@echo ""
-	@echo "Step 4/4  Downloading seed images (skips existing)..."
-	@bash scripts/download-images.sh
-	@echo ""
-	@echo "         Seeding database with dummy data..."
-	pnpm seed
-	@echo ""
-	@echo "========================================"
-	@echo "  Seed complete!"
-	@echo "========================================"
-	@echo "  App:      http://localhost:3000"
-	@echo "  Admin:    http://localhost:3000/admin"
-	@echo "  Email:    admin@shayga.com"
-	@echo "  Password: admin123"
-	@echo "========================================"
-	@echo ""
-
 # ============================================================================
 # Database
 # ============================================================================
@@ -183,6 +153,18 @@ db-migrate: ## Run pending database migrations
 	pnpm payload migrate
 	pnpm dlx @better-auth/cli migrate --config src/lib/auth.ts -y
 
+db-migrate-preview: ## Run pending database migrations against preview environment
+	@if [ ! -f infra/.env.preview ]; then echo "❌ infra/.env.preview not found."; exit 1; fi
+	pnpm dlx @dotenvx/dotenvx run -f infra/.env.preview -o -- pnpm payload migrate
+	pnpm dlx @dotenvx/dotenvx run -f infra/.env.preview -o -- pnpm dlx @better-auth/cli migrate --config src/lib/auth.ts -y
+
+db-migrate-prod: ## Run pending database migrations against production environment
+	@if [ ! -f infra/.env.production ]; then echo "❌ infra/.env.production not found."; exit 1; fi
+	@echo "⚠️  WARNING: You are about to migrate PRODUCTION."
+	@read -p "Are you sure? [y/N] " ans && [ $${ans:-N} = y ]
+	pnpm dlx @dotenvx/dotenvx run -f infra/.env.production -o -- pnpm payload migrate
+	pnpm dlx @dotenvx/dotenvx run -f infra/.env.production -o -- pnpm dlx @better-auth/cli migrate --config src/lib/auth.ts -y
+
 db-migrate-create: ## Create a new migration (MSG='description')
 	@if [ -z "$(MSG)" ]; then \
 		echo "Error: MSG is required. Usage: make db-migrate-create MSG='add products table'"; \
@@ -190,27 +172,88 @@ db-migrate-create: ## Create a new migration (MSG='description')
 	fi
 	pnpm payload migrate:create "$(MSG)"
 
-db-seed: ## Seed database with sample data (uses .env)
-	@set -a && [ -f .env ] && . ./.env; set +a && pnpm seed
+seed-local: ## Seed local database: download images → seed data
+	@echo ""
+	@echo "========================================"
+	@echo "  Shayga — Seed Local Database"
+	@echo "========================================"
+	@echo ""
+	@echo "Step 1/2  Downloading seed images (skips existing)..."
+	@bash scripts/download-images.sh
+	@echo ""
+	@echo "Step 2/2  Seeding database with dummy data..."
+	@pnpm seed
 
-db-seed-preview: ## Seed preview DB + R2 (sources .env.preview, no --env-file override)
-	@if [ ! -f .env.preview ]; then \
-		echo "❌ .env.preview not found."; \
-		exit 1; \
-	fi
-	@set -a && . ./.env.preview && set +a && \
-		node --import tsx/esm scripts/seed.ts
+seed-preview: ## Seed preview database: download images → seed data
+	@if [ ! -f infra/.env.preview ]; then echo "❌ infra/.env.preview not found."; exit 1; fi
+	@echo ""
+	@echo "========================================"
+	@echo "  Shayga — Seed Preview Database"
+	@echo "========================================"
+	@echo ""
+	@echo "Step 1/2  Downloading seed images (skips existing)..."
+	@bash scripts/download-images.sh
+	@echo ""
+	@echo "Step 2/2  Seeding database with dummy data..."
+	@pnpm dlx @dotenvx/dotenvx run -f infra/.env.preview -o -- node --import tsx/esm scripts/seed.ts
 
-db-sync-media-preview: ## Re-upload local images to preview R2 (sources .env.preview)
-	@if [ ! -f .env.preview ]; then \
-		echo "❌ .env.preview not found."; \
-		exit 1; \
-	fi
-	@set -a && . ./.env.preview && set +a && \
-		node --import tsx/esm scripts/sync-media-to-r2.ts
+seed-production: ## Seed production database: download images → seed data
+	@if [ ! -f infra/.env.production ]; then echo "❌ infra/.env.production not found."; exit 1; fi
+	@echo "⚠️  WARNING: You are about to seed PRODUCTION."
+	@read -p "Are you sure? [y/N] " ans && [ $${ans:-N} = y ]
+	@echo ""
+	@echo "========================================"
+	@echo "  Shayga — Seed Production Database"
+	@echo "========================================"
+	@echo ""
+	@echo "Step 1/2  Downloading seed images (skips existing)..."
+	@bash scripts/download-images.sh
+	@echo ""
+	@echo "Step 2/2  Seeding database with dummy data..."
+	@pnpm dlx @dotenvx/dotenvx run -f infra/.env.production -o -- node --import tsx/esm scripts/seed.ts
+
+db-sync-media-preview: ## Re-upload local images to preview R2 (sources infra/.env.preview)
+	@if [ ! -f infra/.env.preview ]; then echo "❌ infra/.env.preview not found."; exit 1; fi
+	pnpm dlx @dotenvx/dotenvx run -f infra/.env.preview -o -- node --import tsx/esm scripts/sync-media-to-r2.ts
+
+db-sync-media-prod: ## Re-upload local images to production R2 (sources infra/.env.production)
+	@if [ ! -f infra/.env.production ]; then echo "❌ infra/.env.production not found."; exit 1; fi
+	@echo "⚠️  WARNING: You are about to sync media to PRODUCTION R2."
+	@read -p "Are you sure? [y/N] " ans && [ $${ans:-N} = y ]
+	pnpm dlx @dotenvx/dotenvx run -f infra/.env.production -o -- node --import tsx/esm scripts/sync-media-to-r2.ts
 
 db-generate-types: ## Generate Payload TypeScript types from schema
 	pnpm generate:types
+
+reset-local: ## Reset local infrastructure (nuke local DB + local MinIO bucket)
+	@echo ""
+	@echo "========================================"
+	@echo "  Shayga — Reset Local Infrastructure"
+	@echo "========================================"
+	@echo ""
+	@node --env-file=.env --import tsx/esm scripts/reset-infra.ts
+
+reset-preview-dangerous: ## Reset preview infrastructure (nuke preview DB + preview R2 bucket)
+	@if [ ! -f infra/.env.preview ]; then echo "❌ infra/.env.preview not found."; exit 1; fi
+	@echo "⚠️  WARNING: You are about to RESET PREVIEW database and storage."
+	@read -p "Are you sure? Type 'DANGEROUS' to confirm: " ans && [ "$$ans" = "DANGEROUS" ]
+	@echo ""
+	@echo "========================================"
+	@echo "  Shayga — Reset Preview Infrastructure"
+	@echo "========================================"
+	@echo ""
+	pnpm dlx @dotenvx/dotenvx run -f infra/.env.preview -o -- node --import tsx/esm scripts/reset-infra.ts
+
+reset-production-dangerous: ## Reset production infrastructure (nuke production DB + prod R2 bucket)
+	@if [ ! -f infra/.env.production ]; then echo "❌ infra/.env.production not found."; exit 1; fi
+	@echo "⚠️  WARNING: You are about to RESET PRODUCTION database and storage."
+	@read -p "Are you sure? Type 'DANGEROUS' to confirm: " ans && [ "$$ans" = "DANGEROUS" ]
+	@echo ""
+	@echo "========================================"
+	@echo "  Shayga — Reset Production Infrastructure"
+	@echo "========================================"
+	@echo ""
+	pnpm dlx @dotenvx/dotenvx run -f infra/.env.production -o -- node --import tsx/esm scripts/reset-infra.ts
 
 # ============================================================================
 # Release (semantic-release)

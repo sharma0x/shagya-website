@@ -10,14 +10,14 @@ export async function GET(request: Request) {
     if (!city) {
       return NextResponse.json(
         { error: 'City query parameter is required' },
-        { status: 400 }
+        { status: 400 },
       )
     }
 
     if (city.length < 2) {
       return NextResponse.json(
         { error: 'City name must be at least 2 characters' },
-        { status: 400 }
+        { status: 400 },
       )
     }
 
@@ -33,18 +33,18 @@ export async function GET(request: Request) {
     if (results.length === 0) {
       return NextResponse.json(
         { error: 'No post offices found for this city. Try a nearby city.' },
-        { status: 404 }
+        { status: 404 },
       )
     }
 
     setCache(cacheKey, results)
 
-    return NextResponse.json({ data: results })
+    return NextResponse.json({ data: results, cached: false })
   } catch (err) {
     console.error('City search failed:', err)
     return NextResponse.json(
       { error: 'Unable to search city. Please try again later.' },
-      { status: 500 }
+      { status: 500 },
     )
   }
 }
