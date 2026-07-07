@@ -43,6 +43,7 @@ import { Forms } from './collections/Forms'
 import { FormSubmissions } from './collections/FormSubmissions'
 import { NewsletterSubscribers } from './collections/NewsletterSubscribers'
 import { BackInStockRequests } from './collections/BackInStockRequests'
+import { InstagramPosts } from './collections/InstagramPosts'
 import { SiteSettings } from './globals/SiteSettings'
 import { EmailTemplates } from './collections/EmailTemplates'
 import sharp from 'sharp'
@@ -321,6 +322,7 @@ export default buildConfig({
     FormSubmissions,
     NewsletterSubscribers,
     BackInStockRequests,
+    InstagramPosts,
   ],
 
   // ---------------------------------------------------------------------------

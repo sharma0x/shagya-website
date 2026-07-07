@@ -1,25 +1,21 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
+import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { ChevronDown } from 'lucide-react'
 
-export function SortSelect({
-  defaultValue,
-  preserveParams = '',
-}: {
-  defaultValue: string
-  preserveParams?: string
-}) {
+export function SortSelect({ defaultValue }: { defaultValue: string }) {
+  const searchParams = useSearchParams()
   const router = useRouter()
+  const pathname = usePathname()
 
   return (
     <div className="relative">
       <select
         defaultValue={defaultValue}
         onChange={(e) => {
-          const sort = `sort=${e.target.value}`
-          const qs = preserveParams ? `?${sort}&${preserveParams}` : `?${sort}`
-          router.push(qs)
+          const params = new URLSearchParams(searchParams.toString())
+          params.set('sort', e.target.value)
+          router.push(`${pathname}?${params.toString()}`)
         }}
         className="font-body focus:border-brand-500 h-9 appearance-none rounded-lg border border-neutral-200 bg-white pr-8 pl-3 text-xs text-neutral-800 outline-none select-none"
       >
