@@ -12,14 +12,14 @@ export async function POST(request: Request) {
     if (!pincode) {
       return NextResponse.json(
         { error: 'Pincode is required' },
-        { status: 400 }
+        { status: 400 },
       )
     }
 
     if (!PINCODE_RE.test(pincode)) {
       return NextResponse.json(
         { error: 'Invalid pincode. Must be a 6-digit Indian pincode.' },
-        { status: 400 }
+        { status: 400 },
       )
     }
 
@@ -35,18 +35,18 @@ export async function POST(request: Request) {
     if (!result) {
       return NextResponse.json(
         { error: 'Pincode not found. Please check and try again.' },
-        { status: 404 }
+        { status: 404 },
       )
     }
 
     setCache(cacheKey, result)
 
-    return NextResponse.json({ data: result })
+    return NextResponse.json({ data: result, cached: false })
   } catch (err) {
     console.error('Pincode verification failed:', err)
     return NextResponse.json(
       { error: 'Unable to verify pincode. Please try again later.' },
-      { status: 500 }
+      { status: 500 },
     )
   }
 }

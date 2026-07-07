@@ -110,6 +110,26 @@ async function processBlock(
       ...(imageId ? { image: imageId } : {}),
     }
   }
+
+  if (block.blockType === 'hero') {
+    let backgroundImageId = null
+    if (block.imagePath) {
+      backgroundImageId = await uploadMedia(
+        payload,
+        block.imagePath,
+        block.heading || 'Hero background',
+      )
+    }
+    return {
+      blockType: 'hero',
+      heading: block.heading,
+      subheading: block.subheading,
+      ctaText: block.ctaText,
+      ctaLink: block.ctaLink,
+      ...(backgroundImageId ? { backgroundImage: backgroundImageId } : {}),
+    }
+  }
+
   return block as unknown as Record<string, unknown>
 }
 
@@ -222,6 +242,18 @@ export async function seedCollections(payload: Payload): Promise<void> {
   }
 }
 
+function getMimeType(filename: string): string {
+  const ext = path.extname(filename).toLowerCase()
+  const map: Record<string, string> = {
+    '.png': 'image/png',
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.webp': 'image/webp',
+    '.gif': 'image/gif',
+  }
+  return map[ext] || 'image/jpeg'
+}
+
 async function uploadMedia(
   payload: Payload,
   imagePath: string,
@@ -234,6 +266,9 @@ async function uploadMedia(
   }
 
   const filename = path.basename(imagePath)
+  const fileData = fs.readFileSync(fullPath)
+  const fileSize = fs.statSync(fullPath).size
+
   const existing = await payload.find({
     collection: 'media',
     where: {
@@ -244,7 +279,22 @@ async function uploadMedia(
   })
 
   if (existing.docs.length > 0) {
-    return existing.docs[0].id as any
+    const existingDoc = existing.docs[0] as any
+    // If file sizes differ, re-upload (delete old, create new)
+    if (existingDoc.filesize !== fileSize) {
+      console.log(`    🔄 File changed for ${filename}, re-uploading...`)
+      try {
+        await payload.delete({
+          collection: 'media',
+          id: existingDoc.id,
+          overrideAccess: true,
+        })
+      } catch {
+        // ignore delete errors
+      }
+    } else {
+      return existingDoc.id as number
+    }
   }
 
   try {
@@ -254,10 +304,10 @@ async function uploadMedia(
         alt: altText,
       },
       file: {
-        data: fs.readFileSync(fullPath),
+        data: fileData,
         name: filename,
-        mimetype: 'image/jpeg',
-        size: fs.statSync(fullPath).size,
+        mimetype: getMimeType(filename),
+        size: fileSize,
       },
       overrideAccess: true,
     })
@@ -394,12 +444,9 @@ export async function seedProducts(payload: Payload): Promise<void> {
         updateData.collections = collectionIds
       }
 
-      // Update new fields that may not exist on previously seeded products
-      if (!doc.cityOfOrigin && prod.cityOfOrigin) {
-        updateData.cityOfOrigin = prod.cityOfOrigin
-      }
-      if (!doc.deliveryTime && prod.deliveryTime) {
-        updateData.deliveryTime = prod.deliveryTime
+      // Update color if missing (field was newly added)
+      if (!(doc as any).color) {
+        updateData.color = prod.color
       }
 
       if (Object.keys(updateData).length > 0) {
@@ -572,13 +619,15 @@ export async function seedBlogPosts(payload: Payload): Promise<void> {
       console.log(`  ✅ Created blog post: ${post.title}`)
     } else {
       const doc = existing.docs[0]
-      if (!doc.featuredImage && post.imagePath) {
-        const featuredImageId = await uploadMedia(
-          payload,
-          post.imagePath,
-          post.title,
-        )
-        if (featuredImageId) {
+      const featuredImageId = post.imagePath
+        ? await uploadMedia(payload, post.imagePath, post.title)
+        : null
+      if (featuredImageId) {
+        const oldImageId =
+          typeof doc.featuredImage === 'object'
+            ? (doc.featuredImage as any).id
+            : doc.featuredImage
+        if (oldImageId !== featuredImageId) {
           await (payload.update as any)({
             collection: 'posts',
             id: doc.id,
@@ -587,9 +636,8 @@ export async function seedBlogPosts(payload: Payload): Promise<void> {
           })
           console.log(`  ✅ Updated featured image for: ${post.title}`)
         }
-      } else {
-        console.log(`  ⏭️  Blog post already exists: ${post.title}`)
       }
+      console.log(`  ⏭️  Blog post already exists: ${post.title}`)
     }
   }
 }
@@ -645,6 +693,13 @@ async function main(): Promise<void> {
     process.exit(1)
   }
 
+  if (!process.env.SEED_ADMIN_EMAIL || !process.env.SEED_ADMIN_PASSWORD) {
+    console.error(
+      '❌ Error: SEED_ADMIN_EMAIL and SEED_ADMIN_PASSWORD environment variables are required and must be defined in your env file.\n',
+    )
+    process.exit(1)
+  }
+
   const payload = await getPayload({ config })
 
   try {
@@ -661,6 +716,19 @@ async function main(): Promise<void> {
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1)
     console.log(`\n🎉 Seed complete! (${elapsed}s)`)
+
+    console.log('\n========================================')
+    console.log('  Seed complete!')
+    console.log('========================================')
+    console.log(
+      `  App:      ${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'}`,
+    )
+    console.log(
+      `  Admin:    ${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'}/admin`,
+    )
+    console.log(`  Email:    ${process.env.SEED_ADMIN_EMAIL}`)
+    console.log(`  Password: ${process.env.SEED_ADMIN_PASSWORD}`)
+    console.log('========================================\n')
   } catch (error) {
     console.error('\n❌ Seed failed:', error)
     process.exit(1)
