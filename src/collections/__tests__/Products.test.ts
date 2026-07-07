@@ -233,9 +233,8 @@ describe('Products collection', () => {
       expect(field).toBeDefined()
       expect(field?.type).toBe('text')
     })
-
-    it('has exactly 25 fields in total', () => {
-      expect(Products.fields).toHaveLength(25)
+    it('has exactly 26 fields in total', () => {
+      expect(Products.fields).toHaveLength(26)
     })
   })
 
