@@ -14,6 +14,7 @@ export const EMAIL_TEMPLATE_SLUGS = [
   'welcome-customer',
   'verify-email',
   'magic-link',
+  'back-in-stock',
 ] as const
 
 export type TemplateSlug = (typeof EMAIL_TEMPLATE_SLUGS)[number]
@@ -70,6 +71,10 @@ const SLUG_META: Record<TemplateSlug, { label: string; hint: string }> = {
   'magic-link': {
     label: 'Magic Link Sign-in (Customer)',
     hint: '{{verificationUrl}} {{storeUrl}}',
+  },
+  'back-in-stock': {
+    label: 'Back in Stock (Customer)',
+    hint: '{{productName}} {{productUrl}} {{storeUrl}} {{storeName}}',
   },
 }
 
