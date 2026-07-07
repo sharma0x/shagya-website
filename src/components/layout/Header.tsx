@@ -221,14 +221,14 @@ export function Header() {
           </button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto px-6 py-10 sm:px-8">
-          <div className="flex flex-col gap-6">
+        <nav className="flex-1 overflow-y-auto px-6 py-4 sm:px-8">
+          <div className="flex flex-col">
             {navLinks.map((link, i) => (
               <Link
                 key={link.href}
                 href={link.href}
                 className={cn(
-                  'font-display hover:text-brand-700 text-3xl font-medium text-neutral-900 transition-all duration-500',
+                  'font-body hover:text-brand-700 border-b border-neutral-100 py-3 text-lg font-medium text-neutral-700 transition-colors last:border-0',
                   mobileMenuOpen
                     ? 'translate-y-0 opacity-100'
                     : 'translate-y-4 opacity-0',
@@ -243,7 +243,7 @@ export function Header() {
 
           <div
             className={cn(
-              'mt-10 flex flex-col gap-4 border-t border-neutral-200 pt-8 transition-all duration-500',
+              'mt-6 flex flex-col gap-1 transition-all duration-500',
               mobileMenuOpen
                 ? 'translate-y-0 opacity-100'
                 : 'translate-y-4 opacity-0',
@@ -252,18 +252,18 @@ export function Header() {
           >
             <Link
               href="/account"
-              className="font-body hover:text-brand-700 flex min-h-[44px] items-center gap-4 text-base font-medium text-neutral-600 transition-colors sm:hidden"
+              className="font-body hover:text-brand-700 flex items-center gap-3 py-3 text-sm font-medium text-neutral-500 transition-colors"
               onClick={() => setMobileMenuOpen(false)}
             >
-              <User className="h-6 w-6" />
+              <User className="h-4 w-4" />
               My Account
             </Link>
             <Link
               href="/wishlist"
-              className="font-body hover:text-brand-700 flex min-h-[44px] items-center gap-4 text-base font-medium text-neutral-600 transition-colors sm:hidden"
+              className="font-body hover:text-brand-700 flex items-center gap-3 py-3 text-sm font-medium text-neutral-500 transition-colors"
               onClick={() => setMobileMenuOpen(false)}
             >
-              <Heart className="h-6 w-6" />
+              <Heart className="h-4 w-4" />
               Wishlist
             </Link>
           </div>

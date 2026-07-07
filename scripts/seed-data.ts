@@ -174,6 +174,8 @@ export const blogImagePath = (index: number) =>
   `/images/blogs/blog-${index}.jpg`
 export const avatarImagePath = (index: number) =>
   `/images/avatars/avatar-${index}.jpg`
+export const instagramImagePath = (index: number) =>
+  `/images/instagram/ig-${index}.jpg`
 
 // ---------------------------------------------------------------------------
 // Admin
@@ -1141,7 +1143,7 @@ export const pages: SeedPage[] = [
     blocks: [
       {
         blockType: 'hero',
-        heading: 'Shayga — Handwoven narratives from Varanasi',
+        heading: 'Timeless Elegance in Every Drape',
         subheading:
           'Discover the heritage of Indian handloom. Each saree is a testament to centuries of artisanal weaving, bringing the rich history of Varanasi to your wardrobe.',
         imagePath: '/images/hero/hero-main.png',
@@ -1831,6 +1833,53 @@ export const navigations: SeedNavigation[] = [
         url: 'https://facebook.com/shayga',
       },
     ],
+  },
+]
+
+// ---------------------------------------------------------------------------
+// Instagram Posts (manual fallback — shown when Graph API is not configured)
+// ---------------------------------------------------------------------------
+
+export interface SeedInstagramPost {
+  caption: string
+  permalink: string
+  sortOrder: number
+  imagePath: string
+}
+
+export const instagramPosts: SeedInstagramPost[] = [
+  {
+    caption:
+      'Handwoven Banarasi in pure silk — every thread tells a story. 🧵✨',
+    permalink: 'https://instagram.com/shayga',
+    sortOrder: 0,
+    imagePath: instagramImagePath(1),
+  },
+  {
+    caption:
+      'The richer the zari, the more it catches the light — and your heart. 💛',
+    permalink: 'https://instagram.com/shayga',
+    sortOrder: 1,
+    imagePath: instagramImagePath(2),
+  },
+  {
+    caption:
+      'From the looms of Varanasi to your wardrobe. Tag us in your drapes! 🪡',
+    permalink: 'https://instagram.com/shayga',
+    sortOrder: 2,
+    imagePath: instagramImagePath(3),
+  },
+  {
+    caption: 'That perfect drape that turns every corner into a catwalk. 🔥',
+    permalink: 'https://instagram.com/shayga',
+    sortOrder: 3,
+    imagePath: instagramImagePath(4),
+  },
+  {
+    caption: 'Six yards of elegance, woven with love and heritage. 🇮🇳❤️',
+    permalink: 'https://instagram.com/shayga',
+    sortOrder: 4,
+    imagePath: instagramImagePath(5),
   },
 ]
 
