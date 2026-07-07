@@ -284,6 +284,10 @@ export interface Product {
   palluDetails?: string | null;
   borderType?: string | null;
   weavePattern?: string | null;
+  /**
+   * The city/region where this saree originates (e.g., Varanasi, Kanchipuram)
+   */
+  cityOfOrigin?: string | null;
   occasion?: string | null;
   color:
     | 'red'
@@ -307,9 +311,17 @@ export interface Product {
     | null;
   basePrice: number;
   compareAtPrice?: number | null;
+  /**
+   * Auto-computed from basePrice and compareAtPrice
+   */
+  discountPercentage?: number | null;
   costPrice?: number | null;
   gstPercent?: number | null;
   shippingPrice?: number | null;
+  /**
+   * Estimated delivery time displayed to customers
+   */
+  deliveryTime?: ('by-tomorrow' | 'within-2-days' | 'within-5-days' | 'within-7-days' | '7-plus-days') | null;
   trackQuantity?: boolean | null;
   quantity?: number | null;
   lowStockThreshold?: number | null;
@@ -1217,6 +1229,7 @@ export interface ProductsSelect<T extends boolean = true> {
   palluDetails?: T;
   borderType?: T;
   weavePattern?: T;
+  cityOfOrigin?: T;
   occasion?: T;
   color?: T;
   gallery?:
@@ -1228,9 +1241,11 @@ export interface ProductsSelect<T extends boolean = true> {
       };
   basePrice?: T;
   compareAtPrice?: T;
+  discountPercentage?: T;
   costPrice?: T;
   gstPercent?: T;
   shippingPrice?: T;
+  deliveryTime?: T;
   trackQuantity?: T;
   quantity?: T;
   lowStockThreshold?: T;
