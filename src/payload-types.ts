@@ -93,6 +93,7 @@ export interface Config {
     forms: Form;
     'form-submissions': FormSubmission;
     'newsletter-subscribers': NewsletterSubscriber;
+    'back-in-stock-requests': BackInStockRequest;
     'instagram-posts': InstagramPost;
     search: Search;
     'payload-kv': PayloadKv;
@@ -128,6 +129,7 @@ export interface Config {
     forms: FormsSelect<false> | FormsSelect<true>;
     'form-submissions': FormSubmissionsSelect<false> | FormSubmissionsSelect<true>;
     'newsletter-subscribers': NewsletterSubscribersSelect<false> | NewsletterSubscribersSelect<true>;
+    'back-in-stock-requests': BackInStockRequestsSelect<false> | BackInStockRequestsSelect<true>;
     'instagram-posts': InstagramPostsSelect<false> | InstagramPostsSelect<true>;
     search: SearchSelect<false> | SearchSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
@@ -230,7 +232,8 @@ export interface EmailTemplate {
     | 'admin-order-refunded'
     | 'welcome-customer'
     | 'verify-email'
-    | 'magic-link';
+    | 'magic-link'
+    | 'back-in-stock';
   /**
    * When unchecked, the system falls back to the built-in default template for this email.
    */
@@ -286,6 +289,10 @@ export interface Product {
   palluDetails?: string | null;
   borderType?: string | null;
   weavePattern?: string | null;
+  /**
+   * The city/region where this saree originates (e.g., Varanasi, Kanchipuram)
+   */
+  cityOfOrigin?: string | null;
   occasion?: string | null;
   color:
     | 'red'
@@ -309,12 +316,24 @@ export interface Product {
     | null;
   basePrice: number;
   compareAtPrice?: number | null;
+  /**
+   * Auto-computed from basePrice and compareAtPrice
+   */
+  discountPercentage?: number | null;
   costPrice?: number | null;
   gstPercent?: number | null;
   shippingPrice?: number | null;
+  /**
+   * Estimated delivery time displayed to customers
+   */
+  deliveryTime?: ('by-tomorrow' | 'within-2-days' | 'within-5-days' | 'within-7-days' | '7-plus-days') | null;
   trackQuantity?: boolean | null;
   quantity?: number | null;
   lowStockThreshold?: number | null;
+  /**
+   * Auto-incremented on confirmed orders. Used for trending/popular ranking.
+   */
+  purchaseCount?: number | null;
   allowBackorder?: boolean | null;
   soldIndividually?: boolean | null;
   /**
@@ -964,6 +983,23 @@ export interface NewsletterSubscriber {
   createdAt: string;
 }
 /**
+ * Users requesting notification when a product returns to stock
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "back-in-stock-requests".
+ */
+export interface BackInStockRequest {
+  id: number;
+  product: number | Product;
+  email: string;
+  /**
+   * Auto-set to true after back-in-stock email is sent
+   */
+  notified?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Instagram posts shown on the homepage gallery. Synced automatically from the Instagram Graph API when configured, or added manually as fallback.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1138,6 +1174,10 @@ export interface PayloadLockedDocument {
         value: number | NewsletterSubscriber;
       } | null)
     | ({
+        relationTo: 'back-in-stock-requests';
+        value: number | BackInStockRequest;
+      } | null)
+    | ({
         relationTo: 'instagram-posts';
         value: number | InstagramPost;
       } | null)
@@ -1243,6 +1283,7 @@ export interface ProductsSelect<T extends boolean = true> {
   palluDetails?: T;
   borderType?: T;
   weavePattern?: T;
+  cityOfOrigin?: T;
   occasion?: T;
   color?: T;
   gallery?:
@@ -1254,12 +1295,15 @@ export interface ProductsSelect<T extends boolean = true> {
       };
   basePrice?: T;
   compareAtPrice?: T;
+  discountPercentage?: T;
   costPrice?: T;
   gstPercent?: T;
   shippingPrice?: T;
+  deliveryTime?: T;
   trackQuantity?: T;
   quantity?: T;
   lowStockThreshold?: T;
+  purchaseCount?: T;
   allowBackorder?: T;
   soldIndividually?: T;
   collections?: T;
@@ -1828,6 +1872,17 @@ export interface FormSubmissionsSelect<T extends boolean = true> {
 export interface NewsletterSubscribersSelect<T extends boolean = true> {
   email?: T;
   status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "back-in-stock-requests_select".
+ */
+export interface BackInStockRequestsSelect<T extends boolean = true> {
+  product?: T;
+  email?: T;
+  notified?: T;
   updatedAt?: T;
   createdAt?: T;
 }
