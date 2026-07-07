@@ -8,7 +8,12 @@ import { WishlistButton } from '@/components/product/WishlistButton'
 import { ProductBadge } from '@/components/ui/ProductBadge'
 import { Rating } from '@/components/ui/Rating'
 import { useCart } from '@/lib/store/cart'
-import { IconShoppingCart, IconCheck } from '@tabler/icons-react'
+import {
+  IconShoppingCart,
+  IconCheck,
+  IconChevronLeft,
+  IconChevronRight,
+} from '@tabler/icons-react'
 
 const ph = (w: number, h: number, bg: string, fg: string, text: string) =>
   `https://placehold.co/${w}x${h}/${bg}/${fg}?text=${encodeURIComponent(text)}&font=lora`
@@ -123,8 +128,8 @@ export function ProductCard({
           </div>
         )}
 
-        {/* Cart button overlay on hover — bottom-right */}
-        <div className="absolute right-2 bottom-2 z-10 translate-y-2 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
+        {/* Cart button — always visible on mobile, hover reveal on desktop */}
+        <div className="absolute right-2 bottom-2 z-10 transition-all duration-300 max-sm:opacity-100 sm:translate-y-2 sm:opacity-0 sm:group-hover:translate-y-0 sm:group-hover:opacity-100">
           <button
             onClick={handleAddToCart}
             className={cn(
@@ -191,8 +196,36 @@ export function ProductCarousel({
 
   if (!products || products.length === 0) return null
 
+  const scroll = (direction: 'left' | 'right') => {
+    const el = scrollRef.current
+    if (!el) return
+    const cardWidth = el.children[0]?.getBoundingClientRect().width ?? 200
+    el.scrollBy({
+      left: direction === 'left' ? -cardWidth : cardWidth,
+      behavior: 'smooth',
+    })
+  }
+
   return (
     <div className={cn('relative', className)}>
+      {/* Left arrow — mobile only */}
+      <button
+        onClick={() => scroll('left')}
+        className="text-brand-700 absolute top-1/2 left-1 z-10 hidden -translate-y-1/2 items-center justify-center rounded-full bg-white/90 p-1.5 shadow-md transition-colors hover:bg-white active:scale-95 max-sm:flex"
+        aria-label="Scroll left"
+      >
+        <IconChevronLeft className="h-4 w-4" />
+      </button>
+
+      {/* Right arrow — mobile only */}
+      <button
+        onClick={() => scroll('right')}
+        className="text-brand-700 absolute top-1/2 right-1 z-10 hidden -translate-y-1/2 items-center justify-center rounded-full bg-white/90 p-1.5 shadow-md transition-colors hover:bg-white active:scale-95 max-sm:flex"
+        aria-label="Scroll right"
+      >
+        <IconChevronRight className="h-4 w-4" />
+      </button>
+
       {/* Scroll container — snap scroll on mobile */}
       <div
         ref={scrollRef}
