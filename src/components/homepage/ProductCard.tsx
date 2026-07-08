@@ -26,6 +26,7 @@ interface ProductCardProduct {
   compareAtPrice?: number | null
   weave?: string | null
   fabric?: string | null
+  quantity?: number | null
   gallery?:
     | {
         image:
@@ -171,6 +172,11 @@ export function ProductCard({
               </span>
             )}
         </div>
+        {product.quantity != null && product.quantity <= 5 && product.quantity > 0 && (
+          <p className="mt-1.5 text-[11px] font-medium text-amber-700">
+            {product.quantity === 1 ? 'Just 1 left' : `Only ${product.quantity} left`}
+          </p>
+        )}
       </div>
     </Link>
   )
