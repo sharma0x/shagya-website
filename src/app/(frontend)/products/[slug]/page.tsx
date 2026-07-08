@@ -7,6 +7,8 @@ import { ArrowLeft, ShieldCheck, Truck, RefreshCw } from 'lucide-react'
 import { ProductActions } from '@/components/product/ProductActions'
 import { ProductGallery } from '@/components/product/ProductGallery'
 import { RefreshRouteOnSave } from '@/components/live-preview/RefreshRouteOnSave'
+import { WhatsAppOrderButton } from '@/components/product/WhatsAppOrderButton'
+import type { SiteSetting } from '@/payload-types'
 
 type Props = {
   params: Promise<{ slug: string }>
@@ -127,6 +129,11 @@ export default async function ProductDetailPage({
     return notFound()
   }
 
+  const settings = (await payload.findGlobal({
+    slug: 'site-settings',
+  })) as unknown as SiteSetting
+  const contactPhone = settings.contactPhone || ''
+
   const imageUrls =
     product.gallery && product.gallery.length > 0
       ? product.gallery.map((g: any) =>
@@ -188,7 +195,8 @@ export default async function ProductDetailPage({
   ].filter(Boolean) as { label: string; value: string }[]
 
   return (
-    <div className="bg-surface min-h-screen py-10 md:py-14">
+    <>
+      <div className="bg-surface min-h-screen py-10 md:py-14">
       {isPreview && <RefreshRouteOnSave />}
       <div className="container-page">
         {/* Back link */}
@@ -328,5 +336,13 @@ export default async function ProductDetailPage({
         </div>
       </div>
     </div>
+    {contactPhone && (
+      <WhatsAppOrderButton
+        phone={contactPhone}
+        productName={product.name}
+        productSlug={product.slug || slug}
+      />
+    )}
+    </>
   )
 }
