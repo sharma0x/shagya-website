@@ -31,6 +31,7 @@ import { InstagramGallery } from '@/components/homepage/InstagramGallery'
 import { OccasionButton } from '@/components/homepage/OccasionButton'
 import { TestimonialCard } from '@/components/homepage/TestimonialCard'
 import { TrendingColors } from '@/components/homepage/TrendingColors'
+import { ShopTheLook, type ProductHotspot } from '@/components/homepage/ShopTheLook'
 
 const ph = (w: number, h: number, bg: string, fg: string, text: string) =>
   `https://placehold.co/${w}x${h}/${bg}/${fg}?text=${encodeURIComponent(text)}&font=lora`
@@ -534,6 +535,42 @@ export default async function HomePage({ searchParams }: Props) {
           )}
         </div>
       </section>
+
+      {/* ═══════════════════════════════════════════════════
+          SECTION 3.5: SHOP THE LOOK — Editorial hotspot section
+          ═══════════════════════════════════════════════════ */}
+      <ShopTheLook
+        imageUrl="/images/hero/hero-main.png"
+        headline="Curated for the Modern Woman"
+        subheading="Every saree tells a story. Tap the dots to discover this season's most loved pieces."
+        ctaText="Browse the full collection"
+        ctaLink="/category/all"
+        hotspots={
+          [
+            {
+              productName: 'Banarasi Silk Saree',
+              productSlug: 'banarasi-silk-saree',
+              price: 8500,
+              x: 25,
+              y: 40,
+            },
+            {
+              productName: 'Chanderi Cotton',
+              productSlug: 'chanderi-cotton-saree',
+              price: 4200,
+              x: 55,
+              y: 55,
+            },
+            {
+              productName: 'Kanjeevaram Pure Silk',
+              productSlug: 'kanjeevaram-pure-silk',
+              price: 12000,
+              x: 75,
+              y: 35,
+            },
+          ] as ProductHotspot[]
+        }
+      />
 
       {/* ═══════════════════════════════════════════════════
           SECTION 4: COMBINED — New Arrivals + Trending Now + Best Offers
