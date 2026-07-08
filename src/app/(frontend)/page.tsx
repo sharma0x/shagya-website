@@ -31,6 +31,7 @@ import { InstagramGallery } from '@/components/homepage/InstagramGallery'
 import { OccasionButton } from '@/components/homepage/OccasionButton'
 import { TestimonialCard } from '@/components/homepage/TestimonialCard'
 import { TrendingColors } from '@/components/homepage/TrendingColors'
+import { CollectionBanners, type CollectionBannerData } from '@/components/homepage/CollectionBanners'
 
 const ph = (w: number, h: number, bg: string, fg: string, text: string) =>
   `https://placehold.co/${w}x${h}/${bg}/${fg}?text=${encodeURIComponent(text)}&font=lora`
@@ -601,6 +602,40 @@ export default async function HomePage({ searchParams }: Props) {
           </div>
         </section>
       )}
+
+      {/* ═══════════════════════════════════════════════════
+          SECTION 4.5: COLLECTION BANNERS — Wedding, Festive, Daily, Gifts
+          ═══════════════════════════════════════════════════ */}
+      <CollectionBanners
+        banners={
+          [
+            {
+              title: 'Wedding Edit',
+              subtitle: 'Heirloom weaves for your special day',
+              imageUrl: '/images/hero/hero-main.png',
+              link: '/category/silk',
+            },
+            {
+              title: 'Festive Picks',
+              subtitle: 'Celebrate in handwoven elegance',
+              imageUrl: '/images/hero/hero-main.png',
+              link: '/collections',
+            },
+            {
+              title: 'Daily Wear',
+              subtitle: 'Lightweight cottons for everyday grace',
+              imageUrl: '/images/hero/hero-main.png',
+              link: '/category/cotton',
+            },
+            {
+              title: 'Gift a Saree',
+              subtitle: 'The most meaningful gift, wrapped in tradition',
+              imageUrl: '/images/hero/hero-main.png',
+              link: '/category/designer',
+            },
+          ] as CollectionBannerData[]
+        }
+      />
 
       {/* ═══════════════════════════════════════════════════
           SECTION 5: SHOP BY OCCASION + TRENDING COLORS + SOCIAL
