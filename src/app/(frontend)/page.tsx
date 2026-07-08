@@ -31,6 +31,7 @@ import { InstagramGallery } from '@/components/homepage/InstagramGallery'
 import { OccasionButton } from '@/components/homepage/OccasionButton'
 import { TestimonialCard } from '@/components/homepage/TestimonialCard'
 import { TrendingColors } from '@/components/homepage/TrendingColors'
+import { WeaveLibrary } from '@/components/homepage/WeaveLibrary'
 
 const ph = (w: number, h: number, bg: string, fg: string, text: string) =>
   `https://placehold.co/${w}x${h}/${bg}/${fg}?text=${encodeURIComponent(text)}&font=lora`
@@ -853,6 +854,11 @@ export default async function HomePage({ searchParams }: Props) {
           </div>
         </div>
       </section>
+
+      {/* ═══════════════════════════════════════════════════
+          SECTION 9.5: WEAVE LIBRARY — Educational weave cards
+          ═══════════════════════════════════════════════════ */}
+      <WeaveLibrary />
 
       {/* ═══════════════════════════════════════════════════
           SECTION 10: NEWSLETTER + PROMISE (side by side)
