@@ -96,7 +96,7 @@ export function ProductCard({
     >
       {/* Image Container */}
       <div className="relative overflow-hidden rounded-xl bg-neutral-100 transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-md">
-        <div className="aspect-[3/4] w-full">
+        <div className="aspect-[4/5] w-full">
           <SkeletonImage
             src={imageUrl || ''}
             alt={product.name}
@@ -128,8 +128,8 @@ export function ProductCard({
           </div>
         )}
 
-        {/* Cart button — always visible on mobile, hover reveal on desktop */}
-        <div className="absolute right-2 bottom-2 z-10 transition-all duration-300 max-sm:opacity-100 sm:translate-y-2 sm:opacity-0 sm:group-hover:translate-y-0 sm:group-hover:opacity-100">
+        {/* Cart button — always visible */}
+        <div className="absolute right-2 bottom-2 z-10">
           <button
             onClick={handleAddToCart}
             className={cn(
