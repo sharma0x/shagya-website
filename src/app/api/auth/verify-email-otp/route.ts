@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { verifyOTPToken, OTP_COOKIE_NAME, OTP_TTL_MS } from '@/lib/otp'
+import { verifyOTPToken, OTP_COOKIE_NAME } from '@/lib/otp'
 import { Pool } from 'pg'
 import crypto from 'crypto'
 
@@ -13,6 +13,10 @@ function generateToken(): string {
 
 function hashToken(raw: string): string {
   return crypto.createHash('sha256').update(raw).digest('hex')
+}
+
+function generateId(): string {
+  return crypto.randomUUID()
 }
 
 export async function POST(request: Request) {
@@ -49,30 +53,33 @@ export async function POST(request: Request) {
       [normalizedEmail],
     )
 
-    if (userResult.rows.length === 0) {
-      const randomPassword =
-        crypto.randomBytes(16).toString('base64') +
-        'Aa1!'
+    let userId: string
+    let userEmail: string
 
+    if (userResult.rows.length > 0) {
+      userId = userResult.rows[0].id
+      userEmail = userResult.rows[0].email
+    } else {
+      const newUserId = generateId()
       const now = new Date().toISOString()
-      const userId = crypto.randomUUID()
 
-      userResult = await pool.query(
-        `INSERT INTO "user" (id, email, name, password, email_verified, created_at, updated_at)
-         VALUES ($1, $2, $3, $4, true, $5, $5)
-         RETURNING id, email`,
-        [userId, normalizedEmail, normalizedEmail.split('@')[0], randomPassword, now],
+      // Create user row
+      await pool.query(
+        `INSERT INTO "user" (id, name, email, "emailVerified", "createdAt", "updatedAt")
+         VALUES ($1, $2, $3, true, $4, $4)`,
+        [newUserId, normalizedEmail.split('@')[0], normalizedEmail, now],
       )
-    }
 
-    const user = userResult.rows[0]
-
-    if (!user) {
-      await pool.end()
-      return NextResponse.json(
-        { error: 'Could not create user' },
-        { status: 500 },
+      // Create account row (credentials for email/password, even though password is random)
+      const randomPassword = crypto.randomBytes(16).toString('base64') + 'Aa1!'
+      await pool.query(
+        `INSERT INTO account (id, "accountId", "providerId", "userId", password, "createdAt", "updatedAt")
+         VALUES ($1, $2, 'email', $3, $4, $5, $5)`,
+        [generateId(), normalizedEmail, newUserId, randomPassword, now],
       )
+
+      userId = newUserId
+      userEmail = normalizedEmail
     }
 
     // ── 2. Create a session ──
@@ -80,18 +87,19 @@ export async function POST(request: Request) {
     const sessionToken = hashToken(rawToken)
     const now = new Date()
     const expiresAt = new Date(now.getTime() + SESSION_EXPIRY)
+    const nowISO = now.toISOString()
 
     await pool.query(
-      `INSERT INTO "session" (id, user_id, token, expires_at, ip_address, user_agent, created_at, updated_at)
+      `INSERT INTO "session" (id, "userId", token, "expiresAt", "ipAddress", "userAgent", "createdAt", "updatedAt")
        VALUES ($1, $2, $3, $4, $5, $6, $7, $7)`,
       [
-        crypto.randomUUID(),
-        user.id,
+        generateId(),
+        userId,
         sessionToken,
         expiresAt,
         request.headers.get('x-forwarded-for') || '',
         request.headers.get('user-agent') || '',
-        now.toISOString(),
+        nowISO,
       ],
     )
 
@@ -110,7 +118,7 @@ export async function POST(request: Request) {
 
     cookieStore.delete(OTP_COOKIE_NAME)
 
-    return NextResponse.json({ success: true, email })
+    return NextResponse.json({ success: true, email: userEmail })
   } catch (error) {
     console.error('[API] POST /api/auth/verify-email-otp error:', error)
     return NextResponse.json(
