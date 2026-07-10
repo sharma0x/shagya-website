@@ -7,6 +7,7 @@ import { useSession } from '@/lib/auth-client'
 import { useCart } from '@/lib/store/cart'
 import { loadRazorpayScript } from '@/lib/razorpay'
 import { AddressForm, type AddressFormData } from '@/components/address/AddressForm'
+import { GuestCheckout } from '@/components/checkout/GuestCheckout'
 import {
   ArrowLeft,
   Check,
@@ -78,6 +79,14 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState(false)
   const [error, setError] = useState('')
+  const [orderNotes, setOrderNotes] = useState('')
+
+  // Guest checkout
+  const [guestData, setGuestData] = useState<{
+    name: string; email: string; phone: string; customerId: string | number
+  } | null>(null)
+
+  const isLoggedIn = !!sessionData?.user
 
   // New address form state
   const [showNewAddressForm, setShowNewAddressForm] = useState(false)
@@ -90,8 +99,35 @@ export default function CheckoutPage() {
   // Load cart and addresses
   useEffect(() => {
     if (isPending) return
-    if (!sessionData?.user) {
-      router.push('/account/login?redirect=/checkout')
+
+    if (!isLoggedIn) {
+      // Guest — load cart from Zustand local store
+      const localItems = useCart.getState().items
+      if (localItems.length === 0) {
+        router.push('/')
+        return
+      }
+      const localSubtotal = useCart.getState().getSubtotal()
+      setCart({
+        items: localItems.map((i) => ({
+          id: String(i.product.id),
+          product: {
+            id: String(i.product.id),
+            name: i.product.name,
+            slug: i.product.slug,
+            basePrice: i.unitPrice,
+            gallery: i.product.gallery,
+          },
+          variant: i.variant,
+          quantity: i.quantity,
+          unitPrice: i.unitPrice,
+        })),
+        subtotal: localSubtotal,
+        coupon: useCart.getState().coupon || undefined,
+      })
+      setLoading(false)
+      // Auto-show address form for guests
+      setShowNewAddressForm(true)
       return
     }
 
@@ -158,6 +194,27 @@ export default function CheckoutPage() {
   const handleAddNewAddress = async (data: AddressFormData) => {
     setActionLoading(true)
     setError('')
+
+    if (!isLoggedIn) {
+      // Guest — store address locally
+      const tempAddress = {
+        id: 'guest-addr',
+        fullName: data.fullName,
+        phone: data.phone,
+        line1: data.line1,
+        line2: data.line2 || '',
+        city: data.city,
+        state: data.state,
+        pincode: data.pincode,
+        country: data.country,
+        isDefault: false,
+      }
+      setAddresses([tempAddress])
+      setSelectedAddressId('guest-addr')
+      setShowNewAddressForm(false)
+      setActionLoading(false)
+      return
+    }
 
     try {
       const res = await fetch('/api/addresses', {
@@ -273,7 +330,7 @@ export default function CheckoutPage() {
           order_id: razorpayOrder.id,
           prefill: {
             name: selectedAddress.fullName,
-            email: sessionData?.user?.email || '',
+            email: sessionData?.user?.email || guestData?.email || '',
             contact: selectedAddress.phone,
           },
           theme: {
@@ -291,6 +348,16 @@ export default function CheckoutPage() {
                   razorpay_signature: response.razorpay_signature,
                   shippingAddress: selectedAddress,
                   phone: selectedAddress.phone,
+                  notes: orderNotes,
+                  guestEmail: guestData?.email || '',
+                  guestPhone: guestData?.phone || '',
+                  cartItems: !isLoggedIn
+                    ? cart?.items.map((i) => ({
+                        product: i.product.id,
+                        quantity: i.quantity,
+                        unitPrice: i.unitPrice,
+                      }))
+                    : undefined,
                   isMock: razorpayOrder.isMock || false,
                 }),
               })
@@ -321,13 +388,23 @@ export default function CheckoutPage() {
           const verifyRes = await fetch('/api/razorpay/verify', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              razorpay_order_id: razorpayOrder.id,
-              razorpay_payment_id: `pay_mock_${Math.random().toString(36).substring(2, 11)}`,
-              razorpay_signature: 'mock_signature',
-              shippingAddress: selectedAddress,
-              phone: selectedAddress.phone,
-              isMock: true,
+                body: JSON.stringify({
+                  razorpay_order_id: razorpayOrder.id,
+                  razorpay_payment_id: `pay_mock_${Math.random().toString(36).substring(2, 11)}`,
+                  razorpay_signature: 'mock_signature',
+                  shippingAddress: selectedAddress,
+                  phone: selectedAddress.phone,
+                  notes: orderNotes,
+                  guestEmail: guestData?.email || '',
+                  guestPhone: guestData?.phone || '',
+                  cartItems: !isLoggedIn
+                    ? cart?.items.map((i) => ({
+                        product: i.product.id,
+                        quantity: i.quantity,
+                        unitPrice: i.unitPrice,
+                      }))
+                    : undefined,
+                  isMock: true,
             }),
           })
 
@@ -516,14 +593,49 @@ export default function CheckoutPage() {
                     )}
 
                     {selectedAddressId && (
-                      <div className="flex justify-end pt-4">
-                        <button
-                          onClick={() => setStep(2)}
-                          className="font-display bg-brand-600 hover:bg-brand-700 h-11 rounded-xl px-6 text-xs font-semibold text-white transition-all"
-                        >
-                          Proceed to Shipping
-                        </button>
-                      </div>
+                      <>
+                        {/* Guest checkout — phone OTP verification */}
+                        {!isLoggedIn && !guestData && (
+                          <div className="mt-6 border-t border-neutral-100 pt-6">
+                            <GuestCheckout onVerified={setGuestData} />
+                          </div>
+                        )}
+
+                        {/* Guest verified */}
+                        {guestData && (
+                          <div className="mt-6 border-t border-neutral-100 pt-6">
+                            <div className="rounded-xl border border-green-100 bg-green-50 p-4">
+                              <p className="font-display text-xs font-semibold text-green-700">
+                                Verified — {guestData.name} · {guestData.phone} · {guestData.email}
+                              </p>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Order notes */}
+                        <div className="mt-6 border-t border-neutral-100 pt-6">
+                          <h4 className="font-display mb-3 text-xs font-semibold tracking-wider text-neutral-500 uppercase">
+                            Delivery Instructions (Optional)
+                          </h4>
+                          <textarea
+                            value={orderNotes}
+                            onChange={(e) => setOrderNotes(e.target.value)}
+                            rows={2}
+                            placeholder="Landmark, gate code, or special instructions"
+                            className="font-body focus:border-brand-500 w-full rounded-xl border border-neutral-200 px-3 py-2 text-sm outline-none resize-none"
+                          />
+                        </div>
+
+                        <div className="flex justify-end pt-4">
+                          <button
+                            onClick={() => setStep(2)}
+                            disabled={!isLoggedIn && !guestData}
+                            className="font-display bg-brand-600 hover:bg-brand-700 disabled:bg-neutral-200 h-11 rounded-xl px-6 text-xs font-semibold text-white transition-all disabled:text-neutral-400"
+                          >
+                            Proceed to Shipping
+                          </button>
+                        </div>
+                      </>
                     )}
                   </div>
                 )}
@@ -777,6 +889,9 @@ export default function CheckoutPage() {
                   <span>Order Total</span>
                   <span>₹{total.toLocaleString('en-IN')}</span>
                 </div>
+                <p className="mt-1 text-right text-[10px] font-medium text-red-500">
+                  * Excluding delivery charges
+                </p>
               </div>
             </div>
           </div>

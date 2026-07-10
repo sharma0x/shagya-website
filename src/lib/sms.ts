@@ -74,3 +74,13 @@ export async function sendSMS(
     return { success: false }
   }
 }
+
+/**
+ * Sends a one-time password for phone verification.
+ */
+export async function sendOTP(
+  to: string,
+  code: string,
+): Promise<{ success: boolean }> {
+  return sendSMS(to, `Your Shayga verification code is: ${code}. Valid for 5 minutes.`)
+}
