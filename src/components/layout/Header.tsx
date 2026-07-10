@@ -6,6 +6,7 @@ import { Search, ShoppingCart, Heart, User, Menu, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Logo } from '@/components/layout/Logo'
 import { useCart } from '@/lib/store/cart'
+import { useUI } from '@/lib/store/ui'
 import { CartDrawer } from '@/components/cart/CartDrawer'
 import { SearchCommand } from '@/components/search/SearchCommand'
 import { useSession } from '@/lib/auth-client'
@@ -21,8 +22,6 @@ const navLinks = [
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [cartOpen, setCartOpen] = useState(false)
-  const [searchOpen, setSearchOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [announcement, setAnnouncement] = useState<{
     enabled: boolean
@@ -31,6 +30,8 @@ export function Header() {
   const [wishlistCount, setWishlistCount] = useState(0)
   const { items } = useCart()
   const { data: sessionData } = useSession()
+  const { cartOpen, searchOpen, openCart, openSearch, closeCart, closeSearch } =
+    useUI()
 
   // Scroll listener for blur-on-scroll
   useEffect(() => {
@@ -66,12 +67,12 @@ export function Header() {
     function onKeyDown(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault()
-        setSearchOpen((prev) => !prev)
+        openSearch()
       }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [])
+  }, [openSearch])
 
   const cartCount = items.reduce((acc, item) => acc + item.quantity, 0)
 
@@ -140,7 +141,7 @@ export function Header() {
             {/* Actions */}
             <div className="flex items-center gap-1">
               <button
-                onClick={() => setSearchOpen(true)}
+                onClick={() => openSearch()}
                 className="hover:text-brand-700 flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg p-2 text-neutral-600 transition-colors hover:bg-neutral-100"
                 aria-label="Search"
               >
@@ -177,7 +178,7 @@ export function Header() {
               </Link>
 
               <button
-                onClick={() => setCartOpen(true)}
+                onClick={() => openCart()}
                 className="hover:text-brand-700 relative flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg p-2 text-neutral-600 transition-colors hover:bg-neutral-100"
                 aria-label="Cart"
               >
@@ -269,8 +270,8 @@ export function Header() {
           </div>
         </nav>
       </div>
-      <SearchCommand isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
-      <CartDrawer isOpen={cartOpen} onClose={() => setCartOpen(false)} />
+      <SearchCommand isOpen={searchOpen} onClose={() => closeSearch()} />
+      <CartDrawer isOpen={cartOpen} onClose={() => closeCart()} />
     </>
   )
 }
