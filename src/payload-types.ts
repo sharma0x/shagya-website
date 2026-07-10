@@ -233,7 +233,8 @@ export interface EmailTemplate {
     | 'welcome-customer'
     | 'verify-email'
     | 'magic-link'
-    | 'back-in-stock';
+    | 'back-in-stock'
+    | 'password-reset';
   /**
    * When unchecked, the system falls back to the built-in default template for this email.
    */
@@ -468,6 +469,22 @@ export interface Order {
   discount?: number | null;
   total: number;
   paymentId?: string | null;
+  /**
+   * Customer notes or delivery instructions
+   */
+  notes?: string | null;
+  /**
+   * Set when status changes to confirmed
+   */
+  confirmedAt?: string | null;
+  /**
+   * Set when status changes to shipped
+   */
+  shippedAt?: string | null;
+  /**
+   * Set when status changes to delivered
+   */
+  deliveredAt?: string | null;
   shippingAddress?: {
     fullName?: string | null;
     phone?: string | null;
@@ -1373,6 +1390,10 @@ export interface OrdersSelect<T extends boolean = true> {
   discount?: T;
   total?: T;
   paymentId?: T;
+  notes?: T;
+  confirmedAt?: T;
+  shippedAt?: T;
+  deliveredAt?: T;
   shippingAddress?:
     | T
     | {

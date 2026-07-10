@@ -6,12 +6,9 @@ import Link from 'next/link'
 import { ArrowLeft, ShieldCheck, Truck, RefreshCw } from 'lucide-react'
 import { ProductActions } from '@/components/product/ProductActions'
 import { ProductGallery } from '@/components/product/ProductGallery'
-import { StockBadge } from '@/components/product/StockBadge'
-import { NotifyMeButton } from '@/components/product/NotifyMeButton'
-import { RecommendationRow } from '@/components/product/RecommendationRow'
 import { RefreshRouteOnSave } from '@/components/live-preview/RefreshRouteOnSave'
-import { getRelatedProducts, getProductsByIds } from '@/lib/recommendations'
-import { getRecentlyViewedIds, addRecentlyViewed } from '@/lib/recently-viewed'
+import { WhatsAppOrderButton } from '@/components/product/WhatsAppOrderButton'
+import type { SiteSetting } from '@/payload-types'
 
 type Props = {
   params: Promise<{ slug: string }>
@@ -132,29 +129,10 @@ export default async function ProductDetailPage({
     return notFound()
   }
 
-  // Track recently viewed (cookie-based, SSR-friendly)
-  if (!isPreview) {
-    addRecentlyViewed(product.id).catch(() => {})
-  }
-
-  // Fetch recommendations in parallel
-  const collectionIds: (string | number)[] =
-    product.collections
-      ?.map((c: any) => (typeof c === 'object' ? c.id : c))
-      .filter(Boolean) ?? []
-
-  const [relatedProducts, recentlyViewed] = await Promise.all([
-    getRelatedProducts(
-      product.id,
-      product.fabric,
-      product.weave,
-      collectionIds,
-    ),
-    getRecentlyViewedIds().then((ids) => {
-      const filtered = ids.filter((id) => String(id) !== String(product.id))
-      return getProductsByIds(filtered.slice(0, 8))
-    }),
-  ])
+  const settings = (await payload.findGlobal({
+    slug: 'site-settings',
+  })) as unknown as SiteSetting
+  const contactPhone = settings.contactPhone || ''
 
   const imageUrls =
     product.gallery && product.gallery.length > 0
@@ -217,7 +195,8 @@ export default async function ProductDetailPage({
   ].filter(Boolean) as { label: string; value: string }[]
 
   return (
-    <div className="bg-surface min-h-screen py-10 md:py-14">
+    <>
+      <div className="bg-surface min-h-screen py-10 md:py-14">
       {isPreview && <RefreshRouteOnSave />}
       <div className="container-page">
         {/* Back link */}
@@ -260,15 +239,6 @@ export default async function ProductDetailPage({
                 {product.name}
               </h1>
 
-              {/* Stock status */}
-              <div className="mt-3">
-                <StockBadge
-                  quantity={product.quantity ?? 0}
-                  trackQuantity={product.trackQuantity ?? false}
-                  lowStockThreshold={product.lowStockThreshold ?? 5}
-                />
-              </div>
-
               {/* Pricing */}
               <div className="mt-5 flex items-baseline gap-3 border-b border-neutral-100 pb-6">
                 <span className="font-display text-2xl font-semibold text-neutral-900">
@@ -291,11 +261,7 @@ export default async function ProductDetailPage({
 
               {/* Size, stitching, CTAs */}
               <div className="mt-7">
-                {product.trackQuantity && product.quantity <= 0 ? (
-                  <NotifyMeButton productSlug={product.slug} />
-                ) : (
-                  <ProductActions product={serializableProduct} />
-                )}
+                <ProductActions product={serializableProduct} />
               </div>
 
               {/* Trust signals — inline list, no icon circles */}
@@ -368,19 +334,15 @@ export default async function ProductDetailPage({
             </div>
           </div>
         </div>
-
-        {/* ── Recommendations ── */}
-        <div className="mt-20 space-y-14 border-t border-neutral-200 pt-16">
-          <RecommendationRow
-            title="You May Also Like"
-            products={relatedProducts}
-          />
-          <RecommendationRow
-            title="Recently Viewed"
-            products={recentlyViewed}
-          />
-        </div>
       </div>
     </div>
+    {contactPhone && (
+      <WhatsAppOrderButton
+        phone={contactPhone}
+        productName={product.name}
+        productSlug={product.slug || slug}
+      />
+    )}
+    </>
   )
 }
