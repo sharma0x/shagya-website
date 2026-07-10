@@ -365,3 +365,36 @@ export async function sendBackInStockEmail(
   })
   await safeSend(payload, to, subject, html, 'back-in-stock')
 }
+
+/**
+ * Sends a one-time passcode to the customer's email address.
+ * Used by the login and guest-checkout OTP flow.
+ */
+export async function sendOTPEmail(to: string, otp: string): Promise<void> {
+  const storeName = 'Shayga'
+  const subject = `Your Shayga verification code: ${otp}`
+
+  const html = `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="font-family:system-ui,sans-serif;max-width:480px;margin:40px auto;padding:24px;background:#fafafa;border-radius:12px">
+  <h2 style="margin:0 0 8px;font-size:20px;color:#1a1a1a">${storeName}</h2>
+  <p style="margin:0 0 16px;color:#555;line-height:1.6">Use the code below to verify your identity. This code expires in 5 minutes.</p>
+  <div style="background:#fff;border:1px solid #eee;border-radius:8px;padding:20px;text-align:center;margin-bottom:16px">
+    <span style="font-size:32px;font-weight:700;letter-spacing:6px;color:#1a1a1a">${otp}</span>
+  </div>
+  <p style="margin:0;font-size:12px;color:#999">If you didn't request this, you can safely ignore this email.</p>
+</body>
+</html>`
+
+  // Lazy-load Payload to send via the configured email adapter
+  try {
+    const { getPayload } = await import('payload')
+    const config = (await import('@payload-config')).default
+    const payload = await getPayload({ config })
+    await safeSend(payload, to, subject, html, 'otp-email')
+  } catch {
+    // Fire-and-forget: log and continue
+    console.warn('[sendOTPEmail] Could not send — email adapter may not be configured')
+  }
+}
