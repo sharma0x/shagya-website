@@ -1,9 +1,17 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { Filter, X, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { RangeSlider } from '@/components/ui/range-slider'
+import { COLOR_PALETTE } from '@/lib/colors'
+
+const INITIAL_COLOR_COUNT = 12
+
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
 
 const FABRIC_OPTIONS = [
   { label: 'Silk', value: 'silk' },
@@ -53,26 +61,89 @@ const DISCOUNT_OPTIONS = [
   { label: '50%+ OFF', value: '50' },
 ]
 
-const checkboxClass = cn(
-  'accent-brand-600 h-3.5 w-3.5 rounded border-neutral-300',
-  'cursor-pointer',
-)
+const SIZE_OPTIONS = [
+  { label: 'XS', value: 'XS' },
+  { label: 'S', value: 'S' },
+  { label: 'M', value: 'M' },
+  { label: 'L', value: 'L' },
+  { label: 'XL', value: 'XL' },
+  { label: '2XL', value: '2XL' },
+  { label: 'Free', value: 'Free' },
+]
 
-const labelClass = cn(
-  'cursor-pointer select-none text-xs',
-  'group-hover:text-neutral-800 transition-colors',
-)
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+interface FacetCount {
+  value: string
+  label: string
+  count: number
+}
+
+interface FacetsData {
+  fabric: FacetCount[]
+  weave: FacetCount[]
+  pattern: FacetCount[]
+  colors: FacetCount[]
+}
 
 interface ProductFiltersProps {
   variant?: 'sidebar' | 'vertical'
   className?: string
-  preserveParams?: string
 }
+
+// ---------------------------------------------------------------------------
+// Shared UI
+// ---------------------------------------------------------------------------
+
+const checkboxClass = cn(
+  'accent-brand-600 h-3.5 w-3.5 rounded border-neutral-300 cursor-pointer',
+)
+
+const labelClass = cn(
+  'cursor-pointer select-none text-xs group-hover:text-neutral-800 transition-colors',
+)
+
+function Section({
+  title,
+  expanded,
+  onToggle,
+  children,
+}: {
+  title: string
+  expanded: boolean
+  onToggle: () => void
+  children: React.ReactNode
+}) {
+  return (
+    <div className="border-b border-neutral-50 pb-4">
+      <button
+        onClick={onToggle}
+        className="flex w-full items-center justify-between py-1 text-left"
+      >
+        <span className="font-display text-[11px] font-semibold tracking-wider text-neutral-500 uppercase">
+          {title}
+        </span>
+        <ChevronDown
+          className={cn(
+            'h-3.5 w-3.5 text-neutral-400 transition-transform',
+            expanded && 'rotate-180',
+          )}
+        />
+      </button>
+      {expanded && <div className="mt-2">{children}</div>}
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Main component
+// ---------------------------------------------------------------------------
 
 export function ProductFilters({
   variant = 'sidebar',
   className,
-  preserveParams = '',
 }: ProductFiltersProps) {
   const router = useRouter()
   const pathname = usePathname()
@@ -84,8 +155,24 @@ export function ProductFilters({
   }
 
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [facets, setFacets] = useState<FacetsData | null>(null)
 
-  // Local state initialized from URL
+  // Section expand/collapse
+  const [expandedSections, setExpandedSections] = useState<
+    Record<string, boolean>
+  >({
+    price: true,
+    fabric: true,
+    weave: true,
+    pattern: true,
+    discount: true,
+    delivery: true,
+    city: true,
+    color: false,
+    size: false,
+  })
+
+  // Filter state from URL
   const [fabric, setFabric] = useState<string[]>(getParamArray('fabric'))
   const [weave, setWeave] = useState<string[]>(getParamArray('weave'))
   const [pattern, setPattern] = useState<string[]>(getParamArray('pattern'))
@@ -99,20 +186,35 @@ export function ProductFilters({
     searchParams.get('deliveryTime') || '',
   )
   const [city, setCity] = useState(searchParams.get('city') || '')
+  const [color, setColor] = useState<string[]>(getParamArray('color'))
+  const [size, setSize] = useState(searchParams.get('size') || '')
+  const [showAllColors, setShowAllColors] = useState(false)
 
-  // Sections that can be collapsed
-  const [expandedSections, setExpandedSections] = useState<
-    Record<string, boolean>
-  >({
-    price: true,
-    fabric: true,
-    weave: true,
-    pattern: true,
-    discount: true,
-    delivery: true,
-    city: true,
-  })
+  // --- Facet fetching ---
+  const fetchFacets = useCallback(async () => {
+    try {
+      const params = new URLSearchParams()
+      const currentParams = new URLSearchParams(searchParams.toString())
+      // Remove page/limit for facets
+      currentParams.delete('page')
+      currentParams.delete('limit')
+      // Exclude color and size from facet base query
+      currentParams.delete('color')
+      currentParams.delete('size')
 
+      const qs = currentParams.toString()
+      const res = await fetch(`/api/products/facets?${qs}`)
+      if (res.ok) setFacets(await res.json())
+    } catch {
+      // silently fail
+    }
+  }, [searchParams])
+
+  useEffect(() => {
+    fetchFacets()
+  }, [fetchFacets])
+
+  // --- Handlers ---
   const toggleSection = (section: string) => {
     setExpandedSections((prev) => ({
       ...prev,
@@ -121,11 +223,7 @@ export function ProductFilters({
   }
 
   const toggleArrayFilter = useCallback(
-    (
-      value: string,
-      current: string[],
-      setter: (v: string[]) => void,
-    ) => {
+    (value: string, current: string[], setter: (v: string[]) => void) => {
       if (current.includes(value)) {
         setter(current.filter((v) => v !== value))
       } else {
@@ -146,29 +244,15 @@ export function ProductFilters({
     if (minDiscount) params.set('minDiscount', minDiscount)
     if (deliveryTime) params.set('deliveryTime', deliveryTime)
     if (city) params.set('city', city)
-
-    // Preserve sort param from current URL
+    if (color.length) params.set('color', color.join(','))
+    if (size) params.set('size', size)
+    // Preserve sort, reset page to 1
     const sort = searchParams.get('sort')
     if (sort) params.set('sort', sort)
-
-    if (preserveParams) {
-      const preserve = new URLSearchParams(preserveParams)
-      preserve.forEach((v, k) => {
-        if (!params.has(k)) params.set(k, v)
-      })
-    }
     return params.toString()
   }, [
-    fabric,
-    weave,
-    pattern,
-    minPrice,
-    maxPrice,
-    onSale,
-    minDiscount,
-    deliveryTime,
-    city,
-    preserveParams,
+    fabric, weave, pattern, minPrice, maxPrice, onSale,
+    minDiscount, deliveryTime, city, color, size, searchParams,
   ])
 
   const handleApply = () => {
@@ -186,6 +270,8 @@ export function ProductFilters({
     setMinDiscount('')
     setDeliveryTime('')
     setCity('')
+    setColor([])
+    setSize('')
     const sort = searchParams.get('sort')
     const params = new URLSearchParams()
     if (sort) params.set('sort', sort)
@@ -197,30 +283,39 @@ export function ProductFilters({
     fabric.length > 0 ||
     weave.length > 0 ||
     pattern.length > 0 ||
-    minPrice ||
-    maxPrice ||
+    !!minPrice ||
+    !!maxPrice ||
     onSale ||
-    minDiscount ||
-    deliveryTime ||
-    city
+    !!minDiscount ||
+    !!deliveryTime ||
+    !!city ||
+    color.length > 0 ||
+    !!size
 
+  const activeCount =
+    fabric.length +
+    weave.length +
+    pattern.length +
+    (onSale ? 1 : 0) +
+    (minDiscount ? 1 : 0) +
+    (deliveryTime ? 1 : 0) +
+    (city ? 1 : 0) +
+    color.length +
+    (size ? 1 : 0)
+
+  const getFacetCount = (list: FacetCount[] | undefined, value: string) => {
+    if (!list) return null
+    const item = list.find((f) => f.value === value)
+    return item ? ` (${item.count})` : ''
+  }
+
+  // --- Render ---
   const filterContent = (
     <div className="space-y-6">
-      {/* Active filters summary */}
       {hasActiveFilters && (
         <div className="flex items-center justify-between">
           <span className="font-body text-xs text-neutral-500">
-            {[
-              fabric.length && `${fabric.length} fabric`,
-              weave.length && `${weave.length} weave`,
-              pattern.length && `${pattern.length} pattern`,
-              onSale && 'On Sale',
-              minDiscount && `≥${minDiscount}% off`,
-              deliveryTime && DELIVERY_OPTIONS.find((d) => d.value === deliveryTime)?.label,
-              city && `"${city}"`,
-            ]
-              .filter(Boolean)
-              .join(', ')}
+            {activeCount} active
           </span>
           <button
             onClick={handleClearAll}
@@ -231,13 +326,27 @@ export function ProductFilters({
         </div>
       )}
 
-      {/* Price Range */}
+      {/* Price Range with slider */}
       <Section
         title="Price Range"
         expanded={expandedSections.price}
         onToggle={() => toggleSection('price')}
       >
-        <div className="flex items-center gap-2">
+        <RangeSlider
+          min={0}
+          max={100000}
+          step={500}
+          value={[
+            minPrice ? parseInt(minPrice, 10) : 0,
+            maxPrice ? parseInt(maxPrice, 10) : 100000,
+          ]}
+          onChange={([low, high]) => {
+            setMinPrice(low > 0 ? String(low) : '')
+            setMaxPrice(high < 100000 ? String(high) : '')
+          }}
+          formatLabel={(v) => `₹${v.toLocaleString('en-IN')}`}
+        />
+        <div className="mt-2 flex items-center gap-2">
           <input
             type="number"
             placeholder="Min"
@@ -273,7 +382,10 @@ export function ProductFilters({
             <span className={labelClass}>On Sale</span>
           </label>
           {DISCOUNT_OPTIONS.map((opt) => (
-            <label key={opt.value} className="flex cursor-pointer items-center gap-2">
+            <label
+              key={opt.value}
+              className="flex cursor-pointer items-center gap-2"
+            >
               <input
                 type="radio"
                 name="minDiscount"
@@ -309,7 +421,10 @@ export function ProductFilters({
                 }
                 className={checkboxClass}
               />
-              <span className={labelClass}>{opt.label}</span>
+              <span className={labelClass}>
+                {opt.label}
+                {getFacetCount(facets?.fabric, opt.value)}
+              </span>
             </label>
           ))}
         </div>
@@ -335,7 +450,10 @@ export function ProductFilters({
                 }
                 className={checkboxClass}
               />
-              <span className={labelClass}>{opt.label}</span>
+              <span className={labelClass}>
+                {opt.label}
+                {getFacetCount(facets?.weave, opt.value)}
+              </span>
             </label>
           ))}
         </div>
@@ -358,6 +476,87 @@ export function ProductFilters({
                 checked={pattern.includes(opt.value)}
                 onChange={() =>
                   toggleArrayFilter(opt.value, pattern, setPattern)
+                }
+                className={checkboxClass}
+              />
+              <span className={labelClass}>
+                {opt.label}
+                {getFacetCount(facets?.pattern, opt.value)}
+              </span>
+            </label>
+          ))}
+        </div>
+      </Section>
+
+      {/* Color */}
+      <Section
+        title="Color"
+        expanded={expandedSections.color}
+        onToggle={() => toggleSection('color')}
+      >
+        <div className="grid grid-cols-3 gap-1.5">
+          {COLOR_PALETTE.slice(
+            0,
+            showAllColors ? COLOR_PALETTE.length : INITIAL_COLOR_COUNT,
+          ).map((c) => {
+            const isSelected = color.includes(c.value)
+            return (
+              <button
+                key={c.value}
+                type="button"
+                onClick={() =>
+                  toggleArrayFilter(c.value, color, setColor)
+                }
+                className={cn(
+                  'flex items-center gap-1.5 rounded-lg px-1.5 py-1 text-left transition-colors',
+                  isSelected
+                    ? 'bg-brand-50 ring-1 ring-brand-300'
+                    : 'hover:bg-neutral-50',
+                )}
+              >
+                <span
+                  className="h-3.5 w-3.5 shrink-0 rounded-sm border border-neutral-200"
+                  style={{ backgroundColor: c.hex }}
+                  title={c.label}
+                />
+                <span className="font-body truncate text-[10px] leading-tight text-neutral-700">
+                  {c.label}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+        {COLOR_PALETTE.length > INITIAL_COLOR_COUNT && (
+          <button
+            type="button"
+            onClick={() => setShowAllColors(!showAllColors)}
+            className="font-display text-brand-600 hover:text-brand-700 mt-2 text-[10px] font-semibold tracking-wider uppercase transition-colors"
+          >
+            {showAllColors
+              ? 'Show Less'
+              : `Show All ${COLOR_PALETTE.length} Colors`}
+          </button>
+        )}
+      </Section>
+
+      {/* Size */}
+      <Section
+        title="Size"
+        expanded={expandedSections.size}
+        onToggle={() => toggleSection('size')}
+      >
+        <div className="space-y-2">
+          {SIZE_OPTIONS.map((opt) => (
+            <label
+              key={opt.value}
+              className="flex cursor-pointer items-center gap-2"
+            >
+              <input
+                type="radio"
+                name="size"
+                checked={size === opt.value}
+                onChange={() =>
+                  setSize(size === opt.value ? '' : opt.value)
                 }
                 className={checkboxClass}
               />
@@ -409,7 +608,7 @@ export function ProductFilters({
         />
       </Section>
 
-      {/* Apply Button */}
+      {/* Apply */}
       <button
         onClick={handleApply}
         className="bg-brand-600 hover:bg-brand-700 font-display flex h-10 w-full items-center justify-center rounded-xl text-xs font-semibold text-white transition-all active:scale-95"
@@ -421,21 +620,21 @@ export function ProductFilters({
 
   return (
     <>
-      {/* Mobile toggle button */}
+      {/* Mobile toggle */}
       <button
         onClick={() => setMobileOpen(!mobileOpen)}
         className="font-display bg-brand-600 hover:bg-brand-700 inline-flex h-10 items-center gap-2 rounded-xl px-4 text-xs font-semibold text-white transition-colors lg:hidden"
       >
         <Filter className="h-3.5 w-3.5" />
         Filters
-        {hasActiveFilters && (
+        {activeCount > 0 && (
           <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-[10px] font-bold text-neutral-900">
-            {fabric.length + weave.length + pattern.length + (onSale ? 1 : 0) + (minDiscount ? 1 : 0) + (deliveryTime ? 1 : 0) + (city ? 1 : 0)}
+            {activeCount}
           </span>
         )}
       </button>
 
-      {/* Sidebar — desktop */}
+      {/* Desktop sidebar */}
       {variant === 'sidebar' && (
         <aside className={cn('hidden lg:block w-60 shrink-0', className)}>
           <div className="sticky top-24">
@@ -481,37 +680,5 @@ export function ProductFilters({
         </div>
       )}
     </>
-  )
-}
-
-function Section({
-  title,
-  expanded,
-  onToggle,
-  children,
-}: {
-  title: string
-  expanded: boolean
-  onToggle: () => void
-  children: React.ReactNode
-}) {
-  return (
-    <div className="border-b border-neutral-50 pb-4">
-      <button
-        onClick={onToggle}
-        className="flex w-full items-center justify-between py-1 text-left"
-      >
-        <span className="font-display text-[11px] font-semibold tracking-wider text-neutral-500 uppercase">
-          {title}
-        </span>
-        <ChevronDown
-          className={cn(
-            'h-3.5 w-3.5 text-neutral-400 transition-transform',
-            expanded && 'rotate-180',
-          )}
-        />
-      </button>
-      {expanded && <div className="mt-2">{children}</div>}
-    </div>
   )
 }

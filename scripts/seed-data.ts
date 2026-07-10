@@ -44,8 +44,6 @@ export interface SeedProduct {
   borderType: string
   weavePattern: string
   occasion: string
-  cityOfOrigin: string
-  deliveryTime: string
   gstPercent: number
   shippingPrice: number
   imagePath: string
@@ -176,8 +174,6 @@ export const blogImagePath = (index: number) =>
   `/images/blogs/blog-${index}.jpg`
 export const avatarImagePath = (index: number) =>
   `/images/avatars/avatar-${index}.jpg`
-export const instagramImagePath = (index: number) =>
-  `/images/instagram/ig-${index}.jpg`
 
 // ---------------------------------------------------------------------------
 // Admin
@@ -433,9 +429,7 @@ export const products: SeedProduct[] = [
       '8-inch broad border with elephant and peacock motifs in real gold zari',
     weavePattern:
       'Kadhwa (cutwork) technique — each motif woven independently without floating threads',
-    occasion: 'Wedding, Reception, Diwali',
-    cityOfOrigin: 'Varanasi, Uttar Pradesh',
-    deliveryTime: 'within-5-days',
+    occasion: 'festive',
     gstPercent: 5,
     shippingPrice: 0,
     description:
@@ -467,9 +461,7 @@ export const products: SeedProduct[] = [
       'Classic 6-inch Korvai temple border with gopuram (temple tower) and yali (mythical lion) motifs',
     weavePattern:
       'Korvai technique — body and border woven separately then interlocked for strength',
-    occasion: 'Bridal, Wedding Reception, Seemandham',
-    cityOfOrigin: 'Kanchipuram, Tamil Nadu',
-    deliveryTime: 'within-7-days',
+    occasion: 'bridal',
     gstPercent: 5,
     shippingPrice: 0,
     description:
@@ -500,9 +492,7 @@ export const products: SeedProduct[] = [
     borderType: 'Thick contrasting border with double-line geometric pattern',
     weavePattern:
       'Jamdani supplementary weft technique — motifs float above the ground weave',
-    occasion: 'Daily Wear, Office, Casual Lunch',
-    cityOfOrigin: 'Phulia, West Bengal',
-    deliveryTime: 'within-2-days',
+    occasion: 'daily-wear',
     gstPercent: 5,
     shippingPrice: 100,
     description:
@@ -533,9 +523,7 @@ export const products: SeedProduct[] = [
     borderType: 'Fine bandhani dotted border with gota trim edge',
     weavePattern:
       'Bandhani tie-dye — each dot hand-tied with thread before dyeing, untied to reveal the pattern',
-    occasion: 'Navratri, Garba, Festive, Wedding Guest',
-    cityOfOrigin: 'Bhuj, Gujarat',
-    deliveryTime: 'within-5-days',
+    occasion: 'festive',
     gstPercent: 5,
     shippingPrice: 0,
     description:
@@ -566,9 +554,7 @@ export const products: SeedProduct[] = [
     borderType: '1.5-inch gold zari border with delicate scalloped edge',
     weavePattern:
       'Chanderi weave — silk warp with cotton weft creating sheer, glossy texture',
-    occasion: 'Office, Day Wedding, Puja, Lunch Party',
-    cityOfOrigin: 'Chanderi, Madhya Pradesh',
-    deliveryTime: 'by-tomorrow',
+    occasion: 'casual',
     gstPercent: 5,
     shippingPrice: 0,
     description:
@@ -600,9 +586,7 @@ export const products: SeedProduct[] = [
       'Triple-layer border with diamond, floral, and elephant motif bands',
     weavePattern:
       'Double Ikat — both warp and weft resist-dyed before weaving, pattern emerges at intersection',
-    occasion: 'Bridal, Heirloom Collection, Museum-Quality Investment',
-    cityOfOrigin: 'Patan, Gujarat',
-    deliveryTime: '7-plus-days',
+    occasion: 'bridal',
     gstPercent: 5,
     shippingPrice: 0,
     description:
@@ -634,9 +618,7 @@ export const products: SeedProduct[] = [
       'Narrative border depicting episodes from the Panchatantra fables',
     weavePattern:
       'Srikalahasti style Kalamkari — freehand drawing with bamboo kalam (pen) using natural dyes',
-    occasion: 'Art Exhibition, Cultural Event, Brunch, Museum Visit',
-    cityOfOrigin: 'Srikalahasti, Andhra Pradesh',
-    deliveryTime: 'within-5-days',
+    occasion: 'casual',
     gstPercent: 5,
     shippingPrice: 0,
     description:
@@ -668,9 +650,7 @@ export const products: SeedProduct[] = [
       'Oval buti border with peacock feather motifs in alternating gold and silver zari',
     weavePattern:
       'Tapestry weave — each color change requires manual thread insertion, no power loom can replicate',
-    occasion: 'Wedding, Paithani Festival, Maharashtra Day, Reception',
-    cityOfOrigin: 'Yeola, Maharashtra',
-    deliveryTime: 'within-7-days',
+    occasion: 'festive',
     gstPercent: 5,
     shippingPrice: 0,
     description:
@@ -702,9 +682,7 @@ export const products: SeedProduct[] = [
       'Signature reversible Maheshwari border — gold zari on one side, colored silk on reverse',
     weavePattern:
       'Plain weave with zari stripe insertion — simplicity as sophistication',
-    occasion: 'Daily Wear, Office, Puja, Casual Outing',
-    cityOfOrigin: 'Maheshwar, Madhya Pradesh',
-    deliveryTime: 'by-tomorrow',
+    occasion: 'daily-wear',
     gstPercent: 5,
     shippingPrice: 100,
     description:
@@ -736,9 +714,7 @@ export const products: SeedProduct[] = [
       'Floral vine border with small animal motifs woven in gold and silver zari',
     weavePattern:
       'Jacquard-loom figured weave — the pallu is a tapestry of miniature figurative panels',
-    occasion: "Heritage Event, Wedding, Collector's Piece, Cultural Exhibition",
-    cityOfOrigin: 'Bishnupur, West Bengal',
-    deliveryTime: 'within-7-days',
+    occasion: 'festive',
     gstPercent: 5,
     shippingPrice: 0,
     description:
@@ -769,9 +745,7 @@ export const products: SeedProduct[] = [
       'Delicate chikankari scalloped border with shadow-work technique',
     weavePattern:
       'Organza base with hand-embroidered chikankari — Lucknowi craft on translucent silk',
-    occasion: 'Cocktail, Sangeet, Summer Wedding, High Tea',
-    cityOfOrigin: 'Lucknow, Uttar Pradesh',
-    deliveryTime: 'within-7-days',
+    occasion: 'festive',
     gstPercent: 5,
     shippingPrice: 0,
     description:
@@ -802,9 +776,7 @@ export const products: SeedProduct[] = [
     borderType: 'Triangular sawtooth ikat border with alternating color blocks',
     weavePattern:
       'Single Ikat — warp threads resist-dyed before weaving creating the distinctive blurred-edge geometric patterns',
-    occasion: 'Office, Conference, Day Event, Contemporary Wedding Guest',
-    cityOfOrigin: 'Pochampally, Telangana',
-    deliveryTime: 'within-2-days',
+    occasion: 'casual',
     gstPercent: 5,
     shippingPrice: 0,
     description:
@@ -835,9 +807,7 @@ export const products: SeedProduct[] = [
       'Simple selvedge edge — no added border, celebrating the fabric itself',
     weavePattern:
       'Hand-spun (khadi) yarn, hand-woven on pit loom — zero electricity used in production',
-    occasion: 'Daily Wear, Sustainable Fashion, Travel, Beach Wedding',
-    cityOfOrigin: 'Bhuj, Gujarat',
-    deliveryTime: 'within-2-days',
+    occasion: 'daily-wear',
     gstPercent: 5,
     shippingPrice: 100,
     description:
@@ -867,9 +837,7 @@ export const products: SeedProduct[] = [
     borderType: 'Fine gold zari border with delicate khat weave pattern',
     weavePattern:
       'Kota Doria — unique square-check weave (khat) created by onion-juice starching technique',
-    occasion: 'Summer Wedding, Day Event, Lunch, Resort Wear',
-    cityOfOrigin: 'Kota, Rajasthan',
-    deliveryTime: 'by-tomorrow',
+    occasion: 'casual',
     gstPercent: 5,
     shippingPrice: 0,
     description:
@@ -900,9 +868,7 @@ export const products: SeedProduct[] = [
     borderType: '4-inch gold zari border with peacock eye motif',
     weavePattern:
       'Crepe weave from Mysore silk — distinctive crinkled texture that adds volume to the drape',
-    occasion: 'Wedding Guest, Reception, Diwali Party, Award Function',
-    cityOfOrigin: 'Mysore, Karnataka',
-    deliveryTime: 'within-5-days',
+    occasion: 'festive',
     gstPercent: 5,
     shippingPrice: 0,
     description:
@@ -933,9 +899,7 @@ export const products: SeedProduct[] = [
     borderType: 'Simple selvedge with Kantha stitch detail',
     weavePattern:
       'Wild tussar silk — naturally textured golden-beige with slubs — paired with hand embroidery',
-    occasion: 'Art Opening, Cultural Event, Day Wedding, Lunch Party',
-    cityOfOrigin: 'Bhagalpur, Bihar',
-    deliveryTime: 'within-5-days',
+    occasion: 'casual',
     gstPercent: 5,
     shippingPrice: 0,
     description:
@@ -966,9 +930,7 @@ export const products: SeedProduct[] = [
     borderType: 'Thick gold zari border with leaf motif',
     weavePattern:
       "Fine count cotton (100s) with supplementary zari — Andhra Pradesh's finest handloom",
-    occasion: 'Office, Puja, Family Gathering, Casual Outing',
-    cityOfOrigin: 'Venkatagiri, Andhra Pradesh',
-    deliveryTime: 'within-2-days',
+    occasion: 'daily-wear',
     gstPercent: 5,
     shippingPrice: 100,
     description:
@@ -999,10 +961,7 @@ export const products: SeedProduct[] = [
       'Multiple rows of running stitch in graduating colors forming a complex border',
     weavePattern:
       'Vintage silk sarees upcycled with Kantha embroidery — two sarees stitched together with running stitch',
-    occasion:
-      'Art Collector, Sustainable Fashion, Cultural Event, Gallery Opening',
-    cityOfOrigin: 'Bolpur, West Bengal',
-    deliveryTime: 'within-7-days',
+    occasion: 'casual',
     gstPercent: 5,
     shippingPrice: 0,
     description:
@@ -1032,9 +991,7 @@ export const products: SeedProduct[] = [
     borderType: 'Elephant and fish motif ikat border in rust and black',
     weavePattern:
       'Bandha (tie-dye ikat) from Odisha — both warp and weft resist-dyed before weaving',
-    occasion: 'Daily Wear, Cultural Event, Office, Travel',
-    cityOfOrigin: 'Sambalpur, Odisha',
-    deliveryTime: 'within-2-days',
+    occasion: 'daily-wear',
     gstPercent: 5,
     shippingPrice: 100,
     description:
@@ -1065,9 +1022,7 @@ export const products: SeedProduct[] = [
     borderType: 'Thick gota ribbon border with chain-stitch detail',
     weavePattern:
       'Silk base with gota patti appliqué — gold and silver ribbons cut and shaped into motifs',
-    occasion: 'Mehendi, Sangeet, Festive, Wedding Guest',
-    cityOfOrigin: 'Jaipur, Rajasthan',
-    deliveryTime: 'within-5-days',
+    occasion: 'festive',
     gstPercent: 5,
     shippingPrice: 0,
     description:
@@ -1097,8 +1052,6 @@ export const products: SeedProduct[] = [
     borderType: '1-inch stone-studded border',
     weavePattern: 'Chiffon base with hand-applied stone work',
     occasion: 'party-wear',
-    cityOfOrigin: 'Surat, Gujarat',
-    deliveryTime: 'within-5-days',
     gstPercent: 5,
     shippingPrice: 0,
     description:
@@ -1128,8 +1081,6 @@ export const products: SeedProduct[] = [
     weavePattern:
       'Georgette base with Gujarati-style shisha (mirror) embroidery',
     occasion: 'festive',
-    cityOfOrigin: 'Bhuj, Gujarat',
-    deliveryTime: 'within-7-days',
     gstPercent: 5,
     shippingPrice: 0,
     description:
@@ -1159,8 +1110,6 @@ export const products: SeedProduct[] = [
     weavePattern:
       'Pure linen base with hand-block printed motifs using natural dyes',
     occasion: 'daily-wear',
-    cityOfOrigin: 'Jaipur, Rajasthan',
-    deliveryTime: 'within-7-days',
     gstPercent: 5,
     shippingPrice: 100,
     description:
@@ -1192,7 +1141,7 @@ export const pages: SeedPage[] = [
     blocks: [
       {
         blockType: 'hero',
-        heading: 'Timeless Elegance in Every Drape',
+        heading: 'Shayga — Handwoven narratives from Varanasi',
         subheading:
           'Discover the heritage of Indian handloom. Each saree is a testament to centuries of artisanal weaving, bringing the rich history of Varanasi to your wardrobe.',
         imagePath: '/images/hero/hero-main.png',
@@ -1882,53 +1831,6 @@ export const navigations: SeedNavigation[] = [
         url: 'https://facebook.com/shayga',
       },
     ],
-  },
-]
-
-// ---------------------------------------------------------------------------
-// Instagram Posts (manual fallback — shown when Graph API is not configured)
-// ---------------------------------------------------------------------------
-
-export interface SeedInstagramPost {
-  caption: string
-  permalink: string
-  sortOrder: number
-  imagePath: string
-}
-
-export const instagramPosts: SeedInstagramPost[] = [
-  {
-    caption:
-      'Handwoven Banarasi in pure silk — every thread tells a story. 🧵✨',
-    permalink: 'https://instagram.com/shayga',
-    sortOrder: 0,
-    imagePath: instagramImagePath(1),
-  },
-  {
-    caption:
-      'The richer the zari, the more it catches the light — and your heart. 💛',
-    permalink: 'https://instagram.com/shayga',
-    sortOrder: 1,
-    imagePath: instagramImagePath(2),
-  },
-  {
-    caption:
-      'From the looms of Varanasi to your wardrobe. Tag us in your drapes! 🪡',
-    permalink: 'https://instagram.com/shayga',
-    sortOrder: 2,
-    imagePath: instagramImagePath(3),
-  },
-  {
-    caption: 'That perfect drape that turns every corner into a catwalk. 🔥',
-    permalink: 'https://instagram.com/shayga',
-    sortOrder: 3,
-    imagePath: instagramImagePath(4),
-  },
-  {
-    caption: 'Six yards of elegance, woven with love and heritage. 🇮🇳❤️',
-    permalink: 'https://instagram.com/shayga',
-    sortOrder: 4,
-    imagePath: instagramImagePath(5),
   },
 ]
 
