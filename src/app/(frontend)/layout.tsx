@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Public_Sans, Sora, Noto_Sans_Devanagari } from 'next/font/google'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
+import { NavigationLoader } from '@/components/ui/NavigationLoader'
 import './globals.css'
 
 const sora = Sora({
@@ -54,6 +55,7 @@ export default function RootLayout({
       className={`${sora.variable} ${publicSans.variable} ${notoSansDevanagari.variable}`}
     >
       <body className="font-body flex min-h-screen flex-col antialiased">
+        <NavigationLoader />
         <Header />
         <main className="flex-1">{children}</main>
         <Footer />

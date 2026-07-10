@@ -23,6 +23,7 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [cartOpen, setCartOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
   const [announcement, setAnnouncement] = useState<{
     enabled: boolean
     text: string
@@ -30,6 +31,16 @@ export function Header() {
   const [wishlistCount, setWishlistCount] = useState(0)
   const { items } = useCart()
   const { data: sessionData } = useSession()
+
+  // Scroll listener for blur-on-scroll
+  useEffect(() => {
+    function onScroll() {
+      setScrolled(window.scrollY > 20)
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    onScroll()
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
 
   useEffect(() => {
     if (!sessionData?.user) return
@@ -66,11 +77,42 @@ export function Header() {
 
   return (
     <>
-      <header className="z-sticky glass-panel sticky top-0">
+      <header
+        className={cn(
+          'z-sticky sticky top-0 transition-all duration-300',
+          scrolled ? 'bg-white/95 shadow-sm backdrop-blur-xl' : 'glass-panel',
+        )}
+      >
         {/* Announcement */}
         {announcement?.enabled && (
-          <div className="bg-brand-600 font-body px-4 py-2 text-center text-xs text-white">
-            {announcement.text}
+          <div className="bg-brand-600 relative overflow-hidden px-4 py-2 text-center text-xs text-white">
+            {/* Decorative dots */}
+            <span
+              className="absolute top-1/2 left-4 hidden -translate-y-1/2 sm:block"
+              aria-hidden="true"
+            >
+              <span className="inline-block h-1 w-1 rounded-full bg-white/30" />
+              <span className="ml-1.5 inline-block h-1 w-1 rounded-full bg-white/30" />
+            </span>
+            <span
+              className="absolute top-1/2 right-4 hidden -translate-y-1/2 sm:block"
+              aria-hidden="true"
+            >
+              <span className="inline-block h-1 w-1 rounded-full bg-white/30" />
+              <span className="ml-1.5 inline-block h-1 w-1 rounded-full bg-white/30" />
+            </span>
+            <span className="relative inline-flex items-center gap-2">
+              <svg
+                className="text-gold-300 h-3 w-3 shrink-0"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+              </svg>
+              <span className="font-medium tracking-wide">
+                {announcement.text}
+              </span>
+            </span>
           </div>
         )}
 
@@ -168,27 +210,25 @@ export function Header() {
             : 'pointer-events-none translate-x-full opacity-0',
         )}
       >
-        <div className="container-page">
-          <div className="flex h-15 items-center justify-between gap-6 border-b border-neutral-200">
-            <Logo wordmarkClassName="text-neutral-900" />
-            <button
-              className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg p-2 text-neutral-600 transition-colors hover:bg-neutral-100"
-              onClick={() => setMobileMenuOpen(false)}
-              aria-label="Close menu"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
+        <div className="flex h-15 items-center justify-between border-b border-neutral-200 pr-1 pl-4">
+          <Logo wordmarkClassName="text-neutral-900" />
+          <button
+            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg p-2 text-neutral-600 transition-colors hover:bg-neutral-100"
+            onClick={() => setMobileMenuOpen(false)}
+            aria-label="Close menu"
+          >
+            <X className="h-5 w-5" />
+          </button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto px-6 py-10 sm:px-8">
-          <div className="flex flex-col gap-6">
+        <nav className="flex-1 overflow-y-auto px-6 py-4 sm:px-8">
+          <div className="flex flex-col">
             {navLinks.map((link, i) => (
               <Link
                 key={link.href}
                 href={link.href}
                 className={cn(
-                  'font-display hover:text-brand-700 text-3xl font-medium text-neutral-900 transition-all duration-500',
+                  'font-body hover:text-brand-700 border-b border-neutral-100 py-3 text-lg font-medium text-neutral-700 transition-colors last:border-0',
                   mobileMenuOpen
                     ? 'translate-y-0 opacity-100'
                     : 'translate-y-4 opacity-0',
@@ -203,7 +243,7 @@ export function Header() {
 
           <div
             className={cn(
-              'mt-10 flex flex-col gap-4 border-t border-neutral-200 pt-8 transition-all duration-500',
+              'mt-6 flex flex-col gap-1 transition-all duration-500',
               mobileMenuOpen
                 ? 'translate-y-0 opacity-100'
                 : 'translate-y-4 opacity-0',
@@ -212,18 +252,18 @@ export function Header() {
           >
             <Link
               href="/account"
-              className="font-body hover:text-brand-700 flex min-h-[44px] items-center gap-4 text-base font-medium text-neutral-600 transition-colors sm:hidden"
+              className="font-body hover:text-brand-700 flex items-center gap-3 py-3 text-sm font-medium text-neutral-500 transition-colors"
               onClick={() => setMobileMenuOpen(false)}
             >
-              <User className="h-6 w-6" />
+              <User className="h-4 w-4" />
               My Account
             </Link>
             <Link
               href="/wishlist"
-              className="font-body hover:text-brand-700 flex min-h-[44px] items-center gap-4 text-base font-medium text-neutral-600 transition-colors sm:hidden"
+              className="font-body hover:text-brand-700 flex items-center gap-3 py-3 text-sm font-medium text-neutral-500 transition-colors"
               onClick={() => setMobileMenuOpen(false)}
             >
-              <Heart className="h-6 w-6" />
+              <Heart className="h-4 w-4" />
               Wishlist
             </Link>
           </div>

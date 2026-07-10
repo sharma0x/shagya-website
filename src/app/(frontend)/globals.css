@@ -423,6 +423,19 @@
   }
 }
 
+/* Navigation loader — top progress bar on page transitions */
+@keyframes loader-bar {
+  0% {
+    transform: translateX(-100%) scaleX(0.3);
+  }
+  40% {
+    transform: translateX(0%) scaleX(0.6);
+  }
+  100% {
+    transform: translateX(100%) scaleX(0.3);
+  }
+}
+
 /* Skeleton shimmer — image and card loading states */
 @keyframes skeleton-shimmer {
   0% {
@@ -491,4 +504,86 @@
 /* Enforce sticky header z-index to stay on top of hoverable cards/images */
 .z-sticky {
   z-index: 100 !important;
+}
+
+/* ==========================================================================
+   Filter: Dual-Range Price Slider
+   ==========================================================================
+   Two overlapping native <input type="range"> elements styled as a
+   single dual-handle slider. The track is transparent; the visual track
+   and active range are rendered by <div> elements behind the inputs.
+   Thumb styling must be prefixed for WebKit (-webkit-slider-thumb) and
+   Firefox (-moz-range-thumb).                           ========================================================================== */
+
+.price-range-thumb::-webkit-slider-runnable-track {
+  height: 100%;
+  background: transparent;
+  border: none;
+}
+
+.price-range-thumb::-moz-range-track {
+  height: 100%;
+  background: transparent;
+  border: none;
+}
+
+.price-range-thumb::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 1.125rem;
+  width: 1.125rem;
+  border-radius: 9999px;
+  background: white;
+  border: 2px solid oklch(0.42 0.11 346); /* brand-600 */
+  box-shadow: 0 1px 3px oklch(0 0 0 / 0.15);
+  cursor: grab;
+  transition:
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
+}
+
+.price-range-thumb::-webkit-slider-thumb:hover {
+  box-shadow: 0 2px 6px oklch(0 0 0 / 0.2);
+  transform: scale(1.1);
+}
+
+.price-range-thumb::-webkit-slider-thumb:active {
+  cursor: grabbing;
+  box-shadow: 0 0 0 4px oklch(0.42 0.11 346 / 0.15);
+  transform: scale(1.15);
+}
+
+.price-range-thumb::-moz-range-thumb {
+  height: 1.125rem;
+  width: 1.125rem;
+  border-radius: 9999px;
+  background: white;
+  border: 2px solid oklch(0.42 0.11 346); /* brand-600 */
+  box-shadow: 0 1px 3px oklch(0 0 0 / 0.15);
+  cursor: grab;
+  transition:
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
+}
+
+.price-range-thumb::-moz-range-thumb:hover {
+  box-shadow: 0 2px 6px oklch(0 0 0 / 0.2);
+  transform: scale(1.1);
+}
+
+.price-range-thumb::-moz-range-thumb:active {
+  cursor: grabbing;
+  box-shadow: 0 0 0 4px oklch(0.42 0.11 346 / 0.15);
+  transform: scale(1.15);
+}
+
+/* Focus-visible ring for keyboard navigation */
+.price-range-thumb:focus-visible::-webkit-slider-thumb {
+  outline: 2px solid oklch(0.42 0.11 346);
+  outline-offset: 2px;
+}
+
+.price-range-thumb:focus-visible::-moz-range-thumb {
+  outline: 2px solid oklch(0.42 0.11 346);
+  outline-offset: 2px;
 }
