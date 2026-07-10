@@ -1,7 +1,19 @@
 import { NextResponse } from 'next/server'
-import { verifyOTPToken, OTP_COOKIE_NAME } from '@/lib/otp'
-import { auth } from '@/lib/auth'
+import { cookies } from 'next/headers'
+import { verifyOTPToken, OTP_COOKIE_NAME, OTP_TTL_MS } from '@/lib/otp'
 import { Pool } from 'pg'
+import crypto from 'crypto'
+
+const SESSION_COOKIE = 'better-auth.session_token'
+const SESSION_EXPIRY = 7 * 24 * 60 * 60 * 1000 // 7 days
+
+function generateToken(): string {
+  return crypto.randomBytes(32).toString('hex')
+}
+
+function hashToken(raw: string): string {
+  return crypto.createHash('sha256').update(raw).digest('hex')
+}
 
 export async function POST(request: Request) {
   try {
@@ -15,8 +27,8 @@ export async function POST(request: Request) {
       )
     }
 
-    const cookie = request.headers.get('cookie') || ''
-    const token = parseCookie(cookie, OTP_COOKIE_NAME)
+    const cookieHeader = request.headers.get('cookie') || ''
+    const token = parseCookie(cookieHeader, OTP_COOKIE_NAME)
 
     if (!token || !verifyOTPToken(email, otp, token)) {
       return NextResponse.json(
@@ -25,77 +37,80 @@ export async function POST(request: Request) {
       )
     }
 
-    // Sign in the user via Better Auth — this creates a session cookie
-    const signInRequest = new Request(
-      'http://localhost:3000/api/auth/sign-in/email',
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, callbackURL: '/account' }),
-      },
+    const pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+    })
+
+    const normalizedEmail = email.toLowerCase()
+
+    // ── 1. Find or create the user ──
+    let userResult = await pool.query(
+      'SELECT id, email FROM "user" WHERE LOWER(email) = $1',
+      [normalizedEmail],
     )
 
-    const signInResponse = await auth.handler(signInRequest)
-
-    if (!signInResponse.ok) {
-      // User might not exist yet — try sign-up first
+    if (userResult.rows.length === 0) {
       const randomPassword =
-        Math.random().toString(36).slice(2) +
-        Math.random().toString(36).slice(2) +
-        '!A1'
+        crypto.randomBytes(16).toString('base64') +
+        'Aa1!'
 
-      const signUpRequest = new Request(
-        'http://localhost:3000/api/auth/sign-up/email',
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email,
-            password: randomPassword,
-            name: email.split('@')[0],
-          }),
-        },
+      const now = new Date().toISOString()
+      const userId = crypto.randomUUID()
+
+      userResult = await pool.query(
+        `INSERT INTO "user" (id, email, name, password, email_verified, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, true, $5, $5)
+         RETURNING id, email`,
+        [userId, normalizedEmail, normalizedEmail.split('@')[0], randomPassword, now],
       )
-
-      const signUpResponse = await auth.handler(signUpRequest)
-
-      if (signUpResponse.ok) {
-        // Mark email as verified so user can sign in immediately
-        try {
-          const pool = new Pool({
-            connectionString: process.env.DATABASE_URL,
-          })
-          await pool.query(
-            'UPDATE "user" SET email_verified = true WHERE email = $1',
-            [email.toLowerCase()],
-          )
-          await pool.end()
-        } catch {}
-      }
-
-      // Now try sign-in again
-      const secondSignIn = await auth.handler(signInRequest)
-      if (!secondSignIn.ok) {
-        return NextResponse.json(
-          { error: 'Could not sign in. Please try again.' },
-          { status: 500 },
-        )
-      }
     }
 
-    const res = NextResponse.json({ success: true, email })
+    const user = userResult.rows[0]
 
-    // Forward the session cookie from Better Auth
-    const setCookie = signInResponse.headers.getSetCookie?.() || signInResponse.headers.get('set-cookie')
-    if (setCookie) {
-      const cookies = Array.isArray(setCookie) ? setCookie : [setCookie]
-      for (const c of cookies) {
-        res.headers.append('Set-Cookie', c)
-      }
+    if (!user) {
+      await pool.end()
+      return NextResponse.json(
+        { error: 'Could not create user' },
+        { status: 500 },
+      )
     }
 
-    res.cookies.delete(OTP_COOKIE_NAME)
-    return res
+    // ── 2. Create a session ──
+    const rawToken = generateToken()
+    const sessionToken = hashToken(rawToken)
+    const now = new Date()
+    const expiresAt = new Date(now.getTime() + SESSION_EXPIRY)
+
+    await pool.query(
+      `INSERT INTO "session" (id, user_id, token, expires_at, ip_address, user_agent, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $7)`,
+      [
+        crypto.randomUUID(),
+        user.id,
+        sessionToken,
+        expiresAt,
+        request.headers.get('x-forwarded-for') || '',
+        request.headers.get('user-agent') || '',
+        now.toISOString(),
+      ],
+    )
+
+    await pool.end()
+
+    // ── 3. Set session cookie with RAW token, clear OTP cookie ──
+    const cookieStore = await cookies()
+
+    cookieStore.set(SESSION_COOKIE, rawToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: SESSION_EXPIRY / 1000,
+    })
+
+    cookieStore.delete(OTP_COOKIE_NAME)
+
+    return NextResponse.json({ success: true, email })
   } catch (error) {
     console.error('[API] POST /api/auth/verify-email-otp error:', error)
     return NextResponse.json(
