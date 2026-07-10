@@ -10,6 +10,12 @@ import {
 import { INDIAN_STATES } from '@/lib/indian-states'
 import { Button } from '@/components/ui/button'
 
+interface CitySearchResult {
+  city: string
+  state: string
+  pincodes: string[]
+}
+
 export interface AddressFormData {
   fullName: string
   phone: string
@@ -81,9 +87,10 @@ export function AddressForm({
     initialData?.pincode ?? '',
   )
 
-  // Monotonic request token. Each call to handlePincodeBlur increments the
-  // ref. When a response resolves, it only mutates state if its token is the
-  // latest one — otherwise a stale response can clobber a newer one.
+  const [searchingCity, setSearchingCity] = useState(false)
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [citySuggestions, setCitySuggestions] = useState<CitySearchResult[]>([])
+
   const requestTokenRef = useRef(0)
 
   const isOtherCountry = country === OTHER_COUNTRY_VALUE
@@ -117,7 +124,6 @@ export function AddressForm({
         body: JSON.stringify({ pincode: trimmed }),
       })
 
-      // A newer call has started — drop this stale response.
       if (token !== requestTokenRef.current) return
 
       const body = await res.json()
@@ -155,6 +161,50 @@ export function AddressForm({
       setPincodeVerified(false)
       setPincodeError('')
     }
+  }
+
+  const handleCityBlur = useCallback(async () => {
+    setShowSuggestions(false)
+    const trimmed = city.trim()
+    if (trimmed.length < 3) return
+    if (country !== 'India') return
+
+    setSearchingCity(true)
+    setCitySuggestions([])
+
+    try {
+      const res = await fetch(
+        `/api/pincode/city-search?city=${encodeURIComponent(trimmed)}`
+      )
+      const body = await res.json()
+
+      if (!res.ok || body.error || !body.data?.length) {
+        return
+      }
+
+      const results: CitySearchResult[] = body.data
+
+      if (results.length === 1 && results[0].pincodes.length === 1) {
+        const result = results[0]
+        setPincode(result.pincodes[0])
+        setState(result.state)
+        setCountry('India')
+      } else {
+        setCitySuggestions(results)
+        setShowSuggestions(true)
+      }
+    } catch {
+    } finally {
+      setSearchingCity(false)
+    }
+  }, [city, country])
+
+  const selectPincodeFromCity = (result: CitySearchResult, pincodeValue: string) => {
+    setPincode(pincodeValue)
+    setState(result.state)
+    setCountry('India')
+    setShowSuggestions(false)
+    setCitySuggestions([])
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -211,7 +261,6 @@ export function AddressForm({
             required
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
-            className={textInputClass}
             placeholder={initialData?.phone ? undefined : '10-digit mobile'}
           />
         </div>

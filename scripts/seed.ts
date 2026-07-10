@@ -445,6 +445,13 @@ export async function seedProducts(payload: Payload): Promise<void> {
         updateData.collections = collectionIds
       }
 
+      // Update new fields that may not exist on previously seeded products
+      if (!doc.cityOfOrigin && prod.cityOfOrigin) {
+        updateData.cityOfOrigin = prod.cityOfOrigin
+      }
+      if (!doc.deliveryTime && prod.deliveryTime) {
+        updateData.deliveryTime = prod.deliveryTime
+      }
       // Update color if missing (field was newly added)
       if (!(doc as any).color) {
         updateData.color = prod.color

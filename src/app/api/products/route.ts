@@ -6,7 +6,8 @@ import config from '@payload-config'
  * GET /api/products
  *
  * Returns a paginated list of published products.
- * Supports filtering by fabric, weave, pattern, minPrice, maxPrice.
+ * Supports filtering by fabric, weave, pattern, minPrice, maxPrice,
+ * onSale, minDiscount, deliveryTime, city.
  * Supports pagination via page and limit query params.
  */
 
@@ -56,6 +57,32 @@ export async function GET(request: Request): Promise<NextResponse> {
         basePrice.less_than_equal = parseInt(maxPrice, 10)
       }
       where.basePrice = basePrice
+    }
+
+    // On sale filter — products with a compareAtPrice set
+    const onSale = searchParams.get('onSale')
+    if (onSale === 'true') {
+      where.compareAtPrice = { greater_than: 0 }
+    }
+
+    // Minimum discount percentage
+    const minDiscount = searchParams.get('minDiscount')
+    if (minDiscount) {
+      where.discountPercentage = {
+        greater_than_equal: parseInt(minDiscount, 10),
+      }
+    }
+
+    // Delivery time
+    const deliveryTime = searchParams.get('deliveryTime')
+    if (deliveryTime) {
+      where.deliveryTime = { equals: deliveryTime }
+    }
+
+    // City of origin
+    const city = searchParams.get('city')
+    if (city) {
+      where.cityOfOrigin = { contains: city }
     }
 
     const payload = await getPayload({ config })
