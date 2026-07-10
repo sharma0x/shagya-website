@@ -31,7 +31,7 @@ import { InstagramGallery } from '@/components/homepage/InstagramGallery'
 import { OccasionButton } from '@/components/homepage/OccasionButton'
 import { TestimonialCard } from '@/components/homepage/TestimonialCard'
 import { TrendingColors } from '@/components/homepage/TrendingColors'
-import { ShopTheLook, type ProductHotspot } from '@/components/homepage/ShopTheLook'
+import { CollectionBanners, type CollectionBannerData } from '@/components/homepage/CollectionBanners'
 
 const ph = (w: number, h: number, bg: string, fg: string, text: string) =>
   `https://placehold.co/${w}x${h}/${bg}/${fg}?text=${encodeURIComponent(text)}&font=lora`
@@ -537,42 +537,6 @@ export default async function HomePage({ searchParams }: Props) {
       </section>
 
       {/* ═══════════════════════════════════════════════════
-          SECTION 3.5: SHOP THE LOOK — Editorial hotspot section
-          ═══════════════════════════════════════════════════ */}
-      <ShopTheLook
-        imageUrl="/images/hero/hero-main.png"
-        headline="Curated for the Modern Woman"
-        subheading="Every saree tells a story. Tap the dots to discover this season's most loved pieces."
-        ctaText="Browse the full collection"
-        ctaLink="/category/all"
-        hotspots={
-          [
-            {
-              productName: 'Banarasi Silk Saree',
-              productSlug: 'banarasi-silk-saree',
-              price: 8500,
-              x: 25,
-              y: 40,
-            },
-            {
-              productName: 'Chanderi Cotton',
-              productSlug: 'chanderi-cotton-saree',
-              price: 4200,
-              x: 55,
-              y: 55,
-            },
-            {
-              productName: 'Kanjeevaram Pure Silk',
-              productSlug: 'kanjeevaram-pure-silk',
-              price: 12000,
-              x: 75,
-              y: 35,
-            },
-          ] as ProductHotspot[]
-        }
-      />
-
-      {/* ═══════════════════════════════════════════════════
           SECTION 4: COMBINED — New Arrivals + Trending Now + Best Offers
           ═══════════════════════════════════════════════════ */}
       {(newArrivals.length > 0 ||
@@ -638,6 +602,40 @@ export default async function HomePage({ searchParams }: Props) {
           </div>
         </section>
       )}
+
+      {/* ═══════════════════════════════════════════════════
+          SECTION 4.5: COLLECTION BANNERS — Wedding, Festive, Daily, Gifts
+          ═══════════════════════════════════════════════════ */}
+      <CollectionBanners
+        banners={
+          [
+            {
+              title: 'Wedding Edit',
+              subtitle: 'Heirloom weaves for your special day',
+              imageUrl: '/images/hero/hero-main.png',
+              link: '/category/silk',
+            },
+            {
+              title: 'Festive Picks',
+              subtitle: 'Celebrate in handwoven elegance',
+              imageUrl: '/images/hero/hero-main.png',
+              link: '/collections',
+            },
+            {
+              title: 'Daily Wear',
+              subtitle: 'Lightweight cottons for everyday grace',
+              imageUrl: '/images/hero/hero-main.png',
+              link: '/category/cotton',
+            },
+            {
+              title: 'Gift a Saree',
+              subtitle: 'The most meaningful gift, wrapped in tradition',
+              imageUrl: '/images/hero/hero-main.png',
+              link: '/category/designer',
+            },
+          ] as CollectionBannerData[]
+        }
+      />
 
       {/* ═══════════════════════════════════════════════════
           SECTION 5: SHOP BY OCCASION + TRENDING COLORS + SOCIAL
