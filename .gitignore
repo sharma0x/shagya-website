@@ -58,3 +58,6 @@ public/images/screenshots/
 .opencode/
 .superpowers/
 .agents/
+
+# Dev logs
+.dev-boot.log
