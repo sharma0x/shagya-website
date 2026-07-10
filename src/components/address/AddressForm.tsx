@@ -1,6 +1,7 @@
 'use client'
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 import { useCallback, useRef, useState } from 'react'
 import { AlertCircle, Check, ChevronDown, Loader2 } from 'lucide-react'
 import {
@@ -11,13 +12,18 @@ import {
 import { INDIAN_STATES } from '@/lib/indian-states'
 import { Button } from '@/components/ui/button'
 =======
+=======
+>>>>>>> feat/clo-42-order-timeline
 import { useState, useCallback } from 'react'
 import { AlertCircle, Check, ChevronDown, Loader2, MapPin } from 'lucide-react'
 import { ALL_COUNTRIES, DEFAULT_COUNTRY, OTHER_COUNTRY_VALUE } from '@/lib/countries'
 import { INDIAN_STATES } from '@/lib/indian-states'
 import type { CitySearchResult } from '@/lib/india-post'
 import { PhoneInput } from '@/components/ui/phone-input'
+<<<<<<< HEAD
 >>>>>>> feat/clo-40-product-card-actions
+=======
+>>>>>>> feat/clo-42-order-timeline
 
 export interface AddressFormData {
   fullName: string
@@ -47,6 +53,7 @@ const textInputClass =
   'font-body focus:border-brand-500 h-10 w-full rounded-xl border border-neutral-200 pl-3 text-sm outline-none'
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 const ALL_COUNTRY_VALUES = new Set(ALL_COUNTRIES.map((c) => c.value))
 
 function resolveCountryState(country?: string): {
@@ -62,6 +69,8 @@ function resolveCountryState(country?: string): {
 
 =======
 >>>>>>> feat/clo-40-product-card-actions
+=======
+>>>>>>> feat/clo-42-order-timeline
 export function AddressForm({
   initialData,
   onSubmit,
@@ -79,6 +88,7 @@ export function AddressForm({
   const [state, setState] = useState(initialData?.state ?? '')
   const [pincode, setPincode] = useState(initialData?.pincode ?? '')
 <<<<<<< HEAD
+<<<<<<< HEAD
   const [country, setCountry] = useState(
     () => resolveCountryState(initialData?.country).country,
   )
@@ -89,11 +99,16 @@ export function AddressForm({
   const [country, setCountry] = useState(initialData?.country || DEFAULT_COUNTRY)
   const [customCountry, setCustomCountry] = useState('')
 >>>>>>> feat/clo-40-product-card-actions
+=======
+  const [country, setCountry] = useState(initialData?.country || DEFAULT_COUNTRY)
+  const [customCountry, setCustomCountry] = useState('')
+>>>>>>> feat/clo-42-order-timeline
   const [isDefault, setIsDefault] = useState(initialData?.isDefault ?? false)
 
   const [verifyingPincode, setVerifyingPincode] = useState(false)
   const [pincodeVerified, setPincodeVerified] = useState(false)
   const [pincodeError, setPincodeError] = useState('')
+<<<<<<< HEAD
 <<<<<<< HEAD
   const [verifiedPincode, setVerifiedPincode] = useState(
     initialData?.pincode ?? '',
@@ -107,6 +122,8 @@ export function AddressForm({
   const handleCountryChange = (value: string) => {
     if (value !== DEFAULT_COUNTRY) {
 =======
+=======
+>>>>>>> feat/clo-42-order-timeline
   const [verifiedPincode, setVerifiedPincode] = useState(initialData?.pincode ?? '')
 
   const [searchingCity, setSearchingCity] = useState(false)
@@ -117,7 +134,10 @@ export function AddressForm({
 
   const handleCountryChange = (value: string) => {
     if (value !== 'India') {
+<<<<<<< HEAD
 >>>>>>> feat/clo-40-product-card-actions
+=======
+>>>>>>> feat/clo-42-order-timeline
       setState('')
     }
     setCountry(value)
@@ -133,9 +153,12 @@ export function AddressForm({
     }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     const token = ++requestTokenRef.current
 =======
 >>>>>>> feat/clo-40-product-card-actions
+=======
+>>>>>>> feat/clo-42-order-timeline
     setVerifyingPincode(true)
     setPincodeError('')
     setPincodeVerified(false)
@@ -148,6 +171,7 @@ export function AddressForm({
       })
 
 <<<<<<< HEAD
+<<<<<<< HEAD
       if (token !== requestTokenRef.current) return
 
       const body = await res.json()
@@ -158,6 +182,10 @@ export function AddressForm({
       const body = await res.json()
 
 >>>>>>> feat/clo-40-product-card-actions
+=======
+      const body = await res.json()
+
+>>>>>>> feat/clo-42-order-timeline
       if (!res.ok || body.error) {
         setPincodeError(body.error || 'Pincode not found')
         return
@@ -174,6 +202,7 @@ export function AddressForm({
       setPincodeError('')
     } catch {
 <<<<<<< HEAD
+<<<<<<< HEAD
       if (token !== requestTokenRef.current) return
       setPincodeError('Could not verify pincode. Try again.')
     } finally {
@@ -185,6 +214,11 @@ export function AddressForm({
     } finally {
       setVerifyingPincode(false)
 >>>>>>> feat/clo-40-product-card-actions
+=======
+      setPincodeError('Could not verify pincode. Try again.')
+    } finally {
+      setVerifyingPincode(false)
+>>>>>>> feat/clo-42-order-timeline
     }
   }, [pincode, verifiedPincode, pincodeVerified])
 
@@ -198,7 +232,10 @@ export function AddressForm({
   }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> feat/clo-42-order-timeline
   const handleCityBlur = useCallback(async () => {
     setShowSuggestions(false)
     const trimmed = city.trim()
@@ -243,7 +280,10 @@ export function AddressForm({
     setCitySuggestions([])
   }
 
+<<<<<<< HEAD
 >>>>>>> feat/clo-40-product-card-actions
+=======
+>>>>>>> feat/clo-42-order-timeline
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     await onSubmit({
@@ -270,6 +310,7 @@ export function AddressForm({
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
 <<<<<<< HEAD
+<<<<<<< HEAD
           <label
             htmlFor="address-fullName"
             className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase"
@@ -279,11 +320,16 @@ export function AddressForm({
           <input
             id="address-fullName"
 =======
+=======
+>>>>>>> feat/clo-42-order-timeline
           <label className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase">
             Full Name
           </label>
           <input
+<<<<<<< HEAD
 >>>>>>> feat/clo-40-product-card-actions
+=======
+>>>>>>> feat/clo-42-order-timeline
             type="text"
             required
             value={fullName}
@@ -293,6 +339,7 @@ export function AddressForm({
           />
         </div>
         <div>
+<<<<<<< HEAD
 <<<<<<< HEAD
           <label
             htmlFor="address-phone"
@@ -308,6 +355,8 @@ export function AddressForm({
             onChange={(e) => setPhone(e.target.value)}
             className={textInputClass}
 =======
+=======
+>>>>>>> feat/clo-42-order-timeline
           <label className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase">
             Phone Number
           </label>
@@ -315,13 +364,17 @@ export function AddressForm({
             required
             value={phone}
             onChange={setPhone}
+<<<<<<< HEAD
 >>>>>>> feat/clo-40-product-card-actions
+=======
+>>>>>>> feat/clo-42-order-timeline
             placeholder={initialData?.phone ? undefined : '10-digit mobile'}
           />
         </div>
       </div>
 
       <div>
+<<<<<<< HEAD
 <<<<<<< HEAD
         <label
           htmlFor="address-line1"
@@ -332,16 +385,22 @@ export function AddressForm({
         <input
           id="address-line1"
 =======
+=======
+>>>>>>> feat/clo-42-order-timeline
         <label className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase">
           Address Line 1
         </label>
         <input
+<<<<<<< HEAD
 >>>>>>> feat/clo-40-product-card-actions
+=======
+>>>>>>> feat/clo-42-order-timeline
           type="text"
           required
           value={line1}
           onChange={(e) => setLine1(e.target.value)}
           className={textInputClass}
+<<<<<<< HEAD
 <<<<<<< HEAD
           placeholder={
             initialData?.line1 ? undefined : 'House/Flat No., Street, Area'
@@ -349,10 +408,14 @@ export function AddressForm({
 =======
           placeholder={initialData?.line1 ? undefined : 'House/Flat No., Street, Area'}
 >>>>>>> feat/clo-40-product-card-actions
+=======
+          placeholder={initialData?.line1 ? undefined : 'House/Flat No., Street, Area'}
+>>>>>>> feat/clo-42-order-timeline
         />
       </div>
 
       <div>
+<<<<<<< HEAD
 <<<<<<< HEAD
         <label
           htmlFor="address-line2"
@@ -363,11 +426,16 @@ export function AddressForm({
         <input
           id="address-line2"
 =======
+=======
+>>>>>>> feat/clo-42-order-timeline
         <label className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase">
           Address Line 2 (Optional)
         </label>
         <input
+<<<<<<< HEAD
 >>>>>>> feat/clo-40-product-card-actions
+=======
+>>>>>>> feat/clo-42-order-timeline
           type="text"
           value={line2}
           onChange={(e) => setLine2(e.target.value)}
@@ -377,6 +445,7 @@ export function AddressForm({
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+<<<<<<< HEAD
 <<<<<<< HEAD
         <div>
           <label
@@ -407,6 +476,8 @@ export function AddressForm({
               <select
                 id="address-state"
 =======
+=======
+>>>>>>> feat/clo-42-order-timeline
         <div className="relative">
           <label className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase">
             City
@@ -460,7 +531,10 @@ export function AddressForm({
           {country === 'India' ? (
             <div className="relative">
               <select
+<<<<<<< HEAD
 >>>>>>> feat/clo-40-product-card-actions
+=======
+>>>>>>> feat/clo-42-order-timeline
                 required
                 value={state}
                 onChange={(e) => setState(e.target.value)}
@@ -480,9 +554,12 @@ export function AddressForm({
           ) : (
             <input
 <<<<<<< HEAD
+<<<<<<< HEAD
               id="address-state"
 =======
 >>>>>>> feat/clo-40-product-card-actions
+=======
+>>>>>>> feat/clo-42-order-timeline
               type="text"
               required
               value={state}
@@ -494,6 +571,7 @@ export function AddressForm({
         </div>
         <div>
 <<<<<<< HEAD
+<<<<<<< HEAD
           <label
             htmlFor="address-pincode"
             className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase"
@@ -501,12 +579,18 @@ export function AddressForm({
 =======
           <label className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase">
 >>>>>>> feat/clo-40-product-card-actions
+=======
+          <label className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase">
+>>>>>>> feat/clo-42-order-timeline
             Pincode
           </label>
           <div className="relative">
             <input
 <<<<<<< HEAD
+<<<<<<< HEAD
               id="address-pincode"
+=======
+>>>>>>> feat/clo-42-order-timeline
               type="text"
               required
               inputMode="numeric"
@@ -514,6 +598,7 @@ export function AddressForm({
               value={pincode}
               onChange={handlePincodeChange}
               onBlur={handlePincodeBlur}
+<<<<<<< HEAD
               aria-describedby="address-pincode-status"
 =======
               type="text"
@@ -524,6 +609,8 @@ export function AddressForm({
               onChange={handlePincodeChange}
               onBlur={handlePincodeBlur}
 >>>>>>> feat/clo-40-product-card-actions
+=======
+>>>>>>> feat/clo-42-order-timeline
               className={`${textInputClass} ${pincodeVerified ? 'border-brand-600 bg-brand-50/10 pr-8' : ''}`}
               placeholder="6-digit PIN"
             />
@@ -531,6 +618,7 @@ export function AddressForm({
               <Loader2 className="pointer-events-none absolute top-1/2 right-2.5 h-3.5 w-3.5 -translate-y-1/2 animate-spin text-neutral-400" />
             )}
             {pincodeVerified && !verifyingPincode && (
+<<<<<<< HEAD
 <<<<<<< HEAD
               <Check className="text-success pointer-events-none absolute top-1/2 right-2.5 h-3.5 w-3.5 -translate-y-1/2" />
             )}
@@ -555,6 +643,8 @@ export function AddressForm({
               Verified &mdash; city &amp; state auto-filled. You can edit if
               needed.
 =======
+=======
+>>>>>>> feat/clo-42-order-timeline
               <Check className="pointer-events-none absolute top-1/2 right-2.5 h-3.5 w-3.5 -translate-y-1/2 text-emerald-500" />
             )}
           </div>
@@ -564,13 +654,17 @@ export function AddressForm({
           {pincodeVerified && !pincodeError && (
             <p className="mt-1 text-xs text-emerald-600">
               Verified &mdash; city &amp; state auto-filled. You can edit if needed.
+<<<<<<< HEAD
 >>>>>>> feat/clo-40-product-card-actions
+=======
+>>>>>>> feat/clo-42-order-timeline
             </p>
           )}
         </div>
       </div>
 
       <div>
+<<<<<<< HEAD
 <<<<<<< HEAD
         <label
           htmlFor="address-country"
@@ -579,14 +673,20 @@ export function AddressForm({
 =======
         <label className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase">
 >>>>>>> feat/clo-40-product-card-actions
+=======
+        <label className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase">
+>>>>>>> feat/clo-42-order-timeline
           Country
         </label>
         <div className="relative">
           <select
 <<<<<<< HEAD
+<<<<<<< HEAD
             id="address-country"
 =======
 >>>>>>> feat/clo-40-product-card-actions
+=======
+>>>>>>> feat/clo-42-order-timeline
             value={country}
             onChange={(e) => handleCountryChange(e.target.value)}
             className={`${inputClass} select-none`}
@@ -602,6 +702,7 @@ export function AddressForm({
         {isOtherCountry && (
           <input
 <<<<<<< HEAD
+<<<<<<< HEAD
             id="address-customCountry"
             type="text"
             required
@@ -610,6 +711,10 @@ export function AddressForm({
             type="text"
             required
 >>>>>>> feat/clo-40-product-card-actions
+=======
+            type="text"
+            required
+>>>>>>> feat/clo-42-order-timeline
             value={customCountry}
             onChange={(e) => setCustomCountry(e.target.value)}
             className={`${textInputClass} mt-2`}
@@ -623,14 +728,19 @@ export function AddressForm({
           <input
             type="checkbox"
 <<<<<<< HEAD
+<<<<<<< HEAD
             id="address-isDefault"
 =======
             id="isDefault"
 >>>>>>> feat/clo-40-product-card-actions
+=======
+            id="isDefault"
+>>>>>>> feat/clo-42-order-timeline
             checked={isDefault}
             onChange={(e) => setIsDefault(e.target.checked)}
             className="accent-brand-600 rounded border-neutral-300"
           />
+<<<<<<< HEAD
 <<<<<<< HEAD
           <label
             htmlFor="address-isDefault"
@@ -639,6 +749,9 @@ export function AddressForm({
 =======
           <label htmlFor="isDefault" className="font-body text-xs text-neutral-600">
 >>>>>>> feat/clo-40-product-card-actions
+=======
+          <label htmlFor="isDefault" className="font-body text-xs text-neutral-600">
+>>>>>>> feat/clo-42-order-timeline
             Set as default shipping address
           </label>
         </div>
@@ -646,7 +759,11 @@ export function AddressForm({
 
       <div className="flex justify-end gap-3 pt-2">
 <<<<<<< HEAD
+<<<<<<< HEAD
         <Button
+=======
+        <button
+>>>>>>> feat/clo-42-order-timeline
           type="button"
           variant="outline"
           onClick={onCancel}
@@ -661,6 +778,7 @@ export function AddressForm({
         >
           {isSubmitting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
           {isSubmitting ? 'Saving...' : submitLabel}
+<<<<<<< HEAD
         </Button>
 =======
         <button
@@ -679,6 +797,9 @@ export function AddressForm({
           {isSubmitting ? 'Saving...' : submitLabel}
         </button>
 >>>>>>> feat/clo-40-product-card-actions
+=======
+        </button>
+>>>>>>> feat/clo-42-order-timeline
       </div>
     </form>
   )

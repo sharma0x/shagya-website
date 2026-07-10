@@ -7,41 +7,7 @@ import { notFound } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { SortSelect } from '@/components/ui/sort-select'
 import { ProductFilters } from '@/components/product/ProductFilters'
-<<<<<<< HEAD
-import { WishlistButton } from '@/components/product/WishlistButton'
-
-const ph = (w: number, h: number, bg: string, fg: string, text: string) =>
-  `https://placehold.co/${w}x${h}/${bg}/${fg}?text=${encodeURIComponent(text)}&font=lora`
-
-function ImagePanel({
-  src,
-  alt,
-  className,
-  rounded = 'rounded-2xl',
-}: {
-  src: string
-  alt: string
-  className?: string
-  rounded?: string
-}) {
-  return (
-    <div
-      className={`relative overflow-hidden bg-neutral-100 ${rounded} ${className ?? ''}`}
-    >
-      <Image
-        src={src}
-        alt={alt}
-        fill
-        sizes="(max-width: 768px) 50vw, 33vw"
-        className="object-cover"
-        unoptimized={src.startsWith('https://placehold.co')}
-      />
-    </div>
-  )
-}
-=======
 import { ProductCard } from '@/components/product/ProductCard'
->>>>>>> feat/clo-40-product-card-actions
 
 function getCommaParam(
   params: { [key: string]: string | string[] | undefined },

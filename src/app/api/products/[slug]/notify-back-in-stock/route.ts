@@ -17,19 +17,22 @@ export async function POST(
 
     const payload = await getPayload({ config })
 
-    const product = await payload.findByID({
+    const products = await payload.find({
       collection: 'products',
-      id: slug,
+      where: { slug: { equals: slug } },
+      limit: 1,
     } as any)
 
-    if (!product) {
+    if (products.docs.length === 0) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 })
     }
+
+    const product = products.docs[0] as any
 
     const existing = await payload.find({
       collection: 'back-in-stock-requests',
       where: {
-        product: { equals: slug },
+        product: { equals: product.id },
         email: { equals: email },
         notified: { equals: false },
       },
@@ -45,7 +48,7 @@ export async function POST(
 
     await payload.create({
       collection: 'back-in-stock-requests',
-      data: { product: slug, email },
+      data: { product: product.id, email },
     } as any)
 
     return NextResponse.json({

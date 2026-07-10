@@ -292,7 +292,7 @@ export default async function ProductDetailPage({
               {/* Size, stitching, CTAs */}
               <div className="mt-7">
                 {product.trackQuantity && product.quantity <= 0 ? (
-                  <NotifyMeButton productId={product.id} />
+                  <NotifyMeButton productSlug={product.slug} />
                 ) : (
                   <ProductActions product={serializableProduct} />
                 )}
