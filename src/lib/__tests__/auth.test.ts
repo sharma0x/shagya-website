@@ -26,9 +26,9 @@ describe('auth', () => {
     expect(auth.options.database).toBeDefined()
   })
 
-  it('has plugins configured (twoFactor + passkey)', () => {
+  it('has plugins configured (emailOTP + twoFactor + passkey)', () => {
     expect(auth.options.plugins).toBeDefined()
-    expect(auth.options.plugins?.length).toBe(2)
+    expect(auth.options.plugins?.length).toBe(3)
   })
 
   it('has the two-factor plugin configured with correct issuer', () => {

@@ -2,13 +2,10 @@
 
 import { useState, useCallback } from 'react'
 import { Loader2, Check, AlertCircle, UserPlus, Mail } from 'lucide-react'
+import { emailOtp } from '@/lib/auth-client'
 
 interface GuestCheckoutProps {
-  onVerified: (data: {
-    name: string
-    email: string
-    customerId: string | number
-  }) => void
+  onVerified: (data: { name: string; email: string }) => void
 }
 
 export function GuestCheckout({ onVerified }: GuestCheckoutProps) {
@@ -19,7 +16,6 @@ export function GuestCheckout({ onVerified }: GuestCheckoutProps) {
   const [sendingOTP, setSendingOTP] = useState(false)
   const [verifying, setVerifying] = useState(false)
   const [verified, setVerified] = useState(false)
-  const [accountCreated, setAccountCreated] = useState(false)
   const [error, setError] = useState('')
   const [cooldown, setCooldown] = useState(0)
 
@@ -36,26 +32,20 @@ export function GuestCheckout({ onVerified }: GuestCheckoutProps) {
 
     setSendingOTP(true)
     try {
-      const res = await fetch('/api/checkout/send-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+      await emailOtp.sendVerificationOtp({
+        email,
+        type: 'sign-in',
       })
-      const data = await res.json()
-      if (res.ok) {
-        setOtpSent(true)
-        setCooldown(30)
-        const timer = setInterval(() => {
-          setCooldown((prev) => {
-            if (prev <= 1) { clearInterval(timer); return 0 }
-            return prev - 1
-          })
-        }, 1000)
-      } else {
-        setError(data.error || 'Failed to send OTP')
-      }
-    } catch {
-      setError('Could not send OTP. Try again.')
+      setOtpSent(true)
+      setCooldown(30)
+      const timer = setInterval(() => {
+        setCooldown((prev) => {
+          if (prev <= 1) { clearInterval(timer); return 0 }
+          return prev - 1
+        })
+      }, 1000)
+    } catch (err: any) {
+      setError(err?.message || 'Failed to send OTP')
     } finally {
       setSendingOTP(false)
     }
@@ -70,25 +60,17 @@ export function GuestCheckout({ onVerified }: GuestCheckoutProps) {
 
     setVerifying(true)
     try {
-      const res = await fetch('/api/auth/verify-email-otp', {
+      const res = await fetch('/api/auth/sign-in/email-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, otp, name }),
       })
       const data = await res.json()
-      if (res.ok && data.success) {
-        setVerified(true)
-        setAccountCreated(true)
-        onVerified({
-          name: data.name,
-          email: data.email,
-          customerId: data.customerId,
-        })
-      } else {
-        setError(data.error || 'Invalid OTP')
-      }
-    } catch {
-      setError('Could not verify OTP. Try again.')
+      if (!res.ok) throw new Error(data.message || 'Invalid OTP')
+      setVerified(true)
+      onVerified({ name, email })
+    } catch (err: any) {
+      setError(err?.message || 'Invalid OTP')
     } finally {
       setVerifying(false)
     }
@@ -105,16 +87,14 @@ export function GuestCheckout({ onVerified }: GuestCheckoutProps) {
             </span>
           </div>
         </div>
-        {accountCreated && (
-          <div className="rounded-xl border border-brand-100 bg-brand-50/50 p-4">
-            <div className="flex items-center gap-2">
-              <UserPlus className="h-4 w-4 text-brand-600" />
-              <span className="font-display text-xs font-semibold text-brand-700">
-                Account created! You can sign in later with the same email.
-              </span>
-            </div>
+        <div className="rounded-xl border border-brand-100 bg-brand-50/50 p-4">
+          <div className="flex items-center gap-2">
+            <UserPlus className="h-4 w-4 text-brand-600" />
+            <span className="font-display text-xs font-semibold text-brand-700">
+              Account created! You can sign in later with the same email.
+            </span>
           </div>
-        )}
+        </div>
       </div>
     )
   }

@@ -103,7 +103,7 @@ export default function CheckoutPage() {
 
   // Guest checkout
   const [guestData, setGuestData] = useState<{
-    name: string; email: string; customerId: string | number
+    name: string; email: string
   } | null>(null)
 
   const isLoggedIn = !!sessionData?.user

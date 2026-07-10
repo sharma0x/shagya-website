@@ -1,17 +1,15 @@
 import { betterAuth } from 'better-auth'
 import { passkey } from '@better-auth/passkey'
 import { twoFactor } from 'better-auth/plugins'
+import { emailOTP } from 'better-auth/plugins/email-otp'
 import { Pool } from 'pg'
+import { sendOTPEmail } from '@/email/send'
 import { getServerURL, getAllowedOrigins } from './env'
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 })
 
-/**
- * Lazy-load the centralized email sender so this module stays free of a
- * direct Payload dependency at import time.
- */
 async function sendVerificationEmail(
   to: string,
   name: string,
@@ -74,6 +72,11 @@ export const auth = betterAuth({
     },
   },
   plugins: [
+    emailOTP({
+      sendVerificationOTP: async ({ email, otp }) => {
+        await sendOTPEmail(email, otp)
+      },
+    }),
     twoFactor({
       issuer: 'Shayga',
       backupCodeOptions: { amount: 8 },

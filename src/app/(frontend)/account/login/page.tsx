@@ -1,16 +1,10 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import { signIn } from '@/lib/auth-client'
+import { emailOtp } from '@/lib/auth-client'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import {
-  ArrowLeft,
-  Mail,
-  AlertCircle,
-  Loader2,
-  Check,
-} from 'lucide-react'
+import { ArrowLeft, Mail, AlertCircle, Loader2 } from 'lucide-react'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -28,29 +22,19 @@ export default function LoginPage() {
       setError('Please enter a valid email address')
       return
     }
-
     setLoading(true)
     try {
-      const res = await fetch('/api/checkout/send-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      })
-      const data = await res.json()
-      if (!res.ok) {
-        setError(data.error || 'Failed to send OTP')
-      } else {
-        setOtpSent(true)
-        setCooldown(30)
-        const timer = setInterval(() => {
-          setCooldown((prev) => {
-            if (prev <= 1) { clearInterval(timer); return 0 }
-            return prev - 1
-          })
-        }, 1000)
-      }
-    } catch {
-      setError('Could not send OTP. Try again.')
+      await emailOtp.sendVerificationOtp({ email, type: 'sign-in' })
+      setOtpSent(true)
+      setCooldown(30)
+      const timer = setInterval(() => {
+        setCooldown((prev) => {
+          if (prev <= 1) { clearInterval(timer); return 0 }
+          return prev - 1
+        })
+      }, 1000)
+    } catch (err: any) {
+      setError(err?.message || 'Failed to send OTP')
     } finally {
       setLoading(false)
     }
@@ -64,19 +48,16 @@ export default function LoginPage() {
     }
     setLoading(true)
     try {
-      const res = await fetch('/api/auth/verify-email-otp', {
+      const res = await fetch('/api/auth/sign-in/email-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, otp }),
       })
       const data = await res.json()
-      if (!res.ok) {
-        setError(data.error || 'Invalid OTP')
-      } else {
-        router.push('/account')
-      }
-    } catch {
-      setError('Verification failed')
+      if (!res.ok) throw new Error(data.message || 'Invalid OTP')
+      router.push('/account')
+    } catch (err: any) {
+      setError(err?.message || 'Verification failed')
     } finally {
       setLoading(false)
     }
@@ -84,7 +65,14 @@ export default function LoginPage() {
 
   const handleGoogleSignIn = async () => {
     try {
-      await signIn.social({ provider: 'google', callbackURL: '/account' })
+      await fetch('/api/auth/sign-in/social', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ provider: 'google', callbackURL: '/account' }),
+      }).then((r) => {
+        if (r.ok) router.push('/account')
+        else throw new Error('Google sign in failed')
+      })
     } catch {
       setError('Google sign in failed')
     }
@@ -164,7 +152,7 @@ export default function LoginPage() {
                     </div>
                     <p className="font-body mt-1.5 text-[11px] text-neutral-400">
                       OTP sent to {email}
-                      {cooldown > 0 && ` · Resend in ${cooldown}s`}
+                      {cooldown > 0 && ` · Resend in {cooldown}s`}
                       {cooldown === 0 && (
                         <button
                           onClick={() => { setOtpSent(false); setOtp('') }}
