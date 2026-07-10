@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import Image from 'next/image'
 import { Suspense } from 'react'
 import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react'
 import { getPayload } from 'payload'
@@ -8,6 +7,7 @@ import { notFound } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { SortSelect } from '@/components/ui/sort-select'
 import { ProductFilters } from '@/components/product/ProductFilters'
+<<<<<<< HEAD
 import { WishlistButton } from '@/components/product/WishlistButton'
 
 const ph = (w: number, h: number, bg: string, fg: string, text: string) =>
@@ -39,6 +39,9 @@ function ImagePanel({
     </div>
   )
 }
+=======
+import { ProductCard } from '@/components/product/ProductCard'
+>>>>>>> feat/clo-40-product-card-actions
 
 function getCommaParam(
   params: { [key: string]: string | string[] | undefined },
@@ -223,65 +226,16 @@ export default async function CollectionDetailPage({
                 </p>
               </div>
             ) : (
-              <div className="mt-8 grid grid-cols-2 gap-x-4 gap-y-10 sm:gap-x-6 sm:gap-y-12 lg:grid-cols-2 xl:grid-cols-3">
-                {products.map((p) => {
-                  const imageUrl =
-                    p.gallery?.[0]?.image &&
-                    typeof p.gallery[0].image === 'object'
-                      ? p.gallery[0].image.sizes?.card?.url ||
-                        p.gallery[0].image.url
-                      : ph(600, 800, '69254e', 'f5e8ee', p.name)
-
-                  return (
-                    <Link
-                      key={p.id}
-                      href={`/products/${p.slug}`}
-                      className="group block"
-                    >
-                      <div className="relative overflow-hidden rounded-xl transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-md">
-                        <ImagePanel
-                          src={imageUrl || ''}
-                          alt={p.name}
-                          className="aspect-[3/4] w-full"
-                          rounded="none"
-                        />
-                        <div className="absolute top-3 right-3 z-10">
-                          <WishlistButton productId={p.id} />
-                        </div>
-                      </div>
-                      <div className="mt-4 px-1">
-                        <p className="font-display group-hover:text-brand-700 text-sm font-semibold text-neutral-900 transition-colors">
-                          {p.name}
-                        </p>
-                        <p className="font-body mt-0.5 text-xs text-neutral-400">
-                          {p.weave} · {p.fabric}
-                        </p>
-                        <div className="text-brand-700 font-display mt-2 flex flex-wrap items-baseline gap-2 text-sm font-semibold">
-                          <span>
-                            ₹{p.basePrice.toLocaleString('en-IN')}
-                          </span>
-                          {p.compareAtPrice &&
-                            p.compareAtPrice > p.basePrice && (
-                              <>
-                                <span className="text-xs font-normal text-neutral-400 line-through">
-                                  ₹{p.compareAtPrice.toLocaleString('en-IN')}
-                                </span>
-                                <span className="text-[11px] font-semibold text-green-600">
-                                  (
-                                  {Math.round(
-                                    ((p.compareAtPrice - p.basePrice) /
-                                      p.compareAtPrice) *
-                                      100,
-                                  )}
-                                  % OFF)
-                                </span>
-                              </>
-                            )}
-                        </div>
-                      </div>
-                    </Link>
-                  )
-                })}
+              <div className="mt-4 grid grid-cols-2 gap-x-2 gap-y-4 sm:gap-x-3 sm:gap-y-6 lg:grid-cols-3 xl:grid-cols-4">
+                {products.map((p) => (
+                  <ProductCard
+                    key={p.id}
+                    product={p}
+                    variant="grid"
+                    showWishlist
+                    showActions
+                  />
+                ))}
               </div>
             )}
 
