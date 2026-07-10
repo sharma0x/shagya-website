@@ -46,6 +46,13 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: true,
+    sendResetPassword: async ({ user, url }) => {
+      const { getPayload } = await import('payload')
+      const config = (await import('@payload-config')).default
+      const { sendResetPasswordEmail: send } = await import('@/email/send')
+      const payload = await getPayload({ config })
+      await send(payload, user.email, user.name || '', url)
+    },
   },
   emailVerification: {
     sendOnSignUp: true,

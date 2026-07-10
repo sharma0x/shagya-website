@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import { Loader2, Check, AlertCircle } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { Loader2, Check, AlertCircle, UserPlus } from 'lucide-react'
+import { PhoneInput, parsePhoneString } from '@/components/ui/phone-input'
 
 interface GuestCheckoutProps {
   onVerified: (data: {
@@ -22,12 +22,14 @@ export function GuestCheckout({ onVerified }: GuestCheckoutProps) {
   const [sendingOTP, setSendingOTP] = useState(false)
   const [verifying, setVerifying] = useState(false)
   const [verified, setVerified] = useState(false)
+  const [accountCreated, setAccountCreated] = useState(false)
   const [error, setError] = useState('')
   const [cooldown, setCooldown] = useState(0)
 
   const handleSendOTP = useCallback(async () => {
     setError('')
-    if (!phone || phone.length < 10) {
+    const parsed = parsePhoneString(phone)
+    if (!parsed.number || parsed.number.length < 10) {
       setError('Please enter a valid 10-digit mobile number')
       return
     }
@@ -45,7 +47,7 @@ export function GuestCheckout({ onVerified }: GuestCheckoutProps) {
       const res = await fetch('/api/checkout/send-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, email }),
+        body: JSON.stringify({ phone: parsed.number, email }),
       })
       const data = await res.json()
       if (res.ok) {
@@ -74,16 +76,21 @@ export function GuestCheckout({ onVerified }: GuestCheckoutProps) {
       return
     }
 
+    const parsed = parsePhoneString(phone)
+
     setVerifying(true)
     try {
       const res = await fetch('/api/checkout/verify-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, otp, name, email }),
+        body: JSON.stringify({ phone: parsed.number, otp, name, email }),
       })
       const data = await res.json()
       if (res.ok && data.verified) {
         setVerified(true)
+        if (data.accountCreated) {
+          setAccountCreated(true)
+        }
         onVerified({
           name: data.name,
           email: data.email,
@@ -102,13 +109,29 @@ export function GuestCheckout({ onVerified }: GuestCheckoutProps) {
 
   if (verified) {
     return (
-      <div className="rounded-xl border border-green-100 bg-green-50 p-4">
-        <div className="flex items-center gap-2">
-          <Check className="h-4 w-4 text-green-600" />
-          <span className="font-display text-xs font-semibold text-green-700">
-            Phone verified — {name} · {phone}
-          </span>
+      <div className="space-y-3">
+        <div className="rounded-xl border border-green-100 bg-green-50 p-4">
+          <div className="flex items-center gap-2">
+            <Check className="h-4 w-4 text-green-600" />
+            <span className="font-display text-xs font-semibold text-green-700">
+              Phone verified — {name} · {phone}
+            </span>
+          </div>
         </div>
+        {accountCreated && (
+          <div className="rounded-xl border border-brand-100 bg-brand-50/50 p-4">
+            <div className="flex items-center gap-2">
+              <UserPlus className="h-4 w-4 text-brand-600" />
+              <span className="font-display text-xs font-semibold text-brand-700">
+                Account created! Check your email to verify.
+              </span>
+            </div>
+            <p className="font-body mt-1 text-[11px] text-neutral-500">
+              You can sign in later with your phone number + OTP or email +
+              password.
+            </p>
+          </div>
+        )}
       </div>
     )
   }
@@ -164,15 +187,11 @@ export function GuestCheckout({ onVerified }: GuestCheckoutProps) {
           Phone Number
         </label>
         <div className="flex gap-2">
-          <input
-            type="tel"
-            required
-            inputMode="numeric"
+          <PhoneInput
             value={phone}
-            onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-            className={inputClass}
-            placeholder="10-digit mobile"
+            onChange={setPhone}
             disabled={otpSent}
+            className="flex-1"
           />
           <button
             type="button"

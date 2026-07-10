@@ -1,77 +1,98 @@
-# CLO-43: Customer Account Features
+# CLO-43: Auto-Account Creation + Phone OTP Login + Password Reset
 
 ## Overview
 
-Add password reset (forgot password flow), self-service account deletion, saved cards for faster checkout, SMS order notifications, and order push notifications.
+Three connected features:
+1. **Auto-account creation during guest checkout** — when phone OTP is verified, create Better Auth user, send email verification (background), sync local cart to DB
+2. **Phone OTP login** — passwordless login via phone number + OTP (already partially implemented in CLO-42)
+3. **Password reset** — forgot password flow for email-based accounts
 
 ## Stack Constraints
 
-- **Frontend**: Next.js 16 App Router, existing login/register pages
-- **Auth**: Better Auth (already supports password reset natively — just need UI)
-- **Backend**: Payload 3.x, existing Customers/Orders
-- **SMS**: Twilio (already configured for OTP) — reuse for order notifications
-- **Design**: Match existing login/register page styling (rounded-xl, neutral borders, font-display)
+- **Auth**: Better Auth with phoneNumber plugin (already configured)
+- **Frontend**: Next.js 16 App Router, existing login + checkout pages
+- **Email**: Existing email system (Resend/Nodemailer + `sendVerificationEmail`)
+- **No new packages**: Use Better Auth's built-in `signUp`, `sendVerificationEmail`, `forgetPassword`, `resetPassword`
 
 ## OOP / DRY Principles
 
-- Password reset: use Better Auth's built-in `forgetPassword` / `resetPassword` — only need UI pages
-- Account deletion: single API endpoint, cascading anonymization of orders/reviews
-- Saved cards: store card token via Razorpay (not actual card numbers)
-- SMS notifications: extend existing `sendSMS()` utility — add order status template
-- Push notifications: use Web Notifications API (no third-party service)
+- OTP logic reuses existing `src/lib/otp.ts` (cookie-based HMAC)
+- Auth sync reuses existing `src/lib/auth-sync.ts` (matches guest customer by phone)
+- Email verification reuses existing `sendVerificationEmail` from `src/email/send.ts`
+- Password reset uses Better Auth's built-in flow — only need UI pages
+- No duplicate OTP storage or verification logic
 
 ## Acceptance Criteria
 
-### 1. Password Reset Flow
+### 1. Auto-Account Creation During Guest Checkout
+
+- [ ] After phone OTP verified in checkout, call Better Auth `sign-up/email` with:
+  - email, auto-generated random password, name, phoneNumber
+- [ ] Better Auth account is created
+- [ ] Session is established (user becomes logged in mid-checkout)
+- [ ] `auth-sync` hook links existing Payload Customer by phone
+- [ ] Local Zustand cart syncs to DB cart via `/api/cart`
+- [ ] Email verification link sent (fire-and-forget, non-blocking)
+- [ ] User sees verified badge + "Account created" message
+- [ ] If account already exists (same email): auto-login via signIn instead of signUp
+- [ ] Checkout continues seamlessly as now-logged-in user
+
+### 2. Phone OTP Login (already in CLO-42, confirmed working)
+
+- [x] Login page has Email / Phone OTP tab switcher
+- [x] Phone OTP: enter phone → sendOtp → enter code → verify → logged in
+- [x] auth-sync matches existing guest customer by phone
+- [x] Works for users who placed guest orders previously
+
+### 3. Password Reset
+
 - [ ] Login page: "Forgot Password?" link → `/account/forgot-password`
-- [ ] Forgot password page: email input → Better Auth `forgetPassword` → sends magic link
-- [ ] Reset page: `/account/reset-password?token=...` → new password form → Better Auth `resetPassword`
+- [ ] Forgot password page: email input → Better Auth `forgetPassword` → sends email with reset link
+- [ ] Reset password page: `/account/reset-password?token=...` → new password form
+- [ ] Better Auth `resetPassword` called with token + new password
 - [ ] Success → redirect to login with "Password updated" message
-- [ ] All pages match existing login/register design
+- [ ] Pages match existing login/register design system
 
-### 2. Account Deletion
-- [ ] Account settings page: "Delete Account" button in danger zone
-- [ ] Confirmation dialog: "This will permanently delete..."
-- [ ] `DELETE /api/account/me` — anonymizes customer data, deletes auth record
-- [ ] Orders preserved (for legal compliance) but customer reference anonymized
-- [ ] Reviews preserved but author set to "Former Customer"
-- [ ] Wishlist, cart, addresses deleted
-- [ ] Redirect to homepage with "Account deleted" toast
+### 4. Account Settings — Change Password (optional)
 
-### 3. Saved Cards
-- [ ] Checkout: "Save this card for future payments" checkbox
-- [ ] Razorpay tokenization: store `card_token` + `card_last4` + `card_network` (not full card)
-- [ ] `src/collections/SavedCards.ts` — customer relation, token, last4, network, expiry
-- [ ] Checkout: "Use saved card" option — pre-fills payment
-- [ ] Account settings: list saved cards, delete option
-
-### 4. SMS Order Notifications
-- [ ] Order status changes: send SMS in addition to email
-- [ ] Customer phone field on registration (already exists via PhoneInput)
-- [ ] SMS templates: "Your Shayga order ORD-12345 is confirmed. Track: {url}"
-- [ ] Opt-in: checkbox "Send me SMS updates about my order" in account settings
-- [ ] Extend `sendSMS()` to handle order status templates
-- [ ] `src/lib/sms-templates.ts` — order status SMS templates
-
-### 5. Browser Push Notifications
-- [ ] "Enable Notifications" button in account settings
-- [ ] Service Worker registration for push (if PWA)
-- [ ] Notifications for: shipped, delivered, back-in-stock
-- [ ] Fallback: if push not supported, show toast in-app
+- [ ] `/account/settings` page: "Set Password" section for phone-only users
+- [ ] If user has no password (phone OTP account), allow setting one
+- [ ] If user has password, allow changing it
 
 ## Technical Notes
 
 ### Files to Create
 - `src/app/(frontend)/account/forgot-password/page.tsx`
 - `src/app/(frontend)/account/reset-password/page.tsx`
-- `src/app/api/account/me/route.ts` — DELETE for account deletion
-- `src/collections/SavedCards.ts`
-- `src/app/api/account/saved-cards/route.ts`
-- `src/lib/sms-templates.ts`
 
 ### Files to Modify
-- `src/app/(frontend)/account/login/page.tsx` — add forgot password link
-- `src/app/(frontend)/account/page.tsx` — add settings sections (saved cards, delete, notifications)
-- `src/lib/sms.ts` — add order notification functions
-- `src/email/send.ts` — fire SMS alongside email on order status changes
-- `src/collections/Customers.ts` — add `smsNotifications` (checkbox), `pushNotifications` (checkbox)
+- `src/app/api/checkout/verify-otp/route.ts` — add Better Auth account creation + email verification
+- `src/app/(frontend)/checkout/page.tsx` — sync local cart after phone verification
+- `src/app/(frontend)/account/login/page.tsx` — add "Forgot Password?" link
+- `src/components/checkout/GuestCheckout.tsx` — show "Account created" message after verification
+
+### Auto-Account Creation Flow
+```
+Guest verifies phone OTP during checkout
+  → verify-otp endpoint:
+    1. Lookup Payload Customer by phone/email (already done)
+    2. Try Better Auth signUp with email + random password + phone
+    3. If signUp fails (already exists) → signIn with random password (if auto-generated)
+       → If signIn also fails: return verified=true, account exists but no password set
+    4. Send verification email (fire-and-forget)
+    5. Return { verified: true, accountCreated: true, session: sessionCookie }
+  → Client: session refresh → user is now logged in
+  → Client: sync local cart to /api/cart
+```
+
+### Password Reset Flow
+```
+Login page → "Forgot Password?" → /account/forgot-password
+  → User enters email
+  → Better Auth forgetPassword({ email, redirectTo: '/account/reset-password' })
+  → Email sent with magic link containing token
+  → User clicks link → /account/reset-password?token=...
+  → User enters new password
+  → Better Auth resetPassword({ token, newPassword })
+  → Redirect to /account/login with success message
+```
