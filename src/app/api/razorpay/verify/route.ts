@@ -60,7 +60,7 @@ export async function POST(request: Request) {
       // Guest customer might have been created by verify-otp, but if not, create now
       const created = await payload.create({
         collection: 'customers',
-        data: { email: customerEmail, phone: customerPhone },
+        data: { email: customerEmail },
       } as any)
       customerId = created.id as string | number
     } else if (customers.docs.length > 0) {
@@ -233,6 +233,29 @@ export async function POST(request: Request) {
         id: cartId,
         data: { items: [], subtotal: 0, coupon: null },
       } as any)
+    }
+
+    // Save shipping address to customer's saved addresses
+    if (customerId && shippingAddress) {
+      try {
+        await payload.create({
+          collection: 'addresses',
+          data: {
+            customer: customerId as number,
+            fullName: shippingAddress.fullName || '',
+            phone: shippingAddress.phone || '',
+            line1: shippingAddress.line1 || '',
+            line2: shippingAddress.line2 || '',
+            city: shippingAddress.city || '',
+            state: shippingAddress.state || '',
+            pincode: shippingAddress.pincode || '',
+            country: shippingAddress.country || 'India',
+            isDefault: false,
+          },
+        })
+      } catch {
+        // Non-critical — don't fail the order if address save fails
+      }
     }
 
     return NextResponse.json({

@@ -26,9 +26,9 @@ describe('auth', () => {
     expect(auth.options.database).toBeDefined()
   })
 
-  it('has all 4 plugins configured', () => {
+  it('has plugins configured (twoFactor + passkey)', () => {
     expect(auth.options.plugins).toBeDefined()
-    expect(auth.options.plugins?.length).toBe(3)
+    expect(auth.options.plugins?.length).toBe(2)
   })
 
   it('has the two-factor plugin configured with correct issuer', () => {
@@ -42,11 +42,5 @@ describe('auth', () => {
     const plugin = auth.options.plugins?.find((p) => p.id === 'passkey')
     expect(plugin).toBeDefined()
     expect(auth.options.plugins?.some((p) => p.id === 'passkey')).toBe(true)
-  })
-
-  it('has the magic-link plugin configured', () => {
-    const plugin = auth.options.plugins?.find((p) => p.id === 'magic-link')
-    expect(plugin).toBeDefined()
-    expect(auth.options.plugins?.some((p) => p.id === 'magic-link')).toBe(true)
   })
 })

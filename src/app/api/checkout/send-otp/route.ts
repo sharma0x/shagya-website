@@ -6,9 +6,9 @@ export async function POST(request: Request) {
   try {
     const { email } = await request.json()
 
-    if (!email) {
+    if (!email || !email.includes('@')) {
       return NextResponse.json(
-        { error: 'Email is required' },
+        { error: 'A valid email is required' },
         { status: 400 },
       )
     }
@@ -16,7 +16,6 @@ export async function POST(request: Request) {
     const otp = generateOTP()
     const token = createOTPToken(email, otp)
 
-    // In dev mode (no Resend), log the OTP so you can see it
     if (!process.env.RESEND_API_KEY || process.env.RESEND_API_KEY === 're_xxxx') {
       console.log(`[OTP] Dev mode — OTP for ${email}: ${otp}`)
     }

@@ -70,17 +70,15 @@ export function GuestCheckout({ onVerified }: GuestCheckoutProps) {
 
     setVerifying(true)
     try {
-      const res = await fetch('/api/checkout/verify-otp', {
+      const res = await fetch('/api/auth/verify-email-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, otp, name }),
       })
       const data = await res.json()
-      if (res.ok && data.verified) {
+      if (res.ok && data.success) {
         setVerified(true)
-        if (data.accountCreated) {
-          setAccountCreated(true)
-        }
+        setAccountCreated(true)
         onVerified({
           name: data.name,
           email: data.email,
@@ -112,7 +110,7 @@ export function GuestCheckout({ onVerified }: GuestCheckoutProps) {
             <div className="flex items-center gap-2">
               <UserPlus className="h-4 w-4 text-brand-600" />
               <span className="font-display text-xs font-semibold text-brand-700">
-                Account created! Check your email to verify.
+                Account created! You can sign in later with the same email.
               </span>
             </div>
           </div>

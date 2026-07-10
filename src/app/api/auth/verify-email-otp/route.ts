@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { verifyOTPToken, OTP_COOKIE_NAME } from '@/lib/otp'
+import { getPayload } from 'payload'
+import config from '@payload-config'
 import { Pool } from 'pg'
 import crypto from 'crypto'
 
 const SESSION_COOKIE = 'better-auth.session_token'
-const SESSION_EXPIRY = 7 * 24 * 60 * 60 * 1000 // 7 days
+const SESSION_EXPIRY = 7 * 24 * 60 * 60 * 1000
 
 function generateToken(): string {
   return crypto.randomBytes(32).toString('hex')
@@ -22,7 +24,7 @@ function generateId(): string {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { email, otp } = body
+    const { email, otp, name } = body
 
     if (!email || !otp) {
       return NextResponse.json(
@@ -41,62 +43,82 @@ export async function POST(request: Request) {
       )
     }
 
-    const pool = new Pool({
-      connectionString: process.env.DATABASE_URL,
-    })
+    const pool = new Pool({ connectionString: process.env.DATABASE_URL })
+    const payload = await getPayload({ config })
 
     const normalizedEmail = email.toLowerCase()
+    const displayName = name || normalizedEmail.split('@')[0]
 
-    // ── 1. Find or create the user ──
+    // ── 1. Find or create Better Auth user ──
     let userResult = await pool.query(
-      'SELECT id, email FROM "user" WHERE LOWER(email) = $1',
+      'SELECT id FROM "user" WHERE LOWER(email) = $1',
       [normalizedEmail],
     )
 
     let userId: string
-    let userEmail: string
+    const nowISO = new Date().toISOString()
 
     if (userResult.rows.length > 0) {
       userId = userResult.rows[0].id
-      userEmail = userResult.rows[0].email
     } else {
-      const newUserId = generateId()
-      const now = new Date().toISOString()
+      userId = generateId()
 
-      // Create user row
       await pool.query(
         `INSERT INTO "user" (id, name, email, "emailVerified", "createdAt", "updatedAt")
          VALUES ($1, $2, $3, true, $4, $4)`,
-        [newUserId, normalizedEmail.split('@')[0], normalizedEmail, now],
+        [userId, displayName, normalizedEmail, nowISO],
       )
 
-      // Create account row (credentials for email/password, even though password is random)
-      const randomPassword = crypto.randomBytes(16).toString('base64') + 'Aa1!'
+      // Create empty account row so Better Auth treats this as a valid user
       await pool.query(
-        `INSERT INTO account (id, "accountId", "providerId", "userId", password, "createdAt", "updatedAt")
-         VALUES ($1, $2, 'email', $3, $4, $5, $5)`,
-        [generateId(), normalizedEmail, newUserId, randomPassword, now],
+        `INSERT INTO account (id, "accountId", "providerId", "userId", "createdAt", "updatedAt")
+         VALUES ($1, $2, 'email', $3, $4, $4)`,
+        [generateId(), normalizedEmail, userId, nowISO],
       )
-
-      userId = newUserId
-      userEmail = normalizedEmail
     }
 
-    // ── 2. Create a session ──
+    // ── 2. Find or create Payload Customer ──
+    let customerId: string | number | null = null
+
+    const existingCustomers = await payload.find({
+      collection: 'customers',
+      where: { email: { equals: normalizedEmail } },
+      limit: 1,
+    })
+
+    if (existingCustomers.docs.length > 0) {
+      const cust = existingCustomers.docs[0]
+      customerId = cust.id as string | number
+      // Link to Better Auth user if not already
+      if (!(cust as any).betterAuthUserId) {
+        await payload.update({
+          collection: 'customers',
+          id: customerId,
+          data: { betterAuthUserId: userId },
+        })
+      }
+    } else {
+      const created = await payload.create({
+        collection: 'customers',
+        data: {
+          email: normalizedEmail,
+          name: displayName,
+          betterAuthUserId: userId,
+        },
+      })
+      customerId = created.id as string | number
+    }
+
+    // ── 3. Create session ──
     const rawToken = generateToken()
     const sessionToken = hashToken(rawToken)
-    const now = new Date()
-    const expiresAt = new Date(now.getTime() + SESSION_EXPIRY)
-    const nowISO = now.toISOString()
+    const expiresAt = new Date(Date.now() + SESSION_EXPIRY)
 
     await pool.query(
       `INSERT INTO "session" (id, "userId", token, "expiresAt", "ipAddress", "userAgent", "createdAt", "updatedAt")
        VALUES ($1, $2, $3, $4, $5, $6, $7, $7)`,
       [
-        generateId(),
-        userId,
-        sessionToken,
-        expiresAt,
+        generateId(), userId, sessionToken, expiresAt,
         request.headers.get('x-forwarded-for') || '',
         request.headers.get('user-agent') || '',
         nowISO,
@@ -105,7 +127,7 @@ export async function POST(request: Request) {
 
     await pool.end()
 
-    // ── 3. Set session cookie with RAW token, clear OTP cookie ──
+    // ── 4. Set session cookie, clear OTP cookie ──
     const cookieStore = await cookies()
 
     cookieStore.set(SESSION_COOKIE, rawToken, {
@@ -118,7 +140,12 @@ export async function POST(request: Request) {
 
     cookieStore.delete(OTP_COOKIE_NAME)
 
-    return NextResponse.json({ success: true, email: userEmail })
+    return NextResponse.json({
+      success: true,
+      email: normalizedEmail,
+      name: displayName,
+      customerId,
+    })
   } catch (error) {
     console.error('[API] POST /api/auth/verify-email-otp error:', error)
     return NextResponse.json(

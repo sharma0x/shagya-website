@@ -1,6 +1,6 @@
 import { betterAuth } from 'better-auth'
 import { passkey } from '@better-auth/passkey'
-import { twoFactor, magicLink } from 'better-auth/plugins'
+import { twoFactor } from 'better-auth/plugins'
 import { Pool } from 'pg'
 import { getServerURL, getAllowedOrigins } from './env'
 
@@ -9,10 +9,8 @@ const pool = new Pool({
 })
 
 /**
- * Lazy-load the centralized email senders so this module stays free of a
- * direct Payload dependency at import time (avoids circular imports with
- * payload.config). The Better Auth callbacks fire async at runtime, by
- * which point Payload is initialized.
+ * Lazy-load the centralized email sender so this module stays free of a
+ * direct Payload dependency at import time.
  */
 async function sendVerificationEmail(
   to: string,
@@ -24,17 +22,6 @@ async function sendVerificationEmail(
   const { sendVerificationEmail: send } = await import('@/email/send')
   const payload = await getPayload({ config })
   await send(payload, to, name, verificationUrl)
-}
-
-async function sendMagicLinkEmail(
-  to: string,
-  verificationUrl: string,
-): Promise<void> {
-  const { getPayload } = await import('payload')
-  const config = (await import('@payload-config')).default
-  const { sendMagicLinkEmail: send } = await import('@/email/send')
-  const payload = await getPayload({ config })
-  await send(payload, to, verificationUrl)
 }
 
 export const auth = betterAuth({
@@ -57,7 +44,7 @@ export const auth = betterAuth({
     sendOnSignUp: true,
     sendOnSignIn: true,
     autoSignInAfterVerification: true,
-    expiresIn: 3600, // 1 hour
+    expiresIn: 3600,
     sendVerificationEmail: async ({ user, url }) => {
       await sendVerificationEmail(user.email, user.name || '', url)
     },
@@ -89,19 +76,12 @@ export const auth = betterAuth({
   plugins: [
     twoFactor({
       issuer: 'Shayga',
-      backupCodeOptions: {
-        amount: 8,
-      },
+      backupCodeOptions: { amount: 8 },
     }),
     passkey({
       rpName: 'Shayga',
       rpID: new URL(getServerURL()).hostname,
       origin: getServerURL(),
-    }),
-    magicLink({
-      sendMagicLink: async ({ email, url }) => {
-        await sendMagicLinkEmail(email, url)
-      },
     }),
   ],
 })
