@@ -104,6 +104,41 @@ export const Orders: CollectionConfig = {
 
         if (!newStatus || prevStatus === newStatus) return doc
 
+        // Increment purchaseCount on products when order is confirmed
+        if (newStatus === 'confirmed' && prevStatus !== 'confirmed') {
+          const items = (doc as Record<string, unknown>).items as
+            | Array<{ product?: string | number; quantity?: number }>
+            | undefined
+          if (items && items.length > 0) {
+            for (const item of items) {
+              if (item.product) {
+                try {
+                  const product = await req.payload.findByID({
+                    collection: 'products',
+                    id:
+                      typeof item.product === 'string'
+                        ? item.product
+                        : String(item.product),
+                  } as any)
+                  if (product) {
+                    await req.payload.update({
+                      collection: 'products',
+                      id: product.id,
+                      data: {
+                        purchaseCount:
+                          ((product as any).purchaseCount || 0) +
+                          (item.quantity || 1),
+                      },
+                    } as any)
+                  }
+                } catch {
+                  // Don't block order processing for purchaseCount
+                }
+              }
+            }
+          }
+        }
+
         // Send transactional emails for the new status (fire-and-forget)
         const docId = (doc as Record<string, unknown>).id as string
         sendOrderStatusEmails(req.payload, docId, newStatus).catch((err) =>
