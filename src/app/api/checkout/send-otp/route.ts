@@ -1,33 +1,27 @@
 import { NextResponse } from 'next/server'
 import { generateOTP, createOTPToken, OTP_COOKIE_NAME, OTP_TTL_MS } from '@/lib/otp'
-import { sendOTP, validateIndianPhone } from '@/lib/sms'
+import { sendOTPEmail } from '@/email/send'
 
 export async function POST(request: Request) {
   try {
-    const { phone, email } = await request.json()
+    const { email } = await request.json()
 
-    if (!phone || !email) {
+    if (!email) {
       return NextResponse.json(
-        { error: 'Phone and email are required' },
-        { status: 400 },
-      )
-    }
-
-    if (!validateIndianPhone(phone)) {
-      return NextResponse.json(
-        { error: 'Please enter a valid 10-digit Indian mobile number' },
+        { error: 'Email is required' },
         { status: 400 },
       )
     }
 
     const otp = generateOTP()
-    const token = createOTPToken(phone, otp)
+    const token = createOTPToken(email, otp)
 
-    // In dev mode (no Twilio), log the OTP so you can see it
-    if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN) {
-      console.log(`[OTP] Dev mode — OTP for ${phone}: ${otp}`)
+    // In dev mode (no Resend), log the OTP so you can see it
+    if (!process.env.RESEND_API_KEY || process.env.RESEND_API_KEY === 're_xxxx') {
+      console.log(`[OTP] Dev mode — OTP for ${email}: ${otp}`)
     }
-    await sendOTP(phone, otp)
+
+    await sendOTPEmail(email, otp)
 
     const res = NextResponse.json({ success: true, message: 'OTP sent' })
     res.cookies.set(OTP_COOKIE_NAME, token, {

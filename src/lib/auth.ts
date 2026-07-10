@@ -1,8 +1,7 @@
 import { betterAuth } from 'better-auth'
 import { passkey } from '@better-auth/passkey'
-import { phoneNumber, twoFactor, magicLink } from 'better-auth/plugins'
+import { twoFactor, magicLink } from 'better-auth/plugins'
 import { Pool } from 'pg'
-import { sendSMS } from './sms'
 import { getServerURL, getAllowedOrigins } from './env'
 
 const pool = new Pool({
@@ -77,8 +76,6 @@ export const auth = betterAuth({
       clientSecret: process.env.APPLE_CLIENT_SECRET || '',
     },
   },
-  // When a user registers, create a corresponding Customer record in Payload.
-  // Uses dynamic import to avoid circular dependencies with Payload config.
   databaseHooks: {
     user: {
       create: {
@@ -90,11 +87,6 @@ export const auth = betterAuth({
     },
   },
   plugins: [
-    phoneNumber({
-      sendOTP: async ({ phoneNumber, code }) => {
-        await sendSMS(phoneNumber, `Your Shayga verification code is: ${code}`)
-      },
-    }),
     twoFactor({
       issuer: 'Shayga',
       backupCodeOptions: {

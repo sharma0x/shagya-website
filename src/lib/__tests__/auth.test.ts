@@ -28,12 +28,7 @@ describe('auth', () => {
 
   it('has all 4 plugins configured', () => {
     expect(auth.options.plugins).toBeDefined()
-    expect(auth.options.plugins?.length).toBe(4)
-  })
-
-  it('has the phone-number plugin configured', () => {
-    const plugin = auth.options.plugins?.find((p) => p.id === 'phone-number')
-    expect(plugin).toBeDefined()
+    expect(auth.options.plugins?.length).toBe(3)
   })
 
   it('has the two-factor plugin configured with correct issuer', () => {

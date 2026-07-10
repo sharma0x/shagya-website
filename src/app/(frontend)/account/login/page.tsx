@@ -1,20 +1,19 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import { signIn, phoneNumber } from '@/lib/auth-client'
+import { signIn } from '@/lib/auth-client'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
   ArrowLeft,
   KeyRound,
   Mail,
-  Phone,
   AlertCircle,
   Loader2,
   Check,
 } from 'lucide-react'
 
-type LoginMode = 'email' | 'phone'
+type LoginMode = 'email' | 'otp'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -24,8 +23,8 @@ export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
-  // Phone login state
-  const [phone, setPhone] = useState('')
+  // OTP login state
+  const [otpEmail, setOtpEmail] = useState('')
   const [otp, setOtp] = useState('')
   const [otpSent, setOtpSent] = useState(false)
   const [cooldown, setCooldown] = useState(0)
@@ -58,16 +57,21 @@ export default function LoginPage() {
 
   const handleSendOTP = useCallback(async () => {
     setError('')
-    if (!phone || phone.length < 10) {
-      setError('Please enter a valid 10-digit mobile number')
+    if (!otpEmail || !otpEmail.includes('@')) {
+      setError('Please enter a valid email address')
       return
     }
 
     setLoading(true)
     try {
-      const res = await phoneNumber.sendOtp({ phoneNumber: phone })
-      if (res?.error) {
-        setError(res.error.message || 'Failed to send OTP')
+      const res = await fetch('/api/checkout/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: otpEmail }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error || 'Failed to send OTP')
       } else {
         setOtpSent(true)
         setCooldown(30)
@@ -78,12 +82,12 @@ export default function LoginPage() {
           })
         }, 1000)
       }
-    } catch (err: any) {
-      setError(err?.message || 'Could not send OTP')
+    } catch {
+      setError('Could not send OTP')
     } finally {
       setLoading(false)
     }
-  }, [phone])
+  }, [otpEmail])
 
   const handleVerifyOTP = useCallback(async () => {
     setError('')
@@ -91,21 +95,25 @@ export default function LoginPage() {
       setError('Please enter the 6-digit OTP')
       return
     }
-
     setLoading(true)
     try {
-      const res = await phoneNumber.verify({ phoneNumber: phone, code: otp })
-      if (res?.error) {
-        setError(res.error.message || 'Invalid OTP')
+      const res = await fetch('/api/auth/verify-email-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: otpEmail, otp }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error || 'Invalid OTP')
       } else {
         router.push('/account')
       }
-    } catch (err: any) {
-      setError(err?.message || 'Verification failed')
+    } catch {
+      setError('Verification failed')
     } finally {
       setLoading(false)
     }
-  }, [phone, otp])
+  }, [otpEmail, otp])
 
   const handleGoogleSignIn = async () => {
     try {
@@ -151,14 +159,14 @@ export default function LoginPage() {
               Email
             </button>
             <button
-              onClick={() => { setMode('phone'); setError('') }}
+              onClick={() => { setMode('otp'); setError('') }}
               className={`font-display flex-1 rounded-lg py-2 text-xs font-semibold transition-colors ${
-                mode === 'phone'
+                mode === 'otp'
                   ? 'bg-white text-neutral-900 shadow-sm'
                   : 'text-neutral-400 hover:text-neutral-600'
               }`}
             >
-              Phone OTP
+              Login with OTP
             </button>
           </div>
 
@@ -225,24 +233,23 @@ export default function LoginPage() {
             </form>
           )}
 
-          {/* Phone OTP Login */}
-          {mode === 'phone' && (
+          {/* Email OTP / Login with OTP */}
+          {mode === 'otp' && (
             <div className="space-y-5">
               <div>
                 <label className="font-display block text-xs font-semibold tracking-wider text-neutral-500 uppercase">
-                  Phone Number
+                  Email
                 </label>
                 <div className="relative mt-2">
                   <input
-                    type="tel"
-                    inputMode="numeric"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                    type="email"
+                    value={otpEmail}
+                    onChange={(e) => setOtpEmail(e.target.value)}
                     className={inputClass}
-                    placeholder="10-digit mobile"
+                    placeholder="you@example.com"
                     disabled={otpSent}
                   />
-                  <Phone className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+                  <Mail className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-neutral-400" />
                 </div>
               </div>
 
@@ -272,14 +279,14 @@ export default function LoginPage() {
                       />
                     </div>
                     <p className="font-body mt-1.5 text-[11px] text-neutral-400">
-                      OTP sent to {phone}
+                      OTP sent to {otpEmail}
                       {cooldown > 0 && ` · Resend in ${cooldown}s`}
                       {cooldown === 0 && (
                         <button
                           onClick={() => { setOtpSent(false); setOtp('') }}
                           className="text-brand-600 ml-1 font-semibold"
                         >
-                          Change number
+                          Change email
                         </button>
                       )}
                     </p>

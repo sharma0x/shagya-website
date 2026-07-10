@@ -1,5 +1,5 @@
 /**
- * OTP utility — cookie-based storage for phone verification.
+ * OTP utility — cookie-based storage for email verification.
  * Uses httpOnly cookies with HMAC hashing — works across serverless instances.
  */
 
@@ -12,18 +12,18 @@ function getSecret(): string {
   return process.env.BETTER_AUTH_SECRET || process.env.PAYLOAD_SECRET || 'fallback-dev-secret'
 }
 
-function hashOTP(phone: string, otp: string, expiresAt: number): string {
-  const data = `${phone}:${otp}:${expiresAt}`
+function hashOTP(identifier: string, otp: string, expiresAt: number): string {
+  const data = `${identifier}:${otp}:${expiresAt}`
   const hmac = crypto.createHmac('sha256', getSecret()).update(data).digest('hex')
   return `${expiresAt}:${hmac}`
 }
 
-function verifyHash(phone: string, otp: string, token: string): boolean {
+function verifyHash(identifier: string, otp: string, token: string): boolean {
   const parts = token.split(':')
   if (parts.length !== 2) return false
   const expiresAt = parseInt(parts[0], 10)
   if (Date.now() > expiresAt) return false
-  const expected = hashOTP(phone, otp, expiresAt)
+  const expected = hashOTP(identifier, otp, expiresAt)
   return expected === token
 }
 
@@ -34,17 +34,17 @@ export function generateOTP(): string {
 /**
  * Creates the OTP cookie value to set on the response.
  */
-export function createOTPToken(phone: string, otp: string): string {
+export function createOTPToken(identifier: string, otp: string): string {
   const expiresAt = Date.now() + TTL_MS
-  return hashOTP(phone, otp, expiresAt)
+  return hashOTP(identifier, otp, expiresAt)
 }
 
 /**
  * Verifies the OTP against the token from the cookie.
  */
-export function verifyOTPToken(phone: string, otp: string, token: string): boolean {
+export function verifyOTPToken(identifier: string, otp: string, token: string): boolean {
   try {
-    return verifyHash(phone, otp, token)
+    return verifyHash(identifier, otp, token)
   } catch {
     return false
   }

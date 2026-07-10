@@ -8,11 +8,11 @@ import { Pool } from 'pg'
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { phone, otp, name, email } = body
+    const { email, otp, name } = body
 
-    if (!phone || !otp || !name || !email) {
+    if (!email || !otp || !name) {
       return NextResponse.json(
-        { error: 'Phone, OTP, name, and email are required' },
+        { error: 'Email, OTP, and name are required' },
         { status: 400 },
       )
     }
@@ -20,7 +20,7 @@ export async function POST(request: Request) {
     const cookie = request.headers.get('cookie') || ''
     const token = parseCookie(cookie, OTP_COOKIE_NAME)
 
-    if (!token || !verifyOTPToken(phone, otp, token)) {
+    if (!token || !verifyOTPToken(email, otp, token)) {
       return NextResponse.json(
         { error: 'Invalid or expired OTP' },
         { status: 400 },
@@ -40,24 +40,22 @@ export async function POST(request: Request) {
 
     if (existing.docs.length > 0) {
       customerId = existing.docs[0].id as string | number
-      if (!(existing.docs[0] as any).phone) {
+      if (!(existing.docs[0] as any).name) {
         await payload.update({
           collection: 'customers',
           id: customerId,
-          data: { phone, name },
+          data: { name },
         } as any)
       }
     } else {
       const created = await payload.create({
         collection: 'customers',
-        data: { email, name, phone },
+        data: { email, name },
       } as any)
       customerId = created.id as string | number
     }
 
-    // 2. Create Better Auth account (no auto-login — requireEmailVerification is on)
-    //    Better Auth's databaseHooks.user.create.after calls syncCustomer(),
-    //    which links this new BA user to the Payload Customer by phone.
+    // 2. Create Better Auth account
     const randomPassword =
       Math.random().toString(36).slice(2) +
       Math.random().toString(36).slice(2) +
@@ -75,7 +73,6 @@ export async function POST(request: Request) {
             email,
             password: randomPassword,
             name,
-            phoneNumber: phone,
           }),
         },
       )
@@ -83,30 +80,7 @@ export async function POST(request: Request) {
       const signUpResponse = await auth.handler(signUpRequest)
 
       if (signUpResponse.ok) {
-        const signUpData = await signUpResponse.json()
-        const baUserId: string | undefined = signUpData.user?.id
-
-        if (baUserId) {
-          accountCreated = true
-
-          // 3. Mark phone as verified in Better Auth's user table
-          //    (bypasses phoneNumber plugin's input:false constraint)
-          try {
-            const pool = new Pool({
-              connectionString: process.env.DATABASE_URL,
-            })
-            await pool.query(
-              'UPDATE "user" SET phone_number_verified = true WHERE id = $1',
-              [baUserId],
-            )
-            await pool.end()
-          } catch (dbErr) {
-            console.warn(
-              '[verify-otp] Could not set phone_number_verified:',
-              dbErr,
-            )
-          }
-        }
+        accountCreated = true
       }
     } catch (signUpErr) {
       console.warn(
@@ -122,7 +96,6 @@ export async function POST(request: Request) {
       customerId,
       email,
       name,
-      phone,
     })
     res.cookies.delete(OTP_COOKIE_NAME)
     return res
