@@ -826,6 +826,7 @@ export default async function HomePage({ searchParams }: Props) {
                       'Customer'
                     }
                     rating={review.rating}
+                    avatarUrl={review.customer?.image || null}
                   />
                 ))
             ) : (
