@@ -2,7 +2,6 @@
 
 import { useState, useCallback } from 'react'
 import { Loader2, Check, AlertCircle, UserPlus, Mail } from 'lucide-react'
-import { emailOtp } from '@/lib/auth-client'
 
 interface GuestCheckoutProps {
   onVerified: (data: { name: string; email: string }) => void
@@ -32,10 +31,15 @@ export function GuestCheckout({ onVerified }: GuestCheckoutProps) {
 
     setSendingOTP(true)
     try {
-      await emailOtp.sendVerificationOtp({
-        email,
-        type: 'sign-in',
+      const res = await fetch('/api/auth/email-otp/send-verification-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, type: 'sign-in' }),
       })
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.message || 'Failed to send OTP')
+      }
       setOtpSent(true)
       setCooldown(30)
       const timer = setInterval(() => {

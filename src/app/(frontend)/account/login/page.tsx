@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import { emailOtp } from '@/lib/auth-client'
+import { signIn } from '@/lib/auth-client'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Mail, AlertCircle, Loader2 } from 'lucide-react'
@@ -24,7 +24,15 @@ export default function LoginPage() {
     }
     setLoading(true)
     try {
-      await emailOtp.sendVerificationOtp({ email, type: 'sign-in' })
+      const res = await fetch('/api/auth/email-otp/send-verification-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, type: 'sign-in' }),
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.message || 'Failed to send OTP')
+      }
       setOtpSent(true)
       setCooldown(30)
       const timer = setInterval(() => {
@@ -65,14 +73,7 @@ export default function LoginPage() {
 
   const handleGoogleSignIn = async () => {
     try {
-      await fetch('/api/auth/sign-in/social', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ provider: 'google', callbackURL: '/account' }),
-      }).then((r) => {
-        if (r.ok) router.push('/account')
-        else throw new Error('Google sign in failed')
-      })
+      await signIn.social({ provider: 'google', callbackURL: '/account' })
     } catch {
       setError('Google sign in failed')
     }
@@ -152,7 +153,7 @@ export default function LoginPage() {
                     </div>
                     <p className="font-body mt-1.5 text-[11px] text-neutral-400">
                       OTP sent to {email}
-                      {cooldown > 0 && ` · Resend in {cooldown}s`}
+                      {cooldown > 0 && ` \u00b7 Resend in ${cooldown}s`}
                       {cooldown === 0 && (
                         <button
                           onClick={() => { setOtpSent(false); setOtp('') }}
