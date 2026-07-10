@@ -131,8 +131,6 @@ export async function searchCity(city: string): Promise<CitySearchResult[]> {
   >()
 
   for (const po of data[0].PostOffice) {
-    // Group by Name + State — a "Central" PO in Maharashtra and a "Central" PO
-    // in Tamil Nadu are distinct entries.
     const key = `${po.Name}|${po.State}`
     if (!grouped.has(key)) {
       grouped.set(key, {
