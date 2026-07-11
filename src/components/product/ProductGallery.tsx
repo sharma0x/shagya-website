@@ -2,8 +2,9 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ZoomIn } from 'lucide-react'
 import { SkeletonImage } from '@/components/ui/SkeletonImage'
+import { ImageZoomModal } from '@/components/product/ImageZoomModal'
 
 interface ProductGalleryProps {
   imageUrls: string[]
@@ -15,6 +16,7 @@ export function ProductGallery({
   productName,
 }: ProductGalleryProps) {
   const [activeIdx, setActiveIdx] = useState(0)
+  const [zoomOpen, setZoomOpen] = useState(false)
 
   if (!imageUrls || imageUrls.length === 0) {
     return (
@@ -38,6 +40,15 @@ export function ProductGallery({
     <div className="flex flex-col gap-3">
       {/* Main image — all images stacked, active one fades in */}
       <div className="group relative aspect-[3/4] w-full overflow-hidden rounded-2xl bg-neutral-100">
+        <button
+          type="button"
+          onClick={() => setZoomOpen(true)}
+          className="absolute inset-0 z-20 cursor-zoom-in"
+          aria-label="Zoom into image"
+        />
+        <div className="absolute top-3 right-3 z-30 flex h-8 w-8 items-center justify-center rounded-full bg-white/85 text-neutral-600 opacity-0 shadow-sm backdrop-blur-sm transition-opacity group-hover:opacity-100">
+          <ZoomIn className="h-4 w-4" />
+        </div>
         {imageUrls.map((url, idx) => (
           <div
             key={idx}
@@ -97,7 +108,15 @@ export function ProductGallery({
                   }`}
                 />
               ))}
-            </div>
+      {zoomOpen && (
+        <ImageZoomModal
+          images={imageUrls}
+          initialIndex={activeIdx}
+          productName={productName}
+          onClose={() => setZoomOpen(false)}
+        />
+      )}
+    </div>
           </>
         )}
       </div>
