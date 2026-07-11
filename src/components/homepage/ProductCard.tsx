@@ -96,7 +96,7 @@ export function ProductCard({
     >
       {/* Image Container */}
       <div className="relative overflow-hidden rounded-xl bg-neutral-100 transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-md">
-        <div className="aspect-[3/4] w-full">
+        <div className="aspect-[4/5] w-full">
           <SkeletonImage
             src={imageUrl || ''}
             alt={product.name}
@@ -119,8 +119,17 @@ export function ProductCard({
           </div>
         )}
 
-        {/* Cart button — always visible on mobile, hover reveal on desktop */}
-        <div className="absolute right-2 bottom-2 z-10 transition-all duration-300 max-sm:opacity-100 sm:translate-y-2 sm:opacity-0 sm:group-hover:translate-y-0 sm:group-hover:opacity-100">
+        {/* Discount pill */}
+        {discount > 0 && (
+          <div className="absolute bottom-2 left-2 z-10">
+            <span className="rounded-full bg-red-500/90 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm">
+              {discount}% OFF
+            </span>
+          </div>
+        )}
+
+        {/* Cart button — always visible */}
+        <div className="absolute right-2 bottom-2 z-10">
           <button
             onClick={handleAddToCart}
             className={cn(
@@ -155,12 +164,13 @@ export function ProductCard({
           <span className="font-display text-brand-700 text-sm font-semibold">
             ₹{product.basePrice.toLocaleString('en-IN')}
           </span>
+          {product.compareAtPrice &&
+            product.compareAtPrice > product.basePrice && (
+              <span className="text-brand-700/40 text-xs line-through">
+                ₹{product.compareAtPrice.toLocaleString('en-IN')}
+              </span>
+            )}
         </div>
-        {product.compareAtPrice && product.compareAtPrice > product.basePrice && (
-          <p className="mt-0.5 text-[10px] font-medium tracking-wider text-brand-500 uppercase">
-            Special Price
-          </p>
-        )}
       </div>
     </Link>
   )
