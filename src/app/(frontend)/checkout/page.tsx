@@ -103,7 +103,7 @@ export default function CheckoutPage() {
 
   // Guest checkout
   const [guestData, setGuestData] = useState<{
-    name: string; email: string; phone: string; customerId: string | number
+    name: string; email: string
   } | null>(null)
 
   const isLoggedIn = !!sessionData?.user
@@ -203,7 +203,7 @@ export default function CheckoutPage() {
       const tempAddress = {
         id: 'guest-addr',
         fullName: data.fullName,
-        phone: data.phone,
+        phone: '',
         line1: data.line1,
         line2: data.line2 || '',
         city: data.city,
@@ -225,7 +225,7 @@ export default function CheckoutPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           fullName: data.fullName,
-          phone: data.phone,
+          phone: '',
           line1: data.line1,
           line2: data.line2,
           city: data.city,
@@ -291,7 +291,7 @@ export default function CheckoutPage() {
             phone: selectedAddress?.phone,
             notes: orderNotes,
             guestEmail: guestData?.email || '',
-            guestPhone: guestData?.phone || '',
+            guestPhone: '',
             cartItems: !isLoggedIn
               ? effectiveCart?.items.map((i) => ({
                   product: i.product.id,
@@ -326,7 +326,7 @@ export default function CheckoutPage() {
             phone: selectedAddress?.phone,
             isCod: false,
             guestEmail: guestData?.email || '',
-            guestPhone: guestData?.phone || '',
+            guestPhone: '',
             cartItems: !isLoggedIn
               ? effectiveCart?.items.map((i) => ({
                   product: i.product.id,
@@ -377,7 +377,7 @@ export default function CheckoutPage() {
                   phone: selectedAddress.phone,
                   notes: orderNotes,
                   guestEmail: guestData?.email || '',
-                  guestPhone: guestData?.phone || '',
+                  guestPhone: '',
                   cartItems: !isLoggedIn
                     ? effectiveCart?.items.map((i) => ({
                         product: i.product.id,
@@ -423,7 +423,7 @@ export default function CheckoutPage() {
                   phone: selectedAddress.phone,
                   notes: orderNotes,
                   guestEmail: guestData?.email || '',
-                  guestPhone: guestData?.phone || '',
+                  guestPhone: '',
                   cartItems: !isLoggedIn
                     ? effectiveCart?.items.map((i) => ({
                         product: i.product.id,
@@ -622,7 +622,7 @@ export default function CheckoutPage() {
 
                     {selectedAddressId && (
                       <>
-                        {/* Guest checkout — phone OTP verification */}
+                        {/* Guest checkout — email OTP verification */}
                         {!isLoggedIn && !guestData && (
                           <div className="mt-6 border-t border-neutral-100 pt-6">
                             <GuestCheckout onVerified={setGuestData} />
@@ -634,7 +634,7 @@ export default function CheckoutPage() {
                           <div className="mt-6 border-t border-neutral-100 pt-6">
                             <div className="rounded-xl border border-green-100 bg-green-50 p-4">
                               <p className="font-display text-xs font-semibold text-green-700">
-                                Verified — {guestData.name} · {guestData.phone} · {guestData.email}
+                                Verified — {guestData.name} · {guestData.email}
                               </p>
                             </div>
                           </div>

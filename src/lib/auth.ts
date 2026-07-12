@@ -1,20 +1,15 @@
 import { betterAuth } from 'better-auth'
 import { passkey } from '@better-auth/passkey'
-import { phoneNumber, twoFactor, magicLink } from 'better-auth/plugins'
+import { twoFactor } from 'better-auth/plugins'
+import { emailOTP } from 'better-auth/plugins/email-otp'
 import { Pool } from 'pg'
-import { sendSMS } from './sms'
+import { sendOTPEmail } from '@/email/send'
 import { getServerURL, getAllowedOrigins } from './env'
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 })
 
-/**
- * Lazy-load the centralized email senders so this module stays free of a
- * direct Payload dependency at import time (avoids circular imports with
- * payload.config). The Better Auth callbacks fire async at runtime, by
- * which point Payload is initialized.
- */
 async function sendVerificationEmail(
   to: string,
   name: string,
@@ -25,17 +20,6 @@ async function sendVerificationEmail(
   const { sendVerificationEmail: send } = await import('@/email/send')
   const payload = await getPayload({ config })
   await send(payload, to, name, verificationUrl)
-}
-
-async function sendMagicLinkEmail(
-  to: string,
-  verificationUrl: string,
-): Promise<void> {
-  const { getPayload } = await import('payload')
-  const config = (await import('@payload-config')).default
-  const { sendMagicLinkEmail: send } = await import('@/email/send')
-  const payload = await getPayload({ config })
-  await send(payload, to, verificationUrl)
 }
 
 export const auth = betterAuth({
@@ -58,7 +42,7 @@ export const auth = betterAuth({
     sendOnSignUp: true,
     sendOnSignIn: true,
     autoSignInAfterVerification: true,
-    expiresIn: 3600, // 1 hour
+    expiresIn: 3600,
     sendVerificationEmail: async ({ user, url }) => {
       await sendVerificationEmail(user.email, user.name || '', url)
     },
@@ -77,8 +61,6 @@ export const auth = betterAuth({
       clientSecret: process.env.APPLE_CLIENT_SECRET || '',
     },
   },
-  // When a user registers, create a corresponding Customer record in Payload.
-  // Uses dynamic import to avoid circular dependencies with Payload config.
   databaseHooks: {
     user: {
       create: {
@@ -90,26 +72,19 @@ export const auth = betterAuth({
     },
   },
   plugins: [
-    phoneNumber({
-      sendOTP: async ({ phoneNumber, code }) => {
-        await sendSMS(phoneNumber, `Your Shayga verification code is: ${code}`)
+    emailOTP({
+      sendVerificationOTP: async ({ email, otp }) => {
+        await sendOTPEmail(email, otp)
       },
     }),
     twoFactor({
       issuer: 'Shayga',
-      backupCodeOptions: {
-        amount: 8,
-      },
+      backupCodeOptions: { amount: 8 },
     }),
     passkey({
       rpName: 'Shayga',
       rpID: new URL(getServerURL()).hostname,
       origin: getServerURL(),
-    }),
-    magicLink({
-      sendMagicLink: async ({ email, url }) => {
-        await sendMagicLinkEmail(email, url)
-      },
     }),
   ],
 })

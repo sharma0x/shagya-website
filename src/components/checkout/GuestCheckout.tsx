@@ -1,38 +1,25 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import { Loader2, Check, AlertCircle, UserPlus } from 'lucide-react'
-import { PhoneInput, parsePhoneString } from '@/components/ui/phone-input'
+import { Loader2, Check, AlertCircle, UserPlus, Mail } from 'lucide-react'
 
 interface GuestCheckoutProps {
-  onVerified: (data: {
-    name: string
-    email: string
-    phone: string
-    customerId: string | number
-  }) => void
+  onVerified: (data: { name: string; email: string }) => void
 }
 
 export function GuestCheckout({ onVerified }: GuestCheckoutProps) {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
-  const [phone, setPhone] = useState('')
   const [otp, setOtp] = useState('')
   const [otpSent, setOtpSent] = useState(false)
   const [sendingOTP, setSendingOTP] = useState(false)
   const [verifying, setVerifying] = useState(false)
   const [verified, setVerified] = useState(false)
-  const [accountCreated, setAccountCreated] = useState(false)
   const [error, setError] = useState('')
   const [cooldown, setCooldown] = useState(0)
 
   const handleSendOTP = useCallback(async () => {
     setError('')
-    const parsed = parsePhoneString(phone)
-    if (!parsed.number || parsed.number.length < 10) {
-      setError('Please enter a valid 10-digit mobile number')
-      return
-    }
     if (!email || !email.includes('@')) {
       setError('Please enter a valid email address')
       return
@@ -44,30 +31,29 @@ export function GuestCheckout({ onVerified }: GuestCheckoutProps) {
 
     setSendingOTP(true)
     try {
-      const res = await fetch('/api/checkout/send-otp', {
+      const res = await fetch('/api/auth/email-otp/send-verification-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: parsed.number, email }),
+        body: JSON.stringify({ email, type: 'sign-in' }),
       })
-      const data = await res.json()
-      if (res.ok) {
-        setOtpSent(true)
-        setCooldown(30)
-        const timer = setInterval(() => {
-          setCooldown((prev) => {
-            if (prev <= 1) { clearInterval(timer); return 0 }
-            return prev - 1
-          })
-        }, 1000)
-      } else {
-        setError(data.error || 'Failed to send OTP')
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.message || 'Failed to send OTP')
       }
-    } catch {
-      setError('Could not send OTP. Try again.')
+      setOtpSent(true)
+      setCooldown(30)
+      const timer = setInterval(() => {
+        setCooldown((prev) => {
+          if (prev <= 1) { clearInterval(timer); return 0 }
+          return prev - 1
+        })
+      }, 1000)
+    } catch (err: any) {
+      setError(err?.message || 'Failed to send OTP')
     } finally {
       setSendingOTP(false)
     }
-  }, [phone, email, name])
+  }, [email, name])
 
   const handleVerifyOTP = useCallback(async () => {
     setError('')
@@ -76,36 +62,23 @@ export function GuestCheckout({ onVerified }: GuestCheckoutProps) {
       return
     }
 
-    const parsed = parsePhoneString(phone)
-
     setVerifying(true)
     try {
-      const res = await fetch('/api/checkout/verify-otp', {
+      const res = await fetch('/api/auth/sign-in/email-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: parsed.number, otp, name, email }),
+        body: JSON.stringify({ email, otp, name }),
       })
       const data = await res.json()
-      if (res.ok && data.verified) {
-        setVerified(true)
-        if (data.accountCreated) {
-          setAccountCreated(true)
-        }
-        onVerified({
-          name: data.name,
-          email: data.email,
-          phone: data.phone,
-          customerId: data.customerId,
-        })
-      } else {
-        setError(data.error || 'Invalid OTP')
-      }
-    } catch {
-      setError('Could not verify OTP. Try again.')
+      if (!res.ok) throw new Error(data.message || 'Invalid OTP')
+      setVerified(true)
+      onVerified({ name, email })
+    } catch (err: any) {
+      setError(err?.message || 'Invalid OTP')
     } finally {
       setVerifying(false)
     }
-  }, [otp, phone, name, onVerified])
+  }, [otp, email, name, onVerified])
 
   if (verified) {
     return (
@@ -114,24 +87,18 @@ export function GuestCheckout({ onVerified }: GuestCheckoutProps) {
           <div className="flex items-center gap-2">
             <Check className="h-4 w-4 text-green-600" />
             <span className="font-display text-xs font-semibold text-green-700">
-              Phone verified — {name} · {phone}
+              Verified — {name} &middot; {email}
             </span>
           </div>
         </div>
-        {accountCreated && (
-          <div className="rounded-xl border border-brand-100 bg-brand-50/50 p-4">
-            <div className="flex items-center gap-2">
-              <UserPlus className="h-4 w-4 text-brand-600" />
-              <span className="font-display text-xs font-semibold text-brand-700">
-                Account created! Check your email to verify.
-              </span>
-            </div>
-            <p className="font-body mt-1 text-[11px] text-neutral-500">
-              You can sign in later with your phone number + OTP or email +
-              password.
-            </p>
+        <div className="rounded-xl border border-brand-100 bg-brand-50/50 p-4">
+          <div className="flex items-center gap-2">
+            <UserPlus className="h-4 w-4 text-brand-600" />
+            <span className="font-display text-xs font-semibold text-brand-700">
+              Account created! You can sign in later with the same email.
+            </span>
           </div>
-        )}
+        </div>
       </div>
     )
   }
@@ -171,28 +138,19 @@ export function GuestCheckout({ onVerified }: GuestCheckoutProps) {
         <label className="font-display mb-1 block text-[10px] font-semibold tracking-wider text-neutral-500 uppercase">
           Email
         </label>
-        <input
-          type="email"
-          required
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className={inputClass}
-          placeholder="you@example.com"
-          disabled={otpSent}
-        />
-      </div>
-
-      <div>
-        <label className="font-display mb-1 block text-[10px] font-semibold tracking-wider text-neutral-500 uppercase">
-          Phone Number
-        </label>
         <div className="flex gap-2">
-          <PhoneInput
-            value={phone}
-            onChange={setPhone}
-            disabled={otpSent}
-            className="flex-1"
-          />
+          <div className="relative flex-1">
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className={`${inputClass} pl-9`}
+              placeholder="you@example.com"
+              disabled={otpSent}
+            />
+            <Mail className="pointer-events-none absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 text-neutral-400" />
+          </div>
           <button
             type="button"
             onClick={handleSendOTP}
@@ -239,7 +197,7 @@ export function GuestCheckout({ onVerified }: GuestCheckoutProps) {
             </button>
           </div>
           <p className="mt-1 text-[10px] text-neutral-400">
-            We sent a 6-digit code to {phone}
+            We sent a 6-digit code to {email}
           </p>
         </div>
       )}
