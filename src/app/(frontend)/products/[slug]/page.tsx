@@ -373,6 +373,8 @@ export default async function ProductDetailPage({
         reviews={reviews}
         averageRating={avgRating}
         totalCount={reviews.length}
+        productId={product.id}
+        productSlug={slug}
       />
     </div>
     {contactPhone && (
