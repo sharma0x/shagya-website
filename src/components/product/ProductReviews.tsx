@@ -121,7 +121,7 @@ export function ProductReviews({
   })
 
   return (
-    <section className="py-14 sm:py-16 md:py-20">
+    <section className="px-5 py-14 sm:px-8 sm:py-16 md:py-20">
       {/* ── Heading ── */}
       <h2 className="font-display text-2xl font-semibold tracking-tight text-neutral-900">
         Customer Reviews
@@ -171,15 +171,17 @@ export function ProductReviews({
         )}
       </div>
 
-      {/* ── Write Review Button ── */}
-      <button
-        type="button"
-        onClick={handleWriteReview}
-        className="font-display bg-brand-600 hover:bg-brand-700 mt-8 inline-flex h-11 items-center gap-2 rounded-xl px-6 text-sm font-semibold text-white shadow-sm transition-all active:scale-[0.97]"
-      >
-        <Edit3 className="h-4 w-4" />
-        Write a Customer Review
-      </button>
+      {/* ── Write Review (shown only when reviews exist) ── */}
+      {allReviews.length > 0 && (
+        <button
+          type="button"
+          onClick={handleWriteReview}
+          className="font-display bg-brand-600 hover:bg-brand-700 mt-8 inline-flex h-11 items-center gap-2 rounded-xl px-6 text-sm font-semibold text-white shadow-sm transition-all active:scale-[0.97]"
+        >
+          <Edit3 className="h-4 w-4" />
+          Write a Customer Review
+        </button>
+      )}
 
       {/* ── Success / Form / Reviews ── */}
       <div className="mt-10">
@@ -342,10 +344,15 @@ export function ProductReviews({
 
         {/* Empty state */}
         {allReviews.length === 0 && (
-          <div className="rounded-2xl border-2 border-dashed border-neutral-100 py-20 text-center">
+          <div className="rounded-2xl border-2 border-dashed border-neutral-100 py-16 text-center">
             <Star className="mx-auto h-12 w-12 text-neutral-200" />
             <p className="font-display mt-5 text-lg font-semibold text-neutral-500">No customer reviews yet</p>
             <p className="font-body mt-2 text-sm text-neutral-400">Be the first to share your experience with this saree.</p>
+            <button type="button" onClick={handleWriteReview}
+              className="font-display bg-brand-600 hover:bg-brand-700 mt-6 inline-flex h-11 items-center gap-2 rounded-xl px-6 text-sm font-semibold text-white shadow-sm transition-all active:scale-[0.97]">
+              <Edit3 className="h-4 w-4" />
+              Write a Review
+            </button>
           </div>
         )}
       </div>
