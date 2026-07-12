@@ -1,10 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import Image from 'next/image'
-import { ChevronLeft, ChevronRight, ZoomIn } from 'lucide-react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { SkeletonImage } from '@/components/ui/SkeletonImage'
-import { ImageZoomModal } from '@/components/product/ImageZoomModal'
+import { ProductImageZoom } from '@/components/product/ProductImageZoom'
 
 interface ProductGalleryProps {
   imageUrls: string[]
@@ -16,7 +15,6 @@ export function ProductGallery({
   productName,
 }: ProductGalleryProps) {
   const [activeIdx, setActiveIdx] = useState(0)
-  const [zoomOpen, setZoomOpen] = useState(false)
 
   if (!imageUrls || imageUrls.length === 0) {
     return (
@@ -38,40 +36,12 @@ export function ProductGallery({
 
   return (
     <div className="flex flex-col gap-3">
-      {/* Main image — all images stacked, active one fades in */}
-      <div className="group relative aspect-[3/4] w-full overflow-hidden rounded-2xl bg-neutral-100">
-        <button
-          type="button"
-          onClick={() => setZoomOpen(true)}
-          className="absolute inset-0 z-20 cursor-zoom-in"
-          aria-label="Zoom into image"
+      {/* Main image with hover magnifier */}
+      <div className="group relative overflow-hidden rounded-2xl bg-neutral-100">
+        <ProductImageZoom
+          imageUrl={imageUrls[activeIdx]}
+          productName={`${productName} — image ${activeIdx + 1}`}
         />
-        <div className="absolute top-3 right-3 z-30 flex h-8 w-8 items-center justify-center rounded-full bg-white/85 text-neutral-600 opacity-0 shadow-sm backdrop-blur-sm transition-opacity group-hover:opacity-100">
-          <ZoomIn className="h-4 w-4" />
-        </div>
-        {imageUrls.map((url, idx) => (
-          <div
-            key={idx}
-            className="absolute inset-0"
-            style={{
-              opacity: idx === activeIdx ? 1 : 0,
-              transition: 'opacity 380ms ease-in-out',
-              zIndex: idx === activeIdx ? 1 : 0,
-            }}
-          >
-            <SkeletonImage
-              src={url}
-              alt={idx === 0 ? productName : `${productName} — view ${idx + 1}`}
-              fill
-              priority={idx === 0}
-              className="object-cover"
-              unoptimized={url.startsWith('https://placehold.co')}
-            />
-          </div>
-        ))}
-
-        {/* Inner border overlay */}
-        <div className="pointer-events-none absolute inset-0 z-10 rounded-2xl border border-neutral-900/5" />
 
         {/* Prev / Next arrows */}
         {total > 1 && (
@@ -108,15 +78,7 @@ export function ProductGallery({
                   }`}
                 />
               ))}
-      {zoomOpen && (
-        <ImageZoomModal
-          images={imageUrls}
-          initialIndex={activeIdx}
-          productName={productName}
-          onClose={() => setZoomOpen(false)}
-        />
-      )}
-    </div>
+            </div>
           </>
         )}
       </div>
