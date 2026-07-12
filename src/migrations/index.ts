@@ -12,11 +12,6 @@ import * as migration_20260712_131127 from './20260712_131127';
 
 export const migrations = [
   {
-    up: migration_20260628_091813_totp_secret_for_users.up,
-    down: migration_20260628_091813_totp_secret_for_users.down,
-    name: '20260628_091813_totp_secret_for_users',
-  },
-  {
     up: migration_20260630_180128_initial.up,
     down: migration_20260630_180128_initial.down,
     name: '20260630_180128_initial',
@@ -25,6 +20,11 @@ export const migrations = [
     up: migration_20260701_163431_initial_payload.up,
     down: migration_20260701_163431_initial_payload.down,
     name: '20260701_163431_initial_payload',
+  },
+  {
+    up: migration_20260628_091813_totp_secret_for_users.up,
+    down: migration_20260628_091813_totp_secret_for_users.down,
+    name: '20260628_091813_totp_secret_for_users',
   },
   {
     up: migration_20260702_120116_add_discount_delivery_time_and_city_of_origin_filters.up,
@@ -64,6 +64,6 @@ export const migrations = [
   {
     up: migration_20260712_131127.up,
     down: migration_20260712_131127.down,
-    name: '20260712_131127'
+    name: '20260712_131127',
   },
-];
+]
