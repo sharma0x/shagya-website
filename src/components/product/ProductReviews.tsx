@@ -189,7 +189,7 @@ export function ProductReviews({
         {submitted && (
           <div className="mb-8 flex items-center gap-3 rounded-xl border border-green-100 bg-green-50 p-5 text-sm text-green-700">
             <Check className="h-5 w-5 shrink-0 text-green-600" />
-            <span>Review submitted! It will appear after approval.</span>
+            <span>Thank you for your review!</span>
           </div>
         )}
 
