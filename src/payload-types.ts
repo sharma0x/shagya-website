@@ -485,6 +485,18 @@ export interface Order {
    * Set when status changes to delivered
    */
   deliveredAt?: string | null;
+  /**
+   * Enter tracking ID from shipping provider (e.g. Shiprocket, Delhivery, India Post)
+   */
+  trackingId?: string | null;
+  /**
+   * Direct link to track this package
+   */
+  trackingUrl?: string | null;
+  /**
+   * Shipping method chosen at checkout
+   */
+  shippingType: 'standard' | 'express';
   shippingAddress?: {
     fullName?: string | null;
     phone?: string | null;
@@ -1394,6 +1406,9 @@ export interface OrdersSelect<T extends boolean = true> {
   confirmedAt?: T;
   shippedAt?: T;
   deliveredAt?: T;
+  trackingId?: T;
+  trackingUrl?: T;
+  shippingType?: T;
   shippingAddress?:
     | T
     | {

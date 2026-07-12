@@ -61,3 +61,5 @@ public/images/screenshots/
 
 # Dev logs
 .dev-boot.log
+
+.vercel
