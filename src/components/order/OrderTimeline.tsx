@@ -157,6 +157,42 @@ export function OrderTimeline({ order, className }: OrderTimelineProps) {
                 : 'Order placed — awaiting confirmation'}
         </p>
       )}
+
+      {/* Tracking Info — shown when shipped */}
+      {status === 'shipped' && order.trackingId && (
+        <div className="mt-5 rounded-xl border border-brand-100 bg-brand-50/30 p-4">
+          <p className="font-display text-xs font-semibold text-neutral-900">
+            Tracking details for your order
+          </p>
+          <div className="mt-3 flex items-center gap-2">
+            <span className="font-mono text-sm font-semibold text-neutral-700">
+              {order.trackingId}
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                navigator.clipboard.writeText(order.trackingId)
+              }}
+              className="font-display text-brand-600 hover:text-brand-700 rounded-lg px-2 py-1 text-[10px] font-semibold transition-colors"
+            >
+              Copy
+            </button>
+          </div>
+          {order.trackingUrl && (
+            <a
+              href={order.trackingUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-display bg-brand-600 hover:bg-brand-700 mt-3 inline-flex h-9 items-center gap-1.5 rounded-lg px-4 text-xs font-semibold text-white transition-colors"
+            >
+              Track Package
+              <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" />
+              </svg>
+            </a>
+          )}
+        </div>
+      )}
     </div>
   )
 }

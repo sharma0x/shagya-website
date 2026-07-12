@@ -301,6 +301,18 @@ export const Orders: CollectionConfig = {
       admin: { readOnly: true, description: 'Set when status changes to delivered' },
     },
     {
+      name: 'trackingId',
+      type: 'text',
+      label: 'Tracking Number',
+      admin: { description: 'Enter tracking ID from shipping provider (e.g. Shiprocket, Delhivery, India Post)' },
+    },
+    {
+      name: 'trackingUrl',
+      type: 'text',
+      label: 'Tracking URL',
+      admin: { description: 'Direct link to track this package' },
+    },
+    {
       name: 'shippingAddress',
       type: 'group',
       fields: addressGroup.fields,
