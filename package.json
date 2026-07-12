@@ -8,7 +8,7 @@
     "dev:services": "docker compose -f infra/dev-services.yml up -d",
     "dev:services:down": "docker compose -f infra/dev-services.yml down",
     "dev:services:reset": "docker compose -f infra/dev-services.yml down -v",
-    "build": "payload migrate && payload generate:types && next build",
+    "build": "payload generate:types && next build",
     "start": "next start",
     "lint": "eslint .",
     "format": "prettier --write .",
