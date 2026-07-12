@@ -2,6 +2,54 @@ import type { CollectionConfig } from 'payload'
 import { sendWebhook } from '@/lib/webhooks'
 import { sendOrderPlacedEmails, sendOrderStatusEmails } from '@/email/send'
 
+/**
+ * Runs email, webhook, and event-log side-effects without blocking the
+ * hook response. Critical in Vercel serverless where functions have a 30s limit.
+ */
+function scheduleSideEffects(
+  payload: any,
+  docId: string,
+  orderId: string,
+  prevStatus: string | null,
+  newStatus: string,
+) {
+  // Run all side-effects detached from the current execution context
+  Promise.resolve().then(async () => {
+    try {
+      // 1. Send email (non-blocking)
+      sendOrderStatusEmails(payload, docId, newStatus).catch(() => {})
+    } catch {}
+
+    try {
+      // 2. Send webhook
+      const webhookUrl = process.env.WEBHOOK_URL
+      if (webhookUrl) {
+        const webhookPayload = {
+          event: 'order.status_changed',
+          orderId,
+          previousStatus: prevStatus ?? null,
+          newStatus,
+        }
+        await sendWebhook(webhookUrl, webhookPayload)
+      }
+    } catch {}
+
+    try {
+      // 3. Create event log
+      await payload.create({
+        collection: 'event-logs',
+        data: {
+          event: 'order.status_changed',
+          orderId,
+          status: newStatus,
+          payload: { orderId, previousStatus: prevStatus, newStatus },
+          response: { note: 'WEBHOOK_URL not configured — skipped' },
+        },
+      })
+    } catch {}
+  })
+}
+
 const addressGroup = {
   name: 'address',
   type: 'group' as const,
@@ -156,56 +204,13 @@ export const Orders: CollectionConfig = {
           }
         }
 
-        // Send transactional emails for the new status (fire-and-forget)
+        // Run side-effects asynchronously — don't block the order update
+        // Vercel serverless functions have a 30s timeout; these operations
+        // (email, webhook, event-log) must not delay the API response
         const docId = (doc as Record<string, unknown>).id as string
-        sendOrderStatusEmails(req.payload, docId, newStatus).catch((err) =>
-          req.payload.logger.error(
-            `[Email] sendOrderStatusEmails failed: ${err}`,
-          ),
-        )
-
         const orderId = (doc as Record<string, unknown>).orderNumber as string
-        const webhookUrl = process.env.WEBHOOK_URL
 
-        const payload: Record<string, unknown> = {
-          event: 'order.status_changed',
-          orderId,
-          previousStatus: prevStatus ?? null,
-          newStatus,
-          order: {
-            orderNumber: (doc as Record<string, unknown>).orderNumber,
-            customerEmail: (doc as Record<string, unknown>).customerEmail,
-            status: newStatus,
-            total: (doc as Record<string, unknown>).total,
-            updatedAt: (doc as Record<string, unknown>).updatedAt,
-          },
-        }
-
-        let webhookResult = null
-
-        if (webhookUrl) {
-          webhookResult = await sendWebhook(webhookUrl, payload)
-        }
-
-        // Always log the event to the audit trail
-        try {
-          await req.payload.create({
-            collection: 'event-logs',
-            data: {
-              event: 'order.status_changed',
-              orderId,
-              status: newStatus,
-              payload,
-              response: webhookResult ?? {
-                note: 'WEBHOOK_URL not configured — skipped',
-              },
-            },
-          } as any)
-        } catch (err) {
-          req.payload.logger.error(
-            `[orders.afterChange] Failed to create EventLog: ${String(err)}`,
-          )
-        }
+        scheduleSideEffects(req.payload, docId, orderId, prevStatus ?? null, newStatus)
 
         return doc
       },
