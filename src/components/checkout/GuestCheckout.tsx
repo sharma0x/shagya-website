@@ -154,7 +154,7 @@ export function GuestCheckout({ onVerified }: GuestCheckoutProps) {
           <button
             type="button"
             onClick={handleSendOTP}
-            disabled={sendingOTP || cooldown > 0 || otpSent}
+            disabled={sendingOTP || cooldown > 0}
             className="font-display bg-brand-600 hover:bg-brand-700 disabled:bg-neutral-200 shrink-0 rounded-xl px-4 text-xs font-semibold text-white transition-colors disabled:text-neutral-400"
           >
             {sendingOTP ? (
