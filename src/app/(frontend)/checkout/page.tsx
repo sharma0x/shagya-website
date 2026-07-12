@@ -204,7 +204,7 @@ export default function CheckoutPage() {
       const tempAddress = {
         id: 'guest-addr',
         fullName: data.fullName,
-        phone: '',
+        phone: data.phone,
         line1: data.line1,
         line2: data.line2 || '',
         city: data.city,
@@ -226,7 +226,7 @@ export default function CheckoutPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           fullName: data.fullName,
-          phone: '',
+          phone: data.phone,
           line1: data.line1,
           line2: data.line2,
           city: data.city,
