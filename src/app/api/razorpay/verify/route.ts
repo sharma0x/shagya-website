@@ -19,6 +19,7 @@ export async function POST(request: Request) {
       notes = '',
       guestEmail = '',
       guestPhone = '',
+      shippingType = 'standard',
       cartItems: guestCartItems,
     } = body
 
@@ -201,6 +202,7 @@ export async function POST(request: Request) {
         total,
         paymentId: finalPaymentId,
         notes: notes || '',
+        shippingType,
         shippingAddress: {
           fullName: shippingAddress.fullName,
           phone: shippingAddress.phone,

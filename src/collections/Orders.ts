@@ -313,6 +313,17 @@ export const Orders: CollectionConfig = {
       admin: { description: 'Direct link to track this package' },
     },
     {
+      name: 'shippingType',
+      type: 'select',
+      defaultValue: 'standard',
+      required: true,
+      options: [
+        { label: 'Standard', value: 'standard' },
+        { label: 'Express', value: 'express' },
+      ],
+      admin: { description: 'Shipping method chosen at checkout' },
+    },
+    {
       name: 'shippingAddress',
       type: 'group',
       fields: addressGroup.fields,

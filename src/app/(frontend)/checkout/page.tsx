@@ -118,6 +118,7 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState<'razorpay' | 'cod'>(
     'razorpay',
   )
+  const [shippingType, setShippingType] = useState<'standard' | 'express'>('standard')
 
   // Load cart and addresses — run only once on mount
   const didLoad = useRef(false)
@@ -254,7 +255,7 @@ export default function CheckoutPage() {
 
   // Cost calculations
   const subtotal = effectiveCart?.subtotal || 0
-  const shipping = subtotal >= 5000 ? 0 : 150
+  const shipping = shippingType === 'express' ? 350 : (subtotal >= 5000 ? 0 : 150)
   let discount = 0
   if (cart?.coupon) {
     if (effectiveCart?.coupon.type === 'percentage') {
@@ -292,6 +293,7 @@ export default function CheckoutPage() {
             notes: orderNotes,
             guestEmail: guestData?.email || '',
             guestPhone: '',
+            shippingType,
             cartItems: !isLoggedIn
               ? effectiveCart?.items.map((i) => ({
                   product: i.product.id,
@@ -327,6 +329,7 @@ export default function CheckoutPage() {
             isCod: false,
             guestEmail: guestData?.email || '',
             guestPhone: '',
+            shippingType,
             cartItems: !isLoggedIn
               ? effectiveCart?.items.map((i) => ({
                   product: i.product.id,
@@ -679,16 +682,27 @@ export default function CheckoutPage() {
                 </h3>
 
                 <div className="space-y-4">
-                  <div className="flex items-start justify-between gap-4 rounded-xl border border-neutral-200 bg-neutral-50/50 p-4">
+                  {/* Standard Delivery */}
+                  <div
+                    onClick={() => setShippingType('standard')}
+                    className={`flex cursor-pointer items-start justify-between gap-4 rounded-xl border p-4 transition-all ${
+                      shippingType === 'standard'
+                        ? 'border-brand-600 bg-brand-50/20'
+                        : 'border-neutral-200 hover:border-neutral-300'
+                    }`}
+                  >
                     <div className="flex gap-3">
-                      <Truck className="text-brand-600 mt-0.5 h-5 w-5" />
+                      <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-neutral-300">
+                        {shippingType === 'standard' && (
+                          <div className="bg-brand-600 h-2.5 w-2.5 rounded-full" />
+                        )}
+                      </div>
                       <div>
                         <p className="font-display text-sm font-semibold text-neutral-900">
                           Standard Handloom Dispatch
                         </p>
                         <p className="font-body mt-1 text-xs text-neutral-500">
-                          Carefully verified, ironed, and packed in luxury
-                          storage box.
+                          Carefully verified, ironed, and packed in luxury storage box.
                         </p>
                         <p className="font-body text-brand-700 mt-2 text-xs font-medium">
                           Est. Delivery: 4–6 business days to{' '}
@@ -697,8 +711,42 @@ export default function CheckoutPage() {
                         </p>
                       </div>
                     </div>
-                    <span className="font-display text-sm font-semibold text-neutral-900">
-                      {shipping === 0 ? 'FREE' : `₹${shipping}`}
+                    <span className="font-display text-sm font-semibold text-neutral-900 whitespace-nowrap">
+                      {subtotal >= 5000 ? 'FREE' : '₹150'}
+                    </span>
+                  </div>
+
+                  {/* Express Delivery */}
+                  <div
+                    onClick={() => setShippingType('express')}
+                    className={`flex cursor-pointer items-start justify-between gap-4 rounded-xl border p-4 transition-all ${
+                      shippingType === 'express'
+                        ? 'border-brand-600 bg-brand-50/20'
+                        : 'border-neutral-200 hover:border-neutral-300'
+                    }`}
+                  >
+                    <div className="flex gap-3">
+                      <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-neutral-300">
+                        {shippingType === 'express' && (
+                          <div className="bg-brand-600 h-2.5 w-2.5 rounded-full" />
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-display text-sm font-semibold text-neutral-900">
+                          Express Delivery
+                        </p>
+                        <p className="font-body mt-1 text-xs text-neutral-500">
+                          Priority dispatch with fastest available courier.
+                        </p>
+                        <p className="font-body text-brand-700 mt-2 text-xs font-medium">
+                          Est. Delivery: 1–2 business days to{' '}
+                          {selectedAddress?.city || 'your city'} (
+                          {selectedAddress?.pincode})
+                        </p>
+                      </div>
+                    </div>
+                    <span className="font-display text-sm font-semibold text-neutral-900 whitespace-nowrap">
+                      ₹350
                     </span>
                   </div>
 

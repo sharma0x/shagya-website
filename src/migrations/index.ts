@@ -8,6 +8,7 @@ import * as migration_20260704_064359_add_order_status_timestamps_for_timeline f
 import * as migration_20260705_155739 from './20260705_155739';
 import * as migration_20260707_174712_add_instagram_posts_collection from './20260707_174712_add_instagram_posts_collection';
 import * as migration_20260712_090414 from './20260712_090414';
+import * as migration_20260712_131127 from './20260712_131127';
 
 export const migrations = [
   {
@@ -58,6 +59,11 @@ export const migrations = [
   {
     up: migration_20260712_090414.up,
     down: migration_20260712_090414.down,
-    name: '20260712_090414'
+    name: '20260712_090414',
+  },
+  {
+    up: migration_20260712_131127.up,
+    down: migration_20260712_131127.down,
+    name: '20260712_131127'
   },
 ];
