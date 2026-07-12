@@ -79,28 +79,34 @@ export default function WishlistPage() {
   const handleMoveToCart = async (product: WishlistItem['product']) => {
     setActionLoading(String(product.id))
     try {
+      // 1. Fetch current cart to merge (don't replace existing items)
+      const cartRes = await fetch('/api/cart')
+      const cartData = cartRes.ok ? await cartRes.json() : null
+      const existingItems = cartData?.items || []
+
+      const newItem = {
+        product: product.id,
+        quantity: 1,
+        unitPrice: product.basePrice,
+      }
+
+      // 2. Send merged cart (append to existing)
       const res = await fetch('/api/cart', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          items: [
-            {
-              product: product.id,
-              quantity: 1,
-              unitPrice: product.basePrice,
-            },
-          ],
-        }),
+        body: JSON.stringify({ items: [...existingItems, newItem] }),
       })
 
       if (!res.ok) throw new Error('Failed to add to cart')
 
+      // 3. Remove from wishlist
       await fetch('/api/wishlist', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ productId: String(product.id) }),
       })
 
+      // 4. Remove from local state
       setItems(items.filter((item) => item.product.id !== product.id))
     } catch (err) {
       console.error(err)
