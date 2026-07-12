@@ -18,6 +18,7 @@ const nextConfig: NextConfig = {
         hostname: 'shagya-website-sharma0x-4079-clow-work.vercel.app',
       },
       { protocol: 'https', hostname: '*.r2.cloudflarestorage.com' },
+      { protocol: 'https', hostname: '*.vercel.app' },
     ],
   },
 
