@@ -8,6 +8,7 @@ import { ProductActions } from '@/components/product/ProductActions'
 import { ProductGallery } from '@/components/product/ProductGallery'
 import { RefreshRouteOnSave } from '@/components/live-preview/RefreshRouteOnSave'
 import { WhatsAppOrderButton } from '@/components/product/WhatsAppOrderButton'
+import { ProductReviews, type ReviewData } from '@/components/product/ProductReviews'
 import type { SiteSetting } from '@/payload-types'
 
 type Props = {
@@ -133,6 +134,37 @@ export default async function ProductDetailPage({
     slug: 'site-settings',
   })) as unknown as SiteSetting
   const contactPhone = settings.contactPhone || ''
+
+  // Fetch approved reviews for this product
+  const reviewsRes = await payload.find({
+    collection: 'reviews',
+    where: {
+      and: [
+        { product: { equals: product.id } },
+        { status: { equals: 'approved' } },
+      ],
+    },
+    sort: '-createdAt',
+    limit: 20,
+    depth: 2,
+  })
+  const reviews: ReviewData[] = (reviewsRes.docs as any[]).map((r: any) => ({
+    id: r.id,
+    title: r.title,
+    body: r.body,
+    rating: r.rating,
+    createdAt: r.createdAt,
+    verifiedPurchase: r.verifiedPurchase,
+    customer: {
+      name: r.customer?.name || 'Customer',
+      image: r.customer?.image || null,
+    },
+    images: r.images || [],
+  }))
+  const avgRating =
+    reviews.length > 0
+      ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+      : 0
 
   const imageUrls =
     product.gallery && product.gallery.length > 0
@@ -335,6 +367,13 @@ export default async function ProductDetailPage({
           </div>
         </div>
       </div>
+
+      {/* ── Customer Reviews ── */}
+      <ProductReviews
+        reviews={reviews}
+        averageRating={avgRating}
+        totalCount={reviews.length}
+      />
     </div>
     {contactPhone && (
       <WhatsAppOrderButton
