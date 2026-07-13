@@ -61,6 +61,7 @@ const DISCOUNT_OPTIONS = [
   { label: '50%+ OFF', value: '50' },
 ]
 
+/* Temporarily disabled — size filter
 const SIZE_OPTIONS = [
   { label: 'XS', value: 'XS' },
   { label: 'S', value: 'S' },
@@ -70,6 +71,7 @@ const SIZE_OPTIONS = [
   { label: '2XL', value: '2XL' },
   { label: 'Free', value: 'Free' },
 ]
+*/
 
 // ---------------------------------------------------------------------------
 // Types
@@ -187,7 +189,9 @@ export function ProductFilters({
   )
   const [city, setCity] = useState(searchParams.get('city') || '')
   const [color, setColor] = useState<string[]>(getParamArray('color'))
+  /* Temporarily disabled
   const [size, setSize] = useState(searchParams.get('size') || '')
+  */
   const [showAllColors, setShowAllColors] = useState(false)
 
   // --- Facet fetching ---
@@ -200,7 +204,9 @@ export function ProductFilters({
       currentParams.delete('limit')
       // Exclude color and size from facet base query
       currentParams.delete('color')
+      /* Temporarily disabled
       currentParams.delete('size')
+      */
 
       const qs = currentParams.toString()
       const res = await fetch(`/api/products/facets?${qs}`)
@@ -245,14 +251,16 @@ export function ProductFilters({
     if (deliveryTime) params.set('deliveryTime', deliveryTime)
     if (city) params.set('city', city)
     if (color.length) params.set('color', color.join(','))
+    /* Temporarily disabled
     if (size) params.set('size', size)
+    */
     // Preserve sort, reset page to 1
     const sort = searchParams.get('sort')
     if (sort) params.set('sort', sort)
     return params.toString()
   }, [
     fabric, weave, pattern, minPrice, maxPrice, onSale,
-    minDiscount, deliveryTime, city, color, size, searchParams,
+    minDiscount, deliveryTime, city, color, /* size, */ searchParams,
   ])
 
   const handleApply = () => {
@@ -271,7 +279,9 @@ export function ProductFilters({
     setDeliveryTime('')
     setCity('')
     setColor([])
+    /* Temporarily disabled
     setSize('')
+    */
     const sort = searchParams.get('sort')
     const params = new URLSearchParams()
     if (sort) params.set('sort', sort)
@@ -289,8 +299,10 @@ export function ProductFilters({
     !!minDiscount ||
     !!deliveryTime ||
     !!city ||
-    color.length > 0 ||
+    color.length > 0
+    /* Temporarily disabled
     !!size
+    */
 
   const activeCount =
     fabric.length +
@@ -300,8 +312,10 @@ export function ProductFilters({
     (minDiscount ? 1 : 0) +
     (deliveryTime ? 1 : 0) +
     (city ? 1 : 0) +
-    color.length +
-    (size ? 1 : 0)
+    color.length
+    /* Temporarily disabled
+    + (size ? 1 : 0)
+    */
 
   const getFacetCount = (list: FacetCount[] | undefined, value: string) => {
     if (!list) return null
@@ -539,32 +553,19 @@ export function ProductFilters({
         )}
       </Section>
 
-      {/* Size */}
-      <Section
-        title="Size"
-        expanded={expandedSections.size}
-        onToggle={() => toggleSection('size')}
-      >
+      {/* Temporarily disabled — Size filter
+      <Section title="Size" expanded={expandedSections.size} onToggle={() => toggleSection('size')}>
         <div className="space-y-2">
           {SIZE_OPTIONS.map((opt) => (
-            <label
-              key={opt.value}
-              className="flex cursor-pointer items-center gap-2"
-            >
-              <input
-                type="radio"
-                name="size"
-                checked={size === opt.value}
-                onChange={() =>
-                  setSize(size === opt.value ? '' : opt.value)
-                }
-                className={checkboxClass}
-              />
+            <label key={opt.value} className="flex cursor-pointer items-center gap-2">
+              <input type="radio" name="size" checked={size === opt.value}
+                onChange={() => setSize(size === opt.value ? '' : opt.value)} className={checkboxClass} />
               <span className={labelClass}>{opt.label}</span>
             </label>
           ))}
         </div>
       </Section>
+      */}
 
       {/* Delivery Time */}
       <Section

@@ -6,6 +6,13 @@ import { ShoppingCart, Heart } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useSession } from '@/lib/auth-client'
 
+const COLOR_HEX: Record<string, string> = {
+  red: '#DC2626', burgundy: '#6B2448', gold: '#D4A017',
+  green: '#166534', blue: '#1D4ED8', ivory: '#F5F0E8',
+  pink: '#E8A0B4', purple: '#7C3AED', orange: '#EA580C',
+  black: '#1A1A1A', white: '#FFFFFF', multicolor: '#94A3B8',
+}
+
 interface ProductActionsProps {
   product: {
     id: number | string
@@ -16,9 +23,11 @@ interface ProductActionsProps {
     gallery?: Array<{ image: any; alt?: string }>
     fabric: string
     weave: string
+    colors?: string[]
   }
 }
 
+/* Temporarily disabled — size and blouse selection
 const SAREE_SIZES = ['Standard (Free Size)', '5.5 Meters', '6.0 Meters (+₹600)']
 const BLOUSE_SIZES = [
   'Unstitched',
@@ -28,14 +37,20 @@ const BLOUSE_SIZES = [
   'Stitched: L',
   'Stitched: XL',
 ]
+*/
 
 export function ProductActions({ product }: ProductActionsProps) {
   const { addItem } = useCart()
   const router = useRouter()
   const { data: session } = useSession()
 
+  /* Temporarily disabled — size and blouse selection
   const [size, setSize] = useState(SAREE_SIZES[0])
   const [blouseSize, setBlouseSize] = useState(BLOUSE_SIZES[0])
+  */
+  const [selectedColor, setSelectedColor] = useState<string>(
+    product.colors?.[0] || ''
+  )
   const [addedState, setAddedState] = useState<'idle' | 'added'>('idle')
   const [inWishlist, setInWishlist] = useState(false)
   const [wishlistLoading, setWishlistLoading] = useState(false)
@@ -81,66 +96,73 @@ export function ProductActions({ product }: ProductActionsProps) {
   }, [session?.user, product.id, router])
 
   const handleAddToCart = () => {
-    addItem(product, 1, { size, blouseSize })
+    addItem(product, 1, { color: selectedColor })
     setAddedState('added')
     setTimeout(() => setAddedState('idle'), 2200)
   }
 
   const handleBuyNow = () => {
-    addItem(product, 1, { size, blouseSize })
+    addItem(product, 1, { color: selectedColor })
     router.push('/checkout')
   }
 
   return (
     <div className="space-y-7">
-      {/* Saree Size */}
+      {/* Color Variant Picker */}
+      {product.colors && product.colors.length > 1 && (
+        <div>
+          <p className="font-display text-xs font-semibold text-neutral-500">
+            Color — {selectedColor.charAt(0).toUpperCase() + selectedColor.slice(1)}
+          </p>
+          <div className="mt-2.5 flex flex-wrap gap-2.5">
+            {product.colors.map((color) => {
+              const hex = COLOR_HEX[color] || '#94A3B8'
+              return (
+                <button
+                  key={color}
+                  type="button"
+                  onClick={() => setSelectedColor(color)}
+                  title={color.charAt(0).toUpperCase() + color.slice(1)}
+                  className={`h-8 w-8 rounded-full border-2 transition-all ${
+                    selectedColor === color
+                      ? 'border-brand-600 scale-110 ring-2 ring-brand-200'
+                      : 'border-neutral-200 hover:border-neutral-400'
+                  }`}
+                  style={{ backgroundColor: hex }}
+                />
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Temporarily disabled — size and blouse selection
       <div>
-        <p className="font-display text-xs font-semibold text-neutral-500">
-          Saree Size
-        </p>
+        <p className="font-display text-xs font-semibold text-neutral-500">Saree Size</p>
         <div className="mt-2.5 flex flex-wrap gap-2">
           {SAREE_SIZES.map((s) => (
-            <button
-              key={s}
-              type="button"
-              onClick={() => setSize(s)}
+            <button key={s} type="button" onClick={() => setSize(s)}
               className={`font-body rounded-xl border px-4 py-2.5 text-xs font-medium transition-all ${
-                size === s
-                  ? 'border-brand-600 bg-brand-50/60 text-brand-700'
-                  : 'border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300'
-              }`}
-            >
-              {s}
-            </button>
+                size === s ? 'border-brand-600 bg-brand-50/60 text-brand-700' : 'border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300'
+              }`}>{s}</button>
           ))}
         </div>
       </div>
-
-      {/* Blouse Stitching */}
       <div>
-        <p className="font-display text-xs font-semibold text-neutral-500">
-          Blouse Stitching
-        </p>
+        <p className="font-display text-xs font-semibold text-neutral-500">Blouse Stitching</p>
         <div className="mt-2.5 flex flex-wrap gap-2">
           {BLOUSE_SIZES.map((b) => (
-            <button
-              key={b}
-              type="button"
-              onClick={() => setBlouseSize(b)}
+            <button key={b} type="button" onClick={() => setBlouseSize(b)}
               className={`font-body rounded-xl border px-3.5 py-2.5 text-xs font-medium transition-all ${
-                blouseSize === b
-                  ? 'border-brand-600 bg-brand-50/60 text-brand-700'
-                  : 'border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300'
-              }`}
-            >
-              {b}
-            </button>
+                blouseSize === b ? 'border-brand-600 bg-brand-50/60 text-brand-700' : 'border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300'
+              }`}>{b}</button>
           ))}
         </div>
         <p className="font-body mt-2 text-[11px] leading-relaxed text-neutral-400">
           Stitching adds 3–5 days. Unstitched blouse piece included as standard.
         </p>
       </div>
+      */}
 
       {/* CTAs — Cart, Buy Now, Wishlist in one row */}
       <div className="flex gap-2.5">
@@ -163,7 +185,6 @@ export function ProductActions({ product }: ProductActionsProps) {
           Buy Now
         </button>
 
-        {/* Wishlist — icon only */}
         <button
           onClick={handleToggleWishlist}
           disabled={wishlistLoading}
@@ -174,9 +195,7 @@ export function ProductActions({ product }: ProductActionsProps) {
               : 'border-neutral-200 bg-white text-neutral-500 hover:border-neutral-300 hover:text-neutral-700'
           }`}
         >
-          <Heart
-            className={`h-4.5 w-4.5 ${inWishlist ? 'fill-red-500' : ''}`}
-          />
+          <Heart className={`h-4.5 w-4.5 ${inWishlist ? 'fill-red-500' : ''}`} />
         </button>
       </div>
     </div>

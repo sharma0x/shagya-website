@@ -14,7 +14,11 @@ interface ProductCardActionsProps {
   variant?: 'grid' | 'compact'
 }
 
+const defaultVariant = {} as any
+
+/* Temporarily disabled — size and blouse selection
 const defaultVariant = { size: 'Free', blouseSize: 'Unstitched' }
+*/
 
 export function ProductCardActions({
   productId,

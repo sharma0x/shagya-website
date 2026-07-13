@@ -181,6 +181,11 @@ export default async function ProductDetailPage({
     slug: product.slug || '',
     basePrice: product.basePrice,
     compareAtPrice: product.compareAtPrice || undefined,
+    colors: (() => {
+      const colorSet = new Set<string>()
+      if (product.color) colorSet.add(product.color)
+      return Array.from(colorSet)
+    })(),
     gallery: product.gallery?.map((g: any) => ({
       image:
         typeof g.image === 'object' && g.image !== null
