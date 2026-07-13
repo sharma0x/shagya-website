@@ -11,7 +11,8 @@ import { WhatsAppOrderButton } from '@/components/product/WhatsAppOrderButton'
 import { ProductReviews, type ReviewData } from '@/components/product/ProductReviews'
 import { RecommendationRow } from '@/components/product/RecommendationRow'
 import { getRelatedProducts, getProductsByIds } from '@/lib/recommendations'
-import { getRecentlyViewedIds, addRecentlyViewed } from '@/lib/recently-viewed'
+import { getRecentlyViewedIds } from '@/lib/recently-viewed'
+import { TrackRecentlyViewed } from '@/components/product/TrackRecentlyViewed'
 import type { SiteSetting } from '@/payload-types'
 
 type Props = {
@@ -169,9 +170,6 @@ export default async function ProductDetailPage({
       ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
       : 0
 
-  // Track in recently viewed cookie
-  await addRecentlyViewed(product.id)
-
   // Fetch related products (same fabric/weave)
   const relatedProducts = await getRelatedProducts(
     product.id,
@@ -255,6 +253,7 @@ export default async function ProductDetailPage({
 
   return (
     <>
+      <TrackRecentlyViewed productId={String(product.id)} />
       <div className="bg-surface min-h-screen py-10 md:py-14">
       {isPreview && <RefreshRouteOnSave />}
       <div className="container-page">
