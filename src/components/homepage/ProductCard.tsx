@@ -160,7 +160,7 @@ export function ProductCard({
           </p>
         )}
         {rating && rating > 0 && <Rating value={rating} className="mt-1.5" />}
-        <div className="mt-1.5 flex flex-wrap items-baseline gap-1.5">
+        <div className="mt-1.5 min-h-[28px] flex flex-wrap items-baseline gap-1.5">
           <span className="font-display text-brand-700 text-sm font-semibold">
             ₹{product.basePrice.toLocaleString('en-IN')}
           </span>
