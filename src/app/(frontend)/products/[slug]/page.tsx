@@ -9,6 +9,9 @@ import { ProductGallery } from '@/components/product/ProductGallery'
 import { RefreshRouteOnSave } from '@/components/live-preview/RefreshRouteOnSave'
 import { WhatsAppOrderButton } from '@/components/product/WhatsAppOrderButton'
 import { ProductReviews, type ReviewData } from '@/components/product/ProductReviews'
+import { RecommendationRow } from '@/components/product/RecommendationRow'
+import { getRelatedProducts, getProductsByIds } from '@/lib/recommendations'
+import { getRecentlyViewedIds, addRecentlyViewed } from '@/lib/recently-viewed'
 import type { SiteSetting } from '@/payload-types'
 
 type Props = {
@@ -165,6 +168,25 @@ export default async function ProductDetailPage({
     reviews.length > 0
       ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
       : 0
+
+  // Track in recently viewed cookie
+  await addRecentlyViewed(product.id)
+
+  // Fetch related products (same fabric/weave)
+  const relatedProducts = await getRelatedProducts(
+    product.id,
+    product.fabric || '',
+    product.weave || '',
+    [],
+    8,
+  )
+
+  // Fetch recently viewed products (exclude current)
+  const recentIds = await getRecentlyViewedIds()
+  const filteredRecentIds = recentIds.filter((id) => id !== String(product.id)).slice(0, 8)
+  const recentlyViewedProducts = filteredRecentIds.length > 0
+    ? await getProductsByIds(filteredRecentIds)
+    : []
 
   const imageUrls =
     product.gallery && product.gallery.length > 0
@@ -381,6 +403,23 @@ export default async function ProductDetailPage({
         productId={product.id}
         productSlug={slug}
       />
+      {/* ── Recently Viewed ── */}
+      {recentlyViewedProducts.length > 0 && (
+        <RecommendationRow
+          title="Recently Viewed"
+          products={recentlyViewedProducts}
+          className="mt-16 border-t border-neutral-200 pt-14"
+        />
+      )}
+
+      {/* ── You May Also Like ── */}
+      {relatedProducts.length > 0 && (
+        <RecommendationRow
+          title="You May Also Like"
+          products={relatedProducts}
+          className={recentlyViewedProducts.length === 0 ? 'mt-16 border-t border-neutral-200 pt-14' : 'mt-12'}
+        />
+      )}
     </div>
     {contactPhone && (
       <WhatsAppOrderButton
