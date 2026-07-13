@@ -25,7 +25,7 @@ export function WhatsAppOrderButton({
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Order on WhatsApp"
-      className="group fixed bottom-6 right-6 z-30 flex h-12 w-12 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg transition-all duration-300 hover:bg-[#1ebe5c] hover:shadow-xl sm:h-14 sm:w-14"
+      className="group fixed bottom-20 right-5 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg transition-all duration-300 hover:bg-[#1ebe5c] hover:shadow-xl lg:bottom-6 lg:right-6"
     >
       <span className="absolute inset-0 animate-pulse-ring rounded-full bg-[#25D366] opacity-0" />
       <svg
