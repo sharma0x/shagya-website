@@ -416,7 +416,7 @@ export default async function ProductDetailPage({
         <RecommendationRow
           title="You May Also Like"
           products={relatedProducts}
-          className={recentlyViewedProducts.length === 0 ? 'mt-16 border-t border-neutral-200 pt-14' : 'mt-12'}
+          className="mt-16 border-t border-neutral-200 pt-14"
         />
       )}
     </div>
