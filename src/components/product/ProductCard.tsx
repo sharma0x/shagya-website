@@ -151,8 +151,8 @@ export function ProductCard({
             {product.name}
           </p>
 
-          {/* Price — fixed height to match cards with/without discount */}
-          <div className="mt-0.5 min-h-[28px]">
+          {/* Price — fixed height for identical cards */}
+          <div className="mt-0.5 min-h-[34px]">
             <div className="flex flex-wrap items-baseline gap-1">
               <span className="font-display text-xs font-bold text-neutral-900">
                 ₹{(product.basePrice ?? 0).toLocaleString('en-IN')}
