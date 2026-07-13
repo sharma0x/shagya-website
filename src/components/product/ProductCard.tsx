@@ -151,25 +151,27 @@ export function ProductCard({
             {product.name}
           </p>
 
-          {/* Price */}
-          <div className="mt-0.5 flex flex-wrap items-baseline gap-1">
-            <span className="font-display text-xs font-bold text-neutral-900">
-              ₹{(product.basePrice ?? 0).toLocaleString('en-IN')}
-            </span>
-            {product.compareAtPrice &&
-              product.basePrice &&
-              product.compareAtPrice > product.basePrice && (
-                <>
-                  <span className="font-body text-[9px] text-neutral-400 line-through">
-                    ₹{product.compareAtPrice.toLocaleString('en-IN')}
-                  </span>
-                  {discountPct && (
-                    <span className="font-display text-[9px] font-semibold text-amber-600">
-                      {discountPct}% OFF
+          {/* Price — fixed height to match cards with/without discount */}
+          <div className="mt-0.5 min-h-[28px]">
+            <div className="flex flex-wrap items-baseline gap-1">
+              <span className="font-display text-xs font-bold text-neutral-900">
+                ₹{(product.basePrice ?? 0).toLocaleString('en-IN')}
+              </span>
+              {product.compareAtPrice &&
+                product.basePrice &&
+                product.compareAtPrice > product.basePrice && (
+                  <>
+                    <span className="font-body text-[9px] text-neutral-400 line-through">
+                      ₹{product.compareAtPrice.toLocaleString('en-IN')}
                     </span>
-                  )}
-                </>
-              )}
+                    {discountPct && (
+                      <span className="font-display text-[9px] font-semibold text-amber-600">
+                        {discountPct}% OFF
+                      </span>
+                    )}
+                  </>
+                )}
+            </div>
           </div>
         </div>
       </Link>
