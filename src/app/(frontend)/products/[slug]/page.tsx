@@ -394,6 +394,15 @@ export default async function ProductDetailPage({
         </div>
       </div>
 
+      {/* ── You May Also Like ── */}
+      {relatedProducts.length > 0 && (
+        <RecommendationRow
+          title="You May Also Like"
+          products={relatedProducts}
+          className="p-8 border-t border-neutral-200"
+        />
+      )}
+
       {/* ── Customer Reviews ── */}
       <ProductReviews
         reviews={reviews}
@@ -407,16 +416,7 @@ export default async function ProductDetailPage({
         <RecommendationRow
           title="Recently Viewed"
           products={recentlyViewedProducts}
-          className="mt-16 border-t border-neutral-200 pt-14"
-        />
-      )}
-
-      {/* ── You May Also Like ── */}
-      {relatedProducts.length > 0 && (
-        <RecommendationRow
-          title="You May Also Like"
-          products={relatedProducts}
-          className="mt-16 border-t border-neutral-200 pt-14"
+          className="p-8 border-t border-neutral-200 pt-6"
         />
       )}
     </div>
