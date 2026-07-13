@@ -29,7 +29,7 @@ function wrap(content: string): string {
             <img src="{{storeUrl}}/shayga-logo.svg" alt="Logo" width="32" height="32" style="display:block; border:none;" />
           </td>
           <td valign="middle">
-            <span style="font-family:Georgia,'Times New Roman',serif;font-size:24px;letter-spacing:0.02em;color:#6B2448;font-weight:400;">Shagya</span>
+            <span style="font-family:Georgia,'Times New Roman',serif;font-size:24px;letter-spacing:0.02em;color:#6B2448;font-weight:400;">Shayga</span>
           </td>
         </tr>
       </table>

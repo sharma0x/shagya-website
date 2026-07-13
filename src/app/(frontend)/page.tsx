@@ -4,7 +4,6 @@ import {
   RotateCcw,
   ShieldCheck,
   Sparkles,
-  Lock,
 } from 'lucide-react'
 import {
   IconBrandInstagram,
@@ -332,11 +331,6 @@ export default async function HomePage({ searchParams }: Props) {
       icon: <Sparkles className="h-7 w-7" />,
       title: 'Premium Fabric',
       description: 'Handpicked quality materials',
-    },
-    {
-      icon: <Lock className="h-7 w-7" />,
-      title: 'Secure Payment',
-      description: 'Protected checkout',
     },
   ]
 
