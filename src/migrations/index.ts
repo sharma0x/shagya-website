@@ -6,6 +6,7 @@ import * as migration_20260703_184203_add_order_notes_and_support_guest_checkout
 import * as migration_20260704_064359_add_order_status_timestamps_for_timeline from './20260704_064359_add_order_status_timestamps_for_timeline';
 import * as migration_20260705_155739 from './20260705_155739';
 import * as migration_20260707_174712_add_instagram_posts_collection from './20260707_174712_add_instagram_posts_collection';
+import * as migration_20260714_084351 from './20260714_084351';
 
 export const migrations = [
   {
@@ -48,4 +49,9 @@ export const migrations = [
     down: migration_20260707_174712_add_instagram_posts_collection.down,
     name: '20260707_174712_add_instagram_posts_collection',
   },
-]
+  {
+    up: migration_20260714_084351.up,
+    down: migration_20260714_084351.down,
+    name: '20260714_084351'
+  },
+];

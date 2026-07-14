@@ -210,6 +210,29 @@ export const Products: CollectionConfig = {
       type: 'text',
     },
     {
+      name: 'tags',
+      type: 'text',
+      label: 'Tags',
+      admin: {
+        description: 'Comma-separated tags (e.g., Zari Work, Handwoven, Eco Friendly)',
+      },
+    },
+    {
+      name: 'features',
+      type: 'array',
+      label: 'Product Badges',
+      admin: {
+        description: 'Feature badges shown on product page (e.g., Handloom Verified, Premium Fabric)',
+      },
+      fields: [
+        {
+          name: 'label',
+          type: 'text',
+          required: true,
+        },
+      ],
+    },
+    {
       name: 'color',
       type: 'select',
       required: true,
@@ -343,6 +366,15 @@ export const Products: CollectionConfig = {
       hasMany: true,
       admin: {
         description: 'Curated editorial collections this product belongs to',
+      },
+    },
+    {
+      name: 'brand',
+      type: 'relationship',
+      relationTo: 'brands',
+      hasMany: false,
+      admin: {
+        description: 'Brand associated with this product',
       },
     },
   ],

@@ -3,7 +3,7 @@ import config from '@payload-config'
 import { notFound } from 'next/navigation'
 import { headers as nextHeaders } from 'next/headers'
 import Link from 'next/link'
-import { ArrowLeft, ShieldCheck, Truck, RefreshCw } from 'lucide-react'
+import { ArrowLeft, ShieldCheck, Truck, RefreshCw, Sparkles } from 'lucide-react'
 import { ProductActions } from '@/components/product/ProductActions'
 import { ProductGallery } from '@/components/product/ProductGallery'
 import { RefreshRouteOnSave } from '@/components/live-preview/RefreshRouteOnSave'
@@ -13,6 +13,7 @@ import { RecommendationRow } from '@/components/product/RecommendationRow'
 import { getRelatedProducts, getProductsByIds } from '@/lib/recommendations'
 import { getRecentlyViewedIds } from '@/lib/recently-viewed'
 import { TrackRecentlyViewed } from '@/components/product/TrackRecentlyViewed'
+import { Rating } from '@/components/ui/Rating'
 import type { SiteSetting } from '@/payload-types'
 
 type Props = {
@@ -201,6 +202,19 @@ export default async function ProductDetailPage({
     slug: product.slug || '',
     basePrice: product.basePrice,
     compareAtPrice: product.compareAtPrice || undefined,
+    brand: product.brand?.name || null,
+    tags: product.tags
+      ? product.tags.split(',').map((t: string) => t.trim()).filter(Boolean)
+      : [],
+    features: (product.features || []).map((f: any) => f.label).filter(Boolean),
+    discountPercentage: product.discountPercentage || 0,
+    purchaseCount: product.purchaseCount || 0,
+    quantity: product.quantity ?? 0,
+    lowStockThreshold: product.lowStockThreshold ?? 5,
+    rating: {
+      average: avgRating,
+      count: reviews.length,
+    },
     colors: (() => {
       const colorSet = new Set<string>()
       if (product.color) colorSet.add(product.color)
@@ -278,8 +292,13 @@ export default async function ProductDetailPage({
           {/* Right — Info (sticky on desktop) */}
           <div className="lg:col-span-5">
             <div className="lg:sticky lg:top-24">
-              {/* Weave + occasion tags */}
+              {/* Brand + Category */}
               <div className="flex flex-wrap items-center gap-2">
+                {serializableProduct.brand && (
+                  <span className="font-display text-neutral-500 text-[11px] font-semibold tracking-wider uppercase">
+                    {serializableProduct.brand}
+                  </span>
+                )}
                 <span className="font-display bg-brand-50 text-brand-700 rounded-md px-2.5 py-1 text-[11px] font-semibold tracking-wide">
                   {product.weave.charAt(0).toUpperCase() +
                     product.weave.slice(1)}{' '}
@@ -298,24 +317,71 @@ export default async function ProductDetailPage({
               </h1>
 
               {/* Pricing */}
-              <div className="mt-5 flex items-baseline gap-3 border-b border-neutral-100 pb-6">
-                <span className="font-display text-2xl font-semibold text-neutral-900">
-                  ₹{product.basePrice.toLocaleString('en-IN')}
-                </span>
-                {product.compareAtPrice &&
-                  product.compareAtPrice > product.basePrice && (
-                    <>
+              <div className="mt-5 border-b border-neutral-100 pb-5">
+                <div className="flex flex-wrap items-baseline gap-3">
+                  <span className="font-display text-2xl font-semibold text-neutral-900">
+                    ₹{product.basePrice.toLocaleString('en-IN')}
+                  </span>
+                  {product.compareAtPrice &&
+                    product.compareAtPrice > product.basePrice && (
                       <span className="font-display text-sm text-neutral-400 line-through">
                         ₹{product.compareAtPrice.toLocaleString('en-IN')}
                       </span>
-                      {discountPct && (
-                        <span className="font-display bg-success-light text-success rounded-md px-2 py-0.5 text-xs font-semibold">
-                          {discountPct}% off
-                        </span>
-                      )}
-                    </>
+                    )}
+                  {serializableProduct.discountPercentage > 0 && (
+                    <span className="font-display rounded-md bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700">
+                      {serializableProduct.discountPercentage}% OFF
+                    </span>
                   )}
+                </div>
+                <p className="font-body mt-1 text-[11px] text-neutral-400">
+                  Inclusive of all taxes
+                </p>
               </div>
+
+              {/* Rating + Purchase count */}
+              {serializableProduct.rating.count > 0 && (
+                <div className="mt-3 flex items-center gap-3 text-xs text-neutral-500">
+                  <Rating value={Math.round(serializableProduct.rating.average)} size="sm" />
+                  <span>{serializableProduct.rating.count} reviews</span>
+                  {serializableProduct.purchaseCount > 0 && (
+                    <span className="text-neutral-300">·</span>
+                  )}
+                  {serializableProduct.purchaseCount > 0 && (
+                    <span>{serializableProduct.purchaseCount} purchases</span>
+                  )}
+                </div>
+              )}
+
+              {/* Stock urgency */}
+              {serializableProduct.quantity > 0 && serializableProduct.quantity <= serializableProduct.lowStockThreshold && (
+                <p className="mt-2 text-xs font-medium text-amber-700">
+                  {serializableProduct.quantity === 1 ? 'Only 1 left in stock' : `Only ${serializableProduct.quantity} left in stock`}
+                </p>
+              )}
+
+              {/* Tags */}
+              {serializableProduct.tags.length > 0 && (
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {serializableProduct.tags.map((tag: string) => (
+                    <span key={tag} className="rounded-full border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-[10px] text-neutral-500">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {/* Features / Badges */}
+              {serializableProduct.features.length > 0 && (
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {serializableProduct.features.map((feat: string) => (
+                    <span key={feat} className="inline-flex items-center gap-1 rounded-md bg-brand-50 px-2.5 py-1 text-[10px] font-medium text-brand-700">
+                      <Sparkles className="h-3 w-3" />
+                      {feat}
+                    </span>
+                  ))}
+                </div>
+              )}
 
               {/* Size, stitching, CTAs */}
               <div className="mt-7">

@@ -20,6 +20,14 @@ interface ProductActionsProps {
     slug: string
     basePrice: number
     compareAtPrice?: number
+    brand?: string | null
+    tags?: string[]
+    features?: string[]
+    discountPercentage?: number
+    purchaseCount?: number
+    quantity?: number
+    lowStockThreshold?: number
+    rating?: { average: number; count: number }
     gallery?: Array<{ image: any; alt?: string }>
     fabric: string
     weave: string
