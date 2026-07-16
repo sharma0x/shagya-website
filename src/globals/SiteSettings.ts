@@ -141,5 +141,17 @@ export const SiteSettings: GlobalConfig = {
       label: 'Currency',
       defaultValue: 'INR',
     },
+
+    // ---- Coupons & Offers ----
+    {
+      name: 'activeCoupons',
+      type: 'relationship',
+      relationTo: 'coupons',
+      hasMany: true,
+      label: 'Featured Coupon Codes',
+      admin: {
+        description: 'Select coupons to display on the checkout page under pre-populated offers',
+      },
+    },
   ],
 }

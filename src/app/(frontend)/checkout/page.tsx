@@ -120,6 +120,13 @@ export default function CheckoutPage() {
   )
   const [shippingType, setShippingType] = useState<'standard' | 'express'>('standard')
 
+  // Coupon state
+  const [couponCode, setCouponCode] = useState('')
+  const [couponLoading, setCouponLoading] = useState(false)
+  const [couponError, setCouponError] = useState('')
+  const [appliedCoupon, setAppliedCoupon] = useState<any>(null)
+  const [activeCoupons, setActiveCoupons] = useState<any[]>([])
+
   // Load cart and addresses — run only once on mount
   const didLoad = useRef(false)
 
@@ -195,6 +202,43 @@ export default function CheckoutPage() {
     loadData()
   }, [sessionData, isPending]) // didLoad ref prevents re-runs after first mount
 
+  // Fetch pre-populated coupons
+  useEffect(() => {
+    fetch('/api/coupons/active')
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => { if (d) setActiveCoupons(d.coupons || []) })
+      .catch(() => {})
+  }, [])
+
+  const handleApplyCoupon = async () => {
+    setCouponError('')
+    if (!couponCode.trim()) return
+    setCouponLoading(true)
+    try {
+      const res = await fetch('/api/coupons/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: couponCode.trim(), subtotal }),
+      })
+      const data = await res.json()
+      if (data.valid) {
+        setAppliedCoupon(data.coupon)
+        setCouponCode('')
+      } else {
+        setCouponError(data.error || 'Invalid coupon')
+      }
+    } catch {
+      setCouponError('Could not validate coupon')
+    } finally {
+      setCouponLoading(false)
+    }
+  }
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null)
+    setCouponError('')
+  }
+
   const handleAddNewAddress = async (data: AddressFormData) => {
     setActionLoading(true)
     setError('')
@@ -257,14 +301,14 @@ export default function CheckoutPage() {
   const subtotal = effectiveCart?.subtotal || 0
   const shipping = shippingType === 'express' ? 350 : (subtotal >= 5000 ? 0 : 150)
   let discount = 0
-  if (cart?.coupon) {
-    if (effectiveCart?.coupon.type === 'percentage') {
-      discount = Math.round((subtotal * (effectiveCart.coupon.value || 0)) / 100)
-      if (effectiveCart.coupon.maxDiscount && discount > effectiveCart.coupon.maxDiscount) {
-        discount = effectiveCart.coupon.maxDiscount
+  if (appliedCoupon) {
+    if (appliedCoupon.type === 'percentage') {
+      discount = Math.round((subtotal * (appliedCoupon.value || 0)) / 100)
+      if (appliedCoupon.maxDiscount && discount > appliedCoupon.maxDiscount) {
+        discount = appliedCoupon.maxDiscount
       }
-    } else if (effectiveCart?.coupon.type === 'fixed_amount') {
-      discount = effectiveCart.coupon.value || 0
+    } else if (appliedCoupon.type === 'fixed_amount') {
+      discount = appliedCoupon.value || 0
     }
   }
   const total = Math.max(0, subtotal + shipping - discount)
@@ -921,6 +965,93 @@ export default function CheckoutPage() {
                     </div>
                   )
                 })}
+              </div>
+
+              {/* Coupon Code Section */}
+              <div className="border-t border-neutral-100 py-4">
+                {appliedCoupon ? (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Ticket className="text-success h-4 w-4" />
+                      <span className="font-display text-xs font-semibold text-neutral-900">
+                        {appliedCoupon.code} applied
+                      </span>
+                      <span className="font-body text-[10px] text-success">
+                        -₹{appliedCoupon.discount?.toLocaleString('en-IN') || 0}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleRemoveCoupon}
+                      className="font-display text-[11px] font-semibold text-red-500 hover:text-red-600"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={couponCode}
+                        onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                        placeholder="Enter coupon code"
+                        className="font-body focus:border-brand-500 h-9 flex-1 rounded-xl border border-neutral-200 px-3 text-xs outline-none"
+                        disabled={couponLoading}
+                      />
+                      <button
+                        type="button"
+                        onClick={handleApplyCoupon}
+                        disabled={couponLoading || !couponCode.trim()}
+                        className="font-display bg-brand-600 hover:bg-brand-700 disabled:bg-neutral-200 h-9 rounded-xl px-4 text-[11px] font-semibold text-white transition-colors disabled:text-neutral-400"
+                      >
+                        {couponLoading ? '...' : 'Apply'}
+                      </button>
+                    </div>
+                    {couponError && (
+                      <p className="text-[10px] text-red-500">{couponError}</p>
+                    )}
+                    {activeCoupons.length > 0 && (
+                      <div className="space-y-1.5">
+                        <p className="font-body text-[10px] text-neutral-400">
+                          Available offers:
+                        </p>
+                        {activeCoupons.map((c: any) => (
+                          <button
+                            key={c.id}
+                            type="button"
+                            onClick={() => {
+                              setCouponCode(c.code)
+                              setCouponError('')
+                            }}
+                            className="flex w-full items-center justify-between rounded-lg border border-dashed border-neutral-200 px-2.5 py-1.5 transition-colors hover:border-neutral-300 hover:bg-neutral-50"
+                          >
+                            <div className="text-left">
+                              <span className="font-display text-[11px] font-semibold text-neutral-700">
+                                {c.code}
+                              </span>
+                              {c.description && (
+                                <span className="font-body ml-1.5 text-[10px] text-neutral-400">
+                                  — {c.description}
+                                </span>
+                              )}
+                            </div>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                navigator.clipboard.writeText(c.code)
+                              }}
+                              className="font-display text-[10px] font-semibold text-neutral-400 hover:text-neutral-600"
+                            >
+                              Copy
+                            </button>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Shipping Address Summary (if selected) */}

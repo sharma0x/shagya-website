@@ -157,6 +157,18 @@ export async function POST(request: Request) {
           } else if (coupon.type === 'fixed_amount') {
             discount = coupon.value || 0
           }
+          // Increment usedCount
+          if (coupon) {
+            try {
+              await payload.update({
+                collection: 'coupons',
+                id: coupon.id,
+                data: { usedCount: (coupon.usedCount || 0) + 1 },
+              } as any)
+            } catch {
+              // Non-critical — don't block order
+            }
+          }
         }
       }
     }

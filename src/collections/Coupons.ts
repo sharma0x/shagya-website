@@ -23,6 +23,22 @@ export const Coupons: CollectionConfig = {
       index: true,
     },
     {
+      name: 'description',
+      type: 'text',
+      label: 'Campaign Description',
+      admin: {
+        description: 'e.g., Diwali Sale 2026, Welcome Offer, Influencer — Ananya',
+      },
+    },
+    {
+      name: 'influencerCode',
+      type: 'text',
+      label: 'Influencer Tracking Code',
+      admin: {
+        description: 'Optional: unique identifier for influencer/collaborator tracking',
+      },
+    },
+    {
       name: 'type',
       type: 'select',
       required: true,

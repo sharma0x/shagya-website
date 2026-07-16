@@ -295,6 +295,19 @@ export interface Product {
    */
   cityOfOrigin?: string | null;
   occasion?: string | null;
+  /**
+   * Comma-separated tags (e.g., Zari Work, Handwoven, Eco Friendly)
+   */
+  tags?: string | null;
+  /**
+   * Feature badges shown on product page (e.g., Handloom Verified, Premium Fabric)
+   */
+  features?:
+    | {
+        label: string;
+        id?: string | null;
+      }[]
+    | null;
   color:
     | 'red'
     | 'burgundy'
@@ -341,6 +354,10 @@ export interface Product {
    * Curated editorial collections this product belongs to
    */
   collections?: (number | Collection)[] | null;
+  /**
+   * Brand associated with this product
+   */
+  brand?: (number | null) | Brand;
   meta?: {
     title?: string | null;
     description?: string | null;
@@ -417,6 +434,18 @@ export interface Collection {
   slug?: string | null;
   description?: string | null;
   image?: (number | null) | Media;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "brands".
+ */
+export interface Brand {
+  id: number;
+  name: string;
+  slug?: string | null;
+  description?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -599,6 +628,14 @@ export interface Cart {
 export interface Coupon {
   id: number;
   code: string;
+  /**
+   * e.g., Diwali Sale 2026, Welcome Offer, Influencer — Ananya
+   */
+  description?: string | null;
+  /**
+   * Optional: unique identifier for influencer/collaborator tracking
+   */
+  influencerCode?: string | null;
   type: 'percentage' | 'fixed_amount' | 'free_shipping';
   value?: number | null;
   minCartValue?: number | null;
@@ -779,18 +816,6 @@ export interface Review {
  * via the `definition` "tags".
  */
 export interface Tag {
-  id: number;
-  name: string;
-  slug?: string | null;
-  description?: string | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "brands".
- */
-export interface Brand {
   id: number;
   name: string;
   slug?: string | null;
@@ -1314,6 +1339,13 @@ export interface ProductsSelect<T extends boolean = true> {
   weavePattern?: T;
   cityOfOrigin?: T;
   occasion?: T;
+  tags?: T;
+  features?:
+    | T
+    | {
+        label?: T;
+        id?: T;
+      };
   color?: T;
   gallery?:
     | T
@@ -1336,6 +1368,7 @@ export interface ProductsSelect<T extends boolean = true> {
   allowBackorder?: T;
   soldIndividually?: T;
   collections?: T;
+  brand?: T;
   meta?:
     | T
     | {
@@ -1503,6 +1536,8 @@ export interface CartsSelect<T extends boolean = true> {
  */
 export interface CouponsSelect<T extends boolean = true> {
   code?: T;
+  description?: T;
+  influencerCode?: T;
   type?: T;
   value?: T;
   minCartValue?: T;
@@ -2019,6 +2054,10 @@ export interface SiteSetting {
   };
   gstPercent?: number | null;
   currency?: string | null;
+  /**
+   * Select coupons to display on the checkout page under pre-populated offers
+   */
+  activeCoupons?: (number | Coupon)[] | null;
   _status?: ('draft' | 'published') | null;
   updatedAt?: string | null;
   createdAt?: string | null;
@@ -2050,6 +2089,7 @@ export interface SiteSettingsSelect<T extends boolean = true> {
       };
   gstPercent?: T;
   currency?: T;
+  activeCoupons?: T;
   _status?: T;
   updatedAt?: T;
   createdAt?: T;
