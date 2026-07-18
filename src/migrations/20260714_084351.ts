@@ -2,19 +2,26 @@ import { MigrateUpArgs, MigrateDownArgs, sql } from '@payloadcms/db-postgres'
 
 export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   await db.execute(sql`
-   CREATE TYPE "public"."enum_products_delivery_time" AS ENUM('by-tomorrow', 'within-2-days', 'within-5-days', 'within-7-days', '7-plus-days');
-  CREATE TYPE "public"."enum__products_v_version_delivery_time" AS ENUM('by-tomorrow', 'within-2-days', 'within-5-days', 'within-7-days', '7-plus-days');
-  CREATE TYPE "public"."enum_orders_shipping_type" AS ENUM('standard', 'express');
-  ALTER TYPE "public"."enum_email_templates_slug" ADD VALUE 'back-in-stock';
-  ALTER TYPE "public"."enum_email_templates_slug" ADD VALUE 'password-reset';
-  CREATE TABLE "products_features" (
+   DO $$ BEGIN
+     CREATE TYPE "public"."enum_orders_shipping_type" AS ENUM('standard', 'express');
+   EXCEPTION WHEN duplicate_object THEN NULL;
+   END $$;
+  DO $$ BEGIN
+     ALTER TYPE "public"."enum_email_templates_slug" ADD VALUE 'back-in-stock';
+   EXCEPTION WHEN duplicate_object THEN NULL;
+   END $$;
+  DO $$ BEGIN
+     ALTER TYPE "public"."enum_email_templates_slug" ADD VALUE 'password-reset';
+   EXCEPTION WHEN duplicate_object THEN NULL;
+   END $$;
+  CREATE TABLE IF NOT EXISTS "products_features" (
   	"_order" integer NOT NULL,
   	"_parent_id" integer NOT NULL,
   	"id" varchar PRIMARY KEY NOT NULL,
   	"label" varchar
   );
   
-  CREATE TABLE "_products_v_version_features" (
+  CREATE TABLE IF NOT EXISTS "_products_v_version_features" (
   	"_order" integer NOT NULL,
   	"_parent_id" integer NOT NULL,
   	"id" serial PRIMARY KEY NOT NULL,
@@ -22,7 +29,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"_uuid" varchar
   );
   
-  CREATE TABLE "back_in_stock_requests" (
+  CREATE TABLE IF NOT EXISTS "back_in_stock_requests" (
   	"id" serial PRIMARY KEY NOT NULL,
   	"product_id" integer NOT NULL,
   	"email" varchar NOT NULL,
@@ -31,42 +38,54 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"created_at" timestamp(3) with time zone DEFAULT now() NOT NULL
   );
   
-  ALTER TABLE "products" ADD COLUMN "city_of_origin" varchar;
-  ALTER TABLE "products" ADD COLUMN "tags" varchar;
-  ALTER TABLE "products" ADD COLUMN "discount_percentage" numeric;
-  ALTER TABLE "products" ADD COLUMN "delivery_time" "enum_products_delivery_time";
-  ALTER TABLE "products" ADD COLUMN "purchase_count" numeric DEFAULT 0;
-  ALTER TABLE "products" ADD COLUMN "brand_id" integer;
-  ALTER TABLE "_products_v" ADD COLUMN "version_city_of_origin" varchar;
-  ALTER TABLE "_products_v" ADD COLUMN "version_tags" varchar;
-  ALTER TABLE "_products_v" ADD COLUMN "version_discount_percentage" numeric;
-  ALTER TABLE "_products_v" ADD COLUMN "version_delivery_time" "enum__products_v_version_delivery_time";
-  ALTER TABLE "_products_v" ADD COLUMN "version_purchase_count" numeric DEFAULT 0;
-  ALTER TABLE "_products_v" ADD COLUMN "version_brand_id" integer;
-  ALTER TABLE "orders" ADD COLUMN "notes" varchar;
-  ALTER TABLE "orders" ADD COLUMN "confirmed_at" timestamp(3) with time zone;
-  ALTER TABLE "orders" ADD COLUMN "shipped_at" timestamp(3) with time zone;
-  ALTER TABLE "orders" ADD COLUMN "delivered_at" timestamp(3) with time zone;
-  ALTER TABLE "orders" ADD COLUMN "tracking_id" varchar;
-  ALTER TABLE "orders" ADD COLUMN "tracking_url" varchar;
-  ALTER TABLE "orders" ADD COLUMN "shipping_type" "enum_orders_shipping_type" DEFAULT 'standard' NOT NULL;
-  ALTER TABLE "payload_locked_documents_rels" ADD COLUMN "back_in_stock_requests_id" integer;
-  ALTER TABLE "products_features" ADD CONSTRAINT "products_features_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."products"("id") ON DELETE cascade ON UPDATE no action;
-  ALTER TABLE "_products_v_version_features" ADD CONSTRAINT "_products_v_version_features_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."_products_v"("id") ON DELETE cascade ON UPDATE no action;
-  ALTER TABLE "back_in_stock_requests" ADD CONSTRAINT "back_in_stock_requests_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "public"."products"("id") ON DELETE set null ON UPDATE no action;
-  CREATE INDEX "products_features_order_idx" ON "products_features" USING btree ("_order");
-  CREATE INDEX "products_features_parent_id_idx" ON "products_features" USING btree ("_parent_id");
-  CREATE INDEX "_products_v_version_features_order_idx" ON "_products_v_version_features" USING btree ("_order");
-  CREATE INDEX "_products_v_version_features_parent_id_idx" ON "_products_v_version_features" USING btree ("_parent_id");
-  CREATE INDEX "back_in_stock_requests_product_idx" ON "back_in_stock_requests" USING btree ("product_id");
-  CREATE INDEX "back_in_stock_requests_updated_at_idx" ON "back_in_stock_requests" USING btree ("updated_at");
-  CREATE INDEX "back_in_stock_requests_created_at_idx" ON "back_in_stock_requests" USING btree ("created_at");
-  ALTER TABLE "products" ADD CONSTRAINT "products_brand_id_brands_id_fk" FOREIGN KEY ("brand_id") REFERENCES "public"."brands"("id") ON DELETE set null ON UPDATE no action;
-  ALTER TABLE "_products_v" ADD CONSTRAINT "_products_v_version_brand_id_brands_id_fk" FOREIGN KEY ("version_brand_id") REFERENCES "public"."brands"("id") ON DELETE set null ON UPDATE no action;
-  ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_back_in_stock_requests_fk" FOREIGN KEY ("back_in_stock_requests_id") REFERENCES "public"."back_in_stock_requests"("id") ON DELETE cascade ON UPDATE no action;
-  CREATE INDEX "products_brand_idx" ON "products" USING btree ("brand_id");
-  CREATE INDEX "_products_v_version_version_brand_idx" ON "_products_v" USING btree ("version_brand_id");
-  CREATE INDEX "payload_locked_documents_rels_back_in_stock_requests_id_idx" ON "payload_locked_documents_rels" USING btree ("back_in_stock_requests_id");`)
+  ALTER TABLE "products" ADD COLUMN IF NOT EXISTS "tags" varchar;
+  ALTER TABLE "products" ADD COLUMN IF NOT EXISTS "purchase_count" numeric DEFAULT 0;
+  ALTER TABLE "products" ADD COLUMN IF NOT EXISTS "brand_id" integer;
+  ALTER TABLE "_products_v" ADD COLUMN IF NOT EXISTS "version_tags" varchar;
+  ALTER TABLE "_products_v" ADD COLUMN IF NOT EXISTS "version_purchase_count" numeric DEFAULT 0;
+  ALTER TABLE "_products_v" ADD COLUMN IF NOT EXISTS "version_brand_id" integer;
+  ALTER TABLE "orders" ADD COLUMN IF NOT EXISTS "notes" varchar;
+  ALTER TABLE "orders" ADD COLUMN IF NOT EXISTS "confirmed_at" timestamp(3) with time zone;
+  ALTER TABLE "orders" ADD COLUMN IF NOT EXISTS "shipped_at" timestamp(3) with time zone;
+  ALTER TABLE "orders" ADD COLUMN IF NOT EXISTS "delivered_at" timestamp(3) with time zone;
+  ALTER TABLE "orders" ADD COLUMN IF NOT EXISTS "tracking_id" varchar;
+  ALTER TABLE "orders" ADD COLUMN IF NOT EXISTS "tracking_url" varchar;
+  ALTER TABLE "orders" ADD COLUMN IF NOT EXISTS "shipping_type" "enum_orders_shipping_type" DEFAULT 'standard' NOT NULL;
+  ALTER TABLE "payload_locked_documents_rels" ADD COLUMN IF NOT EXISTS "back_in_stock_requests_id" integer;
+  DO $$ BEGIN
+   ALTER TABLE "products_features" ADD CONSTRAINT "products_features_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."products"("id") ON DELETE cascade ON UPDATE no action;
+  EXCEPTION WHEN duplicate_object THEN NULL;
+  END $$;
+  DO $$ BEGIN
+   ALTER TABLE "_products_v_version_features" ADD CONSTRAINT "_products_v_version_features_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."_products_v"("id") ON DELETE cascade ON UPDATE no action;
+  EXCEPTION WHEN duplicate_object THEN NULL;
+  END $$;
+  DO $$ BEGIN
+   ALTER TABLE "back_in_stock_requests" ADD CONSTRAINT "back_in_stock_requests_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "public"."products"("id") ON DELETE set null ON UPDATE no action;
+  EXCEPTION WHEN duplicate_object THEN NULL;
+  END $$;
+  CREATE INDEX IF NOT EXISTS "products_features_order_idx" ON "products_features" USING btree ("_order");
+  CREATE INDEX IF NOT EXISTS "products_features_parent_id_idx" ON "products_features" USING btree ("_parent_id");
+  CREATE INDEX IF NOT EXISTS "_products_v_version_features_order_idx" ON "_products_v_version_features" USING btree ("_order");
+  CREATE INDEX IF NOT EXISTS "_products_v_version_features_parent_id_idx" ON "_products_v_version_features" USING btree ("_parent_id");
+  CREATE INDEX IF NOT EXISTS "back_in_stock_requests_product_idx" ON "back_in_stock_requests" USING btree ("product_id");
+  CREATE INDEX IF NOT EXISTS "back_in_stock_requests_updated_at_idx" ON "back_in_stock_requests" USING btree ("updated_at");
+  CREATE INDEX IF NOT EXISTS "back_in_stock_requests_created_at_idx" ON "back_in_stock_requests" USING btree ("created_at");
+  DO $$ BEGIN
+   ALTER TABLE "products" ADD CONSTRAINT "products_brand_id_brands_id_fk" FOREIGN KEY ("brand_id") REFERENCES "public"."brands"("id") ON DELETE set null ON UPDATE no action;
+  EXCEPTION WHEN duplicate_object THEN NULL;
+  END $$;
+  DO $$ BEGIN
+   ALTER TABLE "_products_v" ADD CONSTRAINT "_products_v_version_brand_id_brands_id_fk" FOREIGN KEY ("version_brand_id") REFERENCES "public"."brands"("id") ON DELETE set null ON UPDATE no action;
+  EXCEPTION WHEN duplicate_object THEN NULL;
+  END $$;
+  DO $$ BEGIN
+   ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_back_in_stock_requests_fk" FOREIGN KEY ("back_in_stock_requests_id") REFERENCES "public"."back_in_stock_requests"("id") ON DELETE cascade ON UPDATE no action;
+  EXCEPTION WHEN duplicate_object THEN NULL;
+  END $$;
+  CREATE INDEX IF NOT EXISTS "products_brand_idx" ON "products" USING btree ("brand_id");
+  CREATE INDEX IF NOT EXISTS "_products_v_version_version_brand_idx" ON "_products_v" USING btree ("version_brand_id");
+  CREATE INDEX IF NOT EXISTS "payload_locked_documents_rels_back_in_stock_requests_id_idx" ON "payload_locked_documents_rels" USING btree ("back_in_stock_requests_id");`)
 }
 
 export async function down({ db, payload, req }: MigrateDownArgs): Promise<void> {
