@@ -55,7 +55,8 @@ CREATE TABLE IF NOT EXISTS "user" (
   "emailVerified" boolean NOT NULL DEFAULT false,
   "image" text,
   "createdAt" timestamp NOT NULL DEFAULT now(),
-  "updatedAt" timestamp NOT NULL DEFAULT now()
+  "updatedAt" timestamp NOT NULL DEFAULT now(),
+  "twoFactorEnabled" boolean DEFAULT false
 );
 
 CREATE TABLE IF NOT EXISTS "session" (
