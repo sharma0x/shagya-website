@@ -223,9 +223,8 @@ export default buildConfig({
   secret: process.env.PAYLOAD_SECRET || 'dev-secret-change-in-production',
 
   // Public URL for constructing absolute media URLs and API responses
-  serverURL: process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000',
+  serverURL: process.env.NEXT_PUBLIC_SERVER_URL
+    || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000'),
 
   // ---------------------------------------------------------------------------
   // Email
