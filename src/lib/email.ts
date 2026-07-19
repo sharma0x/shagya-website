@@ -12,6 +12,8 @@ function createMailpitTransport() {
   })
 }
 
+const isProduction = process.env.NODE_ENV === 'production'
+
 export async function sendEmail({
   to,
   subject,
@@ -21,7 +23,7 @@ export async function sendEmail({
   subject: string
   html: string
 }) {
-  if (process.env.MAILPIT_SMTP_HOST) {
+  if (!isProduction && process.env.MAILPIT_SMTP_HOST) {
     const transport = createMailpitTransport()
     const info = await transport.sendMail({
       from: 'Shayga <noreply@shayga.com>',

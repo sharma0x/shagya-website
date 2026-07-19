@@ -200,7 +200,8 @@ export const extractSearchText = (doc: Record<string, unknown>): string => {
 const FROM_NAME = process.env.EMAIL_FROM_NAME || 'Shayga'
 const FROM_ADDRESS = process.env.EMAIL_FROM_ADDRESS || 'noreply@shayga.in'
 
-const emailAdapter = process.env.MAILPIT_SMTP_HOST
+const isProduction = process.env.NODE_ENV === 'production'
+const emailAdapter = !isProduction && process.env.MAILPIT_SMTP_HOST
   ? nodemailerAdapter({
       defaultFromName: FROM_NAME,
       defaultFromAddress: FROM_ADDRESS,
