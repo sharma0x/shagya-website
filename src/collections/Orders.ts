@@ -3,8 +3,9 @@ import { sendWebhook } from '@/lib/webhooks'
 import { sendOrderPlacedEmails, sendOrderStatusEmails } from '@/email/send'
 
 /**
- * Runs email, webhook, and event-log side-effects without blocking the
- * hook response. Critical in Vercel serverless where functions have a 30s limit.
+ * Runs email, webhook, event-log, and purchaseCount side-effects detached
+ * from the request transaction. This prevents Neon's idle-in-transaction
+ * timeout from killing the connection and rolling back the order save.
  */
 function scheduleSideEffects(
   payload: any,
@@ -12,30 +13,26 @@ function scheduleSideEffects(
   orderId: string,
   prevStatus: string | null,
   newStatus: string,
+  items?: Array<{ product?: string | number; quantity?: number }>,
 ) {
-  // Run all side-effects detached from the current execution context
   Promise.resolve().then(async () => {
     try {
-      // 1. Send email (non-blocking)
       sendOrderStatusEmails(payload, docId, newStatus).catch(() => {})
     } catch {}
 
     try {
-      // 2. Send webhook
       const webhookUrl = process.env.WEBHOOK_URL
       if (webhookUrl) {
-        const webhookPayload = {
+        await sendWebhook(webhookUrl, {
           event: 'order.status_changed',
           orderId,
           previousStatus: prevStatus ?? null,
           newStatus,
-        }
-        await sendWebhook(webhookUrl, webhookPayload)
+        })
       }
     } catch {}
 
     try {
-      // 3. Create event log
       await payload.create({
         collection: 'event-logs',
         data: {
@@ -48,6 +45,29 @@ function scheduleSideEffects(
         overrideAccess: true,
       })
     } catch {}
+
+    if (newStatus === 'confirmed' && prevStatus !== 'confirmed' && items?.length) {
+      for (const item of items) {
+        if (!item.product) continue
+        try {
+          const product = await payload.findByID({
+            collection: 'products',
+            id: typeof item.product === 'string' ? item.product : String(item.product),
+            overrideAccess: true,
+          })
+          if (product) {
+            await payload.update({
+              collection: 'products',
+              id: product.id,
+              data: {
+                purchaseCount: ((product as any).purchaseCount || 0) + (item.quantity || 1),
+              },
+              overrideAccess: true,
+            })
+          }
+        } catch {}
+      }
+    }
   })
 }
 
@@ -159,7 +179,6 @@ export const Orders: CollectionConfig = {
     ],
     afterChange: [
       async ({ doc, previousDoc, operation, req }) => {
-        // Only fire webhooks on status changes during updates
         if (operation !== 'update') return doc
 
         const prevStatus = (previousDoc as Record<string, unknown> | undefined)
@@ -170,50 +189,15 @@ export const Orders: CollectionConfig = {
 
         if (!newStatus || prevStatus === newStatus) return doc
 
-        // Increment purchaseCount on products when order is confirmed
-        if (newStatus === 'confirmed' && prevStatus !== 'confirmed') {
-          const items = (doc as Record<string, unknown>).items as
-            | Array<{ product?: string | number; quantity?: number }>
-            | undefined
-          if (items && items.length > 0) {
-            for (const item of items) {
-              if (item.product) {
-                try {
-                  const product = await req.payload.findByID({
-                    collection: 'products',
-                    id:
-                      typeof item.product === 'string'
-                        ? item.product
-                        : String(item.product),
-                    overrideAccess: true,
-                  } as any)
-                  if (product) {
-                    await req.payload.update({
-                      collection: 'products',
-                      id: product.id,
-                      data: {
-                        purchaseCount:
-                          ((product as any).purchaseCount || 0) +
-                          (item.quantity || 1),
-                      },
-                      overrideAccess: true,
-                    } as any)
-                  }
-                } catch {
-                  // Don't block order processing for purchaseCount
-                }
-              }
-            }
-          }
-        }
-
-        // Run side-effects asynchronously — don't block the order update
-        // Vercel serverless functions have a 30s timeout; these operations
-        // (email, webhook, event-log) must not delay the API response
         const docId = (doc as Record<string, unknown>).id as string
         const orderId = (doc as Record<string, unknown>).orderNumber as string
+        const items = (doc as Record<string, unknown>).items as
+          | Array<{ product?: string | number; quantity?: number }>
+          | undefined
 
-        scheduleSideEffects(req.payload, docId, orderId, prevStatus ?? null, newStatus)
+        scheduleSideEffects(
+          req.payload, docId, orderId, prevStatus ?? null, newStatus, items,
+        )
 
         return doc
       },
