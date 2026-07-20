@@ -45,6 +45,7 @@ function scheduleSideEffects(
           payload: { orderId, previousStatus: prevStatus, newStatus },
           response: { note: 'WEBHOOK_URL not configured — skipped' },
         },
+        overrideAccess: true,
       })
     } catch {}
   })
@@ -184,6 +185,7 @@ export const Orders: CollectionConfig = {
                       typeof item.product === 'string'
                         ? item.product
                         : String(item.product),
+                    overrideAccess: true,
                   } as any)
                   if (product) {
                     await req.payload.update({
@@ -194,6 +196,7 @@ export const Orders: CollectionConfig = {
                           ((product as any).purchaseCount || 0) +
                           (item.quantity || 1),
                       },
+                      overrideAccess: true,
                     } as any)
                   }
                 } catch {
