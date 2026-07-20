@@ -63,7 +63,7 @@ export default function LoginPage() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.message || 'Invalid OTP')
-      router.push('/account')
+      window.location.href = '/account'
     } catch (err: any) {
       setError(err?.message || 'Verification failed')
     } finally {
