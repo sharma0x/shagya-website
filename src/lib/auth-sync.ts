@@ -80,7 +80,7 @@ export async function syncCustomer(user: BetterAuthUser): Promise<void> {
     await payload.create({
       collection: 'customers',
       data: {
-        name: user.name,
+        name: user.name || user.email?.split('@')[0] || 'Customer',
         email: user.email,
         phone: user.phoneNumber || '',
         betterAuthUserId: user.id,
