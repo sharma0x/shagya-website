@@ -7,6 +7,7 @@ import * as migration_20260704_064359_add_order_status_timestamps_for_timeline f
 import * as migration_20260705_155739 from './20260705_155739';
 import * as migration_20260707_174712_add_instagram_posts_collection from './20260707_174712_add_instagram_posts_collection';
 import * as migration_20260714_084351 from './20260714_084351';
+import * as migration_20260719_123300_add_coupons_fields_and_rels from './20260719_123300_add_coupons_fields_and_rels';
 
 export const migrations = [
   {
@@ -52,6 +53,11 @@ export const migrations = [
   {
     up: migration_20260714_084351.up,
     down: migration_20260714_084351.down,
-    name: '20260714_084351'
+    name: '20260714_084351',
+  },
+  {
+    up: migration_20260719_123300_add_coupons_fields_and_rels.up,
+    down: migration_20260719_123300_add_coupons_fields_and_rels.down,
+    name: '20260719_123300_add_coupons_fields_and_rels',
   },
 ];
