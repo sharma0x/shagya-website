@@ -167,6 +167,7 @@ export async function GET(request: Request): Promise<NextResponse> {
     }
 
     const cityFacets: FacetCount[] = Object.entries(cityCounts)
+      .filter(([, count]) => count > 0)
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([value, count]) => ({ value, label: value, count }))
 
@@ -200,6 +201,7 @@ export async function GET(request: Request): Promise<NextResponse> {
     ): FacetCount[] =>
       Object.entries(labels)
         .filter(([key]) => !excludeKeys || !excludeKeys.includes(key))
+        .filter(([key]) => (counts[key] || 0) > 0)
         .map(([key, label]) => ({
           value: key,
           label,
@@ -207,6 +209,7 @@ export async function GET(request: Request): Promise<NextResponse> {
         }))
 
     const colorFacets: FacetCount[] = Object.entries(colorCounts)
+      .filter(([, count]) => count > 0)
       .sort(([, a], [, b]) => b - a)
       .slice(0, 30)
       .map(([value, count]) => ({ value, label: value, count }))
