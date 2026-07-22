@@ -119,10 +119,9 @@ export function ProductCard({
         href={`/products/${product.slug}`}
         className={cn(
           'block transition-all duration-300 ease-out',
-          '[transform-style:preserve-3d]',
           'hover:-translate-y-1 hover:[transform:rotateY(-2deg)_translateZ(8px)]',
           'hover:shadow-xl hover:shadow-neutral-200/60',
-          isCompact ? 'rounded-lg' : 'rounded-lg',
+          'rounded-lg',
         )}
       >
         {/* Image */}
