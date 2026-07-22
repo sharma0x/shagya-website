@@ -1,8 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { WishlistButton } from '@/components/product/WishlistButton'
-import { StockBadge } from '@/components/product/StockBadge'
-import { ProductCardActions } from '@/components/product/ProductCardActions'
 import { cn } from '@/lib/utils'
 
 const ph = (w: number, h: number, bg: string, fg: string, text: string) =>
@@ -49,7 +47,6 @@ interface ProductCardProps {
   product: ProductCardProduct
   variant?: 'grid' | 'compact' | 'row'
   showWishlist?: boolean
-  showActions?: boolean
   className?: string
 }
 
@@ -57,7 +54,6 @@ export function ProductCard({
   product,
   variant = 'grid',
   showWishlist = true,
-  showActions = true,
   className,
 }: ProductCardProps) {
   const imageUrl = getImageUrl(product)
@@ -99,14 +95,6 @@ export function ProductCard({
             <div className="font-display text-sm font-semibold text-neutral-900">
               ₹{(product.basePrice ?? 0).toLocaleString('en-IN')}
             </div>
-            {showActions && (
-              <ProductCardActions
-                productId={product.id}
-                productName={product.name}
-                product={product}
-                isOutOfStock={isOOS}
-              />
-            )}
           </div>
         </div>
       </div>
@@ -114,13 +102,22 @@ export function ProductCard({
   }
 
   return (
-    <div className={cn('group', className)}>
-      <Link href={`/products/${product.slug}`} className="block">
+    <div className={cn('group [perspective:800px]', className)}>
+      <Link
+        href={`/products/${product.slug}`}
+        className={cn(
+          'block transition-all duration-300 ease-out',
+          '[transform-style:preserve-3d]',
+          'hover:-translate-y-1 hover:[transform:rotateY(-2deg)_translateZ(8px)]',
+          'hover:shadow-xl hover:shadow-neutral-200/60',
+          isCompact ? 'rounded-lg' : 'rounded-lg',
+        )}
+      >
         {/* Image */}
         <div
           className={cn(
             'relative overflow-hidden bg-neutral-100',
-            isCompact ? 'aspect-[4/5] rounded-lg' : 'aspect-[4/5] rounded-md',
+            isCompact ? 'aspect-[3/4] rounded-t-lg' : 'aspect-[3/4] rounded-t-lg',
           )}
         >
           <Image
@@ -128,7 +125,7 @@ export function ProductCard({
             alt={product.name}
             fill
             sizes={isCompact ? '128px' : '(max-width: 640px) 50vw, 25vw'}
-            className="object-cover"
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
             unoptimized={imageUrl.startsWith('https://placehold.co')}
           />
           {showWishlist && (
@@ -146,13 +143,13 @@ export function ProductCard({
         </div>
 
         {/* Info */}
-        <div className="mt-0.5">
-          <p className="font-display truncate text-[10px] font-medium leading-tight text-neutral-900">
+        <div className="rounded-b-lg bg-white px-2.5 pb-2.5 pt-2">
+          <p className="font-display truncate text-[11px] font-medium leading-tight text-neutral-900">
             {product.name}
           </p>
 
           {/* Price — fixed height for identical cards */}
-          <div className="mt-0.5 min-h-[34px]">
+          <div className="mt-0.5 min-h-[28px]">
             <div className="flex flex-wrap items-baseline gap-1">
               <span className="font-display text-xs font-bold text-neutral-900">
                 ₹{(product.basePrice ?? 0).toLocaleString('en-IN')}
@@ -175,19 +172,6 @@ export function ProductCard({
           </div>
         </div>
       </Link>
-
-      {/* Actions — always visible */}
-      {showActions && (
-        <div className="mt-1">
-          <ProductCardActions
-            productId={product.id}
-            productName={product.name}
-            product={product}
-            isOutOfStock={isOOS}
-            variant={isCompact ? 'compact' : 'grid'}
-          />
-        </div>
-      )}
     </div>
   )
 }

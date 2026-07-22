@@ -28,7 +28,6 @@ export function RecommendationRow({
               product={p}
               variant="grid"
               showWishlist
-              showActions
             />
           </div>
         ))}
