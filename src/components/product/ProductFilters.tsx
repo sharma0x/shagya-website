@@ -354,16 +354,10 @@ export function ProductFilters({
   const filterContent = (
     <div className="space-y-6">
       {hasActiveFilters && (
-        <div className="flex items-center justify-between">
+        <div className="flex items-center">
           <span className="font-body text-xs text-neutral-500">
             {activeCount} active
           </span>
-          <button
-            onClick={handleClearAll}
-            className="font-display text-brand-600 hover:text-brand-700 text-[10px] font-semibold tracking-wider uppercase transition-colors"
-          >
-            Clear All
-          </button>
         </div>
       )}
 
@@ -431,7 +425,7 @@ export function ProductFilters({
                 type="radio"
                 name="minDiscount"
                 checked={minDiscount === opt.value}
-                onChange={() =>
+                onClick={() =>
                   setMinDiscount(minDiscount === opt.value ? '' : opt.value)
                 }
                 className={checkboxClass}
