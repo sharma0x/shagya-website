@@ -189,6 +189,7 @@ export function ProductFilters({
   const isMountedRef = useRef(true)
   const initialRender = useRef(true)
   const navigateRef = useRef<ReturnType<typeof setTimeout>>()
+  const sliderResetKey = useRef(0)
 
   // --- Facet fetching ---
   const fetchFacets = useCallback(async () => {
@@ -316,6 +317,7 @@ export function ProductFilters({
     setMinDiscount('')
     setCity('')
     setColor([])
+    sliderResetKey.current++
     router.push(pathname)
   }
 
@@ -369,6 +371,7 @@ export function ProductFilters({
         onToggle={() => toggleSection('price')}
       >
         <RangeSlider
+          key={sliderResetKey.current}
           min={0}
           max={100000}
           step={500}
@@ -382,7 +385,7 @@ export function ProductFilters({
           }}
           formatLabel={(v) => `₹${v.toLocaleString('en-IN')}`}
         />
-        <div className="mt-2 flex items-center gap-2">
+        <div className="mt-2 flex items-center gap-2" key={`price-${sliderResetKey.current}`}>
           <input
             type="number"
             placeholder="Min"
