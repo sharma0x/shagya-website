@@ -425,6 +425,9 @@ export function ProductFilters({
                 type="radio"
                 name="minDiscount"
                 checked={minDiscount === opt.value}
+                onChange={() =>
+                  setMinDiscount(minDiscount === opt.value ? '' : opt.value)
+                }
                 onClick={() =>
                   setMinDiscount(minDiscount === opt.value ? '' : opt.value)
                 }
