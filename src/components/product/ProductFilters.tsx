@@ -47,14 +47,6 @@ const PATTERN_OPTIONS = [
   { label: 'Painted', value: 'painted' },
 ]
 
-const DELIVERY_OPTIONS = [
-  { label: 'By Tomorrow', value: 'by-tomorrow' },
-  { label: 'Within 2 Days', value: 'within-2-days' },
-  { label: 'Within 5 Days', value: 'within-5-days' },
-  { label: 'Within 7 Days', value: 'within-7-days' },
-  { label: '7+ Days', value: '7-plus-days' },
-]
-
 const DISCOUNT_OPTIONS = [
   { label: '10%+ OFF', value: '10' },
   { label: '25%+ OFF', value: '25' },
@@ -171,7 +163,6 @@ export function ProductFilters({
     weave: true,
     pattern: true,
     discount: true,
-    delivery: true,
     city: true,
     color: false,
     size: false,
@@ -186,9 +177,6 @@ export function ProductFilters({
   const [onSale, setOnSale] = useState(searchParams.get('onSale') === 'true')
   const [minDiscount, setMinDiscount] = useState(
     searchParams.get('minDiscount') || '',
-  )
-  const [deliveryTime, setDeliveryTime] = useState(
-    searchParams.get('deliveryTime') || '',
   )
   const [city, setCity] = useState(searchParams.get('city') || '')
   const [cityDropdownOpen, setCityDropdownOpen] = useState(false)
@@ -279,7 +267,6 @@ export function ProductFilters({
     if (maxPrice) params.set('maxPrice', maxPrice)
     if (onSale) params.set('onSale', 'true')
     if (minDiscount) params.set('minDiscount', minDiscount)
-    if (deliveryTime) params.set('deliveryTime', deliveryTime)
     if (city) params.set('city', city)
     if (color.length) params.set('color', color.join(','))
     /* Temporarily disabled
@@ -291,7 +278,7 @@ export function ProductFilters({
     return params.toString()
   }, [
     fabric, weave, pattern, minPrice, maxPrice, onSale,
-    minDiscount, deliveryTime, city, color, /* size, */ searchParams,
+    minDiscount, city, color, /* size, */ searchParams,
   ])
 
   const handleApply = () => {
@@ -307,7 +294,6 @@ export function ProductFilters({
     setMaxPrice('')
     setOnSale(false)
     setMinDiscount('')
-    setDeliveryTime('')
     setCity('')
     setColor([])
     /* Temporarily disabled
@@ -328,7 +314,6 @@ export function ProductFilters({
     !!maxPrice ||
     onSale ||
     !!minDiscount ||
-    !!deliveryTime ||
     !!city ||
     color.length > 0
     /* Temporarily disabled
@@ -341,7 +326,6 @@ export function ProductFilters({
     pattern.length +
     (onSale ? 1 : 0) +
     (minDiscount ? 1 : 0) +
-    (deliveryTime ? 1 : 0) +
     (city ? 1 : 0) +
     color.length
     /* Temporarily disabled
@@ -597,33 +581,6 @@ export function ProductFilters({
         </div>
       </Section>
       */}
-
-      {/* Delivery Time */}
-      <Section
-        title="Delivery Time"
-        expanded={expandedSections.delivery}
-        onToggle={() => toggleSection('delivery')}
-      >
-        <div className="space-y-2">
-          {DELIVERY_OPTIONS.map((opt) => (
-            <label
-              key={opt.value}
-              className="flex cursor-pointer items-center gap-2"
-            >
-              <input
-                type="radio"
-                name="deliveryTime"
-                checked={deliveryTime === opt.value}
-                onChange={() =>
-                  setDeliveryTime(deliveryTime === opt.value ? '' : opt.value)
-                }
-                className={checkboxClass}
-              />
-              <span className={labelClass}>{opt.label}</span>
-            </label>
-          ))}
-        </div>
-      </Section>
 
       {/* City of Origin */}
       <Section
