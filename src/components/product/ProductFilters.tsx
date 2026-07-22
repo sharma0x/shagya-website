@@ -186,6 +186,9 @@ export function ProductFilters({
   const [size, setSize] = useState(searchParams.get('size') || '')
   */
   const [showAllColors, setShowAllColors] = useState(false)
+  const isMountedRef = useRef(true)
+  const initialRender = useRef(true)
+  const navigateRef = useRef<ReturnType<typeof setTimeout>>()
 
   // --- Facet fetching ---
   const fetchFacets = useCallback(async () => {
@@ -210,7 +213,10 @@ export function ProductFilters({
 
       const qs = currentParams.toString()
       const res = await fetch(`/api/products/facets?${qs}`)
-      if (res.ok) setFacets(await res.json())
+      if (res.ok) {
+        const data = await res.json()
+        if (isMountedRef.current) setFacets(data)
+      }
     } catch {
       // silently fail
     }
@@ -219,6 +225,11 @@ export function ProductFilters({
   useEffect(() => {
     fetchFacets()
   }, [fetchFacets])
+
+  // Prevent stale async state updates after unmount
+  useEffect(() => {
+    return () => { isMountedRef.current = false }
+  }, [])
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -238,6 +249,20 @@ export function ProductFilters({
       document.removeEventListener('keydown', handleEscape)
     }
   }, [cityDropdownOpen])
+
+  // Auto-apply filters with debounce — navigates on any filter change
+  useEffect(() => {
+    if (initialRender.current) {
+      initialRender.current = false
+      return
+    }
+    clearTimeout(navigateRef.current)
+    navigateRef.current = setTimeout(() => {
+      const query = buildQuery()
+      router.push(query ? `${pathname}?${query}` : pathname)
+    }, 300)
+    return () => clearTimeout(navigateRef.current)
+  }, [fabric, weave, pattern, onSale, minDiscount, minPrice, maxPrice, city, color])
 
   // --- Handlers ---
   const toggleSection = (section: string) => {
@@ -281,11 +306,6 @@ export function ProductFilters({
     minDiscount, city, color, /* size, */ searchParams,
   ])
 
-  const handleApply = () => {
-    const query = buildQuery()
-    router.push(query ? `${pathname}?${query}` : pathname)
-  }
-
   const handleClearAll = () => {
     setFabric([])
     setWeave([])
@@ -296,14 +316,6 @@ export function ProductFilters({
     setMinDiscount('')
     setCity('')
     setColor([])
-    /* Temporarily disabled
-    setSize('')
-    */
-    const sort = searchParams.get('sort')
-    const params = new URLSearchParams()
-    if (sort) params.set('sort', sort)
-    const qs = params.toString()
-    router.push(qs ? `${pathname}?${qs}` : pathname)
   }
 
   const hasActiveFilters =
@@ -662,13 +674,6 @@ export function ProductFilters({
         </div>
       </Section>
 
-      {/* Apply */}
-      <button
-        onClick={handleApply}
-        className="bg-brand-600 hover:bg-brand-700 font-display flex h-10 w-full items-center justify-center rounded-xl text-xs font-semibold text-white transition-all active:scale-95"
-      >
-        Apply Filters
-      </button>
     </div>
   )
 
@@ -690,7 +695,7 @@ export function ProductFilters({
 
       {/* Desktop sidebar */}
       {variant === 'sidebar' && (
-        <aside className={cn('hidden lg:block w-60 shrink-0', className)}>
+        <aside className={cn('hidden lg:block w-48 shrink-0', className)}>
           <div className="sticky top-24">
             <div className="flex items-center justify-between border-b border-neutral-100 pb-4">
               <h3 className="font-display text-sm font-semibold tracking-tight text-neutral-900">

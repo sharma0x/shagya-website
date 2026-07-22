@@ -278,7 +278,7 @@ export default async function CategoryPage({
 
         <div className="mt-8 flex flex-col gap-8 lg:flex-row">
           {/* Sidebar Filters */}
-          <Suspense fallback={<div className="hidden lg:block w-60 shrink-0" />}>
+          <Suspense fallback={<div className="hidden lg:block w-48 shrink-0" />}>
             <ProductFilters variant="sidebar" contextFilter={contextFilter} />
           </Suspense>
 
