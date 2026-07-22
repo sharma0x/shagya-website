@@ -698,7 +698,7 @@ export function ProductFilters({
               {hasActiveFilters && (
                 <button
                   onClick={handleClearAll}
-                  className="font-display text-brand-600 hover:text-brand-700 text-[10px] font-semibold tracking-wider uppercase transition-colors"
+                  className="font-display text-brand-600 hover:text-brand-700 text-[10px] font-semibold tracking-wider uppercase transition-colors cursor-pointer"
                 >
                   Clear All
                 </button>
