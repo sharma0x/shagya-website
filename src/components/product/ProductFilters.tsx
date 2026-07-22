@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { Filter, X, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -191,6 +191,8 @@ export function ProductFilters({
     searchParams.get('deliveryTime') || '',
   )
   const [city, setCity] = useState(searchParams.get('city') || '')
+  const [cityDropdownOpen, setCityDropdownOpen] = useState(false)
+  const cityDropdownRef = useRef<HTMLDivElement>(null)
   const [color, setColor] = useState<string[]>(getParamArray('color'))
   /* Temporarily disabled
   const [size, setSize] = useState(searchParams.get('size') || '')
@@ -229,6 +231,25 @@ export function ProductFilters({
   useEffect(() => {
     fetchFacets()
   }, [fetchFacets])
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (cityDropdownRef.current && !cityDropdownRef.current.contains(e.target as Node)) {
+        setCityDropdownOpen(false)
+      }
+    }
+    function handleEscape(e: KeyboardEvent) {
+      if (e.key === 'Escape') setCityDropdownOpen(false)
+    }
+    if (cityDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+      document.addEventListener('keydown', handleEscape)
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('keydown', handleEscape)
+    }
+  }, [cityDropdownOpen])
 
   // --- Handlers ---
   const toggleSection = (section: string) => {
@@ -610,26 +631,77 @@ export function ProductFilters({
         expanded={expandedSections.city}
         onToggle={() => toggleSection('city')}
       >
-        <div className="relative">
-          <select
-            value={city}
-            onChange={(e) => setCity(e.target.value)}
+        <div ref={cityDropdownRef} className="relative">
+          <button
+            type="button"
+            onClick={() => setCityDropdownOpen(!cityDropdownOpen)}
             className={cn(
-              'font-body h-9 w-full appearance-none rounded-lg border bg-white px-3 pr-9 text-xs outline-none transition-colors',
-              'border-neutral-200 text-neutral-700',
-              'hover:border-neutral-300',
-              'focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20',
-              city ? 'font-medium text-neutral-900' : 'text-neutral-400',
+              'font-body flex h-9 w-full items-center justify-between rounded-lg border bg-white px-3 text-xs outline-none transition-all',
+              cityDropdownOpen
+                ? 'border-brand-500 ring-2 ring-brand-500/20'
+                : 'border-neutral-200 hover:border-neutral-300',
+              city ? 'text-neutral-900 font-medium' : 'text-neutral-400',
             )}
           >
-            <option value="">All Cities</option>
-            {(facets?.cities || []).map((c) => (
-              <option key={c.value} value={c.value}>
-                {c.label} ({c.count})
-              </option>
-            ))}
-          </select>
-          <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-neutral-400" />
+            <span className="truncate">
+              {city
+                ? city === '__unknown__'
+                  ? 'Unknown'
+                  : city
+                : 'All Cities'}
+            </span>
+            <ChevronDown
+              className={cn(
+                'h-3.5 w-3.5 shrink-0 text-neutral-400 transition-transform',
+                cityDropdownOpen && 'rotate-180',
+              )}
+            />
+          </button>
+
+          {cityDropdownOpen && (
+            <div className="absolute left-0 right-0 top-full z-30 mt-1 overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-lg">
+              <div className="max-h-48 overflow-y-auto">
+              <button
+                type="button"
+                onClick={() => {
+                  setCity('')
+                  setCityDropdownOpen(false)
+                }}
+                className={cn(
+                  'font-body w-full px-3 py-1.5 text-left text-xs transition-colors first:rounded-t-lg',
+                  !city
+                    ? 'bg-brand-50 text-brand-700 font-medium'
+                    : 'text-neutral-600 hover:bg-neutral-50',
+                )}
+              >
+                All Cities
+              </button>
+              {(facets?.cities || []).map((c) => (
+                <button
+                  key={c.value}
+                  type="button"
+                  onClick={() => {
+                    setCity(c.value)
+                    setCityDropdownOpen(false)
+                  }}
+                  className={cn(
+                    'font-body flex w-full items-center justify-between px-3 py-1.5 text-left text-xs transition-colors',
+                    city === c.value
+                      ? 'bg-brand-50 text-brand-700 font-medium'
+                      : 'text-neutral-600 hover:bg-neutral-50',
+                  )}
+                >
+                  <span className="truncate">{c.label}</span>
+                  {c.count > 0 && (
+                    <span className="ml-2 shrink-0 tabular-nums text-[10px] text-neutral-400">
+                      {c.count}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+            </div>
+          )}
         </div>
       </Section>
 
