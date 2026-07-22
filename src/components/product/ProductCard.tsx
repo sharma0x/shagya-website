@@ -1,3 +1,6 @@
+'use client'
+
+import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { WishlistButton } from '@/components/product/WishlistButton'
@@ -6,12 +9,17 @@ import { cn } from '@/lib/utils'
 const ph = (w: number, h: number, bg: string, fg: string, text: string) =>
   `https://placehold.co/${w}x${h}/${bg}/${fg}?text=${encodeURIComponent(text)}&font=lora`
 
-function getImageUrl(product: any): string {
-  const g = product.gallery?.[0]
-  if (g?.image && typeof g.image === 'object') {
-    return g.image.sizes?.card?.url || g.image.url || ''
+function getGalleryUrls(product: any): string[] {
+  const gallery = product.gallery
+  if (!gallery || !Array.isArray(gallery) || gallery.length === 0) {
+    return [ph(600, 800, '69254e', 'f5e8ee', product.name || 'Saree')]
   }
-  return ph(600, 800, '69254e', 'f5e8ee', product.name || 'Saree')
+  return gallery.map((g: any) => {
+    if (typeof g.image === 'object' && g.image !== null) {
+      return g.image.sizes?.card?.url || g.image.url || ''
+    }
+    return ph(600, 800, '69254e', 'f5e8ee', product.name || 'Saree')
+  }).filter(Boolean)
 }
 
 function getDiscountPercent(product: any): number | null {
@@ -56,7 +64,8 @@ export function ProductCard({
   showWishlist = true,
   className,
 }: ProductCardProps) {
-  const imageUrl = getImageUrl(product)
+  const galleryUrls = getGalleryUrls(product)
+  const [activeImage, setActiveImage] = useState(0)
   const discountPct = getDiscountPercent(product)
   const isOOS =
     product.trackQuantity === true && (product.quantity ?? 0) <= 0
@@ -71,12 +80,12 @@ export function ProductCard({
           className="relative h-32 w-24 shrink-0 overflow-hidden rounded-lg bg-neutral-100"
         >
           <Image
-            src={imageUrl}
+            src={galleryUrls[0]}
             alt={product.name}
             fill
             sizes="96px"
             className="object-cover"
-            unoptimized={imageUrl.startsWith('https://placehold.co')}
+            unoptimized={galleryUrls[0]?.startsWith('https://placehold.co')}
           />
         </Link>
         <div className="flex flex-1 flex-col justify-between py-1">
@@ -102,7 +111,10 @@ export function ProductCard({
   }
 
   return (
-    <div className={cn('group [perspective:800px]', className)}>
+    <div
+      className={cn('group [perspective:800px]', className)}
+      onMouseLeave={() => setActiveImage(0)}
+    >
       <Link
         href={`/products/${product.slug}`}
         className={cn(
@@ -120,14 +132,22 @@ export function ProductCard({
             isCompact ? 'aspect-[3/4] rounded-t-lg' : 'aspect-[3/4] rounded-t-lg',
           )}
         >
-          <Image
-            src={imageUrl}
-            alt={product.name}
-            fill
-            sizes={isCompact ? '128px' : '(max-width: 640px) 50vw, 25vw'}
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
-            unoptimized={imageUrl.startsWith('https://placehold.co')}
-          />
+          {galleryUrls.map((url, i) => (
+            <Image
+              key={i}
+              src={url}
+              alt={`${product.name} ${i + 1}`}
+              fill
+              sizes={isCompact ? '128px' : '(max-width: 640px) 50vw, 25vw'}
+              priority={i === 0}
+              className={cn(
+                'object-cover transition-opacity duration-300',
+                i === activeImage ? 'opacity-100' : 'opacity-0',
+                galleryUrls.length > 1 && i === activeImage && 'group-hover:scale-105',
+              )}
+              unoptimized={url.startsWith('https://placehold.co')}
+            />
+          ))}
           {showWishlist && (
             <div className="absolute top-1.5 right-1.5 z-10">
               <WishlistButton productId={product.id as number} />
@@ -138,6 +158,31 @@ export function ProductCard({
               <span className="font-display rounded-md bg-white/90 px-2.5 py-0.5 text-[10px] font-semibold text-neutral-700 shadow-sm">
                 Out of Stock
               </span>
+            </div>
+          )}
+
+          {/* Dot indicators — visible on card hover, manual hover only */}
+          {galleryUrls.length > 1 && (
+            <div className="absolute bottom-2 left-1/2 z-10 flex -translate-x-1/2 gap-1.5 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+              {galleryUrls.map((_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onMouseEnter={() => setActiveImage(i)}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    setActiveImage(i)
+                  }}
+                  className={cn(
+                    'h-2 w-2 rounded-full border border-white/60 transition-all duration-200',
+                    i === activeImage
+                      ? 'bg-white shadow-sm'
+                      : 'bg-white/30 hover:bg-white/70',
+                  )}
+                  aria-label={`View image ${i + 1}`}
+                />
+              ))}
             </div>
           )}
         </div>
