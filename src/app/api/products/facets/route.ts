@@ -109,7 +109,7 @@ export async function GET(request: Request): Promise<NextResponse> {
     const productsRes = await payload.find({
       collection: 'products',
       where: baseWhere,
-      limit: 0, // just need IDs for variant lookup
+      limit: 0,
       pagination: false,
     })
 
@@ -124,38 +124,36 @@ export async function GET(request: Request): Promise<NextResponse> {
     for (const key of Object.keys(WEAVE_LABELS)) weaveCounts[key] = 0
     for (const key of Object.keys(PATTERN_LABELS)) patternCounts[key] = 0
 
-    // Fetch all matching products with their field data
-    const allProducts = await payload.find({
-      collection: 'products',
-      where: baseWhere,
-      limit: 500,
-      pagination: false,
-    })
-
-    for (const p of allProducts.docs as any[]) {
-      if (p.fabric && fabricCounts[p.fabric] !== undefined) {
-        fabricCounts[p.fabric]++
-      }
-      if (p.weave && weaveCounts[p.weave] !== undefined) {
-        weaveCounts[p.weave]++
-      }
-      if (p.pattern && patternCounts[p.pattern] !== undefined) {
-        patternCounts[p.pattern]++
-      }
+    // Helper: clone baseWhere, remove specified keys for self-filter-free counting
+    function excludeKeys(where: Record<string, any>, ...keys: string[]): Record<string, any> {
+      const clone = { ...where }
+      for (const k of keys) delete clone[k]
+      return clone
     }
 
-    // Build city facets from all filters EXCEPT the city filter itself,
-    // so the dropdown always shows all available cities in the current scope.
-    const cityBaseWhere: Record<string, any> = { ...baseWhere }
-    delete cityBaseWhere.cityOfOrigin
-    delete cityBaseWhere.or
+    // Query each facet type without its own filter in parallel
+    const fabricWhere = excludeKeys(baseWhere, 'fabric')
+    const weaveWhere = excludeKeys(baseWhere, 'weave')
+    const patternWhere = excludeKeys(baseWhere, 'pattern')
+    const cityBaseWhere = excludeKeys(baseWhere, 'cityOfOrigin', 'or')
 
-    const cityProducts = await payload.find({
-      collection: 'products',
-      where: cityBaseWhere,
-      limit: 500,
-      pagination: false,
-    })
+    const [fabricProducts, weaveProducts, patternProducts, cityProducts] =
+      await Promise.all([
+        payload.find({ collection: 'products', where: fabricWhere, limit: 500, pagination: false }),
+        payload.find({ collection: 'products', where: weaveWhere, limit: 500, pagination: false }),
+        payload.find({ collection: 'products', where: patternWhere, limit: 500, pagination: false }),
+        payload.find({ collection: 'products', where: cityBaseWhere, limit: 500, pagination: false }),
+      ])
+
+    for (const p of fabricProducts.docs as any[]) {
+      if (p.fabric && fabricCounts[p.fabric] !== undefined) fabricCounts[p.fabric]++
+    }
+    for (const p of weaveProducts.docs as any[]) {
+      if (p.weave && weaveCounts[p.weave] !== undefined) weaveCounts[p.weave]++
+    }
+    for (const p of patternProducts.docs as any[]) {
+      if (p.pattern && patternCounts[p.pattern] !== undefined) patternCounts[p.pattern]++
+    }
 
     const cityCounts: Record<string, number> = {}
     let unknownCount = 0
