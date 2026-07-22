@@ -610,18 +610,27 @@ export function ProductFilters({
         expanded={expandedSections.city}
         onToggle={() => toggleSection('city')}
       >
-        <select
-          value={city}
-          onChange={(e) => setCity(e.target.value)}
-          className="font-body focus:border-brand-500 h-8 w-full rounded-lg border border-neutral-200 px-2 text-xs outline-none text-neutral-700"
-        >
-          <option value="">All Cities</option>
-          {(facets?.cities || []).map((c) => (
-            <option key={c.value} value={c.value}>
-              {c.label} ({c.count})
-            </option>
-          ))}
-        </select>
+        <div className="relative">
+          <select
+            value={city}
+            onChange={(e) => setCity(e.target.value)}
+            className={cn(
+              'font-body h-9 w-full appearance-none rounded-lg border bg-white px-3 pr-9 text-xs outline-none transition-colors',
+              'border-neutral-200 text-neutral-700',
+              'hover:border-neutral-300',
+              'focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20',
+              city ? 'font-medium text-neutral-900' : 'text-neutral-400',
+            )}
+          >
+            <option value="">All Cities</option>
+            {(facets?.cities || []).map((c) => (
+              <option key={c.value} value={c.value}>
+                {c.label} ({c.count})
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-neutral-400" />
+        </div>
       </Section>
 
       {/* Apply */}
