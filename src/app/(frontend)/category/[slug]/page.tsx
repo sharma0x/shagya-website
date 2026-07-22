@@ -22,47 +22,47 @@ interface FilterParams {
   [key: string]: string | string[] | undefined
 }
 
+const FABRICS = [
+  'silk',
+  'cotton',
+  'linen',
+  'georgette',
+  'chiffon',
+  'crepe',
+  'velvet',
+  'net',
+  'blend',
+]
+const WEAVES = [
+  'banarasi',
+  'kanchipuram',
+  'bandhani',
+  'patola',
+  'kalamkari',
+  'ikkat',
+  'paithani',
+  'maheshwari',
+  'chanderi',
+  'tant',
+  'baluchari',
+]
+
 function buildWhere(sParams: FilterParams, slug: string) {
   const where: Record<string, any> = {
     status: { equals: 'published' },
   }
 
-  const fabrics = [
-    'silk',
-    'cotton',
-    'linen',
-    'georgette',
-    'chiffon',
-    'crepe',
-    'velvet',
-    'net',
-    'blend',
-  ]
-  const weavesList = [
-    'banarasi',
-    'kanchipuram',
-    'bandhani',
-    'patola',
-    'kalamkari',
-    'ikkat',
-    'paithani',
-    'maheshwari',
-    'chanderi',
-    'tant',
-    'baluchari',
-  ]
-
   // Category-based filters from slug
-  if (fabrics.includes(slug.toLowerCase())) {
+  if (FABRICS.includes(slug.toLowerCase())) {
     where.fabric = { equals: slug.toLowerCase() }
-  } else if (weavesList.includes(slug.toLowerCase())) {
+  } else if (WEAVES.includes(slug.toLowerCase())) {
     where.weave = { equals: slug.toLowerCase() }
   }
 
   // Multi-select filters from query params (merge with slug-based)
   const fabricFilter = getCommaParam(sParams, 'fabric')
   if (fabricFilter.length > 0) {
-    if (fabrics.includes(slug.toLowerCase())) {
+    if (FABRICS.includes(slug.toLowerCase())) {
       const merged = [...new Set([slug.toLowerCase(), ...fabricFilter])]
       where.fabric = { in: merged }
     } else {
@@ -72,7 +72,7 @@ function buildWhere(sParams: FilterParams, slug: string) {
 
   const weaveFilter = getCommaParam(sParams, 'weave')
   if (weaveFilter.length > 0) {
-    if (weavesList.includes(slug.toLowerCase())) {
+    if (WEAVES.includes(slug.toLowerCase())) {
       const merged = [...new Set([slug.toLowerCase(), ...weaveFilter])]
       where.weave = { in: merged }
     } else {
@@ -144,12 +144,10 @@ export default async function CategoryPage({
   const where = buildWhere(sParams, slug)
 
   // Determine context filter for the facets API based on the slug type
-  const fabrics = ['silk', 'cotton', 'linen', 'georgette', 'chiffon', 'crepe', 'velvet', 'net', 'blend']
-  const weavesList = ['banarasi', 'kanchipuram', 'bandhani', 'patola', 'kalamkari', 'ikkat', 'paithani', 'maheshwari', 'chanderi', 'tant', 'baluchari']
   const contextFilter: Record<string, string> = {}
-  if (fabrics.includes(slug.toLowerCase())) {
+  if (FABRICS.includes(slug.toLowerCase())) {
     contextFilter.fabric = slug.toLowerCase()
-  } else if (weavesList.includes(slug.toLowerCase())) {
+  } else if (WEAVES.includes(slug.toLowerCase())) {
     contextFilter.weave = slug.toLowerCase()
   }
 
