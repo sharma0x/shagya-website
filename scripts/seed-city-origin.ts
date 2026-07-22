@@ -1,40 +1,37 @@
 import { getPayload } from 'payload'
 import config from '@payload-config'
+import { sql } from '@payloadcms/db-postgres'
 
-const CITY_SAMPLES: Record<string, string> = {
-  1: 'Varanasi',
-  2: 'Kanchipuram',
-  3: 'Varanasi',
-  4: 'Bhagalpur',
-  5: 'Kanchipuram, Tamil Nadu',
-  6: 'Varanasi, Uttar Pradesh',
-  7: 'Bhagalpur',
-  8: 'Kanchipuram',
-}
+const CITY_POOL = [
+  'Varanasi',
+  'Kanchipuram',
+  'Bhagalpur',
+  'Varanasi, Uttar Pradesh',
+  'Kanchipuram, Tamil Nadu',
+]
 
 async function main() {
   const payload = await getPayload({ config })
+  const db = (payload.db as any).drizzle ?? (payload.db as any).pool
 
-  const { docs: products } = await payload.find({
-    collection: 'products',
-    where: { status: { equals: 'published' } },
-    limit: 20,
-    pagination: false,
-  })
+  // Use direct SQL to bypass Payload's versioning (avoid migration table gaps)
+  const { rows } = await (payload.db as any).execute?.({ raw: sql`SELECT id, name FROM products WHERE status = 'published'` })
+    ?? await db.query(sql`SELECT id, name FROM products WHERE status = 'published'`)
 
+  const products = (Array.isArray(rows) ? rows : rows?.rows ?? []) as { id: number; name: string }[]
   console.log(`Found ${products.length} published products.\n`)
 
-  for (const p of products as any[]) {
-    const city = CITY_SAMPLES[(p.id as number) % 8 + 1] || null
-    if (!city) continue
+  for (let i = 0; i < products.length; i++) {
+    const p = products[i]
+    const city = CITY_POOL[i % CITY_POOL.length]
 
-    await payload.update({
-      collection: 'products',
-      id: p.id,
-      data: { cityOfOrigin: city },
-    })
-
-    console.log(`  Updated product #${p.id}: ${p.name} → cityOfOrigin: "${city}"`)
+    try {
+      await (payload.db as any).execute?.({ raw: sql`UPDATE products SET city_of_origin = ${city}, updated_at = NOW() WHERE id = ${p.id}` })
+        ?? await db.run(sql`UPDATE products SET city_of_origin = ${city}, updated_at = NOW() WHERE id = ${p.id}`)
+      console.log(`  Updated product #${p.id}: ${p.name.substring(0, 50)} → "${city}"`)
+    } catch (e: any) {
+      console.error(`  Failed product #${p.id}:`, e.message)
+    }
   }
 
   console.log(`\nDone! Updated ${products.length} products.`)
