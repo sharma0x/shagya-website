@@ -316,6 +316,7 @@ export function ProductFilters({
     setMinDiscount('')
     setCity('')
     setColor([])
+    router.push(pathname)
   }
 
   const hasActiveFilters =
