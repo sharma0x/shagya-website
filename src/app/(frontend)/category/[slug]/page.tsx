@@ -143,6 +143,16 @@ export default async function CategoryPage({
 
   const where = buildWhere(sParams, slug)
 
+  // Determine context filter for the facets API based on the slug type
+  const fabrics = ['silk', 'cotton', 'linen', 'georgette', 'chiffon', 'crepe', 'velvet', 'net', 'blend']
+  const weavesList = ['banarasi', 'kanchipuram', 'bandhani', 'patola', 'kalamkari', 'ikkat', 'paithani', 'maheshwari', 'chanderi', 'tant', 'baluchari']
+  const contextFilter: Record<string, string> = {}
+  if (fabrics.includes(slug.toLowerCase())) {
+    contextFilter.fabric = slug.toLowerCase()
+  } else if (weavesList.includes(slug.toLowerCase())) {
+    contextFilter.weave = slug.toLowerCase()
+  }
+
   // Variant-based filters (color, size) — sub-query
   const colorParam = getCommaParam(sParams, 'color')
   const sizeParam = (sParams.size as string) || ''
@@ -271,7 +281,7 @@ export default async function CategoryPage({
         <div className="mt-8 flex flex-col gap-8 lg:flex-row">
           {/* Sidebar Filters */}
           <Suspense fallback={<div className="hidden lg:block w-60 shrink-0" />}>
-            <ProductFilters variant="sidebar" />
+            <ProductFilters variant="sidebar" contextFilter={contextFilter} />
           </Suspense>
 
           {/* Main Content */}

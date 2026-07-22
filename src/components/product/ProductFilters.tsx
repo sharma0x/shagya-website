@@ -94,6 +94,7 @@ interface FacetsData {
 interface ProductFiltersProps {
   variant?: 'sidebar' | 'vertical'
   className?: string
+  contextFilter?: Record<string, string>
 }
 
 // ---------------------------------------------------------------------------
@@ -147,6 +148,7 @@ function Section({
 export function ProductFilters({
   variant = 'sidebar',
   className,
+  contextFilter,
 }: ProductFiltersProps) {
   const router = useRouter()
   const pathname = usePathname()
@@ -209,13 +211,20 @@ export function ProductFilters({
       currentParams.delete('size')
       */
 
+      // Apply context filters from the page (e.g. fabric=silk on /category/silk)
+      if (contextFilter) {
+        Object.entries(contextFilter).forEach(([key, value]) => {
+          if (!currentParams.has(key)) currentParams.set(key, value)
+        })
+      }
+
       const qs = currentParams.toString()
       const res = await fetch(`/api/products/facets?${qs}`)
       if (res.ok) setFacets(await res.json())
     } catch {
       // silently fail
     }
-  }, [searchParams])
+  }, [searchParams, contextFilter])
 
   useEffect(() => {
     fetchFacets()
