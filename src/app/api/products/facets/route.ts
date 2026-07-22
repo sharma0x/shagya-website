@@ -13,6 +13,7 @@ interface FacetsResponse {
   weave: FacetCount[]
   pattern: FacetCount[]
   colors: FacetCount[]
+  cities: FacetCount[]
 }
 
 const FABRIC_LABELS: Record<string, string> = {
@@ -93,7 +94,14 @@ export async function GET(request: Request): Promise<NextResponse> {
       }
     }
     if (deliveryTime) baseWhere.deliveryTime = { equals: deliveryTime }
-    if (city) baseWhere.cityOfOrigin = { contains: city }
+    if (city === '__unknown__') {
+      baseWhere.or = [
+        { cityOfOrigin: { exists: false } },
+        { cityOfOrigin: { equals: '' } },
+      ]
+    } else if (city) {
+      baseWhere.cityOfOrigin = { equals: city }
+    }
 
     const payload = await getPayload({ config })
 
@@ -134,6 +142,38 @@ export async function GET(request: Request): Promise<NextResponse> {
       if (p.pattern && patternCounts[p.pattern] !== undefined) {
         patternCounts[p.pattern]++
       }
+    }
+
+    // Build city facets from all filters EXCEPT the city filter itself,
+    // so the dropdown always shows all available cities in the current scope.
+    const cityBaseWhere: Record<string, any> = { ...baseWhere }
+    delete cityBaseWhere.cityOfOrigin
+    delete cityBaseWhere.or
+
+    const cityProducts = await payload.find({
+      collection: 'products',
+      where: cityBaseWhere,
+      limit: 500,
+      pagination: false,
+    })
+
+    const cityCounts: Record<string, number> = {}
+    let unknownCount = 0
+    for (const p of cityProducts.docs as any[]) {
+      if (p.cityOfOrigin && p.cityOfOrigin.trim() !== '') {
+        const val = p.cityOfOrigin.trim()
+        cityCounts[val] = (cityCounts[val] || 0) + 1
+      } else {
+        unknownCount++
+      }
+    }
+
+    const cityFacets: FacetCount[] = Object.entries(cityCounts)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([value, count]) => ({ value, label: value, count }))
+
+    if (unknownCount > 0) {
+      cityFacets.push({ value: '__unknown__', label: 'Unknown', count: unknownCount })
     }
 
     // Count distinct colors from variants of matching products
@@ -179,6 +219,7 @@ export async function GET(request: Request): Promise<NextResponse> {
         weave: buildFacets(WEAVE_LABELS, weaveCounts, weaveFilter),
         pattern: buildFacets(PATTERN_LABELS, patternCounts, patternFilter),
         colors: colorFacets,
+        cities: cityFacets,
       },
       {
         headers: {

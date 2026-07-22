@@ -116,8 +116,13 @@ function buildWhere(sParams: FilterParams, slug: string) {
 
   // City of origin
   const city = sParams.city as string | undefined
-  if (city) {
-    where.cityOfOrigin = { contains: city }
+  if (city === '__unknown__') {
+    where.or = [
+      { cityOfOrigin: { exists: false } },
+      { cityOfOrigin: { equals: '' } },
+    ]
+  } else if (city) {
+    where.cityOfOrigin = { equals: city }
   }
 
   return where

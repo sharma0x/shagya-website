@@ -88,6 +88,7 @@ interface FacetsData {
   weave: FacetCount[]
   pattern: FacetCount[]
   colors: FacetCount[]
+  cities: FacetCount[]
 }
 
 interface ProductFiltersProps {
@@ -600,13 +601,18 @@ export function ProductFilters({
         expanded={expandedSections.city}
         onToggle={() => toggleSection('city')}
       >
-        <input
-          type="text"
-          placeholder="e.g. Varanasi, Kanchipuram"
+        <select
           value={city}
           onChange={(e) => setCity(e.target.value)}
-          className="font-body focus:border-brand-500 h-8 w-full rounded-lg border border-neutral-200 px-2 text-xs outline-none placeholder:text-neutral-300"
-        />
+          className="font-body focus:border-brand-500 h-8 w-full rounded-lg border border-neutral-200 px-2 text-xs outline-none text-neutral-700"
+        >
+          <option value="">All Cities</option>
+          {(facets?.cities || []).map((c) => (
+            <option key={c.value} value={c.value}>
+              {c.label} ({c.count})
+            </option>
+          ))}
+        </select>
       </Section>
 
       {/* Apply */}

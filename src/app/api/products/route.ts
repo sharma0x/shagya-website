@@ -82,8 +82,13 @@ export async function GET(request: Request): Promise<NextResponse> {
     }
 
     const city = searchParams.get('city')
-    if (city) {
-      where.cityOfOrigin = { contains: city }
+    if (city === '__unknown__') {
+      where.or = [
+        { cityOfOrigin: { exists: false } },
+        { cityOfOrigin: { equals: '' } },
+      ]
+    } else if (city) {
+      where.cityOfOrigin = { equals: city }
     }
 
     const color = getCommaParam(searchParams, 'color')
