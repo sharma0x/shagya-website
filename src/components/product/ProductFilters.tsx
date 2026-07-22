@@ -318,6 +318,7 @@ export function ProductFilters({
     setCity('')
     setColor([])
     sliderResetKey.current++
+    setMobileOpen(false)
     router.push(pathname)
   }
 
@@ -725,9 +726,19 @@ export function ProductFilters({
           />
           <div className="absolute inset-y-0 right-0 w-80 max-w-[85vw] overflow-y-auto bg-white p-6 shadow-2xl">
             <div className="mb-6 flex items-center justify-between">
-              <h3 className="font-display text-sm font-semibold tracking-tight text-neutral-900">
-                Filters
-              </h3>
+              <div className="flex items-center gap-3">
+                <h3 className="font-display text-sm font-semibold tracking-tight text-neutral-900">
+                  Filters
+                </h3>
+                {hasActiveFilters && (
+                  <button
+                    onClick={handleClearAll}
+                    className="font-display text-brand-600 hover:text-brand-700 text-[10px] font-semibold tracking-wider uppercase transition-colors cursor-pointer"
+                  >
+                    Clear All
+                  </button>
+                )}
+              </div>
               <button
                 onClick={() => setMobileOpen(false)}
                 className="text-neutral-400 hover:text-neutral-600"
