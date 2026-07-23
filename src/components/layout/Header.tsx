@@ -199,7 +199,7 @@ export function Header() {
                     <div className="flex gap-12 rounded-xl border border-neutral-200 bg-white px-10 py-6 shadow-xl min-w-[600px]">
                       {/* Fabric column */}
                       <div>
-                        <h4 className="font-display mb-3 text-[10px] font-semibold tracking-wider text-neutral-400 uppercase">
+                        <h4 className="font-display mb-3 text-[10px] font-semibold tracking-wider text-brand-600 uppercase">
                           Fabric
                         </h4>
                         <div className="grid grid-cols-3 gap-x-6 gap-y-1.5">
@@ -208,7 +208,7 @@ export function Header() {
                               key={f.value}
                               href={`/category/${f.value}`}
                               onClick={() => setMegaMenuOpen(false)}
-                              className="font-body hover:text-brand-700 whitespace-nowrap rounded px-1.5 py-0.5 text-sm text-neutral-600 transition-colors hover:bg-neutral-50"
+                              className="font-body hover:text-brand-700 after:bg-brand-600 relative whitespace-nowrap rounded px-1.5 py-0.5 text-sm text-neutral-600 transition-colors after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:transition-transform hover:after:scale-x-100"
                             >
                               {f.label}
                             </Link>
@@ -218,7 +218,7 @@ export function Header() {
 
                       {/* Weave column */}
                       <div>
-                        <h4 className="font-display mb-3 text-[10px] font-semibold tracking-wider text-neutral-400 uppercase">
+                        <h4 className="font-display mb-3 text-[10px] font-semibold tracking-wider text-brand-600 uppercase">
                           Weave
                         </h4>
                         <div className="grid grid-cols-3 gap-x-6 gap-y-1.5">
@@ -227,7 +227,7 @@ export function Header() {
                               key={w.value}
                               href={`/category/${w.value}`}
                               onClick={() => setMegaMenuOpen(false)}
-                              className="font-body hover:text-brand-700 whitespace-nowrap rounded px-1.5 py-0.5 text-sm text-neutral-600 transition-colors hover:bg-neutral-50"
+                              className="font-body hover:text-brand-700 after:bg-brand-600 relative whitespace-nowrap rounded px-1.5 py-0.5 text-sm text-neutral-600 transition-colors after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:transition-transform hover:after:scale-x-100"
                             >
                               {w.label}
                             </Link>
@@ -241,7 +241,7 @@ export function Header() {
                       <Link
                         href="/category/all"
                         onClick={() => setMegaMenuOpen(false)}
-                        className="font-display text-brand-600 hover:text-brand-700 text-xs font-semibold tracking-wider uppercase transition-colors"
+                        className="font-display after:bg-brand-600 relative text-brand-600 hover:text-brand-700 text-xs font-semibold tracking-wider uppercase transition-colors after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:transition-transform hover:after:scale-x-100"
                       >
                         Shop All Sarees →
                       </Link>
