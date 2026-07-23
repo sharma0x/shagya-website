@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Copy, TicketPercent, Check } from 'lucide-react'
+import { Copy, TicketPercent, Check, CheckCircle2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface CouponData {
@@ -71,26 +71,43 @@ export function OffersSection({
 
   if (variant === 'banner') {
     return (
-      <div className={cn('space-y-1.5', className)}>
-        {coupons.map((c) => (
-          <div
-            key={c.id}
-            className="flex items-center gap-2 rounded-lg border border-dashed border-brand-200 bg-brand-50/30 px-3 py-2"
-          >
-            <TicketPercent className="h-4 w-4 shrink-0 text-brand-600" />
-            <div className="min-w-0 flex-1">
-              <p className="font-body truncate text-[11px] font-medium text-neutral-800">
-                {formatDiscount(c)} — {c.code}
-              </p>
-              {c.description && (
-                <p className="font-body truncate text-[10px] text-neutral-400">
-                  {c.description}
-                </p>
-              )}
+      <div className={cn('rounded-xl border border-neutral-200 bg-white p-4', className)}>
+        <h4 className="font-display mb-3 text-xs font-semibold tracking-tight text-neutral-900">
+          Available Offers
+        </h4>
+        <div className="bg-gold-400 mb-3 h-px w-10" aria-hidden="true" />
+        <div className="space-y-2">
+          {coupons.map((c) => (
+            <div
+              key={c.id}
+              className="rounded-lg border border-neutral-100 bg-neutral-50/50 px-3 py-2.5"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-start gap-2 min-w-0">
+                  <CheckCircle2 className="h-4 w-4 shrink-0 text-green-600 mt-0.5" />
+                  <div className="min-w-0">
+                    <p className="font-body text-xs font-medium text-neutral-900">
+                      Save {c.type === 'percentage' ? `${c.value}%` : c.type === 'fixed_amount' ? `₹${c.value}` : 'on shipping'} with coupon
+                    </p>
+                    <p className="font-mono mt-0.5 text-[11px] tracking-wider text-neutral-500">
+                      {c.code}
+                    </p>
+                    {(c.minCartValue > 0 || c.maxDiscount || c.endDate) && (
+                      <p className="font-body mt-0.5 text-[10px] text-neutral-400">
+                        {[
+                          c.minCartValue > 0 && `Min. ₹${c.minCartValue.toLocaleString('en-IN')}`,
+                          c.maxDiscount && c.type === 'percentage' && `Max disc ₹${c.maxDiscount.toLocaleString('en-IN')}`,
+                          c.endDate && `Till ${new Date(c.endDate).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })}`,
+                        ].filter(Boolean).join(' · ')}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <CouponCopyButton code={c.code} />
+              </div>
             </div>
-            <CouponCopyButton code={c.code} />
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     )
   }

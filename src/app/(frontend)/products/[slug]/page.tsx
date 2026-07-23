@@ -348,6 +348,13 @@ export default async function ProductDetailPage({
                 </p>
               </div>
 
+              {/* Available Offers — Amazon style */}
+              <OffersSection
+                coupons={productCoupons}
+                variant="banner"
+                className="mt-4"
+              />
+
               {/* Rating + Purchase count */}
               {serializableProduct.rating.count > 0 && (
                 <div className="mt-3 flex items-center gap-3 text-xs text-neutral-500">
@@ -389,15 +396,8 @@ export default async function ProductDetailPage({
                       {feat}
                     </span>
                   ))}
-                </div>
-              )}
-
-              {/* Available Offers */}
-              <OffersSection
-                coupons={productCoupons}
-                variant="banner"
-                className="mt-4"
-              />
+              </div>
+            )}
 
               {/* Size, stitching, CTAs */}
               <div className="mt-7">
