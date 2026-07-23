@@ -206,9 +206,15 @@ export function ProductFilters({
       */
 
       // Apply context filters from the page (e.g. fabric=silk on /category/silk)
+      // Merge into existing params so page context is never lost
       if (contextFilter) {
         Object.entries(contextFilter).forEach(([key, value]) => {
-          if (!currentParams.has(key)) currentParams.set(key, value)
+          const existing = currentParams.get(key)
+          if (!existing) {
+            currentParams.set(key, value)
+          } else if (!existing.split(',').includes(value)) {
+            currentParams.set(key, existing + ',' + value)
+          }
         })
       }
 
@@ -218,8 +224,8 @@ export function ProductFilters({
         const data = await res.json()
         if (isMountedRef.current) setFacets(data)
       }
-    } catch {
-      // silently fail
+    } catch (err) {
+      console.error('[ProductFilters] fetchFacets failed:', err)
     }
   }, [searchParams, contextFilter])
 
