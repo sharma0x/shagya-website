@@ -22,7 +22,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Customer not found' }, { status: 404 })
     }
 
-    const customer = customers.docs[0] as Record<string, unknown>
+    const customer = customers.docs[0] as unknown as Record<string, unknown>
 
     return NextResponse.json({
       name: customer.name || '',

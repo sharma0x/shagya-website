@@ -47,7 +47,7 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [megaMenuOpen, setMegaMenuOpen] = useState(false)
-  const megaMenuTimeout = useRef<ReturnType<typeof setTimeout>>()
+  const megaMenuTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
   const megaMenuRef = useRef<HTMLDivElement>(null)
   const [announcement, setAnnouncement] = useState<{
     enabled: boolean
@@ -113,11 +113,11 @@ export function Header() {
   }, [megaMenuOpen])
 
   useEffect(() => {
-    return () => clearTimeout(megaMenuTimeout.current)
+    return () => { if (megaMenuTimeout.current) clearTimeout(megaMenuTimeout.current) }
   }, [])
 
   const openMegaMenu = () => {
-    clearTimeout(megaMenuTimeout.current)
+    if (megaMenuTimeout.current) clearTimeout(megaMenuTimeout.current)
     setMegaMenuOpen(true)
   }
 

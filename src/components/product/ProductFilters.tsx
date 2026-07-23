@@ -196,7 +196,7 @@ export function ProductFilters({
   const [showAllColors, setShowAllColors] = useState(false)
   const isMountedRef = useRef(true)
   const initialRender = useRef(true)
-  const navigateRef = useRef<ReturnType<typeof setTimeout>>()
+  const navigateRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const sliderResetKey = useRef(0)
 
   // --- Facet fetching ---
@@ -258,12 +258,12 @@ export function ProductFilters({
       initialRender.current = false
       return
     }
-    clearTimeout(navigateRef.current)
+    if (navigateRef.current) clearTimeout(navigateRef.current)
     navigateRef.current = setTimeout(() => {
       const query = buildQuery()
       router.push(query ? `${pathname}?${query}` : pathname)
     }, 300)
-    return () => clearTimeout(navigateRef.current)
+    return () => { if (navigateRef.current) clearTimeout(navigateRef.current) }
   }, [fabric, weave, pattern, onSale, minDiscount, minPrice, maxPrice, city, color])
 
   // --- Handlers ---
