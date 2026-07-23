@@ -457,6 +457,22 @@ export function ProductFilters({
         onToggle={() => toggleSection('fabric')}
       >
         <div className="space-y-2">
+          {contextFilter?.fabric && (
+            <div className="flex items-center gap-2 rounded-md border border-brand-200 bg-brand-50 px-2.5 py-1.5">
+              <input
+                type="checkbox"
+                checked
+                readOnly
+                className="accent-brand-600 h-3.5 w-3.5 rounded border-neutral-300 opacity-40"
+              />
+              <span className="font-body cursor-default select-none text-xs font-medium text-brand-700">
+                {FABRIC_OPTIONS.find((o) => o.value === contextFilter.fabric)?.label || contextFilter.fabric}
+              </span>
+              <span className="font-body ml-auto text-[10px] text-brand-500">
+                current
+              </span>
+            </div>
+          )}
           {FABRIC_OPTIONS
             .filter((opt) =>
               !facets ||
@@ -492,6 +508,22 @@ export function ProductFilters({
         onToggle={() => toggleSection('weave')}
       >
         <div className="max-h-48 space-y-2 overflow-y-auto">
+          {contextFilter?.weave && (
+            <div className="flex items-center gap-2 rounded-md border border-brand-200 bg-brand-50 px-2.5 py-1.5">
+              <input
+                type="checkbox"
+                checked
+                readOnly
+                className="accent-brand-600 h-3.5 w-3.5 rounded border-neutral-300 opacity-40"
+              />
+              <span className="font-body cursor-default select-none text-xs font-medium text-brand-700">
+                {WEAVE_OPTIONS.find((o) => o.value === contextFilter.weave)?.label || contextFilter.weave}
+              </span>
+              <span className="font-body ml-auto text-[10px] text-brand-500">
+                current
+              </span>
+            </div>
+          )}
           {WEAVE_OPTIONS
             .filter((opt) =>
               !facets ||

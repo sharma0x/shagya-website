@@ -109,6 +109,7 @@ export async function GET(request: Request): Promise<NextResponse> {
     const productsRes = await payload.find({
       collection: 'products',
       where: baseWhere,
+      depth: 0,
       limit: 0,
       pagination: false,
     })
@@ -139,10 +140,10 @@ export async function GET(request: Request): Promise<NextResponse> {
 
     const [fabricProducts, weaveProducts, patternProducts, cityProducts] =
       await Promise.all([
-        payload.find({ collection: 'products', where: fabricWhere, limit: 500, pagination: false }),
-        payload.find({ collection: 'products', where: weaveWhere, limit: 500, pagination: false }),
-        payload.find({ collection: 'products', where: patternWhere, limit: 500, pagination: false }),
-        payload.find({ collection: 'products', where: cityBaseWhere, limit: 500, pagination: false }),
+        payload.find({ collection: 'products', where: fabricWhere, depth: 0, limit: 500, pagination: false }),
+        payload.find({ collection: 'products', where: weaveWhere, depth: 0, limit: 500, pagination: false }),
+        payload.find({ collection: 'products', where: patternWhere, depth: 0, limit: 500, pagination: false }),
+        payload.find({ collection: 'products', where: cityBaseWhere, depth: 0, limit: 500, pagination: false }),
       ])
 
     for (const p of fabricProducts.docs as any[]) {
@@ -182,6 +183,7 @@ export async function GET(request: Request): Promise<NextResponse> {
       const variantsRes = await payload.find({
         collection: 'variants',
         where: { product: { in: productIds.slice(0, 500) } },
+        depth: 0,
         limit: 1000,
         pagination: false,
       })
