@@ -1,21 +1,20 @@
-# CLO-65: Admin — access rules + conflicting API route removal
+# CLO-65: Add stock urgency indicators on product cards
 
 ## Overview
 
-Fixed the coupon form relationship pickers not showing categories/products in the admin panel.
+Premium fashion sites show "Only 3 left" type indicators without discounting. For handloom products where each piece is unique, stock urgency is truthful (limited weaves, small batches) and drives legitimate purchase urgency.
 
-## Access rules added
-6 collections were missing access blocks (Payload default = deny all):
-- Categories (read: public, write: admin)
-- Collections (read: public, write: admin)
-- Forms (read: public, create: public, write: admin)
-- Navigation (read: public, write: admin)
-- Orders (read: authenticated, create: public, write: admin)
-- Variants (read: public, write: admin)
+## Acceptance Criteria
 
-## Conflicting routes removed
-Custom `/api/products/route.ts` and `/api/categories/route.ts` only exported GET — blocked Payload admin POST/PATCH/DELETE requests. Payload's own catch-all now handles all methods. Zero frontend impact confirmed.
+- [ ] "Only X left" badge on product cards when stock ≤ 5
+- [ ] "Just 1 left" badge for last piece (different color)
+- [ ] Data from product inventory/variant stock
+- [ ] Badge: small, amber/rose colored, positioned below price or above image
+- [ ] Only shows when stock is genuinely low — never fake scarcity
+- [ ] Connected to actual inventory from Payload variants
 
-## Files
-- src/collections/Categories.ts, Collections.ts, Forms.ts, Navigation.ts, Orders.ts, Variants.ts
-- Deleted: src/app/api/products/route.ts, src/app/api/categories/route.ts, src/app/api/__tests__/products.test.ts
+## Technical Notes
+
+- Update: `src/components/product/ProductCard.tsx` — add stock badge
+- Read from `product.variants[].stock` or `product.totalStock`
+- Badge style: text-xs, subtle background, no flashy animations

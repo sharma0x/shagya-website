@@ -1,13 +1,20 @@
-# CLO-64: Landing page — CMS content blocks merge
+# CLO-64: Fix footer — payment icons and polish
 
 ## Overview
 
-Restored textImage CMS content blocks from develop branch into the current landing page. Admin can now configure custom text+image sections via the Payload Home page layout, which appear between testimonials and the weave video.
+The footer uses emoji placeholders for payment methods (`['💳', '📱', '🏦', '⚡']`). This looks unprofessional and damages trust at a critical conversion touchpoint. Replace with proper SVG payment method icons.
 
-## Changes
-- Added LexicalRenderer component (inline) for rendering Payload rich text
-- CMS textImage blocks render with optional image position (left/right), gold rule separator, heading, and body content
-- Existing dynamic sections preserved: New Arrivals, Trending Now, Best Offers, Shop by Occasion, Instagram Gallery, Testimonials, Weave Video, Newsletter + Promise
+## Acceptance Criteria
 
-## Files
-- src/app/(frontend)/page.tsx
+- [ ] Replace emoji payment icons with proper SVG/logos
+- [ ] Show actual payment methods: Visa, Mastercard, UPI, Net Banking, Razorpay
+- [ ] Add trust badges: SSL Secure, ISO certified (if applicable)
+- [ ] Add "Made in India" badge or weaving cluster map
+- [ ] Add social media icons (Instagram, Facebook, YouTube, Pinterest)
+- [ ] Responsive: icons scale down on mobile
+
+## Technical Notes
+
+- Update: `src/components/layout/Footer.tsx` — replace payment emoji span
+- Use simple inline SVGs or icon components
+- Add `src/components/ui/PaymentIcons.tsx` for reuse

@@ -1,15 +1,21 @@
-# CLO-66: Fix production build TypeScript errors
+# CLO-66: Add PWA support and app install prompt
 
 ## Overview
 
-Resolved 3 TypeScript errors preventing production build.
+Both Bewakoof and Suta push their mobile app experience. Shayga has no PWA manifest, no service worker, and no app install prompt. A basic PWA setup improves mobile experience and enables offline browsing.
 
-## Fixes
-- Header.tsx: useRef<ReturnType<typeof setTimeout>> required initial value — changed to useRef<T | null>(null) with null checks on clearTimeout
-- ProductFilters.tsx: same useRef/clearTimeout issue with navigateRef
-- customers/me/route.ts: Customer to Record<string, unknown> type narrowing — fixed via unknown intermediate cast
+## Acceptance Criteria
 
-## Files
-- src/components/layout/Header.tsx
-- src/components/product/ProductFilters.tsx
-- src/app/api/customers/me/route.ts
+- [ ] `public/manifest.json` — app name, icons, theme color
+- [ ] Simple service worker for offline caching
+- [ ] PWA icons: 192x192 and 512x512
+- [ ] Theme color: brand wine/maroon
+- [ ] Minimal install prompt (no aggressive banner)
+- [ ] Cache strategy: network-first for pages, cache-first for static assets
+
+## Technical Notes
+
+- New file: `public/manifest.json`
+- New file: `public/sw.js` or `src/app/sw.ts`
+- Update: `src/app/(frontend)/layout.tsx` — add `<link rel="manifest">` + `<meta name="theme-color">`
+- Update: `next.config.ts` — add appropriate headers
