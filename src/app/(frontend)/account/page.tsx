@@ -5,6 +5,7 @@ import { useSession, signOut } from '@/lib/auth-client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { OffersSection } from '@/components/coupons/OffersSection'
+import { cn } from '@/lib/utils'
 import {
   User,
   ShoppingBag,
@@ -19,6 +20,7 @@ import {
   Check,
   X,
   TicketPercent,
+  ChevronDown,
 } from 'lucide-react'
 import { PhoneInput } from '@/components/ui/phone-input'
 
@@ -56,6 +58,7 @@ export default function AccountDashboardPage() {
   const [editPhone, setEditPhone] = useState('')
   const [saving, setSaving] = useState(false)
   const [coupons, setCoupons] = useState<any[]>([])
+  const [offersExpanded, setOffersExpanded] = useState(true)
 
   useEffect(() => {
     if (isPending) return
@@ -259,79 +262,94 @@ export default function AccountDashboardPage() {
         </div>
 
         {/* Dashboard Hub Navigation Cards */}
-        <div className="mb-10 grid grid-cols-1 gap-6 md:grid-cols-3">
+        <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
           <Link
             href="/account/orders"
-            className="hover:border-brand-300 group rounded-2xl border border-neutral-100 bg-white p-6 shadow-xs transition-all"
+            className="hover:border-brand-300 group rounded-2xl border border-neutral-100 bg-white p-5 shadow-xs transition-all"
           >
-            <div className="bg-brand-50 text-brand-700 mb-4 flex h-10 w-10 items-center justify-center rounded-xl transition-transform group-hover:scale-110">
-              <ShoppingBag className="h-5 w-5" />
+            <div className="bg-brand-50 text-brand-700 mb-3 flex h-9 w-9 items-center justify-center rounded-xl transition-transform group-hover:scale-110">
+              <ShoppingBag className="h-4.5 w-4.5" />
             </div>
             <h3 className="font-display flex items-center justify-between text-sm font-semibold text-neutral-900">
               Order History
               <ArrowRight className="group-hover:text-brand-600 h-4 w-4 text-neutral-300 transition-colors" />
             </h3>
-            <p className="font-body mt-2 text-xs text-neutral-500">
-              Review and track your saree dispatches, invoices, and details.
+            <p className="font-body mt-1.5 text-[11px] text-neutral-500">
+              Track your saree dispatches, invoices, and details.
             </p>
           </Link>
 
           <Link
             href="/account/addresses"
-            className="hover:border-brand-300 group rounded-2xl border border-neutral-100 bg-white p-6 shadow-xs transition-all"
+            className="hover:border-brand-300 group rounded-2xl border border-neutral-100 bg-white p-5 shadow-xs transition-all"
           >
-            <div className="bg-brand-50 text-brand-700 mb-4 flex h-10 w-10 items-center justify-center rounded-xl transition-transform group-hover:scale-110">
-              <MapPin className="h-5 w-5" />
+            <div className="bg-brand-50 text-brand-700 mb-3 flex h-9 w-9 items-center justify-center rounded-xl transition-transform group-hover:scale-110">
+              <MapPin className="h-4.5 w-4.5" />
             </div>
             <h3 className="font-display flex items-center justify-between text-sm font-semibold text-neutral-900">
               Addresses
               <ArrowRight className="group-hover:text-brand-600 h-4 w-4 text-neutral-300 transition-colors" />
             </h3>
-            <p className="font-body mt-2 text-xs text-neutral-500">
-              Manage your delivery addresses and set defaults for quick
-              checkout.
+            <p className="font-body mt-1.5 text-[11px] text-neutral-500">
+              Manage your delivery addresses and defaults.
             </p>
           </Link>
 
           <Link
             href="/wishlist"
-            className="hover:border-brand-300 group rounded-2xl border border-neutral-100 bg-white p-6 shadow-xs transition-all"
+            className="hover:border-brand-300 group rounded-2xl border border-neutral-100 bg-white p-5 shadow-xs transition-all"
           >
-            <div className="bg-brand-50 text-brand-700 mb-4 flex h-10 w-10 items-center justify-center rounded-xl transition-transform group-hover:scale-110">
-              <Heart className="h-5 w-5" />
+            <div className="bg-brand-50 text-brand-700 mb-3 flex h-9 w-9 items-center justify-center rounded-xl transition-transform group-hover:scale-110">
+              <Heart className="h-4.5 w-4.5" />
             </div>
             <h3 className="font-display flex items-center justify-between text-sm font-semibold text-neutral-900">
               Wishlist
               <ArrowRight className="group-hover:text-brand-600 h-4 w-4 text-neutral-300 transition-colors" />
             </h3>
-            <p className="font-body mt-2 text-xs text-neutral-500">
-              Save your favorite handlooms, weaves, and patterns for later.
+            <p className="font-body mt-1.5 text-[11px] text-neutral-500">
+              Save handlooms, weaves, and patterns for later.
             </p>
           </Link>
-
-          <button
-            className="hover:border-brand-300 group rounded-2xl border border-neutral-100 bg-white p-6 shadow-xs transition-all text-left"
-          >
-            <div className="bg-brand-50 text-brand-700 mb-4 flex h-10 w-10 items-center justify-center rounded-xl transition-transform group-hover:scale-110">
-              <TicketPercent className="h-5 w-5" />
-            </div>
-            <h3 className="font-display flex items-center justify-between text-sm font-semibold text-neutral-900">
-              My Offers
-              <span className="font-body text-xs text-brand-600">
-                {coupons.length}
-              </span>
-            </h3>
-            <p className="font-body mt-2 text-xs text-neutral-500">
-              Active coupons, discounts, and special offers for your account.
-            </p>
-          </button>
         </div>
 
-        <OffersSection
-          coupons={coupons}
-          variant="card"
-          className="mb-10"
-        />
+        {/* Collapsible My Offers */}
+        {coupons.length > 0 && (
+          <div className="mb-8 overflow-hidden rounded-2xl border border-neutral-100 bg-white shadow-xs">
+            <button
+              onClick={() => setOffersExpanded(!offersExpanded)}
+              className="flex w-full items-center justify-between px-5 py-3.5 text-left hover:bg-neutral-50 transition-colors"
+            >
+              <div className="flex items-center gap-2.5">
+                <div className="bg-brand-50 text-brand-700 flex h-8 w-8 items-center justify-center rounded-lg">
+                  <TicketPercent className="h-4 w-4" />
+                </div>
+                <div>
+                  <span className="font-display text-sm font-semibold text-neutral-900">
+                    My Offers
+                  </span>
+                  <span className="font-body ml-1.5 text-xs text-brand-600">
+                    ({coupons.length} active)
+                  </span>
+                </div>
+              </div>
+              <ChevronDown
+                className={cn(
+                  'h-4 w-4 text-neutral-400 transition-transform',
+                  offersExpanded && 'rotate-180',
+                )}
+              />
+            </button>
+
+            {offersExpanded && (
+              <div className="border-t border-neutral-100 px-5 pb-5 pt-4">
+                <OffersSection
+                  coupons={coupons}
+                  variant="card"
+                />
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
           {/* Recent Orders Section */}
