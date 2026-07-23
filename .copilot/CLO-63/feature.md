@@ -1,20 +1,30 @@
-# CLO-63: Redesign trust features section
+# CLO-63: Filters — global counts + data-driven rendering
 
 ## Overview
 
-The current trust bar crams 5 features into a narrow row with tiny text and generic icons. Suta and premium brands use clean, spacious cards with clear icon + headline + description — much more trustworthy and premium.
+Filter facets overhaul: all filter sections now show global product counts (not scoped to page context), and only render options that have actual products in the database.
 
-## Acceptance Criteria
+## Data-driven rendering
+- Fabric/Weave/Pattern: options are filtered to only show items present in facets API response (count > 0) OR currently selected
+- Color: renders from facets.colors API instead of static 52-color palette
+- City: already data-driven from facets API
+- Zero-count items hidden across all filter types
+- Null facets guard: show all options while API loads
 
-- [ ] Replace cramped trust bar with 4 prominent cards
-- [ ] Each card: icon + bold headline + short description
-- [ ] Layout: 4-card grid on desktop, 2x2 on mobile
-- [ ] Cards: Handloom Verified, Free Shipping, Easy Returns, Secure Payment
-- [ ] Use `section` with proper `aria-label` for accessibility
-- [ ] Clean bounding box cards with slight shadow and rounded corners
+## Global counts
+- Facets no longer scoped to page context
+- On /category/silk: fabric checkboxes show ALL fabrics with products (not just silk)
+- Weave/pattern/city/color counts are still scoped to active filters
+- Remove contextFilter merging from fetchFacets
 
-## Technical Notes
+## Performance
+- depth:0 on all facets queries (10x faster — skip expensive LATERAL JOINs)
+- Color variants seeded for 5 silk products
 
-- Update: `src/app/(frontend)/page.tsx` — replace trust bar JSX
-- Icons: `lucide-react` (ShieldCheck, Truck, RotateCcw, Lock)
-- Match existing card styling pattern (rounded-xl, border, shadow-xs)
+## Navigation signal
+- Fabric/weave deselection on context pages sends empty URL param to prevent slug default re-applying
+
+## Files
+- src/components/product/ProductFilters.tsx
+- src/app/api/products/facets/route.ts
+- src/app/(frontend)/category/[slug]/page.tsx
