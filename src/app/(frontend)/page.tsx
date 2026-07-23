@@ -35,6 +35,31 @@ import { WeaveVideo } from '@/components/homepage/WeaveVideo'
 const ph = (w: number, h: number, bg: string, fg: string, text: string) =>
   `https://placehold.co/${w}x${h}/${bg}/${fg}?text=${encodeURIComponent(text)}&font=lora`
 
+function LexicalRenderer({ content }: { content: any }) {
+  if (!content || !content.root || !Array.isArray(content.root.children)) {
+    return null
+  }
+  return (
+    <div className="font-body space-y-4 text-[1.125rem] leading-relaxed text-neutral-600">
+      {content.root.children.map((block: any, idx: number) => {
+        if (block.type === 'paragraph' && Array.isArray(block.children)) {
+          return (
+            <p key={idx}>
+              {block.children.map((node: any, nIdx: number) => {
+                if (node.type === 'text') {
+                  return node.text
+                }
+                return null
+              })}
+            </p>
+          )
+        }
+        return null
+      })}
+    </div>
+  )
+}
+
 function ImagePanel({
   src,
   alt,
@@ -849,6 +874,55 @@ export default async function HomePage({ searchParams }: Props) {
           </div>
         </div>
       </section>
+
+      {/* ═══════════════════════════════════════════════════
+          CMS CONTENT BLOCKS — Admin-configurable sections
+          from the Home page layout in Payload
+          ═══════════════════════════════════════════════════ */}
+      {homeDoc?.content?.map((block: any, idx: number) => {
+        if (block.blockType === 'textImage') {
+          const imgSrc =
+            block.image && typeof block.image === 'object'
+              ? block.image.sizes?.card?.url || block.image.url
+              : ph(800, 800, 'a97e34', 'fff8ec', 'Craft Story')
+
+          return (
+            <section
+              key={`cms-${idx}`}
+              className="scroll-reveal border-y border-neutral-200 bg-neutral-50"
+            >
+              <div className="container-page grid items-center gap-8 py-16 sm:gap-12 sm:py-24 md:py-32 lg:grid-cols-12 lg:gap-20">
+                <div
+                  className={`lg:col-span-5 ${block.imagePosition === 'right' ? 'lg:order-2' : ''}`}
+                >
+                  <ImagePanel
+                    src={imgSrc}
+                    alt={block.heading}
+                    className="aspect-square w-full shadow-lg"
+                  />
+                </div>
+                <div
+                  className={`lg:col-span-7 ${block.imagePosition === 'right' ? 'lg:order-1' : ''}`}
+                >
+                  <div
+                    className="bg-gold-400 mb-5 h-px w-12"
+                    aria-hidden="true"
+                  />
+                  <h2 className="text-headline font-display font-semibold tracking-tight text-neutral-900">
+                    {block.heading}
+                  </h2>
+                  <div className="mt-6 max-w-[58ch]">
+                    {block.body ? (
+                      <LexicalRenderer content={block.body} />
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+            </section>
+          )
+        }
+        return null
+      })}
 
       {/* ═══════════════════════════════════════════════════
           SECTION 9.5: WEAVE VIDEO — The maker story
