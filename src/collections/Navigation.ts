@@ -6,6 +6,12 @@ export const Navigation: CollectionConfig = {
     useAsTitle: 'name',
     group: 'Content',
   },
+  access: {
+    read: () => true,
+    create: ({ req: { user } }) => Boolean(user),
+    update: ({ req: { user } }) => Boolean(user),
+    delete: ({ req: { user } }) => Boolean(user),
+  },
   fields: [
     {
       name: 'name',

@@ -6,6 +6,12 @@ export const Forms: CollectionConfig = {
     useAsTitle: 'title',
     group: 'Content',
   },
+  access: {
+    read: () => true,
+    create: () => true,
+    update: ({ req: { user } }) => Boolean(user),
+    delete: ({ req: { user } }) => Boolean(user),
+  },
   hooks: {
     beforeChange: [
       ({ data, operation }) => {

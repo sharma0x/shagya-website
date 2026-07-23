@@ -117,6 +117,15 @@ export const Orders: CollectionConfig = {
     useAsTitle: 'orderNumber',
     group: 'Orders',
   },
+  access: {
+    read: ({ req: { user } }) => {
+      if (user) return true
+      return { id: { exists: false } }
+    },
+    create: () => true,
+    update: ({ req: { user } }) => Boolean(user),
+    delete: ({ req: { user } }) => Boolean(user),
+  },
   hooks: {
     afterOperation: [
       async ({ operation, result, req }) => {
