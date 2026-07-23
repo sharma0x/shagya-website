@@ -196,13 +196,13 @@ export function Header() {
                     onMouseEnter={() => openMegaMenu()}
                     onMouseLeave={() => closeMegaMenu()}
                   >
-                    <div className="flex gap-8 rounded-xl border border-neutral-200 bg-white p-6 shadow-xl">
+                    <div className="flex gap-12 rounded-xl border border-neutral-200 bg-white px-10 py-6 shadow-xl min-w-[600px]">
                       {/* Fabric column */}
                       <div>
                         <h4 className="font-display mb-3 text-[10px] font-semibold tracking-wider text-neutral-400 uppercase">
                           Fabric
                         </h4>
-                        <div className="grid grid-cols-3 gap-x-5 gap-y-1">
+                        <div className="grid grid-cols-3 gap-x-6 gap-y-1.5">
                           {megaMenu.fabrics.map((f) => (
                             <Link
                               key={f.value}
@@ -221,7 +221,7 @@ export function Header() {
                         <h4 className="font-display mb-3 text-[10px] font-semibold tracking-wider text-neutral-400 uppercase">
                           Weave
                         </h4>
-                        <div className="grid grid-cols-3 gap-x-5 gap-y-1">
+                        <div className="grid grid-cols-3 gap-x-6 gap-y-1.5">
                           {megaMenu.weaves.map((w) => (
                             <Link
                               key={w.value}
@@ -237,7 +237,7 @@ export function Header() {
                     </div>
 
                     {/* Shop All */}
-                    <div className="border-t border-neutral-100 px-6 py-3 -mt-px bg-neutral-50 rounded-b-xl">
+                    <div className="border-t border-neutral-100 px-10 py-3 -mt-px bg-neutral-50 rounded-b-xl">
                       <Link
                         href="/category/all"
                         onClick={() => setMegaMenuOpen(false)}
