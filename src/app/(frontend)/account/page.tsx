@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useSession, signOut } from '@/lib/auth-client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { OffersSection } from '@/components/coupons/OffersSection'
 import {
   User,
   ShoppingBag,
@@ -17,6 +18,7 @@ import {
   Pencil,
   Check,
   X,
+  TicketPercent,
 } from 'lucide-react'
 import { PhoneInput } from '@/components/ui/phone-input'
 
@@ -53,6 +55,7 @@ export default function AccountDashboardPage() {
   const [editName, setEditName] = useState('')
   const [editPhone, setEditPhone] = useState('')
   const [saving, setSaving] = useState(false)
+  const [coupons, setCoupons] = useState<any[]>([])
 
   useEffect(() => {
     if (isPending) return
@@ -63,10 +66,11 @@ export default function AccountDashboardPage() {
 
     async function loadDashboardData() {
       try {
-        const [ordersRes, addrRes, profileRes] = await Promise.all([
+        const [ordersRes, addrRes, profileRes, couponsRes] = await Promise.all([
           fetch('/api/orders'),
           fetch('/api/addresses'),
           fetch('/api/customers/me'),
+          fetch('/api/coupons/available'),
         ])
 
         if (ordersRes.ok) {
@@ -87,6 +91,11 @@ export default function AccountDashboardPage() {
           setProfileEmail(pData.email || sessionData?.user?.email || '')
         } else {
           setProfileEmail(sessionData?.user?.email || '')
+        }
+
+        if (couponsRes.ok) {
+          const cData = await couponsRes.json()
+          setCoupons(cData.coupons || [])
         }
       } catch (err) {
         console.error('Failed to load dashboard data', err)
@@ -299,7 +308,30 @@ export default function AccountDashboardPage() {
               Save your favorite handlooms, weaves, and patterns for later.
             </p>
           </Link>
+
+          <button
+            className="hover:border-brand-300 group rounded-2xl border border-neutral-100 bg-white p-6 shadow-xs transition-all text-left"
+          >
+            <div className="bg-brand-50 text-brand-700 mb-4 flex h-10 w-10 items-center justify-center rounded-xl transition-transform group-hover:scale-110">
+              <TicketPercent className="h-5 w-5" />
+            </div>
+            <h3 className="font-display flex items-center justify-between text-sm font-semibold text-neutral-900">
+              My Offers
+              <span className="font-body text-xs text-brand-600">
+                {coupons.length}
+              </span>
+            </h3>
+            <p className="font-body mt-2 text-xs text-neutral-500">
+              Active coupons, discounts, and special offers for your account.
+            </p>
+          </button>
         </div>
+
+        <OffersSection
+          coupons={coupons}
+          variant="card"
+          className="mb-10"
+        />
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
           {/* Recent Orders Section */}

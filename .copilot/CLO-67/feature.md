@@ -1,28 +1,36 @@
-# CLO-67: Email OTP Authentication — Replace Phone OTP
+# CLO-67: Coupons/Offers — product banners, account My Offers, checkout cards
 
 ## Overview
 
-Replaced phone-based SMS OTP with Better Auth's native `emailOTP` plugin for login and guest checkout. Removed password-based login and magic link plugin. Single unified flow for both guest checkout and returning user login.
+Show applicable coupons across the user journey with distinct UI styles per page.
 
-## What was built
+## Product detail page (Amazon banner style)
+- Dashed-border compact cards between features and ProductActions
+- Shows coupons that apply to this product via productsConditions or categoriesConditions
+- "Copy" button for each coupon code
 
-- Added `emailOTP` plugin to Better Auth (`src/lib/auth.ts`)
-- Added `sendOTPEmail()` to `src/email/send.ts` — sends OTP via Resend/Mailpit
-- Unified `POST /api/auth/sign-in/email-otp` for both login + guest checkout
-- Removed `phoneNumber`, `magicLink` plugins from auth.ts
-- Removed `phoneNumberClient` from auth-client.ts
-- Login page simplified to OTP-only form + Google sign-in
-- GuestCheckout uses email OTP instead of phone SMS
-- Reviews auto-approved with verified purchase check + spam filter
-- Auto-save shipping address to customer account from orders
+## Account page (Nykaa stacked card style)
+- "My Offers" dashboard card with count badge in the hub section
+- Full-width detailed cards below the hub with code, discount, conditions, expiry, copy button
+- Shows all available coupons for the customer (customersConditions + public)
 
-## Files Changed
+## Checkout page (Nykaa card style)
+- Replaced old chip UI with OffersSection card variant
+- Switched from /api/coupons/active to /api/coupons/available
 
-- `src/lib/auth.ts` — emailOTP plugin, removed phoneNumber + magicLink
-- `src/lib/auth-client.ts` — removed phoneNumberClient
-- `src/email/send.ts` — added sendOTPEmail()
-- `src/app/(frontend)/account/login/page.tsx` — OTP-only login form
-- `src/components/checkout/GuestCheckout.tsx` — email OTP flow
-- `src/app/api/reviews/route.ts` — create reviews (auto-approved)
-- `src/app/api/razorpay/verify/route.ts` — save address for guests
-- Deleted: `verify-email-otp/route.ts`, `send-otp/route.ts`, `lib/otp.ts`
+## New API: GET /api/coupons/available
+- Filters by productId, product categories, active status, date range
+- Returns slim coupon data (id, code, description, type, value, conditions, dates)
+
+## Validate API enforcement
+- Now accepts cart productIds in request body
+- Enforces productsConditions: coupon only valid if cart contains matching products
+- Enforces categoriesConditions: coupon only valid if cart products are in allowed categories
+
+## Files
+- src/app/api/coupons/available/route.ts (new)
+- src/components/coupons/OffersSection.tsx (new)
+- src/app/(frontend)/products/[slug]/page.tsx
+- src/app/(frontend)/account/page.tsx
+- src/app/(frontend)/checkout/page.tsx
+- src/app/api/coupons/validate/route.ts

@@ -14,6 +14,7 @@ import { getRelatedProducts, getProductsByIds } from '@/lib/recommendations'
 import { getRecentlyViewedIds } from '@/lib/recently-viewed'
 import { TrackRecentlyViewed } from '@/components/product/TrackRecentlyViewed'
 import { Rating } from '@/components/ui/Rating'
+import { OffersSection } from '@/components/coupons/OffersSection'
 import type { SiteSetting } from '@/payload-types'
 
 type Props = {
@@ -186,6 +187,14 @@ export default async function ProductDetailPage({
   const recentlyViewedProducts = filteredRecentIds.length > 0
     ? await getProductsByIds(filteredRecentIds)
     : []
+
+  // Fetch applicable coupons for this product
+  const couponsRes = await fetch(
+    `${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'}/api/coupons/available?productId=${product.id}`,
+    { cache: 'no-store' },
+  )
+  const couponsData = couponsRes.ok ? await couponsRes.json() : { coupons: [] }
+  const productCoupons = couponsData.coupons || []
 
   const imageUrls =
     product.gallery && product.gallery.length > 0
@@ -382,6 +391,13 @@ export default async function ProductDetailPage({
                   ))}
                 </div>
               )}
+
+              {/* Available Offers */}
+              <OffersSection
+                coupons={productCoupons}
+                variant="banner"
+                className="mt-4"
+              />
 
               {/* Size, stitching, CTAs */}
               <div className="mt-7">

@@ -10,7 +10,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { code, subtotal } = await request.json()
+    const { code, subtotal, productIds } = await request.json()
     if (!code) {
       return NextResponse.json({ valid: false, error: 'Please enter a coupon code' }, { status: 400 })
     }
@@ -74,6 +74,53 @@ export async function POST(request: Request) {
       )
       if (!allowedIds.includes(customerId)) {
         return NextResponse.json({ valid: false, error: 'This coupon is not available for your account' }, { status: 200 })
+      }
+    }
+
+    // Check product / category conditions
+    const hasProductConditions = coupon.productsConditions?.length > 0
+    const hasCategoryConditions = coupon.categoriesConditions?.length > 0
+
+    if ((hasProductConditions || hasCategoryConditions) && productIds?.length) {
+      const conditionProductIds = hasProductConditions
+        ? coupon.productsConditions.map((p: any) =>
+            typeof p === 'object' ? p.id : p,
+          )
+        : []
+
+      const conditionCategoryIds = hasCategoryConditions
+        ? coupon.categoriesConditions.map((c: any) =>
+            typeof c === 'object' ? c.id : c,
+          )
+        : []
+
+      // Check if ANY product in cart matches product conditions
+      const productMatch = hasProductConditions
+        ? productIds.some((pid: string) => conditionProductIds.includes(pid))
+        : false
+
+      // Check if ANY product in cart belongs to allowed categories
+      let categoryMatch = false
+      if (hasCategoryConditions && !productMatch) {
+        const cartProducts = await payload.find({
+          collection: 'products',
+          where: { id: { in: productIds.map((id: string) => Number(id)) } },
+          depth: 0,
+          limit: 100,
+          pagination: false,
+        })
+        categoryMatch = (cartProducts.docs as any[]).some((p: any) => {
+          const catIds =
+            p.categories?.map((c: any) => (typeof c === 'object' ? c.id : c)) || []
+          return catIds.some((cid: string) => conditionCategoryIds.includes(cid))
+        })
+      }
+
+      if (!productMatch && !categoryMatch) {
+        return NextResponse.json(
+          { valid: false, error: 'This coupon does not apply to items in your cart' },
+          { status: 200 },
+        )
       }
     }
 

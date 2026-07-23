@@ -8,6 +8,7 @@ import { useCart } from '@/lib/store/cart'
 import { loadRazorpayScript } from '@/lib/razorpay'
 import { AddressForm, type AddressFormData } from '@/components/address/AddressForm'
 import { GuestCheckout } from '@/components/checkout/GuestCheckout'
+import { OffersSection } from '@/components/coupons/OffersSection'
 import {
   ArrowLeft,
   Check,
@@ -204,7 +205,7 @@ export default function CheckoutPage() {
 
   // Fetch pre-populated coupons
   useEffect(() => {
-    fetch('/api/coupons/active')
+    fetch('/api/coupons/available')
       .then((r) => r.ok ? r.json() : null)
       .then((d) => { if (d) setActiveCoupons(d.coupons || []) })
       .catch(() => {})
@@ -1012,43 +1013,10 @@ export default function CheckoutPage() {
                       <p className="text-[10px] text-red-500">{couponError}</p>
                     )}
                     {activeCoupons.length > 0 && (
-                      <div className="space-y-1.5">
-                        <p className="font-body text-[10px] text-neutral-400">
-                          Available offers:
-                        </p>
-                        {activeCoupons.map((c: any) => (
-                          <button
-                            key={c.id}
-                            type="button"
-                            onClick={() => {
-                              setCouponCode(c.code)
-                              setCouponError('')
-                            }}
-                            className="flex w-full items-center justify-between rounded-lg border border-dashed border-neutral-200 px-2.5 py-1.5 transition-colors hover:border-neutral-300 hover:bg-neutral-50"
-                          >
-                            <div className="text-left">
-                              <span className="font-display text-[11px] font-semibold text-neutral-700">
-                                {c.code}
-                              </span>
-                              {c.description && (
-                                <span className="font-body ml-1.5 text-[10px] text-neutral-400">
-                                  — {c.description}
-                                </span>
-                              )}
-                            </div>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                navigator.clipboard.writeText(c.code)
-                              }}
-                              className="font-display text-[10px] font-semibold text-neutral-400 hover:text-neutral-600"
-                            >
-                              Copy
-                            </button>
-                          </button>
-                        ))}
-                      </div>
+                      <OffersSection
+                        coupons={activeCoupons}
+                        variant="card"
+                      />
                     )}
                   </div>
                 )}
