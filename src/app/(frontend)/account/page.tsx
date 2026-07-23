@@ -4,8 +4,6 @@ import { useEffect, useState } from 'react'
 import { useSession, signOut } from '@/lib/auth-client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { OffersSection } from '@/components/coupons/OffersSection'
-import { cn } from '@/lib/utils'
 import {
   User,
   ShoppingBag,
@@ -20,7 +18,6 @@ import {
   Check,
   X,
   TicketPercent,
-  ChevronDown,
 } from 'lucide-react'
 import { PhoneInput } from '@/components/ui/phone-input'
 
@@ -57,8 +54,6 @@ export default function AccountDashboardPage() {
   const [editName, setEditName] = useState('')
   const [editPhone, setEditPhone] = useState('')
   const [saving, setSaving] = useState(false)
-  const [coupons, setCoupons] = useState<any[]>([])
-  const [offersExpanded, setOffersExpanded] = useState(true)
 
   useEffect(() => {
     if (isPending) return
@@ -69,11 +64,10 @@ export default function AccountDashboardPage() {
 
     async function loadDashboardData() {
       try {
-        const [ordersRes, addrRes, profileRes, couponsRes] = await Promise.all([
+        const [ordersRes, addrRes, profileRes] = await Promise.all([
           fetch('/api/orders'),
           fetch('/api/addresses'),
           fetch('/api/customers/me'),
-          fetch('/api/coupons/available'),
         ])
 
         if (ordersRes.ok) {
@@ -94,11 +88,6 @@ export default function AccountDashboardPage() {
           setProfileEmail(pData.email || sessionData?.user?.email || '')
         } else {
           setProfileEmail(sessionData?.user?.email || '')
-        }
-
-        if (couponsRes.ok) {
-          const cData = await couponsRes.json()
-          setCoupons(cData.coupons || [])
         }
       } catch (err) {
         console.error('Failed to load dashboard data', err)
@@ -262,7 +251,7 @@ export default function AccountDashboardPage() {
         </div>
 
         {/* Dashboard Hub Navigation Cards */}
-        <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="mb-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Link
             href="/account/orders"
             className="hover:border-brand-300 group rounded-2xl border border-neutral-100 bg-white p-5 shadow-xs transition-all"
@@ -275,7 +264,7 @@ export default function AccountDashboardPage() {
               <ArrowRight className="group-hover:text-brand-600 h-4 w-4 text-neutral-300 transition-colors" />
             </h3>
             <p className="font-body mt-1.5 text-[11px] text-neutral-500">
-              Track your saree dispatches, invoices, and details.
+              Track your saree dispatches and invoices.
             </p>
           </Link>
 
@@ -291,7 +280,7 @@ export default function AccountDashboardPage() {
               <ArrowRight className="group-hover:text-brand-600 h-4 w-4 text-neutral-300 transition-colors" />
             </h3>
             <p className="font-body mt-1.5 text-[11px] text-neutral-500">
-              Manage your delivery addresses and defaults.
+              Manage delivery addresses and defaults.
             </p>
           </Link>
 
@@ -307,49 +296,26 @@ export default function AccountDashboardPage() {
               <ArrowRight className="group-hover:text-brand-600 h-4 w-4 text-neutral-300 transition-colors" />
             </h3>
             <p className="font-body mt-1.5 text-[11px] text-neutral-500">
-              Save handlooms, weaves, and patterns for later.
+              Save handlooms and weaves for later.
+            </p>
+          </Link>
+
+          <Link
+            href="/account/offers"
+            className="hover:border-brand-300 group rounded-2xl border border-neutral-100 bg-white p-5 shadow-xs transition-all"
+          >
+            <div className="bg-brand-50 text-brand-700 mb-3 flex h-9 w-9 items-center justify-center rounded-xl transition-transform group-hover:scale-110">
+              <TicketPercent className="h-4.5 w-4.5" />
+            </div>
+            <h3 className="font-display flex items-center justify-between text-sm font-semibold text-neutral-900">
+              My Offers
+              <ArrowRight className="group-hover:text-brand-600 h-4 w-4 text-neutral-300 transition-colors" />
+            </h3>
+            <p className="font-body mt-1.5 text-[11px] text-neutral-500">
+              Active coupons and special discounts for you.
             </p>
           </Link>
         </div>
-
-        {/* Collapsible My Offers */}
-        {coupons.length > 0 && (
-          <div className="mb-8 overflow-hidden rounded-2xl border border-neutral-100 bg-white shadow-xs">
-            <button
-              onClick={() => setOffersExpanded(!offersExpanded)}
-              className="flex w-full items-center justify-between px-5 py-3.5 text-left hover:bg-neutral-50 transition-colors"
-            >
-              <div className="flex items-center gap-2.5">
-                <div className="bg-brand-50 text-brand-700 flex h-8 w-8 items-center justify-center rounded-lg">
-                  <TicketPercent className="h-4 w-4" />
-                </div>
-                <div>
-                  <span className="font-display text-sm font-semibold text-neutral-900">
-                    My Offers
-                  </span>
-                  <span className="font-body ml-1.5 text-xs text-brand-600">
-                    ({coupons.length} active)
-                  </span>
-                </div>
-              </div>
-              <ChevronDown
-                className={cn(
-                  'h-4 w-4 text-neutral-400 transition-transform',
-                  offersExpanded && 'rotate-180',
-                )}
-              />
-            </button>
-
-            {offersExpanded && (
-              <div className="border-t border-neutral-100 px-5 pb-5 pt-4">
-                <OffersSection
-                  coupons={coupons}
-                  variant="card"
-                />
-              </div>
-            )}
-          </div>
-        )}
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
           {/* Recent Orders Section */}
