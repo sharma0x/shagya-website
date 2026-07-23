@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useSession } from '@/lib/auth-client'
+import { useCart } from '@/lib/store/cart'
 import { ArrowLeft, ShoppingBag, Trash2, Heart, Loader2 } from 'lucide-react'
 
 interface WishlistItem {
@@ -28,6 +29,7 @@ const ph = (w: number, h: number, bg: string, fg: string, text: string) =>
 export default function WishlistPage() {
   const router = useRouter()
   const { data: sessionData, isPending } = useSession()
+  const { addItem } = useCart()
 
   const [items, setItems] = useState<WishlistItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -79,34 +81,29 @@ export default function WishlistPage() {
   const handleMoveToCart = async (product: WishlistItem['product']) => {
     setActionLoading(String(product.id))
     try {
-      // 1. Fetch current cart to merge (don't replace existing items)
-      const cartRes = await fetch('/api/cart')
-      const cartData = cartRes.ok ? await cartRes.json() : null
-      const existingItems = cartData?.items || []
+      // Add to cart via store (updates Zustand + localStorage + server)
+      addItem(
+        {
+          id: Number(product.id),
+          name: product.name,
+          slug: product.slug || '',
+          basePrice: product.basePrice || 0,
+          compareAtPrice: product.compareAtPrice ?? undefined,
+          gallery: product.gallery as any,
+          fabric: product.fabric || '',
+          weave: product.weave || '',
+        },
+        1,
+      )
 
-      const newItem = {
-        product: product.id,
-        quantity: 1,
-        unitPrice: product.basePrice,
-      }
-
-      // 2. Send merged cart (append to existing)
-      const res = await fetch('/api/cart', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items: [...existingItems, newItem] }),
-      })
-
-      if (!res.ok) throw new Error('Failed to add to cart')
-
-      // 3. Remove from wishlist
+      // Remove from wishlist
       await fetch('/api/wishlist', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ productId: String(product.id) }),
       })
 
-      // 4. Remove from local state
+      // Remove from local state
       setItems(items.filter((item) => item.product.id !== product.id))
     } catch (err) {
       console.error(err)
