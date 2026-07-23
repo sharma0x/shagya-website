@@ -1,20 +1,26 @@
-# CLO-61: Add fabric and weave education section
+# CLO-61: Navbar mega menu — Sarees dropdown
 
 ## Overview
 
-For a site selling handloom sarees, there's nothing that explains the different weaves. A dedicated education section ("What is Banarasi?", "What makes Chanderi special?") converts curious browsers into informed buyers who understand the value.
+Replaced 6 hardcoded nav links (Silk, Cotton, Handloom, Designer, Collections, Journal) with a clean 3-link nav: Sarees (mega dropdown), Collections, Journal. Handloom and Designer were broken links showing all products.
 
-## Acceptance Criteria
+## Desktop
+- Hover triggers dropdown with Fabric (9 items, 3-col grid) + Weave (11 items, 3-col grid)
+- "Shop All Sarees" link at bottom
+- Animated brand-wine underline on hover
+- Clicking "Sarees" navigates to /category/all
+- Dropdown flattened into navbar (no gap/card/shadow)
 
-- [ ] "The Weave Library" section on homepage
-- [ ] 4-5 weave types as cards: Banarasi, Chanderi, Kanchipuram, Tussar, Maheshwari
-- [ ] Each card: weave name + origin + distinctive feature + link to category
-- [ ] Clean, educational tone — not salesy
-- [ ] CMS-driven — weave descriptions from Payload
-- [ ] Mobile: horizontal scrollable strip
+## Mobile
+- "Sarees" is a direct link to /category/all — no dropdown needed
+- Collections and Journal as regular links
 
-## Technical Notes
+## Other
+- Footer: removed Handloom/Designer, added Banarasi/Kanchipuram/All Sarees
+- Header test updated
+- Wider dropdown (min-w-600px, px-10, gap-12)
 
-- New file: `src/components/homepage/WeaveLibrary.tsx`
-- Update: `src/app/(frontend)/page.tsx` — add section
-- Data: new Payload collection or hardcoded weave descriptions
+## Files
+- src/components/layout/Header.tsx
+- src/components/layout/Footer.tsx
+- src/components/layout/Header.test.tsx
