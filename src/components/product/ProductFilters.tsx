@@ -453,8 +453,9 @@ export function ProductFilters({
         <div className="space-y-2">
           {FABRIC_OPTIONS
             .filter((opt) =>
+              !facets ||
               fabric.includes(opt.value) ||
-              facets?.fabric?.some((f) => f.value === opt.value),
+              facets.fabric?.some((f) => f.value === opt.value),
             )
             .map((opt) => (
             <label
@@ -487,8 +488,9 @@ export function ProductFilters({
         <div className="max-h-48 space-y-2 overflow-y-auto">
           {WEAVE_OPTIONS
             .filter((opt) =>
+              !facets ||
               weave.includes(opt.value) ||
-              facets?.weave?.some((f) => f.value === opt.value),
+              facets.weave?.some((f) => f.value === opt.value),
             )
             .map((opt) => (
             <label
@@ -521,8 +523,9 @@ export function ProductFilters({
         <div className="space-y-2">
           {PATTERN_OPTIONS
             .filter((opt) =>
+              !facets ||
               pattern.includes(opt.value) ||
-              facets?.pattern?.some((f) => f.value === opt.value),
+              facets.pattern?.some((f) => f.value === opt.value),
             )
             .map((opt) => (
             <label
@@ -555,8 +558,9 @@ export function ProductFilters({
         {(() => {
           const visibleColors = COLOR_PALETTE.filter(
             (c) =>
+              !facets ||
               color.includes(c.value) ||
-              facets?.colors?.some((f) => f.value === c.value),
+              facets.colors?.some((f) => f.value === c.value),
           )
           const showCount = visibleColors.length
           return (
