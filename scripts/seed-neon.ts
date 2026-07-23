@@ -69,7 +69,7 @@ async function main() {
   }
 
   // ─── Create Variants ──────────────────────────────────
-  const colors = ['Red', 'Blue', 'Green', 'Gold', 'Maroon', 'Pink', 'Black', 'White', 'Yellow', 'Purple']
+  const colors = ['red', 'blue', 'green', 'gold', 'pink', 'black', 'white', 'purple', 'orange', 'ivory']
   for (const pid of productIds) {
     const existingVariants = await payload.find({ collection: 'variants', where: { product: { equals: pid } }, limit: 1 })
     if (existingVariants.docs.length > 0) {
@@ -90,7 +90,7 @@ async function main() {
           size: 'Free',
           stock: 5 + Math.floor(Math.random() * 15),
           sku: `SKU-${pid}-${col.toUpperCase()}`,
-        },
+        } as any,
       })
     }
     console.log(`  Created ${numVariants} variants for product ${pid}`)

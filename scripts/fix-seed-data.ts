@@ -83,7 +83,7 @@ async function main() {
         await payload.update({
           collection: 'variants',
           id: v.id,
-          data: { color: newColor },
+          data: { color: newColor } as any,
         })
         console.log(`  Variant ${v.id} (product ${pid}): "${currentColor}" → "${newColor}"`)
       }
