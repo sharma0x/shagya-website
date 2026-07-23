@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Search, ShoppingCart, Heart, User, Menu, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Logo } from '@/components/layout/Logo'
@@ -11,11 +11,34 @@ import { CartDrawer } from '@/components/cart/CartDrawer'
 import { SearchCommand } from '@/components/search/SearchCommand'
 import { useSession } from '@/lib/auth-client'
 
-const navLinks = [
-  { label: 'Silk', href: '/category/silk' },
-  { label: 'Cotton', href: '/category/cotton' },
-  { label: 'Handloom', href: '/category/handloom' },
-  { label: 'Designer', href: '/category/designer' },
+const megaMenu = {
+  fabrics: [
+    { label: 'Silk', value: 'silk' },
+    { label: 'Cotton', value: 'cotton' },
+    { label: 'Linen', value: 'linen' },
+    { label: 'Georgette', value: 'georgette' },
+    { label: 'Chiffon', value: 'chiffon' },
+    { label: 'Crepe', value: 'crepe' },
+    { label: 'Velvet', value: 'velvet' },
+    { label: 'Net', value: 'net' },
+    { label: 'Blend', value: 'blend' },
+  ],
+  weaves: [
+    { label: 'Banarasi', value: 'banarasi' },
+    { label: 'Kanchipuram', value: 'kanchipuram' },
+    { label: 'Bandhani', value: 'bandhani' },
+    { label: 'Patola', value: 'patola' },
+    { label: 'Kalamkari', value: 'kalamkari' },
+    { label: 'Ikat', value: 'ikkat' },
+    { label: 'Paithani', value: 'paithani' },
+    { label: 'Maheshwari', value: 'maheshwari' },
+    { label: 'Chanderi', value: 'chanderi' },
+    { label: 'Tant', value: 'tant' },
+    { label: 'Baluchari', value: 'baluchari' },
+  ],
+}
+
+const topNav = [
   { label: 'Collections', href: '/collections' },
   { label: 'Journal', href: '/blog' },
 ]
@@ -23,6 +46,9 @@ const navLinks = [
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const [megaMenuOpen, setMegaMenuOpen] = useState(false)
+  const megaMenuTimeout = useRef<ReturnType<typeof setTimeout>>()
+  const megaMenuRef = useRef<HTMLDivElement>(null)
   const [announcement, setAnnouncement] = useState<{
     enabled: boolean
     text: string
@@ -74,6 +100,31 @@ export function Header() {
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [openSearch])
 
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (megaMenuRef.current && !megaMenuRef.current.contains(e.target as Node)) {
+        setMegaMenuOpen(false)
+      }
+    }
+    if (megaMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [megaMenuOpen])
+
+  useEffect(() => {
+    return () => clearTimeout(megaMenuTimeout.current)
+  }, [])
+
+  const openMegaMenu = () => {
+    clearTimeout(megaMenuTimeout.current)
+    setMegaMenuOpen(true)
+  }
+
+  const closeMegaMenu = () => {
+    megaMenuTimeout.current = setTimeout(() => setMegaMenuOpen(false), 150)
+  }
+
   const cartCount = items.reduce((acc, item) => acc + item.quantity, 0)
 
   return (
@@ -124,7 +175,82 @@ export function Header() {
 
             {/* Desktop Nav */}
             <nav className="hidden items-center gap-1 lg:flex">
-              {navLinks.map((link) => (
+              {/* Sarees with mega dropdown */}
+              <div
+                ref={megaMenuRef}
+                className="relative"
+                onMouseEnter={() => openMegaMenu()}
+                onMouseLeave={() => closeMegaMenu()}
+              >
+                <Link
+                  href="/category/all"
+                  className="font-body hover:text-brand-700 after:bg-brand-600 relative flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium text-neutral-600 transition-colors after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:transition-transform hover:after:scale-x-100"
+                >
+                  Sarees
+                  <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m6 9 6 6 6-6" /></svg>
+                </Link>
+
+                {megaMenuOpen && (
+                  <div
+                    className="absolute left-0 top-full pt-2 z-50"
+                    onMouseEnter={() => openMegaMenu()}
+                    onMouseLeave={() => closeMegaMenu()}
+                  >
+                    <div className="flex gap-8 rounded-xl border border-neutral-200 bg-white p-6 shadow-xl">
+                      {/* Fabric column */}
+                      <div>
+                        <h4 className="font-display mb-3 text-[10px] font-semibold tracking-wider text-neutral-400 uppercase">
+                          Fabric
+                        </h4>
+                        <div className="grid grid-cols-3 gap-x-5 gap-y-1">
+                          {megaMenu.fabrics.map((f) => (
+                            <Link
+                              key={f.value}
+                              href={`/category/${f.value}`}
+                              onClick={() => setMegaMenuOpen(false)}
+                              className="font-body hover:text-brand-700 whitespace-nowrap rounded px-1.5 py-0.5 text-sm text-neutral-600 transition-colors hover:bg-neutral-50"
+                            >
+                              {f.label}
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Weave column */}
+                      <div>
+                        <h4 className="font-display mb-3 text-[10px] font-semibold tracking-wider text-neutral-400 uppercase">
+                          Weave
+                        </h4>
+                        <div className="grid grid-cols-3 gap-x-5 gap-y-1">
+                          {megaMenu.weaves.map((w) => (
+                            <Link
+                              key={w.value}
+                              href={`/category/${w.value}`}
+                              onClick={() => setMegaMenuOpen(false)}
+                              className="font-body hover:text-brand-700 whitespace-nowrap rounded px-1.5 py-0.5 text-sm text-neutral-600 transition-colors hover:bg-neutral-50"
+                            >
+                              {w.label}
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Shop All */}
+                    <div className="border-t border-neutral-100 px-6 py-3 -mt-px bg-neutral-50 rounded-b-xl">
+                      <Link
+                        href="/category/all"
+                        onClick={() => setMegaMenuOpen(false)}
+                        className="font-display text-brand-600 hover:text-brand-700 text-xs font-semibold tracking-wider uppercase transition-colors"
+                      >
+                        Shop All Sarees →
+                      </Link>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {topNav.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
@@ -224,7 +350,20 @@ export function Header() {
 
         <nav className="flex-1 overflow-y-auto px-6 py-4 sm:px-8">
           <div className="flex flex-col">
-            {navLinks.map((link, i) => (
+            <Link
+              href="/category/all"
+              className={cn(
+                'font-body hover:text-brand-700 border-b border-neutral-100 py-3 text-lg font-medium text-neutral-700 transition-colors',
+                mobileMenuOpen
+                  ? 'translate-y-0 opacity-100'
+                  : 'translate-y-4 opacity-0',
+              )}
+              style={{ transitionDelay: '150ms' }}
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Sarees
+            </Link>
+            {topNav.map((link, i) => (
               <Link
                 key={link.href}
                 href={link.href}
@@ -234,7 +373,7 @@ export function Header() {
                     ? 'translate-y-0 opacity-100'
                     : 'translate-y-4 opacity-0',
                 )}
-                style={{ transitionDelay: `${i * 50 + 100}ms` }}
+                style={{ transitionDelay: `${(i + 1) * 50 + 100}ms` }}
                 onClick={() => setMobileMenuOpen(false)}
               >
                 {link.label}
@@ -249,7 +388,7 @@ export function Header() {
                 ? 'translate-y-0 opacity-100'
                 : 'translate-y-4 opacity-0',
             )}
-            style={{ transitionDelay: `${navLinks.length * 50 + 100}ms` }}
+            style={{ transitionDelay: `${(topNav.length + 1) * 50 + 100}ms` }}
           >
             <Link
               href="/account"

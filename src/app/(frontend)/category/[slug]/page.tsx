@@ -52,32 +52,26 @@ function buildWhere(sParams: FilterParams, slug: string) {
     status: { equals: 'published' },
   }
 
-  // Category-based filters from slug
-  if (FABRICS.includes(slug.toLowerCase())) {
-    where.fabric = { equals: slug.toLowerCase() }
-  } else if (WEAVES.includes(slug.toLowerCase())) {
-    where.weave = { equals: slug.toLowerCase() }
-  }
+  // Category-based filters from slug — URL params override, slug is initial default only
+  const hasFabricParam = sParams.fabric !== undefined
+  const hasWeaveParam = sParams.weave !== undefined
 
-  // Multi-select filters from query params (merge with slug-based)
-  const fabricFilter = getCommaParam(sParams, 'fabric')
-  if (fabricFilter.length > 0) {
-    if (FABRICS.includes(slug.toLowerCase())) {
-      const merged = [...new Set([slug.toLowerCase(), ...fabricFilter])]
-      where.fabric = { in: merged }
-    } else {
+  if (hasFabricParam) {
+    const fabricFilter = getCommaParam(sParams, 'fabric')
+    if (fabricFilter.length > 0) {
       where.fabric = { in: fabricFilter }
     }
+  } else if (FABRICS.includes(slug.toLowerCase())) {
+    where.fabric = { equals: slug.toLowerCase() }
   }
 
-  const weaveFilter = getCommaParam(sParams, 'weave')
-  if (weaveFilter.length > 0) {
-    if (WEAVES.includes(slug.toLowerCase())) {
-      const merged = [...new Set([slug.toLowerCase(), ...weaveFilter])]
-      where.weave = { in: merged }
-    } else {
+  if (hasWeaveParam) {
+    const weaveFilter = getCommaParam(sParams, 'weave')
+    if (weaveFilter.length > 0) {
       where.weave = { in: weaveFilter }
     }
+  } else if (WEAVES.includes(slug.toLowerCase())) {
+    where.weave = { equals: slug.toLowerCase() }
   }
 
   const patternFilter = getCommaParam(sParams, 'pattern')
@@ -192,37 +186,15 @@ export default async function CategoryPage({
   let title = slug.charAt(0).toUpperCase() + slug.slice(1)
   let description = `Discover our curated selection of ${slug} sarees.`
 
-  const fabrics = [
-    'silk',
-    'cotton',
-    'linen',
-    'georgette',
-    'chiffon',
-    'crepe',
-    'velvet',
-    'net',
-    'blend',
-  ]
-  const weavesList = [
-    'banarasi',
-    'kanchipuram',
-    'bandhani',
-    'patola',
-    'kalamkari',
-    'ikkat',
-    'paithani',
-    'maheshwari',
-    'chanderi',
-    'tant',
-    'baluchari',
-  ]
-
-  if (fabrics.includes(slug.toLowerCase())) {
+  if (FABRICS.includes(slug.toLowerCase())) {
     title = `${title} Sarees`
     description = `Premium handwoven pure ${slug} sarees, sourced directly from weaver clusters across India.`
-  } else if (weavesList.includes(slug.toLowerCase())) {
+  } else if (WEAVES.includes(slug.toLowerCase())) {
     title = `${title} Weave`
     description = `Authentic, heritage ${slug} sarees featuring signature regional patterns and pure zari borders.`
+  } else if (slug.toLowerCase() === 'all') {
+    title = 'All Sarees'
+    description = 'Browse our complete collection of handcrafted Indian sarees.'
   } else {
     const catDoc = await payload.find({
       collection: 'categories',

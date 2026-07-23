@@ -54,10 +54,7 @@ describe('Header', () => {
   it('renders all desktop nav links', () => {
     render(<Header />)
     const expected = [
-      { name: 'Silk', href: '/category/silk' },
-      { name: 'Cotton', href: '/category/cotton' },
-      { name: 'Handloom', href: '/category/handloom' },
-      { name: 'Designer', href: '/category/designer' },
+      { name: 'Sarees', href: '/category/all' },
       { name: 'Collections', href: '/collections' },
       { name: 'Journal', href: '/blog' },
     ]

@@ -168,9 +168,17 @@ export function ProductFilters({
     size: false,
   })
 
-  // Filter state from URL
-  const [fabric, setFabric] = useState<string[]>(getParamArray('fabric'))
-  const [weave, setWeave] = useState<string[]>(getParamArray('weave'))
+  // Filter state from URL — initialize from contextFilter if no URL param
+  const [fabric, setFabric] = useState<string[]>(() => {
+    const params = getParamArray('fabric')
+    if (params.length > 0) return params
+    return contextFilter?.fabric ? [contextFilter.fabric] : []
+  })
+  const [weave, setWeave] = useState<string[]>(() => {
+    const params = getParamArray('weave')
+    if (params.length > 0) return params
+    return contextFilter?.weave ? [contextFilter.weave] : []
+  })
   const [pattern, setPattern] = useState<string[]>(getParamArray('pattern'))
   const [minPrice, setMinPrice] = useState(searchParams.get('minPrice') || '')
   const [maxPrice, setMaxPrice] = useState(searchParams.get('maxPrice') || '')
@@ -204,19 +212,6 @@ export function ProductFilters({
       /* Temporarily disabled
       currentParams.delete('size')
       */
-
-      // Apply context filters from the page (e.g. fabric=silk on /category/silk)
-      // Merge into existing params so page context is never lost
-      if (contextFilter) {
-        Object.entries(contextFilter).forEach(([key, value]) => {
-          const existing = currentParams.get(key)
-          if (!existing) {
-            currentParams.set(key, value)
-          } else if (!existing.split(',').includes(value)) {
-            currentParams.set(key, existing + ',' + value)
-          }
-        })
-      }
 
       const qs = currentParams.toString()
       const res = await fetch(`/api/products/facets?${qs}`)
@@ -293,7 +288,9 @@ export function ProductFilters({
   const buildQuery = useCallback(() => {
     const params = new URLSearchParams()
     if (fabric.length) params.set('fabric', fabric.join(','))
+    else if (contextFilter?.fabric && !initialRender.current) params.set('fabric', '')
     if (weave.length) params.set('weave', weave.join(','))
+    else if (contextFilter?.weave && !initialRender.current) params.set('weave', '')
     if (pattern.length) params.set('pattern', pattern.join(','))
     if (minPrice) params.set('minPrice', minPrice)
     if (maxPrice) params.set('maxPrice', maxPrice)
@@ -310,7 +307,7 @@ export function ProductFilters({
     return params.toString()
   }, [
     fabric, weave, pattern, minPrice, maxPrice, onSale,
-    minDiscount, city, color, /* size, */ searchParams,
+    minDiscount, city, color, contextFilter, /* size, */ searchParams,
   ])
 
   const handleClearAll = () => {
@@ -457,22 +454,6 @@ export function ProductFilters({
         onToggle={() => toggleSection('fabric')}
       >
         <div className="space-y-2">
-          {contextFilter?.fabric && (
-            <div className="flex items-center gap-2 rounded-md border border-brand-200 bg-brand-50 px-2.5 py-1.5">
-              <input
-                type="checkbox"
-                checked
-                readOnly
-                className="accent-brand-600 h-3.5 w-3.5 rounded border-neutral-300 opacity-40"
-              />
-              <span className="font-body cursor-default select-none text-xs font-medium text-brand-700">
-                {FABRIC_OPTIONS.find((o) => o.value === contextFilter.fabric)?.label || contextFilter.fabric}
-              </span>
-              <span className="font-body ml-auto text-[10px] text-brand-500">
-                current
-              </span>
-            </div>
-          )}
           {FABRIC_OPTIONS
             .filter((opt) =>
               !facets ||
@@ -508,22 +489,6 @@ export function ProductFilters({
         onToggle={() => toggleSection('weave')}
       >
         <div className="max-h-48 space-y-2 overflow-y-auto">
-          {contextFilter?.weave && (
-            <div className="flex items-center gap-2 rounded-md border border-brand-200 bg-brand-50 px-2.5 py-1.5">
-              <input
-                type="checkbox"
-                checked
-                readOnly
-                className="accent-brand-600 h-3.5 w-3.5 rounded border-neutral-300 opacity-40"
-              />
-              <span className="font-body cursor-default select-none text-xs font-medium text-brand-700">
-                {WEAVE_OPTIONS.find((o) => o.value === contextFilter.weave)?.label || contextFilter.weave}
-              </span>
-              <span className="font-body ml-auto text-[10px] text-brand-500">
-                current
-              </span>
-            </div>
-          )}
           {WEAVE_OPTIONS
             .filter((opt) =>
               !facets ||
