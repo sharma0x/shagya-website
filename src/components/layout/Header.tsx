@@ -192,11 +192,12 @@ export function Header() {
 
                 {megaMenuOpen && (
                   <div
-                    className="absolute left-0 top-full pt-2 z-50"
+                    className="absolute left-0 top-full z-50"
                     onMouseEnter={() => openMegaMenu()}
                     onMouseLeave={() => closeMegaMenu()}
                   >
-                    <div className="flex gap-12 rounded-xl border border-neutral-200 bg-white px-10 py-6 shadow-xl min-w-[600px]">
+                    <div className="overflow-hidden border-x border-b border-neutral-100 bg-white shadow-lg min-w-[600px]">
+                    <div className="flex gap-12 px-10 py-6">
                       {/* Fabric column */}
                       <div>
                         <h4 className="font-display mb-3 text-[10px] font-semibold tracking-wider text-brand-600 uppercase">
@@ -237,7 +238,7 @@ export function Header() {
                     </div>
 
                     {/* Shop All */}
-                    <div className="border-t border-neutral-100 px-10 py-3 -mt-px bg-neutral-50 rounded-b-xl">
+                    <div className="border-t border-neutral-100 px-10 py-3">
                       <Link
                         href="/category/all"
                         onClick={() => setMegaMenuOpen(false)}
@@ -245,6 +246,7 @@ export function Header() {
                       >
                         Shop All Sarees →
                       </Link>
+                    </div>
                     </div>
                   </div>
                 )}
