@@ -1,21 +1,64 @@
-# CLO-60: Add quick-wishlist button on product cards
+# CLO-60: Product card redesign + data-driven filter rendering
 
 ## Overview
 
-Both Bewakoof and Suta have hover quick-wishlist buttons on product cards. Shayga cards are plain links with no interactive elements. Adding a heart icon overlay increases wishlist engagement and provides instant feedback.
+Redesigned product cards with 3D hover effects, gallery carousels, and removed action buttons. Converted all filter sections to render only options with actual products via facets API data.
 
-## Acceptance Criteria
+## Product Card Changes
 
-- [ ] Wishlist heart icon overlay on product card hover (desktop)
-- [ ] Wishlist icon always visible on mobile cards (top-right corner)
-- [ ] Click toggles wishlist state (filled heart = in wishlist)
-- [ ] Toast notification: "Added to wishlist" / "Removed from wishlist"
-- [ ] Unauthenticated users: click redirects to login
-- [ ] Works on homepage, category pages, search results
-- [ ] Consistent with ProductCard component (CLO-52)
+### Removed
+- Add to Cart and Buy Now buttons from all variants (grid, compact, row)
+- `showActions` prop and `ProductCardActions` import
+- `StockBadge` unused import
 
-## Technical Notes
+### Added
+- 3D hover effect: `perspective:800px`, `rotateY(-2deg) translateZ(8px)`, shadow lift
+- Hover-based gallery carousel: dot indicators appear on card hover, hover a dot to preview that gallery image (no auto-play)
+- All gallery images pre-rendered with opacity transition, first image gets `priority`
+- Mouse leave resets to first gallery image
+- Component converted to `'use client'` with `useState` for active image index
 
-- Update: `src/components/product/ProductCard.tsx` — add wishlist button
-- Reuse: existing `POST /api/wishlist` and `DELETE /api/wishlist` endpoints
-- Use `useSession()` for auth state check
+### Adjusted
+- Image aspect ratio: `4/5` → `3/4` (reduced height)
+- Name font: `text-[10px]` → `text-[11px]`
+- Price min-height: `34px` → `28px`
+- Added `bg-white` info panel with `rounded-b-lg`
+- Grid gaps increased: `gap-x-2 gap-y-4` → `gap-x-3 gap-y-5` on mobile
+- `rounded-md` → `rounded-lg` on image container
+- Removed `[transform-style:preserve-3d]` that broke wishlist z-index
+
+### Fixes
+- WishlistButton: added `cursor-pointer`
+- Hydration warning: added `suppressHydrationWarning` to body
+
+## Filter Data-Driven Rendering
+
+### Fabric / Weave / Pattern
+Each section now filters options to only show:
+- Options present in the facets API response (have actual products in current scope), OR
+- Options currently selected by the user
+
+```tsx
+FABRIC_OPTIONS
+  .filter(opt => fabric.includes(opt.value) || facets?.fabric?.some(f => f.value === opt.value))
+  .map(...)
+```
+
+### Color
+Replaced static `COLOR_PALETTE` rendering with facets-driven list. Colors are filtered to only those appearing in `facets.colors` or currently selected. Hex values still sourced from `COLOR_PALETTE`.
+
+### Effect
+On `/category/silk`, only fabrics/weaves/patterns/colors that have silk products appear. Zero-count items are never rendered.
+
+## Files Changed
+
+| File | Change |
+|---|---|
+| `src/components/product/ProductCard.tsx` | Major refactor: client component, gallery carousel, 3D hover, removed actions |
+| `src/components/product/WishlistButton.tsx` | Added cursor-pointer |
+| `src/components/product/ProductFilters.tsx` | Data-driven filter rendering for fabric/weave/pattern/color |
+| `src/components/product/RecommendationRow.tsx` | Removed showActions prop |
+| `src/app/(frontend)/category/[slug]/page.tsx` | Removed showActions, increased grid gaps |
+| `src/app/(frontend)/collections/[slug]/page.tsx` | Removed showActions, increased grid gaps |
+| `src/app/(frontend)/search/page.tsx` | Increased grid gaps |
+| `src/app/(frontend)/layout.tsx` | Added suppressHydrationWarning |

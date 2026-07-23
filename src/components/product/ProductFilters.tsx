@@ -451,7 +451,12 @@ export function ProductFilters({
         onToggle={() => toggleSection('fabric')}
       >
         <div className="space-y-2">
-          {FABRIC_OPTIONS.map((opt) => (
+          {FABRIC_OPTIONS
+            .filter((opt) =>
+              fabric.includes(opt.value) ||
+              facets?.fabric?.some((f) => f.value === opt.value),
+            )
+            .map((opt) => (
             <label
               key={opt.value}
               className="flex cursor-pointer items-center gap-2"
@@ -480,7 +485,12 @@ export function ProductFilters({
         onToggle={() => toggleSection('weave')}
       >
         <div className="max-h-48 space-y-2 overflow-y-auto">
-          {WEAVE_OPTIONS.map((opt) => (
+          {WEAVE_OPTIONS
+            .filter((opt) =>
+              weave.includes(opt.value) ||
+              facets?.weave?.some((f) => f.value === opt.value),
+            )
+            .map((opt) => (
             <label
               key={opt.value}
               className="flex cursor-pointer items-center gap-2"
@@ -509,7 +519,12 @@ export function ProductFilters({
         onToggle={() => toggleSection('pattern')}
       >
         <div className="space-y-2">
-          {PATTERN_OPTIONS.map((opt) => (
+          {PATTERN_OPTIONS
+            .filter((opt) =>
+              pattern.includes(opt.value) ||
+              facets?.pattern?.some((f) => f.value === opt.value),
+            )
+            .map((opt) => (
             <label
               key={opt.value}
               className="flex cursor-pointer items-center gap-2"
@@ -537,49 +552,63 @@ export function ProductFilters({
         expanded={expandedSections.color}
         onToggle={() => toggleSection('color')}
       >
-        <div className="grid grid-cols-3 gap-1.5">
-          {COLOR_PALETTE.slice(
-            0,
-            showAllColors ? COLOR_PALETTE.length : INITIAL_COLOR_COUNT,
-          ).map((c) => {
-            const isSelected = color.includes(c.value)
-            return (
-              <button
-                key={c.value}
-                type="button"
-                onClick={() =>
-                  toggleArrayFilter(c.value, color, setColor)
-                }
-                className={cn(
-                  'flex items-center gap-1.5 rounded-lg px-1.5 py-1 text-left transition-colors',
-                  isSelected
-                    ? 'bg-brand-50 ring-1 ring-brand-300'
-                    : 'hover:bg-neutral-50',
-                )}
-              >
-                <span
-                  className="h-3.5 w-3.5 shrink-0 rounded-sm border border-neutral-200"
-                  style={{ backgroundColor: c.hex }}
-                  title={c.label}
-                />
-                <span className="font-body truncate text-[10px] leading-tight text-neutral-700">
-                  {c.label}
-                </span>
-              </button>
-            )
-          })}
-        </div>
-        {COLOR_PALETTE.length > INITIAL_COLOR_COUNT && (
-          <button
-            type="button"
-            onClick={() => setShowAllColors(!showAllColors)}
-            className="font-display text-brand-600 hover:text-brand-700 mt-2 text-[10px] font-semibold tracking-wider uppercase transition-colors"
-          >
-            {showAllColors
-              ? 'Show Less'
-              : `Show All ${COLOR_PALETTE.length} Colors`}
-          </button>
-        )}
+        {(() => {
+          const visibleColors = COLOR_PALETTE.filter(
+            (c) =>
+              color.includes(c.value) ||
+              facets?.colors?.some((f) => f.value === c.value),
+          )
+          const showCount = visibleColors.length
+          return (
+            <>
+              <div className="grid grid-cols-3 gap-1.5">
+                {visibleColors
+                  .slice(
+                    0,
+                    showAllColors ? showCount : INITIAL_COLOR_COUNT,
+                  )
+                  .map((c) => {
+                    const isSelected = color.includes(c.value)
+                    return (
+                      <button
+                        key={c.value}
+                        type="button"
+                        onClick={() =>
+                          toggleArrayFilter(c.value, color, setColor)
+                        }
+                        className={cn(
+                          'flex items-center gap-1.5 rounded-lg px-1.5 py-1 text-left transition-colors',
+                          isSelected
+                            ? 'bg-brand-50 ring-1 ring-brand-300'
+                            : 'hover:bg-neutral-50',
+                        )}
+                      >
+                        <span
+                          className="h-3.5 w-3.5 shrink-0 rounded-sm border border-neutral-200"
+                          style={{ backgroundColor: c.hex }}
+                          title={c.label}
+                        />
+                        <span className="font-body truncate text-[10px] leading-tight text-neutral-700">
+                          {c.label}
+                        </span>
+                      </button>
+                    )
+                  })}
+              </div>
+              {showCount > INITIAL_COLOR_COUNT && (
+                <button
+                  type="button"
+                  onClick={() => setShowAllColors(!showAllColors)}
+                  className="font-display text-brand-600 hover:text-brand-700 mt-2 text-[10px] font-semibold tracking-wider uppercase transition-colors"
+                >
+                  {showAllColors
+                    ? 'Show Less'
+                    : `Show All ${showCount} Colors`}
+                </button>
+              )}
+            </>
+          )
+        })()}
       </Section>
 
       {/* Temporarily disabled — Size filter
