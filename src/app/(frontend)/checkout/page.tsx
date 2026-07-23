@@ -211,6 +211,29 @@ export default function CheckoutPage() {
       .catch(() => {})
   }, [])
 
+  const handleApplyCouponWithCode = async (code: string) => {
+    setCouponError('')
+    setCouponLoading(true)
+    try {
+      const res = await fetch('/api/coupons/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: code.trim(), subtotal }),
+      })
+      const data = await res.json()
+      if (data.valid) {
+        setAppliedCoupon(data.coupon)
+        setCouponCode('')
+      } else {
+        setCouponError(data.error || 'Invalid coupon')
+      }
+    } catch {
+      setCouponError('Could not validate coupon')
+    } finally {
+      setCouponLoading(false)
+    }
+  }
+
   const handleApplyCoupon = async () => {
     setCouponError('')
     if (!couponCode.trim()) return
@@ -1016,6 +1039,7 @@ export default function CheckoutPage() {
                       <OffersSection
                         coupons={activeCoupons}
                         variant="card"
+                        onApply={handleApplyCouponWithCode}
                       />
                     )}
                   </div>

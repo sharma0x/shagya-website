@@ -19,12 +19,44 @@ interface OffersSectionProps {
   coupons: CouponData[]
   variant: 'banner' | 'card'
   className?: string
+  onApply?: (code: string) => void
 }
 
 function formatDiscount(c: CouponData): string {
   if (c.type === 'percentage') return `${c.value}% off`
   if (c.type === 'fixed_amount') return `₹${c.value} off`
   return 'Free shipping'
+}
+
+function CouponApplyButton({ code, onApply }: { code: string; onApply: (code: string) => void }) {
+  const [applied, setApplied] = useState(false)
+
+  const handleApply = () => {
+    onApply(code)
+    setApplied(true)
+    setTimeout(() => setApplied(false), 2000)
+  }
+
+  return (
+    <button
+      onClick={handleApply}
+      className={cn(
+        'font-display inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[10px] font-semibold tracking-wider uppercase transition-all',
+        applied
+          ? 'bg-green-50 text-green-600'
+          : 'bg-brand-600 text-white hover:bg-brand-700',
+      )}
+    >
+      {applied ? (
+        <>
+          <Check className="h-3 w-3" />
+          Applied
+        </>
+      ) : (
+        'Apply'
+      )}
+    </button>
+  )
 }
 
 function CouponCopyButton({ code }: { code: string }) {
@@ -66,6 +98,7 @@ export function OffersSection({
   coupons,
   variant,
   className,
+  onApply,
 }: OffersSectionProps) {
   if (!coupons.length) return null
 
@@ -129,7 +162,11 @@ export function OffersSection({
                 <p className="font-display text-sm font-semibold text-neutral-900">
                   {c.code}
                 </p>
-                <CouponCopyButton code={c.code} />
+                {onApply ? (
+                  <CouponApplyButton code={c.code} onApply={onApply} />
+                ) : (
+                  <CouponCopyButton code={c.code} />
+                )}
               </div>
               <p className="font-body mt-0.5 text-xs font-medium text-neutral-700">
                 {formatDiscount(c)}
