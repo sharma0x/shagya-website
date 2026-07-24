@@ -84,7 +84,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center px-4 py-16">
-      <div className="w-full">
+      <div className="mx-auto w-full max-w-lg">
         <Link
           href="/"
           className="font-display hover:text-brand-700 inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-400 transition-colors"
@@ -99,7 +99,7 @@ export default function LoginPage() {
           Sign in to track orders, manage addresses, and your wishlist
         </p>
 
-        <div className="mx-auto mt-8 w-full max-w-lg">
+        <div className="mt-8 w-full">
           <div className="border border-neutral-100 bg-white px-4 py-8 shadow-xs sm:rounded-2xl sm:px-10">
             <div className="space-y-5">
               {error && (
