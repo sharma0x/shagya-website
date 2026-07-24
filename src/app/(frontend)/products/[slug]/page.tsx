@@ -277,7 +277,7 @@ export default async function ProductDetailPage({
   return (
     <>
       <TrackRecentlyViewed productId={String(product.id)} />
-      <div className="bg-surface min-h-screen py-10 md:py-14">
+      <div className="bg-surface min-h-screen py-12 md:py-16">
       {isPreview && <RefreshRouteOnSave />}
       <div className="container-page">
         {/* Back link */}
@@ -421,7 +421,7 @@ export default async function ProductDetailPage({
         </div>
 
         {/* ── Details: Story + Specs ── */}
-        <div className="mt-20 border-t border-neutral-200 pt-16">
+        <div className="mt-12 border-t border-neutral-200 pt-12">
           <div className="grid gap-12 lg:grid-cols-12 lg:gap-14">
             {/* Weave Story */}
             <div className="lg:col-span-7">
@@ -481,7 +481,7 @@ export default async function ProductDetailPage({
         <RecommendationRow
           title="You May Also Like"
           products={relatedProducts}
-          className="p-8 border-t border-neutral-200"
+          className="px-8 pt-12 pb-8 border-t border-neutral-200"
         />
       )}
 
@@ -498,7 +498,7 @@ export default async function ProductDetailPage({
         <RecommendationRow
           title="Recently Viewed"
           products={recentlyViewedProducts}
-          className="p-8 border-t border-neutral-200 pt-6"
+          className="px-8 pt-12 pb-8 border-t border-neutral-200"
         />
       )}
     </div>
