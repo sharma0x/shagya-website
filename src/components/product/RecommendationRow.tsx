@@ -65,7 +65,7 @@ export function RecommendationRow({
         {showLeft && (
           <button
             onClick={() => scroll('left')}
-            className="absolute -left-3 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/90 p-2 shadow-md text-brand-600 hover:bg-white hover:text-brand-700 transition-colors"
+            className="absolute -left-3 top-[42%] z-10 -translate-y-1/2 rounded-full bg-white/90 p-2 shadow-md text-brand-600 hover:bg-white hover:text-brand-700 transition-colors"
             aria-label="Scroll left"
           >
             <ChevronLeft className="h-4 w-4" />
@@ -76,7 +76,7 @@ export function RecommendationRow({
         {showRight && (
           <button
             onClick={() => scroll('right')}
-            className="absolute -right-3 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/90 p-2 shadow-md text-brand-600 hover:bg-white hover:text-brand-700 transition-colors"
+            className="absolute -right-3 top-[42%] z-10 -translate-y-1/2 rounded-full bg-white/90 p-2 shadow-md text-brand-600 hover:bg-white hover:text-brand-700 transition-colors"
             aria-label="Scroll right"
           >
             <ChevronRight className="h-4 w-4" />
