@@ -205,11 +205,12 @@ export default function CheckoutPage() {
 
   // Fetch pre-populated coupons
   useEffect(() => {
+    if (!isLoggedIn) return
     fetch('/api/coupons/available')
       .then((r) => r.ok ? r.json() : null)
       .then((d) => { if (d) setActiveCoupons(d.coupons || []) })
       .catch(() => {})
-  }, [])
+  }, [isLoggedIn])
 
   const handleApplyCouponWithCode = async (code: string) => {
     setCouponError('')
@@ -1041,7 +1042,7 @@ export default function CheckoutPage() {
                     {couponError && (
                       <p className="text-[10px] text-red-500">{couponError}</p>
                     )}
-                    {activeCoupons.length > 0 && (
+                    {isLoggedIn && activeCoupons.length > 0 && (
                       <OffersSection
                         coupons={activeCoupons}
                         variant="card"

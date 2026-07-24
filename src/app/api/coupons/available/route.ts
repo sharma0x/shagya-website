@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import config from '@payload-config'
+import { auth } from '@/lib/auth'
 
 export async function GET(request: Request): Promise<NextResponse> {
   try {
@@ -69,6 +70,27 @@ export async function GET(request: Request): Promise<NextResponse> {
 
         return productMatch || categoryMatch
       })
+    }
+
+    // Filter by customer conditions — only show coupons that apply to this user
+    const session = await auth.api.getSession({ headers: request.headers })
+    if (session?.user) {
+      const customers = await payload.find({
+        collection: 'customers',
+        where: { betterAuthUserId: { equals: session.user.id } },
+        limit: 1,
+        overrideAccess: true,
+      })
+      if (customers.docs.length > 0) {
+        const customerId = customers.docs[0].id
+        filtered = filtered.filter((c: any) => {
+          const customerConditions = c.customersConditions || []
+          if (customerConditions.length === 0) return true
+          return customerConditions.some(
+            (cust: any) => (typeof cust === 'object' ? cust.id : cust) === customerId,
+          )
+        })
+      }
     }
 
     const result = filtered.map((c: any) => ({
