@@ -176,9 +176,9 @@ export function ProductActions({ product, isOutOfStock }: ProductActionsProps) {
       {/* CTAs — Out of Stock or Cart / Buy Now / Wishlist */}
       {isOutOfStock ? (
         <div className="space-y-3">
-          <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
-            <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600" />
-            <span className="font-body text-xs font-medium text-amber-800">
+          <div className="flex items-center gap-2 rounded-lg border border-brand-200 bg-brand-50 px-3 py-2">
+            <AlertTriangle className="h-4 w-4 shrink-0 text-brand-600" />
+            <span className="font-body text-xs font-bold text-brand-800">
               Out of Stock
             </span>
           </div>

@@ -248,9 +248,9 @@ export default function WishlistPage() {
                     </div>
 
                     {product.trackQuantity && (product.quantity ?? 0) <= 0 ? (
-                      <div className="mt-5 flex h-10 w-full items-center justify-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50">
-                        <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />
-                        <span className="font-display text-[11px] font-semibold text-amber-700">
+                      <div className="mt-5 flex h-10 w-full items-center justify-center gap-1.5 rounded-xl border border-brand-200 bg-brand-50">
+                        <AlertTriangle className="h-3.5 w-3.5 text-brand-600" />
+                        <span className="font-display text-[11px] font-bold text-brand-700">
                           Out of Stock
                         </span>
                       </div>

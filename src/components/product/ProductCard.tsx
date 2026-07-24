@@ -201,8 +201,8 @@ export function ProductCard({
             </div>
           )}
           {isOOS && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/5">
-              <span className="font-display rounded-md bg-white/90 px-2.5 py-0.5 text-[10px] font-semibold text-neutral-700 shadow-sm">
+            <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+              <span className="font-display rounded-md bg-brand-600 px-3 py-1 text-[11px] font-bold text-white shadow-sm">
                 Out of Stock
               </span>
             </div>
