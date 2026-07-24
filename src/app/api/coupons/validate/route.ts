@@ -52,9 +52,10 @@ export async function POST(request: Request) {
 
     // Check minimum cart value
     if (coupon.minCartValue && subtotal < coupon.minCartValue) {
+      const shortage = coupon.minCartValue - subtotal
       return NextResponse.json({
         valid: false,
-        error: `Minimum cart value of ₹${coupon.minCartValue} required`,
+        error: `Add items worth ₹${shortage.toLocaleString('en-IN')} more to apply ${normalizedCode}`,
       }, { status: 200 })
     }
 
@@ -73,7 +74,10 @@ export async function POST(request: Request) {
         typeof c === 'object' ? c.id : c,
       )
       if (!allowedIds.includes(customerId)) {
-        return NextResponse.json({ valid: false, error: 'This coupon is not available for your account' }, { status: 200 })
+        return NextResponse.json({
+          valid: false,
+          error: `${normalizedCode} is an exclusive offer — not available for your account`,
+        }, { status: 200 })
       }
     }
 
@@ -117,8 +121,41 @@ export async function POST(request: Request) {
       }
 
       if (!productMatch && !categoryMatch) {
+        let hint = ''
+        if (hasProductConditions) {
+          const productDocs = await payload.find({
+            collection: 'products',
+            where: { id: { in: conditionProductIds.map(Number) } },
+            depth: 0,
+            limit: 3,
+            pagination: false,
+          })
+          const names = (productDocs.docs as any[]).map((p: any) => p.name)
+          if (names.length === 1) {
+            hint = `Add '${names[0]}' to your cart`
+          } else if (names.length > 1) {
+            hint = `Add products like '${names[0]}' or '${names[1]}'`
+          }
+        } else if (hasCategoryConditions) {
+          const categoryDocs = await payload.find({
+            collection: 'categories',
+            where: { id: { in: conditionCategoryIds.map(Number) } },
+            depth: 0,
+            limit: 3,
+            pagination: false,
+          })
+          const names = (categoryDocs.docs as any[]).map((c: any) => c.name)
+          if (names.length === 1) {
+            hint = `Add ${names[0].toLowerCase()} products to your cart`
+          } else if (names.length > 1) {
+            hint = `Add ${names.map((n: string) => n.toLowerCase()).join(' or ')} products`
+          }
+        }
         return NextResponse.json(
-          { valid: false, error: 'This coupon does not apply to items in your cart' },
+          {
+            valid: false,
+            error: hint || `${normalizedCode} does not apply to items in your cart`,
+          },
           { status: 200 },
         )
       }

@@ -215,10 +215,13 @@ export default function CheckoutPage() {
     setCouponError('')
     setCouponLoading(true)
     try {
+      const cartProductIds = effectiveCart?.items?.map(
+        (item: any) => String(typeof item.product === 'object' ? item.product.id : item.product),
+      ) || []
       const res = await fetch('/api/coupons/validate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: code.trim(), subtotal }),
+        body: JSON.stringify({ code: code.trim(), subtotal, productIds: cartProductIds }),
       })
       const data = await res.json()
       if (data.valid) {
@@ -239,10 +242,13 @@ export default function CheckoutPage() {
     if (!couponCode.trim()) return
     setCouponLoading(true)
     try {
+      const cartProductIds = effectiveCart?.items?.map(
+        (item: any) => String(typeof item.product === 'object' ? item.product.id : item.product),
+      ) || []
       const res = await fetch('/api/coupons/validate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: couponCode.trim(), subtotal }),
+        body: JSON.stringify({ code: couponCode.trim(), subtotal, productIds: cartProductIds }),
       })
       const data = await res.json()
       if (data.valid) {
