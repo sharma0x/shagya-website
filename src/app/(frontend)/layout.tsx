@@ -54,8 +54,9 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${sora.variable} ${publicSans.variable} ${notoSansDevanagari.variable}`}
+      suppressHydrationWarning
     >
-      <body className="font-body flex min-h-screen flex-col pb-16 antialiased lg:pb-0" suppressHydrationWarning>
+      <body className="font-body flex min-h-screen flex-col pb-16 antialiased lg:pb-0">
         <NavigationLoader />
         <Header />
         <main className="flex-1">{children}</main>
