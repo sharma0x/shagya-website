@@ -130,7 +130,32 @@ export async function POST(request: Request): Promise<NextResponse> {
     }
 
     if (carts.docs.length > 0) {
-      // Update cart
+      // Merge incoming items with existing cart items
+      const existingItems = (carts.docs[0] as any).items || []
+
+      const merged = new Map<string, any>()
+      for (const item of existingItems) {
+        const key = `${item.product}-${item.variant || 'none'}`
+        merged.set(key, { ...item })
+      }
+
+      for (const item of data.items) {
+        const key = `${item.product}-${item.variant || 'none'}`
+        const existing = merged.get(key)
+        if (existing) {
+          existing.quantity = Math.max(existing.quantity || 1, item.quantity || 1)
+          if (item.unitPrice) existing.unitPrice = item.unitPrice
+        } else {
+          merged.set(key, { ...item })
+        }
+      }
+
+      data.items = [...merged.values()]
+      data.subtotal = data.items.reduce(
+        (acc: number, item: any) => acc + (item.unitPrice || 0) * (item.quantity || 1),
+        0,
+      )
+
       cart = await payload.update({
         collection: 'carts',
         id: carts.docs[0].id,

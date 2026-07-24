@@ -2,19 +2,32 @@
 
 ## Overview
 
-Guest cart items now properly merge into account cart on login.
+Guest cart items now properly merge into the account cart when logging in, instead of being lost or silently overwritten.
 
-## Server-side merge
-- `POST /api/cart` merges incoming items with existing by product.id + variant
-- Same product+variant → keeps higher quantity
-- Different product+variant → appends
-- Products not in incoming list → preserved (account cart items)
+## Problem (before fix)
 
-## Client-side sync
-- `Header.tsx`: `useEffect` watches `sessionData.user`
-- On login: `syncWithServer()` pushes localStorage cart → server
-- Then `loadFromServer()` hydrates Zustand with merged server state
-- Prevents localStorage from overwriting server cart for returning users
+| Scenario | Result |
+|---|---|
+| Fresh user: guest adds items → logs in → goes to checkout | Works only if they touched cart AFTER login (fragile) |
+| Returning user: had server cart from last session → browses as guest → logs in | **Previous server cart items WIPED** — guest localStorage completely replaced server cart |
+| User switches device/browser | Old cart lost, only new guest items survive |
+
+## Server-side merge (`POST /api/cart`)
+
+When updating an existing cart, incoming items are merged with existing items:
+
+- Same `product + variant` → keeps **higher quantity** (never reduces)
+- Different `product + variant` → **appends** (both preserved)
+- Products not in incoming → **kept** (account cart items preserved)
+- Subtotal recalculated after merge
+
+## Client-side sync on login (`Header.tsx`)
+
+A `useEffect` detects auth state change from guest → logged in:
+
+1. `syncWithServer()` pushes localStorage cart to server (merge happens server-side)
+2. `loadFromServer()` hydrates Zustand store with the merged result
+3. Only runs once (prevents re-trigger on every session check)
 
 ## Files
 - `src/app/api/cart/route.ts`

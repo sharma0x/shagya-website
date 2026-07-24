@@ -100,6 +100,19 @@ export function Header() {
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [openSearch])
 
+  // Sync guest cart on login — push localStorage items to server and hydrate merged result
+  const prevUserRef = useRef<typeof sessionData?.user>(null)
+
+  useEffect(() => {
+    if (sessionData?.user && !prevUserRef.current) {
+      const { items, syncWithServer, loadFromServer } = useCart.getState()
+      if (items.length > 0) {
+        syncWithServer().then(() => loadFromServer())
+      }
+    }
+    prevUserRef.current = sessionData?.user
+  }, [sessionData?.user])
+
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (megaMenuRef.current && !megaMenuRef.current.contains(e.target as Node)) {
