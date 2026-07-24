@@ -83,9 +83,11 @@ export function ProductCard({
 
   // Auto-rotate carousel on hover — pause when dot is hovered
   useEffect(() => {
-    if (isCardHovered && galleryUrls.length > 1 && !dotHoveredRef.current) {
+    if (isCardHovered && galleryUrls.length > 1) {
       autoTimerRef.current = setInterval(() => {
-        setActiveImage(prev => (prev + 1) % galleryUrls.length)
+        if (!dotHoveredRef.current) {
+          setActiveImage(prev => (prev + 1) % galleryUrls.length)
+        }
       }, 1500)
     }
     return () => {
