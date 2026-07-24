@@ -22,6 +22,8 @@ export interface CartItem {
     }>
     fabric: string
     weave: string
+    quantity?: number | null
+    trackQuantity?: boolean | null
   }
   variant?: {
     size?: string

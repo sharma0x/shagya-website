@@ -6,7 +6,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useSession } from '@/lib/auth-client'
 import { useCart } from '@/lib/store/cart'
-import { ArrowLeft, ShoppingBag, Trash2, Heart, Loader2 } from 'lucide-react'
+import { ArrowLeft, ShoppingBag, Trash2, Heart, Loader2, AlertTriangle } from 'lucide-react'
 
 interface WishlistItem {
   id: string
@@ -19,6 +19,8 @@ interface WishlistItem {
     fabric?: string
     weave?: string
     gallery?: Array<{ image?: { url?: string }; alt?: string }>
+    trackQuantity?: boolean
+    quantity?: number
   }
   variant?: number | { id: number } | null
 }
@@ -79,6 +81,9 @@ export default function WishlistPage() {
   }
 
   const handleMoveToCart = async (product: WishlistItem['product']) => {
+    if (product.trackQuantity && (product.quantity ?? 0) <= 0) {
+      return // OOS — blocked
+    }
     setActionLoading(String(product.id))
     try {
       // Add to cart via store (updates Zustand + localStorage + server)
@@ -242,6 +247,14 @@ export default function WishlistPage() {
                       </p>
                     </div>
 
+                    {product.trackQuantity && (product.quantity ?? 0) <= 0 ? (
+                      <div className="mt-5 flex h-10 w-full items-center justify-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50">
+                        <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />
+                        <span className="font-display text-[11px] font-semibold text-amber-700">
+                          Out of Stock
+                        </span>
+                      </div>
+                    ) : (
                     <button
                       disabled={isThisLoading}
                       onClick={() => handleMoveToCart(product)}
@@ -254,6 +267,7 @@ export default function WishlistPage() {
                       )}
                       Move to Bag
                     </button>
+                    )}
                   </div>
                 </div>
               )

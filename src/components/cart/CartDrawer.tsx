@@ -142,7 +142,11 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                                 item.variant,
                               )
                             }
-                            disabled={item.quantity >= 10}
+                            disabled={
+                              item.product.trackQuantity
+                                ? item.quantity >= (item.product.quantity ?? 10)
+                                : item.quantity >= 10
+                            }
                             className="p-1.5 text-neutral-500 hover:text-neutral-900 disabled:opacity-30"
                             aria-label="Increase quantity"
                           >
