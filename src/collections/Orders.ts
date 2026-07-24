@@ -50,17 +50,24 @@ function scheduleSideEffects(
       for (const item of items) {
         if (!item.product) continue
         try {
+          const pid = typeof item.product === 'string' ? item.product : String(item.product)
           const product = await payload.findByID({
             collection: 'products',
-            id: typeof item.product === 'string' ? item.product : String(item.product),
+            id: pid,
             overrideAccess: true,
           })
           if (product) {
+            const currentPurchase = ((product as any).purchaseCount || 0)
+            const currentQty = (product as any).quantity ?? 0
+            const trackQty = (product as any).trackQuantity === true
+            const orderQty = item.quantity || 1
+
             await payload.update({
               collection: 'products',
               id: product.id,
               data: {
-                purchaseCount: ((product as any).purchaseCount || 0) + (item.quantity || 1),
+                purchaseCount: currentPurchase + orderQty,
+                quantity: trackQty ? Math.max(0, currentQty - orderQty) : currentQty,
               },
               overrideAccess: true,
             })
