@@ -183,6 +183,7 @@ export function ProductFilters({
   const [minPrice, setMinPrice] = useState(searchParams.get('minPrice') || '')
   const [maxPrice, setMaxPrice] = useState(searchParams.get('maxPrice') || '')
   const [onSale, setOnSale] = useState(searchParams.get('onSale') === 'true')
+  const [excludeOOS, setExcludeOOS] = useState(searchParams.get('excludeOOS') === 'true')
   const [minDiscount, setMinDiscount] = useState(
     searchParams.get('minDiscount') || '',
   )
@@ -264,7 +265,7 @@ export function ProductFilters({
       router.push(query ? `${pathname}?${query}` : pathname)
     }, 300)
     return () => { if (navigateRef.current) clearTimeout(navigateRef.current) }
-  }, [fabric, weave, pattern, onSale, minDiscount, minPrice, maxPrice, city, color])
+  }, [fabric, weave, pattern, onSale, excludeOOS, minDiscount, minPrice, maxPrice, city, color])
 
   // --- Handlers ---
   const toggleSection = (section: string) => {
@@ -295,6 +296,7 @@ export function ProductFilters({
     if (minPrice) params.set('minPrice', minPrice)
     if (maxPrice) params.set('maxPrice', maxPrice)
     if (onSale) params.set('onSale', 'true')
+    if (excludeOOS) params.set('excludeOOS', 'true')
     if (minDiscount) params.set('minDiscount', minDiscount)
     if (city) params.set('city', city)
     if (color.length) params.set('color', color.join(','))
@@ -306,7 +308,7 @@ export function ProductFilters({
     if (sort) params.set('sort', sort)
     return params.toString()
   }, [
-    fabric, weave, pattern, minPrice, maxPrice, onSale,
+    fabric, weave, pattern, minPrice, maxPrice, onSale, excludeOOS,
     minDiscount, city, color, contextFilter, /* size, */ searchParams,
   ])
 
@@ -317,6 +319,7 @@ export function ProductFilters({
     setMinPrice('')
     setMaxPrice('')
     setOnSale(false)
+    setExcludeOOS(false)
     setMinDiscount('')
     setCity('')
     setColor([])
@@ -332,6 +335,7 @@ export function ProductFilters({
     !!minPrice ||
     !!maxPrice ||
     onSale ||
+    !!excludeOOS ||
     !!minDiscount ||
     !!city ||
     color.length > 0
@@ -344,6 +348,7 @@ export function ProductFilters({
     weave.length +
     pattern.length +
     (onSale ? 1 : 0) +
+    (excludeOOS ? 1 : 0) +
     (minDiscount ? 1 : 0) +
     (city ? 1 : 0) +
     color.length
@@ -423,6 +428,15 @@ export function ProductFilters({
               className={checkboxClass}
             />
             <span className={labelClass}>On Sale</span>
+          </label>
+          <label className="flex cursor-pointer items-center gap-2">
+            <input
+              type="checkbox"
+              checked={excludeOOS}
+              onChange={(e) => setExcludeOOS(e.target.checked)}
+              className={checkboxClass}
+            />
+            <span className={labelClass}>Exclude Out of Stock</span>
           </label>
           {DISCOUNT_OPTIONS.map((opt) => (
             <label
@@ -562,8 +576,8 @@ export function ProductFilters({
           const visibleColors = COLOR_PALETTE.filter(
             (c) =>
               !facets ||
-              color.includes(c.value) ||
-              facets.colors?.some((f) => f.value === c.value),
+              color.some((sel) => sel.toLowerCase() === c.value) ||
+              facets.colors?.some((f) => f.value.toLowerCase() === c.value),
           )
           const showCount = visibleColors.length
           return (
@@ -575,7 +589,7 @@ export function ProductFilters({
                     showAllColors ? showCount : INITIAL_COLOR_COUNT,
                   )
                   .map((c) => {
-                    const isSelected = color.includes(c.value)
+                    const isSelected = color.some((sel) => sel.toLowerCase() === c.value)
                     return (
                       <button
                         key={c.value}

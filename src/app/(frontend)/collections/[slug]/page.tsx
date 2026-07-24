@@ -68,6 +68,12 @@ function buildWhere(
     where.cityOfOrigin = { equals: city }
   }
 
+  // Exclude out of stock
+  if (sParams.excludeOOS === 'true') {
+    where.trackQuantity = { equals: true }
+    where.quantity = { greater_than: 0 }
+  }
+
   return where
 }
 
