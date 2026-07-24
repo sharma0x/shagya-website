@@ -121,7 +121,7 @@ export function ProductReviews({
   })
 
   return (
-    <section className="px-5 py-14 sm:px-8 sm:py-16 md:py-20">
+    <section className="px-5 py-12 sm:px-8 border-t border-neutral-200">
       {/* ── Heading ── */}
       <h2 className="font-display text-2xl font-semibold tracking-tight text-neutral-900">
         Customer Reviews

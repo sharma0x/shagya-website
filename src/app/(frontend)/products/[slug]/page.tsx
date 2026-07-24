@@ -421,7 +421,7 @@ export default async function ProductDetailPage({
         </div>
 
         {/* ── Details: Story + Specs ── */}
-        <div className="mt-12 border-t border-neutral-200 pt-12">
+        <div className="mt-12 border-t border-neutral-200 pt-12 pb-12">
           <div className="grid gap-12 lg:grid-cols-12 lg:gap-14">
             {/* Weave Story */}
             <div className="lg:col-span-7">
