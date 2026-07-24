@@ -45,6 +45,7 @@ const topNav = [
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [mobileSareesOpen, setMobileSareesOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [megaMenuOpen, setMegaMenuOpen] = useState(false)
   const megaMenuTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -365,19 +366,72 @@ export function Header() {
 
         <nav className="flex-1 overflow-y-auto px-6 py-4 sm:px-8">
           <div className="flex flex-col">
-            <Link
-              href="/category/all"
+            <button
+              onClick={() => setMobileSareesOpen(!mobileSareesOpen)}
               className={cn(
-                'font-body hover:text-brand-700 border-b border-neutral-100 py-3 text-lg font-medium text-neutral-700 transition-colors',
+                'font-body hover:text-brand-700 flex items-center justify-between border-b border-neutral-100 py-3 text-lg font-medium text-neutral-700 transition-colors',
                 mobileMenuOpen
                   ? 'translate-y-0 opacity-100'
                   : 'translate-y-4 opacity-0',
               )}
               style={{ transitionDelay: '150ms' }}
-              onClick={() => setMobileMenuOpen(false)}
             >
               Sarees
-            </Link>
+              <ChevronDown
+                className={cn(
+                  'h-4 w-4 text-neutral-400 transition-transform',
+                  mobileSareesOpen && 'rotate-180',
+                )}
+              />
+            </button>
+
+            {mobileSareesOpen && (
+              <div className="border-b border-neutral-100 pb-3">
+                {/* Fabric */}
+                <p className="mt-3 text-[10px] font-semibold tracking-wider text-brand-600 uppercase">
+                  Fabric
+                </p>
+                <div className="mt-2 grid grid-cols-2 gap-1">
+                  {megaMenu.fabrics.map((f) => (
+                    <Link
+                      key={f.value}
+                      href={`/category/${f.value}`}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="font-body hover:text-brand-700 rounded px-2 py-1 text-sm text-neutral-600 transition-colors"
+                    >
+                      {f.label}
+                    </Link>
+                  ))}
+                </div>
+
+                {/* Weave */}
+                <p className="mt-3 text-[10px] font-semibold tracking-wider text-brand-600 uppercase">
+                  Weave
+                </p>
+                <div className="mt-2 grid grid-cols-2 gap-1">
+                  {megaMenu.weaves.map((w) => (
+                    <Link
+                      key={w.value}
+                      href={`/category/${w.value}`}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="font-body hover:text-brand-700 rounded px-2 py-1 text-sm text-neutral-600 transition-colors"
+                    >
+                      {w.label}
+                    </Link>
+                  ))}
+                </div>
+
+                {/* Shop All */}
+                <Link
+                  href="/category/all"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="font-display text-brand-600 hover:text-brand-700 mt-3 inline-flex items-center gap-1 text-xs font-semibold"
+                >
+                  Shop All Sarees
+                  <span className="text-[10px]">→</span>
+                </Link>
+              </div>
+            )}
             {topNav.map((link, i) => (
               <Link
                 key={link.href}
