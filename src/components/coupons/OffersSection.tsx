@@ -9,7 +9,7 @@ interface CouponData {
   code: string
   description: string
   type: 'percentage' | 'fixed_amount' | 'free_shipping'
-  value: number
+  value: number | null
   minCartValue: number
   maxDiscount?: number | null
   endDate?: string | null
@@ -23,8 +23,8 @@ interface OffersSectionProps {
 }
 
 function formatDiscount(c: CouponData): string {
-  if (c.type === 'percentage') return `${c.value}% off`
-  if (c.type === 'fixed_amount') return `₹${c.value} off`
+  if (c.type === 'percentage') return `${c.value || 0}% off`
+  if (c.type === 'fixed_amount') return `₹${c.value || 0} off`
   return 'Free shipping'
 }
 
@@ -120,7 +120,7 @@ export function OffersSection({
                   <CheckCircle2 className="h-4 w-4 shrink-0 text-green-600 mt-0.5" />
                   <div className="min-w-0">
                     <p className="font-body text-xs font-medium text-neutral-900">
-                      Save {c.type === 'percentage' ? `${c.value}%` : c.type === 'fixed_amount' ? `₹${c.value}` : 'on shipping'} with coupon
+                      Save {c.type === 'percentage' ? `${c.value || 0}%` : c.type === 'fixed_amount' ? `₹${c.value || 0}` : 'on shipping'} with coupon
                     </p>
                     <p className="font-mono mt-0.5 text-[11px] tracking-wider text-neutral-500">
                       {c.code}

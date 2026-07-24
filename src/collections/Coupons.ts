@@ -53,6 +53,12 @@ export const Coupons: CollectionConfig = {
       name: 'value',
       type: 'number',
       min: 0,
+      validate: (val, { data }) => {
+        if (data?.type && data.type !== 'free_shipping' && (val == null || val <= 0)) {
+          return 'Discount value is required for percentage and fixed amount coupons'
+        }
+        return true
+      },
       admin: {
         condition: (data) => data?.type && data.type !== 'free_shipping',
       },
