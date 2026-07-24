@@ -258,7 +258,7 @@ export default function WishlistPage() {
                     <button
                       disabled={isThisLoading}
                       onClick={() => handleMoveToCart(product)}
-                      className="hover:bg-brand-700 font-display mt-5 inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-xl bg-neutral-900 text-xs font-semibold text-white transition-all active:scale-95 disabled:opacity-50"
+                      className="bg-brand-600 hover:bg-brand-700 font-display mt-5 inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-xl text-xs font-semibold text-white transition-all active:scale-95 disabled:opacity-50"
                     >
                       {isThisLoading ? (
                         <Loader2 className="h-3.5 w-3.5 animate-spin" />

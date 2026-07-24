@@ -55,23 +55,18 @@ export const Products: CollectionConfig = {
 
         if (wasOOS && nowInStock) {
           try {
-            const wishlistItems = await req.payload.find({
-              collection: 'wishlist_items',
+            const wishlists = await req.payload.find({
+              collection: 'wishlist',
               where: {
-                product: { equals: (doc as any).id },
+                'items.product': { equals: (doc as any).id },
               },
-              depth: 2,
+              depth: 1,
               limit: 100,
-            } as any)
+            })
 
             const notifiedCustomers = new Set<string>()
-            for (const item of wishlistItems.docs as any[]) {
-              const customerEmail =
-                item.wishlist?.customer?.email ||
-                (item.wishlist?.customer &&
-                  typeof item.wishlist.customer === 'object'
-                  ? (item.wishlist.customer as any).email
-                  : null)
+            for (const wishlist of wishlists.docs as any[]) {
+              const customerEmail = wishlist.customer?.email
 
               if (!customerEmail || notifiedCustomers.has(customerEmail)) continue
               notifiedCustomers.add(customerEmail)
