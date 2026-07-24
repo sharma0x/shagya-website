@@ -101,7 +101,7 @@ export function Header() {
   }, [openSearch])
 
   // Sync guest cart on login — push localStorage items to server and hydrate merged result
-  const prevUserRef = useRef<typeof sessionData?.user>(null)
+  const prevUserRef = useRef<any>(null)
 
   useEffect(() => {
     if (sessionData?.user && !prevUserRef.current) {
