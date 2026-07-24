@@ -1,13 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { WishlistButton } from '@/components/product/WishlistButton'
+import { ProductBadge } from '@/components/ui/ProductBadge'
 import { cn } from '@/lib/utils'
 
-const ph = (w: number, h: number, bg: string, fg: string, text: string) =>
-  `https://placehold.co/${w}x${h}/${bg}/${fg}?text=${encodeURIComponent(text)}&font=lora`
+const ph = (w: number, h: number, _bg: string, _fg: string, text: string) =>
+  `https://images.placeholders.dev/?width=${w}&height=${h}&text=${encodeURIComponent(text.substring(0, 20))}&bgColor=%2369254e&textColor=%23f5e8ee&fontFamily=lora&fontWeight=600`
 
 function getGalleryUrls(product: any): string[] {
   const gallery = product.gallery
@@ -66,9 +67,38 @@ export function ProductCard({
 }: ProductCardProps) {
   const galleryUrls = getGalleryUrls(product)
   const [activeImage, setActiveImage] = useState(0)
+  const [isCardHovered, setIsCardHovered] = useState(false)
+  const dotHoveredRef = useRef(false)
+  const autoTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const discountPct = getDiscountPercent(product)
   const isOOS =
     product.trackQuantity === true && (product.quantity ?? 0) <= 0
+
+  // Auto-detect badge
+  const badge = discountPct
+    ? 'sale' as const
+    : (product as any).purchaseCount > 5
+      ? 'bestseller' as const
+      : undefined
+
+  // Auto-rotate carousel on hover — pause when dot is hovered
+  useEffect(() => {
+    if (isCardHovered && galleryUrls.length > 1 && !dotHoveredRef.current) {
+      autoTimerRef.current = setInterval(() => {
+        setActiveImage(prev => (prev + 1) % galleryUrls.length)
+      }, 1500)
+    }
+    return () => {
+      if (autoTimerRef.current) { clearInterval(autoTimerRef.current); autoTimerRef.current = null }
+    }
+  }, [isCardHovered, galleryUrls.length])
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (autoTimerRef.current) clearInterval(autoTimerRef.current)
+    }
+  }, [])
 
   const isCompact = variant === 'compact'
 
@@ -113,7 +143,11 @@ export function ProductCard({
   return (
     <div
       className={cn('group [perspective:800px]', className)}
-      onMouseLeave={() => setActiveImage(0)}
+      onMouseEnter={() => setIsCardHovered(true)}
+      onMouseLeave={() => {
+        setIsCardHovered(false)
+        setActiveImage(0)
+      }}
     >
       <Link
         href={`/products/${product.slug}`}
@@ -152,6 +186,18 @@ export function ProductCard({
               <WishlistButton productId={product.id as number} />
             </div>
           )}
+          {badge && (
+            <div className="absolute top-1.5 left-1.5 z-10">
+              <ProductBadge type={badge} />
+            </div>
+          )}
+          {discountPct && (
+            <div className="absolute bottom-2 left-2 z-10">
+              <span className="rounded-full bg-red-500/90 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm">
+                {discountPct}% OFF
+              </span>
+            </div>
+          )}
           {isOOS && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/5">
               <span className="font-display rounded-md bg-white/90 px-2.5 py-0.5 text-[10px] font-semibold text-neutral-700 shadow-sm">
@@ -167,7 +213,11 @@ export function ProductCard({
                 <button
                   key={i}
                   type="button"
-                  onMouseEnter={() => setActiveImage(i)}
+                  onMouseEnter={() => {
+                    dotHoveredRef.current = true
+                    setActiveImage(i)
+                  }}
+                  onMouseLeave={() => { dotHoveredRef.current = false }}
                   onClick={(e) => {
                     e.preventDefault()
                     e.stopPropagation()
@@ -187,30 +237,23 @@ export function ProductCard({
         </div>
 
         {/* Info */}
-        <div className="rounded-b-lg bg-white px-2.5 pb-2.5 pt-2">
-          <p className="font-display truncate text-[11px] font-medium leading-tight text-neutral-900">
+        <div className="rounded-b-lg bg-white px-2.5 pb-3 pt-2">
+          <p className="font-display text-brand-950 group-hover:text-brand-700 text-sm font-semibold transition-colors">
             {product.name}
           </p>
 
-          {/* Price — fixed height for identical cards */}
-          <div className="mt-0.5 min-h-[28px]">
-            <div className="flex flex-wrap items-baseline gap-1">
-              <span className="font-display text-xs font-bold text-neutral-900">
+          {/* Price */}
+          <div className="mt-1.5 min-h-[28px]">
+            <div className="flex flex-wrap items-baseline gap-1.5">
+              <span className="font-display text-brand-700 text-sm font-semibold">
                 ₹{(product.basePrice ?? 0).toLocaleString('en-IN')}
               </span>
               {product.compareAtPrice &&
                 product.basePrice &&
                 product.compareAtPrice > product.basePrice && (
-                  <>
-                    <span className="font-body text-[9px] text-neutral-400 line-through">
-                      ₹{product.compareAtPrice.toLocaleString('en-IN')}
-                    </span>
-                    {discountPct && (
-                      <span className="font-display text-[9px] font-semibold text-amber-600">
-                        {discountPct}% OFF
-                      </span>
-                    )}
-                  </>
+                  <span className="text-brand-700/40 text-xs line-through">
+                    ₹{product.compareAtPrice.toLocaleString('en-IN')}
+                  </span>
                 )}
             </div>
           </div>
