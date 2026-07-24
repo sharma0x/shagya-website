@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { Copy, TicketPercent, Check, CheckCircle2 } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { Copy, TicketPercent, Check, CheckCircle2, Loader2, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface CouponData {
@@ -19,7 +19,7 @@ interface OffersSectionProps {
   coupons: CouponData[]
   variant: 'banner' | 'card'
   className?: string
-  onApply?: (code: string) => void
+  onApply?: (code: string) => Promise<boolean>
 }
 
 function formatDiscount(c: CouponData): string {
@@ -28,29 +28,44 @@ function formatDiscount(c: CouponData): string {
   return 'Free shipping'
 }
 
-function CouponApplyButton({ code, onApply }: { code: string; onApply: (code: string) => void }) {
-  const [applied, setApplied] = useState(false)
+function CouponApplyButton({ code, onApply }: { code: string; onApply: (code: string) => Promise<boolean> }) {
+  const [state, setState] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+  const timerRef = useRef<ReturnType<typeof setTimeout>>()
 
-  const handleApply = () => {
-    onApply(code)
-    setApplied(true)
-    setTimeout(() => setApplied(false), 2000)
+  useEffect(() => {
+    return () => { if (timerRef.current) clearTimeout(timerRef.current) }
+  }, [])
+
+  const handleApply = async () => {
+    setState('loading')
+    const success = await onApply(code)
+    setState(success ? 'success' : 'error')
+    timerRef.current = setTimeout(() => setState('idle'), 2000)
   }
 
   return (
     <button
       onClick={handleApply}
+      disabled={state !== 'idle'}
       className={cn(
         'font-display inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[10px] font-semibold tracking-wider uppercase transition-all',
-        applied
-          ? 'bg-green-50 text-green-600'
-          : 'bg-brand-600 text-white hover:bg-brand-700',
+        state === 'success' && 'bg-green-50 text-green-600',
+        state === 'error' && 'bg-red-50 text-red-600',
+        state === 'idle' && 'bg-brand-600 text-white hover:bg-brand-700',
+        state === 'loading' && 'bg-brand-400 text-white cursor-wait',
       )}
     >
-      {applied ? (
+      {state === 'loading' ? (
+        <Loader2 className="h-3 w-3 animate-spin" />
+      ) : state === 'success' ? (
         <>
           <Check className="h-3 w-3" />
           Applied
+        </>
+      ) : state === 'error' ? (
+        <>
+          <X className="h-3 w-3" />
+          Failed
         </>
       ) : (
         'Apply'

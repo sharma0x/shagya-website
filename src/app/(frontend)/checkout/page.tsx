@@ -212,7 +212,7 @@ export default function CheckoutPage() {
       .catch(() => {})
   }, [isLoggedIn])
 
-  const handleApplyCouponWithCode = async (code: string) => {
+  const handleApplyCouponWithCode = async (code: string): Promise<boolean> => {
     setCouponError('')
     setCouponLoading(true)
     try {
@@ -228,11 +228,14 @@ export default function CheckoutPage() {
       if (data.valid) {
         setAppliedCoupon(data.coupon)
         setCouponCode('')
+        return true
       } else {
         setCouponError(data.error || 'Invalid coupon')
+        return false
       }
     } catch {
       setCouponError('Could not validate coupon')
+      return false
     } finally {
       setCouponLoading(false)
     }
