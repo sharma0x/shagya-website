@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { Search, ShoppingCart, Heart, User, Menu, X } from 'lucide-react'
+import { Search, ShoppingCart, Heart, User, Menu, X, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Logo } from '@/components/layout/Logo'
 import { useCart } from '@/lib/store/cart'
