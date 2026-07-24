@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useCart } from '@/lib/store/cart'
-import { ShoppingCart, Heart } from 'lucide-react'
+import { ShoppingCart, Heart, AlertTriangle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useSession } from '@/lib/auth-client'
 
@@ -33,6 +33,7 @@ interface ProductActionsProps {
     weave: string
     colors?: string[]
   }
+  isOutOfStock?: boolean
 }
 
 /* Temporarily disabled — size and blouse selection
@@ -47,7 +48,7 @@ const BLOUSE_SIZES = [
 ]
 */
 
-export function ProductActions({ product }: ProductActionsProps) {
+export function ProductActions({ product, isOutOfStock }: ProductActionsProps) {
   const { addItem } = useCart()
   const router = useRouter()
   const { data: session } = useSession()
@@ -172,7 +173,38 @@ export function ProductActions({ product }: ProductActionsProps) {
       </div>
       */}
 
-      {/* CTAs — Cart, Buy Now, Wishlist in one row */}
+      {/* CTAs — Out of Stock or Cart / Buy Now / Wishlist */}
+      {isOutOfStock ? (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
+            <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600" />
+            <span className="font-body text-xs font-medium text-amber-800">
+              Out of Stock
+            </span>
+          </div>
+          <div className="rounded-xl border-2 border-dashed border-neutral-200 bg-neutral-50 p-4 text-center">
+            <Heart className="text-brand-600 mx-auto h-5 w-5" />
+            <p className="font-display mt-2 text-sm font-semibold text-neutral-900">
+              Save to Wishlist
+            </p>
+            <p className="font-body mt-1 text-xs text-neutral-500">
+              We will notify you when this piece is back from the loom
+            </p>
+            <button
+              onClick={handleToggleWishlist}
+              disabled={wishlistLoading}
+              className={`font-display mt-3 inline-flex h-10 items-center gap-2 rounded-xl px-5 text-xs font-semibold transition-all active:scale-[0.97] disabled:opacity-50 ${
+                inWishlist
+                  ? 'bg-red-50 text-red-600 border border-red-200'
+                  : 'bg-brand-600 hover:bg-brand-700 text-white shadow-xs'
+              }`}
+            >
+              <Heart className={`h-4 w-4 ${inWishlist ? 'fill-red-500' : ''}`} />
+              {inWishlist ? 'Saved — You will be notified' : 'Add to Wishlist'}
+            </button>
+          </div>
+        </div>
+      ) : (
       <div className="flex gap-2.5">
         <button
           onClick={handleAddToCart}
@@ -206,6 +238,7 @@ export function ProductActions({ product }: ProductActionsProps) {
           <Heart className={`h-4.5 w-4.5 ${inWishlist ? 'fill-red-500' : ''}`} />
         </button>
       </div>
+      )}
     </div>
   )
 }

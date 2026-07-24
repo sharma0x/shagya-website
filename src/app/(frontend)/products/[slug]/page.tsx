@@ -401,7 +401,7 @@ export default async function ProductDetailPage({
 
               {/* Size, stitching, CTAs */}
               <div className="mt-7">
-                <ProductActions product={serializableProduct} />
+                <ProductActions product={serializableProduct} isOutOfStock={product.trackQuantity === true && (product.quantity ?? 0) <= 0} />
               </div>
 
               {/* Trust signals — inline list, no icon circles */}

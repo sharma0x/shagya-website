@@ -55,32 +55,32 @@ export const Products: CollectionConfig = {
 
         if (wasOOS && nowInStock) {
           try {
-            const requests = await req.payload.find({
-              collection: 'back-in-stock-requests',
+            const wishlistItems = await req.payload.find({
+              collection: 'wishlist_items',
               where: {
                 product: { equals: (doc as any).id },
-                notified: { equals: false },
               },
+              depth: 2,
               limit: 100,
             } as any)
 
-            for (const r of requests.docs as any[]) {
+            const notifiedCustomers = new Set<string>()
+            for (const item of wishlistItems.docs as any[]) {
+              const customerEmail =
+                item.wishlist?.customer?.email ||
+                (item.wishlist?.customer &&
+                  typeof item.wishlist.customer === 'object'
+                  ? (item.wishlist.customer as any).email
+                  : null)
+
+              if (!customerEmail || notifiedCustomers.has(customerEmail)) continue
+              notifiedCustomers.add(customerEmail)
+
               try {
-                const { sendBackInStockEmail } = await import(
-                  '@/email/send'
-                )
-                await sendBackInStockEmail(
-                  req.payload,
-                  r.email,
-                  doc as any,
-                )
-                await req.payload.update({
-                  collection: 'back-in-stock-requests',
-                  id: r.id,
-                  data: { notified: true },
-                } as any)
+                const { sendBackInStockEmail } = await import('@/email/send')
+                await sendBackInStockEmail(req.payload, customerEmail, doc as any)
               } catch {
-                // Skip failed notifications — don't block the hook
+                // Skip failed notifications
               }
             }
           } catch {
