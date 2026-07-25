@@ -30,7 +30,7 @@ function formatDiscount(c: CouponData): string {
 
 function CouponApplyButton({ code, onApply }: { code: string; onApply: (code: string) => Promise<boolean> }) {
   const [state, setState] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
-  const timerRef = useRef<ReturnType<typeof setTimeout>>()
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     return () => { if (timerRef.current) clearTimeout(timerRef.current) }
