@@ -87,9 +87,26 @@ export const Pages: CollectionConfig = {
               type: 'text',
             },
             {
+              name: 'images',
+              type: 'array',
+              maxRows: 5,
+              fields: [
+                {
+                  name: 'image',
+                  type: 'upload',
+                  relationTo: 'media',
+                  required: true,
+                },
+              ],
+            },
+            {
               name: 'backgroundImage',
               type: 'upload',
               relationTo: 'media',
+              admin: {
+                description:
+                  'Legacy single image. Used as fallback if "Images" array is empty.',
+              },
             },
             {
               name: 'ctaText',

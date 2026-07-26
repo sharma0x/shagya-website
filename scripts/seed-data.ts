@@ -96,6 +96,7 @@ export interface SeedHeroBlock {
   blockType: 'hero'
   heading?: string
   subheading?: string
+  imagePaths?: string[]
   imagePath?: string
   ctaText?: string
   ctaLink?: string
@@ -1144,6 +1145,7 @@ export const pages: SeedPage[] = [
         heading: 'Shayga — Handwoven narratives from Varanasi',
         subheading:
           'Discover the heritage of Indian handloom. Each saree is a testament to centuries of artisanal weaving, bringing the rich history of Varanasi to your wardrobe.',
+        imagePaths: [heroImagePath(1), heroImagePath(2)],
         imagePath: '/images/hero/hero-main.png',
         ctaText: 'Shop the collection',
         ctaLink: '/category/all',

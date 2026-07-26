@@ -93,7 +93,6 @@ export interface Config {
     forms: Form;
     'form-submissions': FormSubmission;
     'newsletter-subscribers': NewsletterSubscriber;
-    'back-in-stock-requests': BackInStockRequest;
     'instagram-posts': InstagramPost;
     search: Search;
     'payload-kv': PayloadKv;
@@ -129,7 +128,6 @@ export interface Config {
     forms: FormsSelect<false> | FormsSelect<true>;
     'form-submissions': FormSubmissionsSelect<false> | FormSubmissionsSelect<true>;
     'newsletter-subscribers': NewsletterSubscribersSelect<false> | NewsletterSubscribersSelect<true>;
-    'back-in-stock-requests': BackInStockRequestsSelect<false> | BackInStockRequestsSelect<true>;
     'instagram-posts': InstagramPostsSelect<false> | InstagramPostsSelect<true>;
     search: SearchSelect<false> | SearchSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
@@ -474,7 +472,67 @@ export interface Variant {
   id: number;
   product: number | Product;
   size: 'XS' | 'S' | 'M' | 'L' | 'XL' | '2XL' | '3XL' | '4XL' | '5XL' | '6XL' | 'Free';
-  color: string;
+  color:
+    | 'white'
+    | 'off-white'
+    | 'cream'
+    | 'ivory'
+    | 'beige'
+    | 'nude'
+    | 'black'
+    | 'charcoal'
+    | 'grey'
+    | 'silver'
+    | 'taupe'
+    | 'red'
+    | 'maroon'
+    | 'burgundy'
+    | 'wine'
+    | 'crimson'
+    | 'ruby'
+    | 'cherry'
+    | 'rose'
+    | 'pink'
+    | 'hot-pink'
+    | 'fuchsia'
+    | 'magenta'
+    | 'blush'
+    | 'peach'
+    | 'coral'
+    | 'salmon'
+    | 'orange'
+    | 'tangerine'
+    | 'rust'
+    | 'mustard'
+    | 'yellow'
+    | 'gold'
+    | 'saffron'
+    | 'amber'
+    | 'green'
+    | 'olive'
+    | 'emerald'
+    | 'mint'
+    | 'teal'
+    | 'sage'
+    | 'mehendi'
+    | 'pista'
+    | 'blue'
+    | 'navy-blue'
+    | 'royal-blue'
+    | 'sky-blue'
+    | 'turquoise'
+    | 'indigo'
+    | 'cobalt'
+    | 'purple'
+    | 'lavender'
+    | 'lilac'
+    | 'violet'
+    | 'plum'
+    | 'mauve'
+    | 'brown'
+    | 'tan'
+    | 'coffee'
+    | 'khaki';
   blouseSize?: string | null;
   sku?: string | null;
   stock?: number | null;
@@ -565,7 +623,7 @@ export interface Order {
  */
 export interface Customer {
   id: number;
-  name: string;
+  name?: string | null;
   email: string;
   phone?: string | null;
   betterAuthUserId?: string | null;
@@ -666,6 +724,15 @@ export interface Page {
         | {
             heading?: string | null;
             subheading?: string | null;
+            images?:
+              | {
+                  image: number | Media;
+                  id?: string | null;
+                }[]
+              | null;
+            /**
+             * Legacy single image. Used as fallback if "Images" array is empty.
+             */
             backgroundImage?: (number | null) | Media;
             ctaText?: string | null;
             ctaLink?: string | null;
@@ -1037,23 +1104,6 @@ export interface NewsletterSubscriber {
   createdAt: string;
 }
 /**
- * Users requesting notification when a product returns to stock
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "back-in-stock-requests".
- */
-export interface BackInStockRequest {
-  id: number;
-  product: number | Product;
-  email: string;
-  /**
-   * Auto-set to true after back-in-stock email is sent
-   */
-  notified?: boolean | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
  * Instagram posts shown on the homepage gallery. Synced automatically from the Instagram Graph API when configured, or added manually as fallback.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1226,10 +1276,6 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'newsletter-subscribers';
         value: number | NewsletterSubscriber;
-      } | null)
-    | ({
-        relationTo: 'back-in-stock-requests';
-        value: number | BackInStockRequest;
       } | null)
     | ({
         relationTo: 'instagram-posts';
@@ -1633,6 +1679,12 @@ export interface PagesSelect<T extends boolean = true> {
           | {
               heading?: T;
               subheading?: T;
+              images?:
+                | T
+                | {
+                    image?: T;
+                    id?: T;
+                  };
               backgroundImage?: T;
               ctaText?: T;
               ctaLink?: T;
@@ -1943,17 +1995,6 @@ export interface FormSubmissionsSelect<T extends boolean = true> {
 export interface NewsletterSubscribersSelect<T extends boolean = true> {
   email?: T;
   status?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "back-in-stock-requests_select".
- */
-export interface BackInStockRequestsSelect<T extends boolean = true> {
-  product?: T;
-  email?: T;
-  notified?: T;
   updatedAt?: T;
   createdAt?: T;
 }

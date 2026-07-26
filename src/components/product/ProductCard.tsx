@@ -15,12 +15,14 @@ function getGalleryUrls(product: any): string[] {
   if (!gallery || !Array.isArray(gallery) || gallery.length === 0) {
     return [ph(600, 800, '69254e', 'f5e8ee', product.name || 'Saree')]
   }
-  return gallery.map((g: any) => {
-    if (typeof g.image === 'object' && g.image !== null) {
-      return g.image.sizes?.card?.url || g.image.url || ''
-    }
-    return ph(600, 800, '69254e', 'f5e8ee', product.name || 'Saree')
-  }).filter(Boolean)
+  return gallery
+    .map((g: any) => {
+      if (typeof g.image === 'object' && g.image !== null) {
+        return g.image.sizes?.card?.url || g.image.url || ''
+      }
+      return ph(600, 800, '69254e', 'f5e8ee', product.name || 'Saree')
+    })
+    .filter(Boolean)
 }
 
 function getDiscountPercent(product: any): number | null {
@@ -71,14 +73,13 @@ export function ProductCard({
   const dotHoveredRef = useRef(false)
   const autoTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const discountPct = getDiscountPercent(product)
-  const isOOS =
-    product.trackQuantity === true && (product.quantity ?? 0) <= 0
+  const isOOS = product.trackQuantity === true && (product.quantity ?? 0) <= 0
 
   // Auto-detect badge
   const badge = discountPct
-    ? 'sale' as const
+    ? ('sale' as const)
     : (product as any).purchaseCount > 5
-      ? 'bestseller' as const
+      ? ('bestseller' as const)
       : undefined
 
   // Auto-rotate carousel on hover — pause when dot is hovered
@@ -86,12 +87,15 @@ export function ProductCard({
     if (isCardHovered && galleryUrls.length > 1) {
       autoTimerRef.current = setInterval(() => {
         if (!dotHoveredRef.current) {
-          setActiveImage(prev => (prev + 1) % galleryUrls.length)
+          setActiveImage((prev) => (prev + 1) % galleryUrls.length)
         }
       }, 1500)
     }
     return () => {
-      if (autoTimerRef.current) { clearInterval(autoTimerRef.current); autoTimerRef.current = null }
+      if (autoTimerRef.current) {
+        clearInterval(autoTimerRef.current)
+        autoTimerRef.current = null
+      }
     }
   }, [isCardHovered, galleryUrls.length])
 
@@ -124,7 +128,7 @@ export function ProductCard({
           <div>
             <Link
               href={`/products/${product.slug}`}
-              className="font-display block text-sm font-semibold text-neutral-900 hover:text-brand-700 transition-colors"
+              className="font-display hover:text-brand-700 block text-sm font-semibold text-neutral-900 transition-colors"
             >
               {product.name}
             </Link>
@@ -164,7 +168,9 @@ export function ProductCard({
         <div
           className={cn(
             'relative overflow-hidden bg-neutral-100',
-            isCompact ? 'aspect-[3/4] rounded-t-lg' : 'aspect-[3/4] rounded-t-lg',
+            isCompact
+              ? 'aspect-[3/4] rounded-t-lg'
+              : 'aspect-[3/4] rounded-t-lg',
           )}
         >
           {galleryUrls.map((url, i) => (
@@ -178,7 +184,9 @@ export function ProductCard({
               className={cn(
                 'object-cover transition-opacity duration-300',
                 i === activeImage ? 'opacity-100' : 'opacity-0',
-                galleryUrls.length > 1 && i === activeImage && 'group-hover:scale-105',
+                galleryUrls.length > 1 &&
+                  i === activeImage &&
+                  'group-hover:scale-105',
               )}
               unoptimized={url.startsWith('https://placehold.co')}
             />
@@ -202,7 +210,7 @@ export function ProductCard({
           )}
           {isOOS && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-              <span className="font-display rounded-md bg-brand-600 px-3 py-1 text-[11px] font-bold text-white shadow-sm">
+              <span className="font-display bg-brand-600 rounded-md px-3 py-1 text-[11px] font-bold text-white shadow-sm">
                 Out of Stock
               </span>
             </div>
@@ -219,7 +227,9 @@ export function ProductCard({
                     dotHoveredRef.current = true
                     setActiveImage(i)
                   }}
-                  onMouseLeave={() => { dotHoveredRef.current = false }}
+                  onMouseLeave={() => {
+                    dotHoveredRef.current = false
+                  }}
                   onClick={(e) => {
                     e.preventDefault()
                     e.stopPropagation()
@@ -239,10 +249,15 @@ export function ProductCard({
         </div>
 
         {/* Info */}
-        <div className="rounded-b-lg bg-white px-2.5 pb-3 pt-2">
+        <div className="rounded-b-lg bg-white px-2.5 pt-2 pb-3">
           <p className="font-display text-brand-950 group-hover:text-brand-700 text-sm font-semibold transition-colors">
             {product.name}
           </p>
+          {(product.weave || product.fabric) && (
+            <p className="text-brand-700/60 mt-0.5 text-xs">
+              {[product.weave, product.fabric].filter(Boolean).join(' · ')}
+            </p>
+          )}
 
           {/* Price */}
           <div className="mt-1.5 min-h-[28px]">
