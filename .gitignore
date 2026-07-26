@@ -78,3 +78,5 @@ scripts/fix-linear-desc.cjs
 scripts/update-clo-*.cjs
 scripts/update-linear-descriptions.cjs
 scripts/create-linear-tickets.cjs
+
+# Environment files
