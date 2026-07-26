@@ -63,3 +63,18 @@ public/images/screenshots/
 .dev-boot.log
 
 .vercel
+scripts/create-clo-*.cjs
+scripts/create-linear-tickets.cjs
+scripts/fix-clo-*.cjs
+scripts/fix-linear-desc.cjs
+scripts/update-clo-*.cjs
+scripts/update-linear-descriptions.cjs
+
+# Linear API scripts (contain secrets)
+scripts/create-clo-*.cjs
+scripts/create-linear-tickets.cjs
+scripts/fix-clo-*.cjs
+scripts/fix-linear-desc.cjs
+scripts/update-clo-*.cjs
+scripts/update-linear-descriptions.cjs
+scripts/create-linear-tickets.cjs
