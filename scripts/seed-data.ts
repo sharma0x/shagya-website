@@ -1852,7 +1852,17 @@ export const siteSettingsData = {
   pinterestUrl: 'https://pinterest.com/shayga',
   announcementBar: {
     enabled: true,
-    text: 'Free shipping on orders above ₹999 \u00A0·\u00A0 Easy 7-day returns',
+    announcements: [
+      {
+        text: 'Free shipping on orders above ₹999 \u00A0·\u00A0 Easy 7-day returns',
+      },
+      {
+        text: 'Use code FIRST10 for 10% off your first order',
+      },
+      {
+        text: 'New arrivals every week \u00A0·\u00A0 Handwoven across India',
+      },
+    ],
   },
   shippingPolicy:
     'We offer free shipping on all orders above ₹5,000. Standard delivery takes 5-7 business days. Express delivery is available for an additional fee.',

@@ -2091,7 +2091,13 @@ export interface SiteSetting {
   returnPolicy?: string | null;
   announcementBar?: {
     enabled?: boolean | null;
-    text?: string | null;
+    announcements?:
+      | {
+          text: string;
+          link?: string | null;
+          id?: string | null;
+        }[]
+      | null;
   };
   gstPercent?: number | null;
   currency?: string | null;
@@ -2126,7 +2132,13 @@ export interface SiteSettingsSelect<T extends boolean = true> {
     | T
     | {
         enabled?: T;
-        text?: T;
+        announcements?:
+          | T
+          | {
+              text?: T;
+              link?: T;
+              id?: T;
+            };
       };
   gstPercent?: T;
   currency?: T;

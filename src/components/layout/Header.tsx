@@ -2,7 +2,15 @@
 
 import Link from 'next/link'
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { Search, ShoppingCart, Heart, User, Menu, X, ChevronDown } from 'lucide-react'
+import {
+  Search,
+  ShoppingCart,
+  Heart,
+  User,
+  Menu,
+  X,
+  ChevronDown,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Logo } from '@/components/layout/Logo'
 import { useCart } from '@/lib/store/cart'
@@ -52,8 +60,10 @@ export function Header() {
   const megaMenuRef = useRef<HTMLDivElement>(null)
   const [announcement, setAnnouncement] = useState<{
     enabled: boolean
-    text: string
+    announcements: { text: string; link?: string }[]
   } | null>(null)
+  const [activeAnnouncement, setActiveAnnouncement] = useState(0)
+  const announcementTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [wishlistCount, setWishlistCount] = useState(0)
   const { items } = useCart()
   const { data: sessionData } = useSession()
@@ -90,6 +100,20 @@ export function Header() {
       .catch(() => {})
   }, [])
 
+  // Auto-rotate announcements every 5 seconds
+  useEffect(() => {
+    const count = announcement?.announcements?.length || 0
+    if (count <= 1) return
+
+    announcementTimer.current = setInterval(() => {
+      setActiveAnnouncement((prev) => (prev + 1) % count)
+    }, 5000)
+
+    return () => {
+      if (announcementTimer.current) clearInterval(announcementTimer.current)
+    }
+  }, [announcement?.announcements?.length])
+
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
@@ -116,7 +140,10 @@ export function Header() {
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (megaMenuRef.current && !megaMenuRef.current.contains(e.target as Node)) {
+      if (
+        megaMenuRef.current &&
+        !megaMenuRef.current.contains(e.target as Node)
+      ) {
         setMegaMenuOpen(false)
       }
     }
@@ -127,7 +154,9 @@ export function Header() {
   }, [megaMenuOpen])
 
   useEffect(() => {
-    return () => { if (megaMenuTimeout.current) clearTimeout(megaMenuTimeout.current) }
+    return () => {
+      if (megaMenuTimeout.current) clearTimeout(megaMenuTimeout.current)
+    }
   }, [])
 
   const openMegaMenu = () => {
@@ -150,7 +179,7 @@ export function Header() {
         )}
       >
         {/* Announcement */}
-        {announcement?.enabled && (
+        {announcement?.enabled && announcement.announcements?.length > 0 && (
           <div className="bg-brand-600 relative overflow-hidden px-4 py-2 text-center text-xs text-white">
             {/* Decorative dots */}
             <span
@@ -167,7 +196,7 @@ export function Header() {
               <span className="inline-block h-1 w-1 rounded-full bg-white/30" />
               <span className="ml-1.5 inline-block h-1 w-1 rounded-full bg-white/30" />
             </span>
-            <span className="relative inline-flex items-center gap-2">
+            <div className="relative inline-flex items-center gap-2">
               <svg
                 className="text-gold-300 h-3 w-3 shrink-0"
                 viewBox="0 0 24 24"
@@ -175,10 +204,58 @@ export function Header() {
               >
                 <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
               </svg>
-              <span className="font-medium tracking-wide">
-                {announcement.text}
-              </span>
-            </span>
+              {announcement.announcements.map((item, i) => {
+                const isActive = i === activeAnnouncement
+                const content = (
+                  <span
+                    key={i}
+                    className={`font-medium tracking-wide transition-all duration-300 ${
+                      isActive
+                        ? 'translate-y-0 opacity-100'
+                        : 'pointer-events-none absolute translate-y-2 opacity-0'
+                    }`}
+                  >
+                    {item.text}
+                  </span>
+                )
+                if (item.link) {
+                  return (
+                    <a
+                      key={i}
+                      href={item.link}
+                      className={`relative ${isActive ? '' : 'hidden'}`}
+                    >
+                      {content}
+                    </a>
+                  )
+                }
+                return (
+                  <span
+                    key={i}
+                    className={`relative ${isActive ? '' : 'hidden'}`}
+                  >
+                    {content}
+                  </span>
+                )
+              })}
+            </div>
+            {/* Dot indicators for multiple announcements */}
+            {announcement.announcements.length > 1 && (
+              <div className="absolute bottom-1 left-1/2 flex -translate-x-1/2 gap-1">
+                {announcement.announcements.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setActiveAnnouncement(i)}
+                    className={`h-1 rounded-full transition-all duration-300 ${
+                      i === activeAnnouncement
+                        ? 'w-3 bg-white'
+                        : 'w-1 bg-white/40'
+                    }`}
+                    aria-label={`Go to announcement ${i + 1}`}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -201,66 +278,74 @@ export function Header() {
                   className="font-body hover:text-brand-700 after:bg-brand-600 relative flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium text-neutral-600 transition-colors after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:transition-transform hover:after:scale-x-100"
                 >
                   Sarees
-                  <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m6 9 6 6 6-6" /></svg>
+                  <svg
+                    className="h-3 w-3"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="m6 9 6 6 6-6" />
+                  </svg>
                 </Link>
 
                 {megaMenuOpen && (
                   <div
-                    className="absolute left-0 top-full z-50"
+                    className="absolute top-full left-0 z-50"
                     onMouseEnter={() => openMegaMenu()}
                     onMouseLeave={() => closeMegaMenu()}
                   >
-                    <div className="overflow-hidden border-x border-b border-neutral-100 bg-white shadow-lg min-w-[600px]">
-                    <div className="flex gap-12 px-10 py-6">
-                      {/* Fabric column */}
-                      <div>
-                        <h4 className="font-display mb-3 text-[10px] font-semibold tracking-wider text-brand-600 uppercase">
-                          Fabric
-                        </h4>
-                        <div className="grid grid-cols-3 gap-x-6 gap-y-1.5">
-                          {megaMenu.fabrics.map((f) => (
-                            <Link
-                              key={f.value}
-                              href={`/category/${f.value}`}
-                              onClick={() => setMegaMenuOpen(false)}
-                              className="font-body hover:text-brand-700 after:bg-brand-600 relative whitespace-nowrap rounded px-1.5 py-0.5 text-sm text-neutral-600 transition-colors after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:transition-transform hover:after:scale-x-100"
-                            >
-                              {f.label}
-                            </Link>
-                          ))}
+                    <div className="min-w-[600px] overflow-hidden border-x border-b border-neutral-100 bg-white shadow-lg">
+                      <div className="flex gap-12 px-10 py-6">
+                        {/* Fabric column */}
+                        <div>
+                          <h4 className="font-display text-brand-600 mb-3 text-[10px] font-semibold tracking-wider uppercase">
+                            Fabric
+                          </h4>
+                          <div className="grid grid-cols-3 gap-x-6 gap-y-1.5">
+                            {megaMenu.fabrics.map((f) => (
+                              <Link
+                                key={f.value}
+                                href={`/category/${f.value}`}
+                                onClick={() => setMegaMenuOpen(false)}
+                                className="font-body hover:text-brand-700 after:bg-brand-600 relative rounded px-1.5 py-0.5 text-sm whitespace-nowrap text-neutral-600 transition-colors after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:transition-transform hover:after:scale-x-100"
+                              >
+                                {f.label}
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Weave column */}
+                        <div>
+                          <h4 className="font-display text-brand-600 mb-3 text-[10px] font-semibold tracking-wider uppercase">
+                            Weave
+                          </h4>
+                          <div className="grid grid-cols-3 gap-x-6 gap-y-1.5">
+                            {megaMenu.weaves.map((w) => (
+                              <Link
+                                key={w.value}
+                                href={`/category/${w.value}`}
+                                onClick={() => setMegaMenuOpen(false)}
+                                className="font-body hover:text-brand-700 after:bg-brand-600 relative rounded px-1.5 py-0.5 text-sm whitespace-nowrap text-neutral-600 transition-colors after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:transition-transform hover:after:scale-x-100"
+                              >
+                                {w.label}
+                              </Link>
+                            ))}
+                          </div>
                         </div>
                       </div>
 
-                      {/* Weave column */}
-                      <div>
-                        <h4 className="font-display mb-3 text-[10px] font-semibold tracking-wider text-brand-600 uppercase">
-                          Weave
-                        </h4>
-                        <div className="grid grid-cols-3 gap-x-6 gap-y-1.5">
-                          {megaMenu.weaves.map((w) => (
-                            <Link
-                              key={w.value}
-                              href={`/category/${w.value}`}
-                              onClick={() => setMegaMenuOpen(false)}
-                              className="font-body hover:text-brand-700 after:bg-brand-600 relative whitespace-nowrap rounded px-1.5 py-0.5 text-sm text-neutral-600 transition-colors after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:transition-transform hover:after:scale-x-100"
-                            >
-                              {w.label}
-                            </Link>
-                          ))}
-                        </div>
+                      {/* Shop All */}
+                      <div className="border-t border-neutral-100 px-10 py-3">
+                        <Link
+                          href="/category/all"
+                          onClick={() => setMegaMenuOpen(false)}
+                          className="font-display after:bg-brand-600 text-brand-600 hover:text-brand-700 relative text-xs font-semibold tracking-wider uppercase transition-colors after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:transition-transform hover:after:scale-x-100"
+                        >
+                          Shop All Sarees →
+                        </Link>
                       </div>
-                    </div>
-
-                    {/* Shop All */}
-                    <div className="border-t border-neutral-100 px-10 py-3">
-                      <Link
-                        href="/category/all"
-                        onClick={() => setMegaMenuOpen(false)}
-                        className="font-display after:bg-brand-600 relative text-brand-600 hover:text-brand-700 text-xs font-semibold tracking-wider uppercase transition-colors after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:transition-transform hover:after:scale-x-100"
-                      >
-                        Shop All Sarees →
-                      </Link>
-                    </div>
                     </div>
                   </div>
                 )}
@@ -388,7 +473,7 @@ export function Header() {
             {mobileSareesOpen && (
               <div className="border-b border-neutral-100 pb-3">
                 {/* Fabric */}
-                <p className="mt-3 text-[10px] font-semibold tracking-wider text-brand-600 uppercase">
+                <p className="text-brand-600 mt-3 text-[10px] font-semibold tracking-wider uppercase">
                   Fabric
                 </p>
                 <div className="mt-2 grid grid-cols-2 gap-1">
@@ -405,7 +490,7 @@ export function Header() {
                 </div>
 
                 {/* Weave */}
-                <p className="mt-3 text-[10px] font-semibold tracking-wider text-brand-600 uppercase">
+                <p className="text-brand-600 mt-3 text-[10px] font-semibold tracking-wider uppercase">
                   Weave
                 </p>
                 <div className="mt-2 grid grid-cols-2 gap-1">

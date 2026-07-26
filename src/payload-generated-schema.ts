@@ -3396,6 +3396,30 @@ export const payload_migrations = pgTable(
   ],
 )
 
+export const site_settings_announcement_bar_announcements = pgTable(
+  'site_settings_announcement_bar_announcements',
+  {
+    _order: integer('_order').notNull(),
+    _parentID: integer('_parent_id').notNull(),
+    id: varchar('id').primaryKey(),
+    text: varchar('text'),
+    link: varchar('link'),
+  },
+  (columns) => [
+    index('site_settings_announcement_bar_announcements_order_idx').on(
+      columns._order,
+    ),
+    index('site_settings_announcement_bar_announcements_parent_id_idx').on(
+      columns._parentID,
+    ),
+    foreignKey({
+      columns: [columns['_parentID']],
+      foreignColumns: [site_settings.id],
+      name: 'site_settings_announcement_bar_announcements_parent_id_fk',
+    }).onDelete('cascade'),
+  ],
+)
+
 export const site_settings = pgTable(
   'site_settings',
   {
@@ -3419,9 +3443,6 @@ export const site_settings = pgTable(
     shippingPolicy: varchar('shipping_policy'),
     returnPolicy: varchar('return_policy'),
     announcementBar_enabled: boolean('announcement_bar_enabled').default(true),
-    announcementBar_text: varchar('announcement_bar_text').default(
-      'Free shipping on orders above ₹999  ·  Easy 7-day returns',
-    ),
     gstPercent: numeric('gst_percent', { mode: 'number' }).default(5),
     currency: varchar('currency').default('INR'),
     _status: enum_site_settings_status('_status').default('draft'),
@@ -3470,6 +3491,31 @@ export const site_settings_rels = pgTable(
   ],
 )
 
+export const _site_settings_v_version_announcement_bar_announcements = pgTable(
+  '_site_settings_v_version_announcement_bar_announcements',
+  {
+    _order: integer('_order').notNull(),
+    _parentID: integer('_parent_id').notNull(),
+    id: serial('id').primaryKey(),
+    text: varchar('text'),
+    link: varchar('link'),
+    _uuid: varchar('_uuid'),
+  },
+  (columns) => [
+    index(
+      '_site_settings_v_version_announcement_bar_announcements_order_idx',
+    ).on(columns._order),
+    index(
+      '_site_settings_v_version_announcement_bar_announcements_parent_id_idx',
+    ).on(columns._parentID),
+    foreignKey({
+      columns: [columns['_parentID']],
+      foreignColumns: [_site_settings_v.id],
+      name: '_site_settings_v_version_announcement_bar_announcements_parent_id_fk',
+    }).onDelete('cascade'),
+  ],
+)
+
 export const _site_settings_v = pgTable(
   '_site_settings_v',
   {
@@ -3495,9 +3541,6 @@ export const _site_settings_v = pgTable(
     version_announcementBar_enabled: boolean(
       'version_announcement_bar_enabled',
     ).default(true),
-    version_announcementBar_text: varchar(
-      'version_announcement_bar_text',
-    ).default('Free shipping on orders above ₹999  ·  Easy 7-day returns'),
     version_gstPercent: numeric('version_gst_percent', {
       mode: 'number',
     }).default(5),
@@ -4737,6 +4780,16 @@ export const relations_payload_migrations = relations(
   payload_migrations,
   () => ({}),
 )
+export const relations_site_settings_announcement_bar_announcements = relations(
+  site_settings_announcement_bar_announcements,
+  ({ one }) => ({
+    _parentID: one(site_settings, {
+      fields: [site_settings_announcement_bar_announcements._parentID],
+      references: [site_settings.id],
+      relationName: 'announcementBar_announcements',
+    }),
+  }),
+)
 export const relations_site_settings_rels = relations(
   site_settings_rels,
   ({ one }) => ({
@@ -4765,11 +4818,30 @@ export const relations_site_settings = relations(
       references: [media.id],
       relationName: 'favicon',
     }),
+    announcementBar_announcements: many(
+      site_settings_announcement_bar_announcements,
+      {
+        relationName: 'announcementBar_announcements',
+      },
+    ),
     _rels: many(site_settings_rels, {
       relationName: '_rels',
     }),
   }),
 )
+export const relations__site_settings_v_version_announcement_bar_announcements =
+  relations(
+    _site_settings_v_version_announcement_bar_announcements,
+    ({ one }) => ({
+      _parentID: one(_site_settings_v, {
+        fields: [
+          _site_settings_v_version_announcement_bar_announcements._parentID,
+        ],
+        references: [_site_settings_v.id],
+        relationName: 'version_announcementBar_announcements',
+      }),
+    }),
+  )
 export const relations__site_settings_v_rels = relations(
   _site_settings_v_rels,
   ({ one }) => ({
@@ -4798,6 +4870,12 @@ export const relations__site_settings_v = relations(
       references: [media.id],
       relationName: 'version_favicon',
     }),
+    version_announcementBar_announcements: many(
+      _site_settings_v_version_announcement_bar_announcements,
+      {
+        relationName: 'version_announcementBar_announcements',
+      },
+    ),
     _rels: many(_site_settings_v_rels, {
       relationName: '_rels',
     }),
@@ -4934,8 +5012,10 @@ type DatabaseSchema = {
   payload_preferences: typeof payload_preferences
   payload_preferences_rels: typeof payload_preferences_rels
   payload_migrations: typeof payload_migrations
+  site_settings_announcement_bar_announcements: typeof site_settings_announcement_bar_announcements
   site_settings: typeof site_settings
   site_settings_rels: typeof site_settings_rels
+  _site_settings_v_version_announcement_bar_announcements: typeof _site_settings_v_version_announcement_bar_announcements
   _site_settings_v: typeof _site_settings_v
   _site_settings_v_rels: typeof _site_settings_v_rels
   relations_users_sessions: typeof relations_users_sessions
@@ -5025,8 +5105,10 @@ type DatabaseSchema = {
   relations_payload_preferences_rels: typeof relations_payload_preferences_rels
   relations_payload_preferences: typeof relations_payload_preferences
   relations_payload_migrations: typeof relations_payload_migrations
+  relations_site_settings_announcement_bar_announcements: typeof relations_site_settings_announcement_bar_announcements
   relations_site_settings_rels: typeof relations_site_settings_rels
   relations_site_settings: typeof relations_site_settings
+  relations__site_settings_v_version_announcement_bar_announcements: typeof relations__site_settings_v_version_announcement_bar_announcements
   relations__site_settings_v_rels: typeof relations__site_settings_v_rels
   relations__site_settings_v: typeof relations__site_settings_v
 }

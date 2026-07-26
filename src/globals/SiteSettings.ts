@@ -119,11 +119,24 @@ export const SiteSettings: GlobalConfig = {
           defaultValue: true,
         },
         {
-          name: 'text',
-          type: 'text',
-          label: 'Announcement Text',
-          defaultValue:
-            'Free shipping on orders above ₹999 \u00A0·\u00A0 Easy 7-day returns',
+          name: 'announcements',
+          type: 'array',
+          label: 'Announcements',
+          minRows: 1,
+          maxRows: 10,
+          fields: [
+            {
+              name: 'text',
+              type: 'text',
+              label: 'Announcement Text',
+              required: true,
+            },
+            {
+              name: 'link',
+              type: 'text',
+              label: 'Link URL (optional)',
+            },
+          ],
         },
       ],
     },
@@ -150,7 +163,8 @@ export const SiteSettings: GlobalConfig = {
       hasMany: true,
       label: 'Featured Coupon Codes',
       admin: {
-        description: 'Select coupons to display on the checkout page under pre-populated offers',
+        description:
+          'Select coupons to display on the checkout page under pre-populated offers',
       },
     },
   ],
