@@ -180,40 +180,23 @@ export function Header() {
       >
         {/* Announcement */}
         {announcement?.enabled && announcement.announcements?.length > 0 && (
-          <div className="bg-brand-600 relative overflow-hidden px-4 py-2 text-center text-xs text-white">
-            {/* Decorative dots */}
-            <span
-              className="absolute top-1/2 left-4 hidden -translate-y-1/2 sm:block"
-              aria-hidden="true"
+          <div className="bg-brand-600 relative flex items-center justify-center overflow-hidden px-10 py-2 text-center text-xs text-white">
+            <div
+              className="relative grid items-center"
+              style={{ gridTemplateAreas: '"slide"' }}
             >
-              <span className="inline-block h-1 w-1 rounded-full bg-white/30" />
-              <span className="ml-1.5 inline-block h-1 w-1 rounded-full bg-white/30" />
-            </span>
-            <span
-              className="absolute top-1/2 right-4 hidden -translate-y-1/2 sm:block"
-              aria-hidden="true"
-            >
-              <span className="inline-block h-1 w-1 rounded-full bg-white/30" />
-              <span className="ml-1.5 inline-block h-1 w-1 rounded-full bg-white/30" />
-            </span>
-            <div className="relative inline-flex items-center gap-2">
-              <svg
-                className="text-gold-300 h-3 w-3 shrink-0"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-              >
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-              </svg>
               {announcement.announcements.map((item, i) => {
-                const isActive = i === activeAnnouncement
-                const content = (
+                const offset = i - activeAnnouncement
+                const isActive = offset === 0
+                const textEl = (
                   <span
-                    key={i}
-                    className={`font-medium tracking-wide transition-all duration-300 ${
-                      isActive
-                        ? 'translate-y-0 opacity-100'
-                        : 'pointer-events-none absolute translate-y-2 opacity-0'
-                    }`}
+                    key={`${i}-${item.text}`}
+                    className="font-medium tracking-wide whitespace-nowrap transition-all duration-500 ease-[cubic-bezier(0.25,0.1,0.25,1)]"
+                    style={{
+                      gridArea: 'slide',
+                      transform: `translateX(${offset * 30}%)`,
+                      opacity: isActive ? 1 : 0,
+                    }}
                   >
                     {item.text}
                   </span>
@@ -223,38 +206,65 @@ export function Header() {
                     <a
                       key={i}
                       href={item.link}
-                      className={`relative ${isActive ? '' : 'hidden'}`}
+                      className="relative z-10"
+                      style={{ gridArea: 'slide' }}
+                      aria-label={item.text}
                     >
-                      {content}
+                      {textEl}
                     </a>
                   )
                 }
-                return (
-                  <span
-                    key={i}
-                    className={`relative ${isActive ? '' : 'hidden'}`}
-                  >
-                    {content}
-                  </span>
-                )
+                return textEl
               })}
             </div>
-            {/* Dot indicators for multiple announcements */}
+            {/* Arrow navigation for multiple announcements */}
             {announcement.announcements.length > 1 && (
-              <div className="absolute bottom-1 left-1/2 flex -translate-x-1/2 gap-1">
-                {announcement.announcements.map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setActiveAnnouncement(i)}
-                    className={`h-1 rounded-full transition-all duration-300 ${
-                      i === activeAnnouncement
-                        ? 'w-3 bg-white'
-                        : 'w-1 bg-white/40'
-                    }`}
-                    aria-label={`Go to announcement ${i + 1}`}
-                  />
-                ))}
-              </div>
+              <>
+                <button
+                  onClick={() =>
+                    setActiveAnnouncement(
+                      (prev) =>
+                        (prev - 1 + announcement.announcements.length) %
+                        announcement.announcements.length,
+                    )
+                  }
+                  className="absolute top-1/2 left-1 -translate-y-1/2 p-1.5 text-white/60 transition-all duration-200 hover:scale-110 hover:text-white"
+                  aria-label="Previous announcement"
+                >
+                  <svg
+                    className="h-3.5 w-3.5"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <polyline points="15 18 9 12 15 6" />
+                  </svg>
+                </button>
+                <button
+                  onClick={() =>
+                    setActiveAnnouncement(
+                      (prev) => (prev + 1) % announcement.announcements.length,
+                    )
+                  }
+                  className="absolute top-1/2 right-1 -translate-y-1/2 p-1.5 text-white/60 transition-all duration-200 hover:scale-110 hover:text-white"
+                  aria-label="Next announcement"
+                >
+                  <svg
+                    className="h-3.5 w-3.5"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                </button>
+              </>
             )}
           </div>
         )}
