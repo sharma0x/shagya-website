@@ -3,12 +3,21 @@ import config from '@payload-config'
 import { notFound } from 'next/navigation'
 import { headers as nextHeaders } from 'next/headers'
 import Link from 'next/link'
-import { ArrowLeft, ShieldCheck, Truck, RefreshCw, Sparkles } from 'lucide-react'
+import {
+  ArrowLeft,
+  ShieldCheck,
+  Truck,
+  RefreshCw,
+  Sparkles,
+} from 'lucide-react'
 import { ProductActions } from '@/components/product/ProductActions'
 import { ProductGallery } from '@/components/product/ProductGallery'
 import { RefreshRouteOnSave } from '@/components/live-preview/RefreshRouteOnSave'
 import { WhatsAppOrderButton } from '@/components/product/WhatsAppOrderButton'
-import { ProductReviews, type ReviewData } from '@/components/product/ProductReviews'
+import {
+  ProductReviews,
+  type ReviewData,
+} from '@/components/product/ProductReviews'
 import { RecommendationRow } from '@/components/product/RecommendationRow'
 import { getRelatedProducts, getProductsByIds } from '@/lib/recommendations'
 import { getRecentlyViewedIds } from '@/lib/recently-viewed'
@@ -183,10 +192,13 @@ export default async function ProductDetailPage({
 
   // Fetch recently viewed products (exclude current)
   const recentIds = await getRecentlyViewedIds()
-  const filteredRecentIds = recentIds.filter((id) => id !== String(product.id)).slice(0, 8)
-  const recentlyViewedProducts = filteredRecentIds.length > 0
-    ? await getProductsByIds(filteredRecentIds)
-    : []
+  const filteredRecentIds = recentIds
+    .filter((id) => id !== String(product.id))
+    .slice(0, 8)
+  const recentlyViewedProducts =
+    filteredRecentIds.length > 0
+      ? await getProductsByIds(filteredRecentIds)
+      : []
 
   // Fetch applicable coupons for this product
   const couponsRes = await fetch(
@@ -213,7 +225,10 @@ export default async function ProductDetailPage({
     compareAtPrice: product.compareAtPrice || undefined,
     brand: product.brand?.name || null,
     tags: product.tags
-      ? product.tags.split(',').map((t: string) => t.trim()).filter(Boolean)
+      ? product.tags
+          .split(',')
+          .map((t: string) => t.trim())
+          .filter(Boolean)
       : [],
     features: (product.features || []).map((f: any) => f.label).filter(Boolean),
     discountPercentage: product.discountPercentage || 0,
@@ -278,237 +293,265 @@ export default async function ProductDetailPage({
     <>
       <TrackRecentlyViewed productId={String(product.id)} />
       <div className="bg-surface min-h-screen py-12 md:py-16">
-      {isPreview && <RefreshRouteOnSave />}
-      <div className="container-page">
-        {/* Back link */}
-        <Link
-          href={`/category/${product.fabric}`}
-          className="font-display hover:text-brand-700 inline-flex items-center gap-1.5 text-xs font-medium text-neutral-400 transition-colors hover:text-neutral-700"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          {product.fabric.charAt(0).toUpperCase() +
-            product.fabric.slice(1)}{' '}
-          Sarees
-        </Link>
+        {isPreview && <RefreshRouteOnSave />}
+        <div className="container-page">
+          {/* Back link */}
+          <Link
+            href={`/category/${product.fabric}`}
+            className="font-display hover:text-brand-700 inline-flex items-center gap-1.5 text-xs font-medium text-neutral-400 transition-colors hover:text-neutral-700"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            {product.fabric.charAt(0).toUpperCase() +
+              product.fabric.slice(1)}{' '}
+            Sarees
+          </Link>
 
-        {/* ── Main PDP Grid ── */}
-        <div className="mt-8 grid gap-10 lg:grid-cols-12 lg:gap-14">
-          {/* Left — Gallery */}
-          <div className="lg:col-span-7">
-            <ProductGallery imageUrls={imageUrls} productName={product.name} />
-          </div>
+          {/* ── Main PDP Grid ── */}
+          <div className="mt-8 grid gap-10 lg:grid-cols-12 lg:gap-14">
+            {/* Left — Gallery */}
+            <div className="lg:col-span-7">
+              <ProductGallery
+                imageUrls={imageUrls}
+                productName={product.name}
+              />
+            </div>
 
-          {/* Right — Info (sticky on desktop) */}
-          <div className="lg:col-span-5">
-            <div className="lg:sticky lg:top-24">
-              {/* Brand + Category */}
-              <div className="flex flex-wrap items-center gap-2">
-                {serializableProduct.brand && (
-                  <span className="font-display text-neutral-500 text-[11px] font-semibold tracking-wider uppercase">
-                    {serializableProduct.brand}
+            {/* Right — Info (sticky on desktop) */}
+            <div className="lg:col-span-5">
+              <div className="lg:sticky lg:top-24">
+                {/* Brand + Category */}
+                <div className="flex flex-wrap items-center gap-2">
+                  {serializableProduct.brand && (
+                    <span className="font-display text-[11px] font-semibold tracking-wider text-neutral-500 uppercase">
+                      {serializableProduct.brand}
+                    </span>
+                  )}
+                  <span className="font-display bg-brand-50 text-brand-700 rounded-md px-2.5 py-1 text-[11px] font-semibold tracking-wide">
+                    {product.weave.charAt(0).toUpperCase() +
+                      product.weave.slice(1)}{' '}
+                    Weave
                   </span>
-                )}
-                <span className="font-display bg-brand-50 text-brand-700 rounded-md px-2.5 py-1 text-[11px] font-semibold tracking-wide">
-                  {product.weave.charAt(0).toUpperCase() +
-                    product.weave.slice(1)}{' '}
-                  Weave
-                </span>
-                {product.occasion && (
-                  <span className="font-body text-xs text-neutral-400">
-                    {product.occasion}
-                  </span>
-                )}
-              </div>
+                  {product.occasion && (
+                    <span className="font-body text-xs text-neutral-400">
+                      {product.occasion}
+                    </span>
+                  )}
+                </div>
 
-              {/* Title */}
-              <h1 className="font-display mt-4 text-2xl font-semibold tracking-tight text-neutral-900 md:text-3xl">
-                {product.name}
-              </h1>
+                {/* Title */}
+                <h1 className="font-display mt-4 text-2xl font-semibold tracking-tight text-neutral-900 md:text-3xl">
+                  {product.name}
+                </h1>
 
-              {/* Pricing */}
-              <div className="mt-5 border-b border-neutral-100 pb-5">
-                <div className="flex flex-wrap items-baseline gap-3">
-                  <span className="font-display text-2xl font-semibold text-neutral-900">
-                    ₹{product.basePrice.toLocaleString('en-IN')}
-                  </span>
-                  {product.compareAtPrice &&
-                    product.compareAtPrice > product.basePrice && (
-                      <span className="font-display text-sm text-neutral-400 line-through">
-                        ₹{product.compareAtPrice.toLocaleString('en-IN')}
+                {/* Pricing */}
+                <div className="mt-5 border-b border-neutral-100 pb-5">
+                  <div className="flex flex-wrap items-baseline gap-3">
+                    <span className="font-display text-2xl font-semibold text-neutral-900">
+                      ₹{product.basePrice.toLocaleString('en-IN')}
+                    </span>
+                    {product.compareAtPrice &&
+                      product.compareAtPrice > product.basePrice && (
+                        <span className="font-display text-sm text-neutral-400 line-through">
+                          ₹{product.compareAtPrice.toLocaleString('en-IN')}
+                        </span>
+                      )}
+                    {serializableProduct.discountPercentage > 0 && (
+                      <span className="font-display rounded-md bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700">
+                        {serializableProduct.discountPercentage}% OFF
                       </span>
                     )}
-                  {serializableProduct.discountPercentage > 0 && (
-                    <span className="font-display rounded-md bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700">
-                      {serializableProduct.discountPercentage}% OFF
-                    </span>
-                  )}
-                </div>
-                <p className="font-body mt-1 text-[11px] text-neutral-400">
-                  Inclusive of all taxes
-                </p>
-              </div>
-
-              {/* Available Offers — Amazon style */}
-              <OffersSection
-                coupons={productCoupons}
-                variant="banner"
-                className="mt-4"
-              />
-
-              {/* Rating + Purchase count */}
-              {serializableProduct.rating.count > 0 && (
-                <div className="mt-3 flex items-center gap-3 text-xs text-neutral-500">
-                  <Rating value={Math.round(serializableProduct.rating.average)} size="sm" />
-                  <span>{serializableProduct.rating.count} reviews</span>
-                  {serializableProduct.purchaseCount > 0 && (
-                    <span className="text-neutral-300">·</span>
-                  )}
-                  {serializableProduct.purchaseCount > 0 && (
-                    <span>{serializableProduct.purchaseCount} purchases</span>
-                  )}
-                </div>
-              )}
-
-              {/* Stock urgency */}
-              {serializableProduct.quantity > 0 && serializableProduct.quantity <= serializableProduct.lowStockThreshold && (
-                <p className="mt-2 text-xs font-medium text-amber-700">
-                  {serializableProduct.quantity === 1 ? 'Only 1 left in stock' : `Only ${serializableProduct.quantity} left in stock`}
-                </p>
-              )}
-
-              {/* Tags */}
-              {serializableProduct.tags.length > 0 && (
-                <div className="mt-3 flex flex-wrap gap-1.5">
-                  {serializableProduct.tags.map((tag: string) => (
-                    <span key={tag} className="rounded-full border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-[10px] text-neutral-500">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              )}
-
-              {/* Features / Badges */}
-              {serializableProduct.features.length > 0 && (
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {serializableProduct.features.map((feat: string) => (
-                    <span key={feat} className="inline-flex items-center gap-1 rounded-md bg-brand-50 px-2.5 py-1 text-[10px] font-medium text-brand-700">
-                      <Sparkles className="h-3 w-3" />
-                      {feat}
-                    </span>
-                  ))}
-              </div>
-            )}
-
-              {/* Size, stitching, CTAs */}
-              <div className="mt-7">
-                <ProductActions product={serializableProduct} isOutOfStock={product.trackQuantity === true && (product.quantity ?? 0) <= 0} />
-              </div>
-
-              {/* Trust signals — inline list, no icon circles */}
-              <div className="mt-8 space-y-3.5 border-t border-neutral-100 pt-8">
-                {TRUST.map(({ icon: Icon, text }) => (
-                  <div
-                    key={text}
-                    className="flex items-start gap-3 text-sm text-neutral-600"
-                  >
-                    <Icon className="text-brand-600 mt-0.5 h-4 w-4 shrink-0" />
-                    <span>{text}</span>
                   </div>
-                ))}
+                  <p className="font-body mt-1 text-[11px] text-neutral-400">
+                    Inclusive of all taxes
+                  </p>
+                </div>
+
+                {/* Available Offers — Amazon style */}
+                <OffersSection
+                  coupons={productCoupons}
+                  variant="banner"
+                  className="mt-4"
+                />
+
+                {/* Rating + Purchase count */}
+                {serializableProduct.rating.count > 0 && (
+                  <div className="mt-3 flex items-center gap-3 text-xs text-neutral-500">
+                    <Rating
+                      value={Math.round(serializableProduct.rating.average)}
+                      size="sm"
+                    />
+                    <span>{serializableProduct.rating.count} reviews</span>
+                    {serializableProduct.purchaseCount > 0 && (
+                      <span className="text-neutral-300">·</span>
+                    )}
+                    {serializableProduct.purchaseCount > 0 && (
+                      <span>{serializableProduct.purchaseCount} purchases</span>
+                    )}
+                  </div>
+                )}
+
+                {/* Stock urgency */}
+                {serializableProduct.quantity > 0 &&
+                  serializableProduct.quantity <=
+                    serializableProduct.lowStockThreshold && (
+                    <p className="mt-2 text-xs font-medium text-amber-700">
+                      {serializableProduct.quantity === 1
+                        ? 'Only 1 left in stock'
+                        : `Only ${serializableProduct.quantity} left in stock`}
+                    </p>
+                  )}
+
+                {/* Tags */}
+                {serializableProduct.tags.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    {serializableProduct.tags.map((tag: string) => (
+                      <span
+                        key={tag}
+                        className="rounded-full border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-[10px] text-neutral-500"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* Features / Badges */}
+                {serializableProduct.features.length > 0 && (
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {serializableProduct.features.map((feat: string) => (
+                      <span
+                        key={feat}
+                        className="bg-brand-50 text-brand-700 inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-[10px] font-medium"
+                      >
+                        <Sparkles className="h-3 w-3" />
+                        {feat}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* Size, stitching, CTAs */}
+                <div className="mt-7">
+                  <ProductActions
+                    product={serializableProduct}
+                    isOutOfStock={
+                      product.trackQuantity === true &&
+                      (product.quantity ?? 0) <= 0
+                    }
+                  />
+                </div>
+
+                {/* Trust signals — inline list, no icon circles */}
+                <div className="mt-8 space-y-3.5 border-t border-neutral-100 pt-8">
+                  {TRUST.map(({ icon: Icon, text }) => (
+                    <div
+                      key={text}
+                      className="flex items-start gap-3 text-sm text-neutral-600"
+                    >
+                      <Icon className="text-brand-600 mt-0.5 h-4 w-4 shrink-0" />
+                      <span>{text}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* ── Details: Story + Specs ── */}
-        <div className="mt-12 border-t border-neutral-200 pt-12 pb-12">
-          <div className="grid gap-12 lg:grid-cols-12 lg:gap-14">
-            {/* Weave Story */}
-            <div className="lg:col-span-7">
-              <div className="bg-gold-400 mb-5 h-px w-12" aria-hidden="true" />
-              <h2 className="font-display text-xl font-semibold tracking-tight text-neutral-900">
-                The Weave Story
-              </h2>
-              <div className="mt-5">
-                {product.description ? (
-                  <LexicalRenderer content={product.description} />
+          {/* ── Details: Story + Specs ── */}
+          <div className="mt-12 border-t border-neutral-200 pt-12 pb-12">
+            <div className="grid gap-12 lg:grid-cols-12 lg:gap-14">
+              {/* Weave Story */}
+              <div className="lg:col-span-7">
+                <div
+                  className="bg-gold-400 mb-5 h-px w-12"
+                  aria-hidden="true"
+                />
+                <h2 className="font-display text-xl font-semibold tracking-tight text-neutral-900">
+                  The Weave Story
+                </h2>
+                <div className="mt-5">
+                  {product.description ? (
+                    <LexicalRenderer content={product.description} />
+                  ) : (
+                    <p className="text-sm text-neutral-400">
+                      No description yet for this piece.
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Specifications */}
+              <div className="lg:col-span-5">
+                <div
+                  className="bg-gold-400 mb-5 h-px w-12"
+                  aria-hidden="true"
+                />
+                <h2 className="font-display text-xl font-semibold tracking-tight text-neutral-900">
+                  Specifications
+                </h2>
+                {specs.length > 0 ? (
+                  <dl className="mt-5 overflow-hidden rounded-xl border border-neutral-200 bg-white">
+                    {specs.map(({ label, value }, i) => (
+                      <div
+                        key={label}
+                        className={`flex items-baseline px-4 py-3.5 text-sm ${
+                          i < specs.length - 1
+                            ? 'border-b border-neutral-100'
+                            : ''
+                        }`}
+                      >
+                        <dt className="font-body w-2/5 shrink-0 text-xs text-neutral-400">
+                          {label}
+                        </dt>
+                        <dd className="font-body font-medium text-neutral-800">
+                          {value}
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
                 ) : (
-                  <p className="text-sm text-neutral-400">
-                    No description yet for this piece.
+                  <p className="mt-5 text-sm text-neutral-400">
+                    Specifications coming soon.
                   </p>
                 )}
               </div>
             </div>
-
-            {/* Specifications */}
-            <div className="lg:col-span-5">
-              <div className="bg-gold-400 mb-5 h-px w-12" aria-hidden="true" />
-              <h2 className="font-display text-xl font-semibold tracking-tight text-neutral-900">
-                Specifications
-              </h2>
-              {specs.length > 0 ? (
-                <dl className="mt-5 overflow-hidden rounded-xl border border-neutral-200 bg-white">
-                  {specs.map(({ label, value }, i) => (
-                    <div
-                      key={label}
-                      className={`flex items-baseline px-4 py-3.5 text-sm ${
-                        i < specs.length - 1
-                          ? 'border-b border-neutral-100'
-                          : ''
-                      }`}
-                    >
-                      <dt className="font-body w-2/5 shrink-0 text-xs text-neutral-400">
-                        {label}
-                      </dt>
-                      <dd className="font-body font-medium text-neutral-800">
-                        {value}
-                      </dd>
-                    </div>
-                  ))}
-                </dl>
-              ) : (
-                <p className="mt-5 text-sm text-neutral-400">
-                  Specifications coming soon.
-                </p>
-              )}
-            </div>
           </div>
         </div>
+
+        {/* ── You May Also Like ── */}
+        {relatedProducts.length > 0 && (
+          <RecommendationRow
+            title="You May Also Like"
+            products={relatedProducts}
+            className="container-page border-t border-neutral-200 pt-12 pb-8"
+          />
+        )}
+
+        {/* ── Customer Reviews ── */}
+        <ProductReviews
+          reviews={reviews}
+          averageRating={avgRating}
+          totalCount={reviews.length}
+          productId={product.id}
+          productSlug={slug}
+        />
+        {/* ── Recently Viewed ── */}
+        {recentlyViewedProducts.length > 0 && (
+          <RecommendationRow
+            title="Recently Viewed"
+            products={recentlyViewedProducts}
+            className="container-page border-t border-neutral-200 pt-12 pb-8"
+          />
+        )}
       </div>
-
-      {/* ── You May Also Like ── */}
-      {relatedProducts.length > 0 && (
-        <RecommendationRow
-          title="You May Also Like"
-          products={relatedProducts}
-          className="px-8 pt-12 pb-8 border-t border-neutral-200"
+      {contactPhone && (
+        <WhatsAppOrderButton
+          phone={contactPhone}
+          productName={product.name}
+          productSlug={product.slug || slug}
         />
       )}
-
-      {/* ── Customer Reviews ── */}
-      <ProductReviews
-        reviews={reviews}
-        averageRating={avgRating}
-        totalCount={reviews.length}
-        productId={product.id}
-        productSlug={slug}
-      />
-      {/* ── Recently Viewed ── */}
-      {recentlyViewedProducts.length > 0 && (
-        <RecommendationRow
-          title="Recently Viewed"
-          products={recentlyViewedProducts}
-          className="px-8 pt-12 pb-8 border-t border-neutral-200"
-        />
-      )}
-    </div>
-    {contactPhone && (
-      <WhatsAppOrderButton
-        phone={contactPhone}
-        productName={product.name}
-        productSlug={product.slug || slug}
-      />
-    )}
     </>
   )
 }
