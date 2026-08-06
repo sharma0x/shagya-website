@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import { auth } from '@/lib/auth'
+import { mergeCartItems, normalizeVariant } from '@/lib/cart-merge'
 
 /**
  * GET /api/cart
@@ -117,7 +118,7 @@ export async function POST(request: Request): Promise<NextResponse> {
           typeof item.product === 'object' && item.product !== null
             ? item.product.id
             : item.product,
-        variant: item.variant || null,
+        variant: normalizeVariant(item.variant),
         quantity: item.quantity,
         unitPrice: item.unitPrice,
       })),
@@ -130,29 +131,15 @@ export async function POST(request: Request): Promise<NextResponse> {
     }
 
     if (carts.docs.length > 0) {
-      // Merge incoming items with existing cart items
+      // Merge incoming items with existing cart items. Existing items come
+      // back from payload.find with relationships populated (default depth
+      // >= 1), so keys must normalize populated product objects + variants.
       const existingItems = (carts.docs[0] as any).items || []
 
-      const merged = new Map<string, any>()
-      for (const item of existingItems) {
-        const key = `${item.product}-${item.variant || 'none'}`
-        merged.set(key, { ...item })
-      }
-
-      for (const item of data.items) {
-        const key = `${item.product}-${item.variant || 'none'}`
-        const existing = merged.get(key)
-        if (existing) {
-          existing.quantity = Math.max(existing.quantity || 1, item.quantity || 1)
-          if (item.unitPrice) existing.unitPrice = item.unitPrice
-        } else {
-          merged.set(key, { ...item })
-        }
-      }
-
-      data.items = [...merged.values()]
+      data.items = mergeCartItems(existingItems, data.items)
       data.subtotal = data.items.reduce(
-        (acc: number, item: any) => acc + (item.unitPrice || 0) * (item.quantity || 1),
+        (acc: number, item: any) =>
+          acc + (item.unitPrice || 0) * (item.quantity || 1),
         0,
       )
 

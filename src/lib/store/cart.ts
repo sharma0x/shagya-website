@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { normalizeVariant, dedupeCartItems } from '@/lib/cart-merge'
 
 export interface CartItem {
   product: {
@@ -66,11 +67,14 @@ interface CartState {
   getTotal: () => number
 }
 
-// Helper to compare variants
+// Helper to compare variants. An empty object "{}" (PDP no-selection) and
+// null/undefined (homepage) both mean "no variant", so they must match.
 const isSameVariant = (v1: any, v2: any) => {
-  if (!v1 && !v2) return true
-  if (!v1 || !v2) return false
-  return JSON.stringify(v1) === JSON.stringify(v2)
+  const a = normalizeVariant(v1)
+  const b = normalizeVariant(v2)
+  if (!a && !b) return true
+  if (!a || !b) return false
+  return JSON.stringify(a) === JSON.stringify(b)
 }
 
 export const useCart = create<CartState>()(
@@ -81,11 +85,14 @@ export const useCart = create<CartState>()(
       isLoading: false,
 
       addItem: (product, quantity = 1, variant = null) => {
-        const currentItems = get().items
+        const currentItems = dedupeCartItems(get().items)
+        const normalizedVariant = normalizeVariant(
+          variant,
+        ) as CartItem['variant']
         const existingIndex = currentItems.findIndex(
           (item) =>
             item.product.id === product.id &&
-            isSameVariant(item.variant, variant),
+            isSameVariant(item.variant, normalizedVariant),
         )
 
         let newItems = [...currentItems]
@@ -101,7 +108,7 @@ export const useCart = create<CartState>()(
         } else {
           newItems.push({
             product,
-            variant,
+            variant: normalizedVariant,
             quantity: Math.min(10, quantity),
             unitPrice: product.basePrice,
           })
@@ -187,7 +194,10 @@ export const useCart = create<CartState>()(
                 quantity: item.quantity,
                 unitPrice: item.unitPrice || item.product.basePrice,
               }))
-              set({ items: formattedItems, coupon: data.coupon || null })
+              set({
+                items: dedupeCartItems(formattedItems),
+                coupon: data.coupon || null,
+              })
             }
           }
         } catch (error) {
