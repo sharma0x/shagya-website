@@ -466,11 +466,19 @@ export const products: SeedProduct[] = [
       {
         colorName: 'Ruby Red',
         imagePath: 'images/products/saree-01.jpg',
+        galleryImages: [
+          'images/products/saree-02.jpg',
+          'images/products/saree-03.jpg',
+        ],
         stock: 5,
       },
       {
         colorName: 'Emerald Green',
         imagePath: 'images/products/saree-02.jpg',
+        galleryImages: [
+          'images/products/saree-04.jpg',
+          'images/products/saree-05.jpg',
+        ],
         stock: 5,
       },
       {
@@ -509,11 +517,19 @@ export const products: SeedProduct[] = [
       {
         colorName: 'Ruby Red',
         imagePath: 'images/products/saree-04.jpg',
+        galleryImages: [
+          'images/products/saree-07.jpg',
+          'images/products/saree-10.jpg',
+        ],
         stock: 3,
       },
       {
         colorName: 'Deep Burgundy',
         imagePath: 'images/products/saree-05.jpg',
+        galleryImages: [
+          'images/products/saree-08.jpg',
+          'images/products/saree-11.jpg',
+        ],
         stock: 3,
         priceOverride: 25500,
       },
