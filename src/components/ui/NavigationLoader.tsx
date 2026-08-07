@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
+import { PageLoader } from '@/components/ui/PageLoader'
 
 export function NavigationLoader() {
   const pathname = usePathname()
@@ -21,15 +22,28 @@ export function NavigationLoader() {
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      const link = (e.target as HTMLElement).closest('a')
-      if (!link) return
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
+
+      const target = e.target as HTMLElement
+      // Only treat clicks whose closest interactive element IS the anchor as
+      // navigation. Buttons/inputs nested inside a card <Link> (add-to-cart,
+      // wishlist, etc.) call preventDefault and must NOT arm the loader —
+      // otherwise the overlay sticks forever (pathname never changes).
+      const interactive = target.closest(
+        'a[href], button, input, select, textarea, [role="button"]',
+      )
+      if (!interactive || interactive.tagName !== 'A') return
+
+      const link = interactive as HTMLAnchorElement
       const href = link.getAttribute('href')
       if (
         !href ||
         href.startsWith('http') ||
         href.startsWith('#') ||
         href.startsWith('mailto:') ||
-        href.startsWith('tel:')
+        href.startsWith('tel:') ||
+        link.target === '_blank' ||
+        link.hasAttribute('download')
       )
         return
 
@@ -48,9 +62,5 @@ export function NavigationLoader() {
 
   if (!visible) return null
 
-  return (
-    <div className="bg-brand-600/30 fixed top-0 right-0 left-0 z-[9999] h-0.5">
-      <div className="animate-loader-bar bg-brand-500 h-full w-full" />
-    </div>
-  )
+  return <PageLoader />
 }
