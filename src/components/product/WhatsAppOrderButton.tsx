@@ -1,21 +1,25 @@
 'use client'
 
+import { getProductUrl } from '@/lib/product-url'
+
 interface WhatsAppOrderButtonProps {
   phone: string
   productName: string
   productSlug: string
+  productId: string | number
 }
 
 export function WhatsAppOrderButton({
   phone,
   productName,
   productSlug,
+  productId,
 }: WhatsAppOrderButtonProps) {
   const cleanPhone = phone.replace(/[\s+\-()]/g, '')
   const baseUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'https://shayga.in'
-  const productUrl = `${baseUrl}/products/${productSlug}`
+  const productUrl = `${baseUrl}${getProductUrl(productSlug, productId)}`
   const message = encodeURIComponent(
-    `Hi, I'm interested in ordering: ${productName}\n${productUrl}`
+    `Hi, I'm interested in ordering: ${productName}\n${productUrl}`,
   )
   const waUrl = `https://wa.me/${cleanPhone}?text=${message}`
 
@@ -25,9 +29,9 @@ export function WhatsAppOrderButton({
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Order on WhatsApp"
-      className="group fixed bottom-20 right-5 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg transition-all duration-300 hover:bg-[#1ebe5c] hover:shadow-xl lg:bottom-6 lg:right-6"
+      className="group fixed right-5 bottom-20 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg transition-all duration-300 hover:bg-[#1ebe5c] hover:shadow-xl lg:right-6 lg:bottom-6"
     >
-      <span className="absolute inset-0 animate-pulse-ring rounded-full bg-[#25D366] opacity-0" />
+      <span className="animate-pulse-ring absolute inset-0 rounded-full bg-[#25D366] opacity-0" />
       <svg
         viewBox="0 0 24 24"
         fill="currentColor"

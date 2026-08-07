@@ -4,11 +4,13 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { getProductUrl } from '@/lib/product-url'
 import { SkeletonImage } from '@/components/ui/SkeletonImage'
 
 export interface ProductHotspot {
   productName: string
   productSlug: string
+  productId: string | number
   price: number
   x: number
   y: number
@@ -65,8 +67,8 @@ export function ShopTheLook({
             >
               <button
                 className={cn(
-                  'flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-brand-600 shadow-lg transition-all duration-200 hover:scale-110',
-                  activeHotspot === i && 'scale-110 bg-brand-500',
+                  'bg-brand-600 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white shadow-lg transition-all duration-200 hover:scale-110',
+                  activeHotspot === i && 'bg-brand-500 scale-110',
                 )}
                 aria-label={`View ${hotspot.productName}`}
               >
@@ -89,11 +91,11 @@ export function ShopTheLook({
                 <p className="font-display text-xs font-semibold text-neutral-900">
                   {hotspot.productName}
                 </p>
-                <p className="font-body mt-0.5 text-xs text-brand-700">
+                <p className="font-body text-brand-700 mt-0.5 text-xs">
                   ₹{hotspot.price.toLocaleString('en-IN')}
                 </p>
                 <Link
-                  href={`/products/${hotspot.productSlug}`}
+                  href={getProductUrl(hotspot.productSlug, hotspot.productId)}
                   className="font-display text-brand-600 hover:text-brand-700 mt-1.5 inline-block text-[11px] font-semibold"
                 >
                   Shop Now →

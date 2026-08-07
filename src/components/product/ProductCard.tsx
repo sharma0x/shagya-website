@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { WishlistButton } from '@/components/product/WishlistButton'
 import { ProductBadge } from '@/components/ui/ProductBadge'
 import { cn } from '@/lib/utils'
+import { getProductUrl } from '@/lib/product-url'
 
 const ph = (w: number, h: number, _bg: string, _fg: string, text: string) =>
   `https://images.placeholders.dev/?width=${w}&height=${h}&text=${encodeURIComponent(text.substring(0, 20))}&bgColor=%2369254e&textColor=%23f5e8ee&fontFamily=lora&fontWeight=600`
@@ -112,7 +113,7 @@ export function ProductCard({
     return (
       <div className={cn('flex gap-4', className)}>
         <Link
-          href={`/products/${product.slug}`}
+          href={getProductUrl(product.slug, product.id)}
           className="relative h-32 w-24 shrink-0 overflow-hidden rounded-lg bg-neutral-100"
         >
           <Image
@@ -127,7 +128,7 @@ export function ProductCard({
         <div className="flex flex-1 flex-col justify-between py-1">
           <div>
             <Link
-              href={`/products/${product.slug}`}
+              href={getProductUrl(product.slug, product.id)}
               className="font-display hover:text-brand-700 block text-sm font-semibold text-neutral-900 transition-colors"
             >
               {product.name}
@@ -156,7 +157,7 @@ export function ProductCard({
       }}
     >
       <Link
-        href={`/products/${product.slug}`}
+        href={getProductUrl(product.slug, product.id)}
         className={cn(
           'block transition-all duration-300 ease-out',
           'hover:-translate-y-1 hover:[transform:rotateY(-2deg)_translateZ(8px)]',

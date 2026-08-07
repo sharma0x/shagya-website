@@ -1,6 +1,7 @@
 import type { Payload } from 'payload'
 import { renderEmail } from './render'
 import { getServerURL } from '@/lib/env'
+import { getProductUrl } from '@/lib/product-url'
 import {
   buildItemsTable,
   buildPricingTable,
@@ -356,7 +357,7 @@ export async function sendBackInStockEmail(
   product: any,
 ): Promise<void> {
   const storeUrl = await getBaseURL()
-  const productUrl = `${storeUrl}/products/${product.slug}`
+  const productUrl = `${storeUrl}${getProductUrl(product.slug, product.id)}`
   const { subject, html } = await renderEmail(payload, 'back-in-stock', {
     productName: product.name || 'Product',
     productUrl,
@@ -395,6 +396,8 @@ export async function sendOTPEmail(to: string, otp: string): Promise<void> {
     await safeSend(payload, to, subject, html, 'otp-email')
   } catch {
     // Fire-and-forget: log and continue
-    console.warn('[sendOTPEmail] Could not send — email adapter may not be configured')
+    console.warn(
+      '[sendOTPEmail] Could not send — email adapter may not be configured',
+    )
   }
 }

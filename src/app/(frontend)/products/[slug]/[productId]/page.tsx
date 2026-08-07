@@ -1,6 +1,6 @@
 import { getPayload } from 'payload'
 import config from '@payload-config'
-import { notFound } from 'next/navigation'
+import { notFound, permanentRedirect } from 'next/navigation'
 import { headers as nextHeaders } from 'next/headers'
 import Link from 'next/link'
 import {
@@ -27,7 +27,7 @@ import { OffersSection } from '@/components/coupons/OffersSection'
 import type { SiteSetting } from '@/payload-types'
 
 type Props = {
-  params: Promise<{ slug: string }>
+  params: Promise<{ slug: string; productId: string }>
   searchParams: Promise<{ preview?: string; id?: string }>
 }
 
@@ -114,7 +114,7 @@ export default async function ProductDetailPage({
   params,
   searchParams,
 }: Props) {
-  const { slug } = await params
+  const { slug, productId } = await params
   const { preview, id } = await searchParams
   const isPreview = preview === 'true' && Boolean(id)
   const payload = await getPayload({ config })
@@ -133,8 +133,10 @@ export default async function ProductDetailPage({
         await payload.find({
           collection: 'products',
           where: {
-            slug: { equals: slug },
-            status: { equals: 'published' },
+            and: [
+              { id: { equals: productId } },
+              { status: { equals: 'published' } },
+            ],
           },
           limit: 1,
           depth: 2,
@@ -143,6 +145,12 @@ export default async function ProductDetailPage({
 
   if (!product) {
     return notFound()
+  }
+
+  // The product ID is the sole identity; a stale/wrong slug in the URL must
+  // redirect to the canonical slug + ID so the page URL stays correct.
+  if (product.slug && product.slug !== slug) {
+    permanentRedirect(`/products/${product.slug}/${product.id}`)
   }
 
   const settings = (await payload.findGlobal({
@@ -550,6 +558,7 @@ export default async function ProductDetailPage({
           phone={contactPhone}
           productName={product.name}
           productSlug={product.slug || slug}
+          productId={product.id}
         />
       )}
     </>

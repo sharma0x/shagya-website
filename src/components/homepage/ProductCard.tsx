@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
+import { getProductUrl } from '@/lib/product-url'
 import { SkeletonImage } from '@/components/ui/SkeletonImage'
 import { WishlistButton } from '@/components/product/WishlistButton'
 import { ProductBadge } from '@/components/ui/ProductBadge'
@@ -91,7 +92,7 @@ export function ProductCard({
 
   return (
     <Link
-      href={`/products/${product.slug}`}
+      href={getProductUrl(product.slug, product.id)}
       className={cn('group block', className)}
     >
       {/* Image Container */}
@@ -160,7 +161,7 @@ export function ProductCard({
           </p>
         )}
         {rating && rating > 0 && <Rating value={rating} className="mt-1.5" />}
-        <div className="mt-1.5 min-h-[28px] flex flex-wrap items-baseline gap-1.5">
+        <div className="mt-1.5 flex min-h-[28px] flex-wrap items-baseline gap-1.5">
           <span className="font-display text-brand-700 text-sm font-semibold">
             ₹{product.basePrice.toLocaleString('en-IN')}
           </span>

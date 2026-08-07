@@ -4,6 +4,7 @@ import { getPayload } from 'payload'
 import configPromise from '@payload-config'
 import { ArrowLeft, Calendar, CreditCard, Truck, Package } from 'lucide-react'
 import { OrderTimeline } from '@/components/order/OrderTimeline'
+import { getProductUrl } from '@/lib/product-url'
 
 // Page props in Next.js 15+ App Router are promises
 export default async function OrderDetailsPage({
@@ -106,7 +107,11 @@ export default async function OrderDetailsPage({
 
                   return (
                     <Link
-                      href={`/products/${item.product?.slug || '#'}`}
+                      href={
+                        item.product?.id
+                          ? getProductUrl(item.product.slug, item.product.id)
+                          : '#'
+                      }
                       key={item.id || idx}
                       className="group hover:border-brand-200 hover:bg-brand-50/30 flex items-center gap-4 rounded-xl border border-neutral-100 bg-neutral-50/50 p-3 transition-colors"
                     >

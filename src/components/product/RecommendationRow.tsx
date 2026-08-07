@@ -3,6 +3,7 @@
 import { useRef, useState, useEffect } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { getProductUrl } from '@/lib/product-url'
 
 interface RecommendationRowProps {
   title: string
@@ -47,7 +48,8 @@ export function RecommendationRow({
 
   // Compute discount for each product
   const getBadge = (p: any) => {
-    if (p.compareAtPrice && p.basePrice && p.compareAtPrice > p.basePrice) return 'sale'
+    if (p.compareAtPrice && p.basePrice && p.compareAtPrice > p.basePrice)
+      return 'sale'
     if (p.purchaseCount > 5) return 'bestseller'
     return undefined
   }
@@ -65,7 +67,7 @@ export function RecommendationRow({
         {showLeft && (
           <button
             onClick={() => scroll('left')}
-            className="absolute -left-3 top-[42%] z-10 -translate-y-1/2 rounded-full bg-white/90 p-2 shadow-md text-brand-600 hover:bg-white hover:text-brand-700 transition-colors"
+            className="text-brand-600 hover:text-brand-700 absolute top-[42%] -left-3 z-10 -translate-y-1/2 rounded-full bg-white/90 p-2 shadow-md transition-colors hover:bg-white"
             aria-label="Scroll left"
           >
             <ChevronLeft className="h-4 w-4" />
@@ -76,7 +78,7 @@ export function RecommendationRow({
         {showRight && (
           <button
             onClick={() => scroll('right')}
-            className="absolute -right-3 top-[42%] z-10 -translate-y-1/2 rounded-full bg-white/90 p-2 shadow-md text-brand-600 hover:bg-white hover:text-brand-700 transition-colors"
+            className="text-brand-600 hover:text-brand-700 absolute top-[42%] -right-3 z-10 -translate-y-1/2 rounded-full bg-white/90 p-2 shadow-md transition-colors hover:bg-white"
             aria-label="Scroll right"
           >
             <ChevronRight className="h-4 w-4" />
@@ -85,7 +87,7 @@ export function RecommendationRow({
 
         <div
           ref={scrollRef}
-          className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide px-1"
+          className="scrollbar-hide flex gap-4 overflow-x-auto px-1 pb-2"
         >
           {products.map((p) => (
             <HomepageCard key={p.id} product={p} badge={getBadge(p)} />
@@ -128,7 +130,7 @@ function HomepageCard({ product, badge }: HomepageCardProps) {
 
   return (
     <Link
-      href={`/products/${product.slug}`}
+      href={getProductUrl(product.slug, product.id)}
       className="group block w-48 min-w-[192px] shrink-0"
     >
       <div className="relative overflow-hidden rounded-xl bg-neutral-100 transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-md">
