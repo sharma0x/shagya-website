@@ -18,6 +18,10 @@ export function PageLoader() {
               style={{ animation: `ripple 2s ${i * 0.5}s ease-out infinite` }}
             />
           ))}
+          <span
+            aria-hidden="true"
+            className="border-brand-500/30 absolute inset-0 z-[5] rounded-full border-2"
+          />
           <img
             src="/shayga-logo.svg"
             alt=""
