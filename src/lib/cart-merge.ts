@@ -7,11 +7,19 @@ export type MergeableItem = {
 
 export function normalizeVariant(variant: unknown): unknown {
   if (variant === null || variant === undefined) return null
-  if (
-    typeof variant === 'object' &&
-    Object.keys(variant as object).length === 0
-  ) {
-    return null
+  if (typeof variant === 'object') {
+    const entries = Object.entries(variant as object)
+    // An empty object or an object whose values are all empty ("no
+    // selection", e.g. { color: '' } from the PDP when no color is chosen)
+    // means "no variant".
+    if (entries.length === 0) return null
+    if (
+      entries.every(
+        ([, value]) => value === '' || value === null || value === undefined,
+      )
+    ) {
+      return null
+    }
   }
   return variant
 }
@@ -27,14 +35,11 @@ function productId(product: unknown): string {
   return String(normalizeProduct(product) ?? '')
 }
 
-function variantKey(variant: unknown): string {
-  const v = normalizeVariant(variant)
-  if (v === null) return 'none'
-  return JSON.stringify(v)
-}
-
+// Cart line identity is the PRODUCT ONLY — the same saree added from the
+// homepage (no variant) and from the PDP (with a color) must land on the
+// same line, and a product can never hold more than one color in the cart.
 export function cartMergeKey(item: MergeableItem): string {
-  return `${productId(item.product)}-${variantKey(item.variant)}`
+  return productId(item.product)
 }
 
 export function mergeCartItems(
@@ -47,6 +52,7 @@ export function mergeCartItems(
     merged.set(cartMergeKey(item), {
       ...item,
       product: normalizeProduct(item.product),
+      variant: normalizeVariant(item.variant),
     })
   }
 
@@ -56,8 +62,14 @@ export function mergeCartItems(
     if (current) {
       current.quantity = Math.max(current.quantity || 1, item.quantity || 1)
       if (item.unitPrice) current.unitPrice = item.unitPrice
+      const v = normalizeVariant(item.variant)
+      if (v !== null) current.variant = v
     } else {
-      merged.set(key, { ...item, product: normalizeProduct(item.product) })
+      merged.set(key, {
+        ...item,
+        product: normalizeProduct(item.product),
+        variant: normalizeVariant(item.variant),
+      })
     }
   }
 
@@ -75,6 +87,8 @@ export function dedupeCartItems<T extends MergeableItem>(items: T[]): T[] {
         10,
         (current.quantity || 0) + (item.quantity || 1),
       )
+      const v = normalizeVariant(item.variant)
+      if (v !== null) current.variant = v
     } else {
       merged.set(key, { ...item, variant: normalizeVariant(item.variant) })
     }

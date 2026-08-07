@@ -119,11 +119,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                         <div className="flex items-center rounded-lg border border-neutral-200">
                           <button
                             onClick={() =>
-                              updateQuantity(
-                                item.product.id,
-                                item.quantity - 1,
-                                item.variant,
-                              )
+                              updateQuantity(item.product.id, item.quantity - 1)
                             }
                             disabled={item.quantity <= 1}
                             className="p-1.5 text-neutral-500 hover:text-neutral-900 disabled:opacity-30"
@@ -136,11 +132,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                           </span>
                           <button
                             onClick={() =>
-                              updateQuantity(
-                                item.product.id,
-                                item.quantity + 1,
-                                item.variant,
-                              )
+                              updateQuantity(item.product.id, item.quantity + 1)
                             }
                             disabled={
                               item.product.trackQuantity
@@ -155,9 +147,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                         </div>
 
                         <button
-                          onClick={() =>
-                            removeItem(item.product.id, item.variant)
-                          }
+                          onClick={() => removeItem(item.product.id)}
                           className="p-2 text-neutral-400 transition-colors hover:text-red-600"
                           aria-label="Remove item"
                         >

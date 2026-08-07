@@ -49,15 +49,8 @@ interface CartState {
     quantity?: number,
     variant?: CartItem['variant'],
   ) => void
-  removeItem: (
-    productId: number | string,
-    variant?: CartItem['variant'],
-  ) => void
-  updateQuantity: (
-    productId: number | string,
-    quantity: number,
-    variant?: CartItem['variant'],
-  ) => void
+  removeItem: (productId: number | string) => void
+  updateQuantity: (productId: number | string, quantity: number) => void
   clearCart: () => void
   setItems: (items: CartItem[]) => void
   setCoupon: (coupon: CartState['coupon']) => void
@@ -67,15 +60,10 @@ interface CartState {
   getTotal: () => number
 }
 
-// Helper to compare variants. An empty object "{}" (PDP no-selection) and
-// null/undefined (homepage) both mean "no variant", so they must match.
-const isSameVariant = (v1: any, v2: any) => {
-  const a = normalizeVariant(v1)
-  const b = normalizeVariant(v2)
-  if (!a && !b) return true
-  if (!a || !b) return false
-  return JSON.stringify(a) === JSON.stringify(b)
-}
+// A cart line is identified by its product — the same saree added from the
+// homepage and the PDP must merge into one line, and one product can never
+// hold multiple colors in the cart. The variant (color/size) rides along on
+// the line for display/checkout but never changes line identity.
 
 export const useCart = create<CartState>()(
   persist(
@@ -90,20 +78,16 @@ export const useCart = create<CartState>()(
           variant,
         ) as CartItem['variant']
         const existingIndex = currentItems.findIndex(
-          (item) =>
-            item.product.id === product.id &&
-            isSameVariant(item.variant, normalizedVariant),
+          (item) => item.product.id === product.id,
         )
 
         let newItems = [...currentItems]
         if (existingIndex > -1) {
-          const newQty = Math.min(
-            10,
-            currentItems[existingIndex].quantity + quantity,
-          )
+          const existing = currentItems[existingIndex]
           newItems[existingIndex] = {
-            ...currentItems[existingIndex],
-            quantity: newQty,
+            ...existing,
+            quantity: Math.min(10, existing.quantity + quantity),
+            variant: normalizedVariant ?? existing.variant,
           }
         } else {
           newItems.push({
@@ -118,29 +102,19 @@ export const useCart = create<CartState>()(
         get().syncWithServer()
       },
 
-      removeItem: (productId, variant = null) => {
+      removeItem: (productId) => {
         const newItems = get().items.filter(
-          (item) =>
-            !(
-              item.product.id === productId &&
-              isSameVariant(item.variant, variant)
-            ),
+          (item) => item.product.id !== productId,
         )
         set({ items: newItems })
         get().syncWithServer()
       },
 
-      updateQuantity: (productId, quantity, variant = null) => {
+      updateQuantity: (productId, quantity) => {
         const qty = Math.max(1, Math.min(10, quantity))
-        const newItems = get().items.map((item) => {
-          if (
-            item.product.id === productId &&
-            isSameVariant(item.variant, variant)
-          ) {
-            return { ...item, quantity: qty }
-          }
-          return item
-        })
+        const newItems = get().items.map((item) =>
+          item.product.id === productId ? { ...item, quantity: qty } : item,
+        )
         set({ items: newItems })
         get().syncWithServer()
       },

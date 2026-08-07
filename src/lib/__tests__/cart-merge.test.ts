@@ -48,13 +48,24 @@ describe('mergeCartItems', () => {
     expect(merged[0].quantity).toBe(4)
   })
 
-  it('keeps distinct variants as separate line items', () => {
+  it('merges the same product even with different variants into one line', () => {
     const existing = [existingItem(21, { size: 'M' })]
     const incoming = [existingItem(21, { size: 'L' })]
 
     const merged = mergeCartItems(existing, incoming)
 
-    expect(merged).toHaveLength(2)
+    expect(merged).toHaveLength(1)
+  })
+
+  it('merges homepage (no variant) with PDP (color variant) adds of the same product', () => {
+    const existing = [existingItem(21, null, 1)]
+    const incoming = [existingItem(21, { color: 'rose' }, 1)]
+
+    const merged = mergeCartItems(existing, incoming)
+
+    expect(merged).toHaveLength(1)
+    expect(merged[0].variant).toEqual({ color: 'rose' })
+    expect(merged[0].quantity).toBe(1)
   })
 
   it('keeps distinct products as separate line items', () => {
@@ -98,6 +109,11 @@ describe('normalizeVariant', () => {
     expect(normalizeVariant(undefined)).toBeNull()
   })
 
+  it('normalizes objects with only empty values to null (e.g. { color: "" })', () => {
+    expect(normalizeVariant({ color: '' })).toBeNull()
+    expect(normalizeVariant({ color: '', size: undefined })).toBeNull()
+  })
+
   it('keeps non-empty variants as-is', () => {
     const v = { size: 'M' }
     expect(normalizeVariant(v)).toEqual(v)
@@ -138,13 +154,16 @@ describe('dedupeCartItems', () => {
     expect(merged[0].quantity).toBe(3)
   })
 
-  it('keeps distinct variants as separate lines', () => {
+  it('merges same product added with different colors into one line', () => {
     const items = [
-      existingItem(21, { size: 'M' }, 1),
-      existingItem(21, { size: 'L' }, 1),
+      existingItem(21, { color: 'rose' }, 1),
+      existingItem(21, { color: 'gold' }, 1),
     ]
 
-    expect(dedupeCartItems(items)).toHaveLength(2)
+    const merged = dedupeCartItems(items)
+
+    expect(merged).toHaveLength(1)
+    expect(merged[0].quantity).toBe(2)
   })
 
   it('caps summed quantity at 10', () => {
