@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { AlertCircle, Check, ChevronDown, Loader2, MapPin } from 'lucide-react'
 import {
   ALL_COUNTRIES,
@@ -79,9 +79,22 @@ export function AddressForm({
   const [verifyingPincode, setVerifyingPincode] = useState(false)
   const [pincodeVerified, setPincodeVerified] = useState(false)
   const [pincodeError, setPincodeError] = useState('')
-  const [verifiedPincode, setVerifiedPincode] = useState(initialData?.pincode ?? '')
+  const [verifiedPincode, setVerifiedPincode] = useState(
+    initialData?.pincode ?? '',
+  )
 
   const requestTokenRef = useRef(0)
+  const verifyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (verifyTimerRef.current) {
+        clearTimeout(verifyTimerRef.current)
+        verifyTimerRef.current = null
+      }
+      requestTokenRef.current += 1
+    }
+  }, [])
 
   const [searchingCity, setSearchingCity] = useState(false)
   const [citySuggestions, setCitySuggestions] = useState<CitySearchResult[]>([])
@@ -95,47 +108,67 @@ export function AddressForm({
     setCountry(value)
   }
 
-  const handlePincodeBlur = useCallback(async () => {
-    const trimmed = pincode.trim()
-    if (trimmed.length !== 6) return
-    if (trimmed === verifiedPincode && pincodeVerified) return
-    if (!/^[1-9][0-9]{5}$/.test(trimmed)) {
-      setPincodeError('Invalid pincode format')
-      return
-    }
-
-    const token = ++requestTokenRef.current
-    setVerifyingPincode(true)
-    setPincodeError('')
-    setPincodeVerified(false)
-
-    try {
-      const res = await fetch('/api/pincode/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pincode: trimmed }),
-      })
-      if (token !== requestTokenRef.current) return
-      const body = await res.json()
-      if (token !== requestTokenRef.current) return
-      if (!res.ok || body.error) {
-        setPincodeError(body.error || 'Pincode not found')
+  const verifyPincode = useCallback(
+    async (trimmed: string) => {
+      if (trimmed.length !== 6) return
+      if (trimmed === verifiedPincode && pincodeVerified) return
+      if (!/^[1-9][0-9]{5}$/.test(trimmed)) {
+        setPincodeError('Invalid pincode format')
         return
       }
-      const data = body.data
-      setPincodeVerified(true)
-      setVerifiedPincode(trimmed)
-      setCity(data.city)
-      setState(data.state)
-      setCountry('India')
+
+      const token = ++requestTokenRef.current
+      setVerifyingPincode(true)
       setPincodeError('')
-    } catch {
-      if (token !== requestTokenRef.current) return
-      setPincodeError('Could not verify pincode. Try again.')
-    } finally {
-      if (token === requestTokenRef.current) setVerifyingPincode(false)
-    }
-  }, [pincode, verifiedPincode, pincodeVerified])
+      setPincodeVerified(false)
+
+      try {
+        const res = await fetch('/api/pincode/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pincode: trimmed }),
+        })
+        if (token !== requestTokenRef.current) return
+        const body = await res.json()
+        if (token !== requestTokenRef.current) return
+        if (!res.ok || body.error) {
+          setPincodeError(body.error || 'Pincode not found')
+          return
+        }
+        const data = body.data
+        setPincodeVerified(true)
+        setVerifiedPincode(trimmed)
+        setCity(data.city)
+        setState(data.state)
+        setCountry('India')
+        setPincodeError('')
+        setCitySuggestions([])
+        setShowSuggestions(false)
+      } catch {
+        if (token !== requestTokenRef.current) return
+        setPincodeError('Could not verify pincode. Try again.')
+      } finally {
+        if (token === requestTokenRef.current) setVerifyingPincode(false)
+      }
+    },
+    [verifiedPincode, pincodeVerified],
+  )
+
+  const scheduleVerify = useCallback(
+    (value: string) => {
+      if (verifyTimerRef.current) {
+        clearTimeout(verifyTimerRef.current)
+      }
+      const trimmed = value.trim()
+      if (trimmed.length === 6 && /^[1-9][0-9]{5}$/.test(trimmed)) {
+        verifyTimerRef.current = setTimeout(() => {
+          verifyTimerRef.current = null
+          verifyPincode(trimmed)
+        }, 450)
+      }
+    },
+    [verifyPincode],
+  )
 
   const handlePincodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, '').slice(0, 6)
@@ -144,17 +177,29 @@ export function AddressForm({
       setPincodeVerified(false)
       setPincodeError('')
     }
+    scheduleVerify(value)
+  }
+
+  const handlePincodeBlur = () => {
+    if (verifyTimerRef.current) {
+      clearTimeout(verifyTimerRef.current)
+      verifyTimerRef.current = null
+    }
+    verifyPincode(pincode.trim())
   }
 
   const handleCityBlur = useCallback(async () => {
     setShowSuggestions(false)
+    if (pincodeVerified) return
     const trimmed = city.trim()
     if (trimmed.length < 3) return
     if (!isIndia) return
     setSearchingCity(true)
     setCitySuggestions([])
     try {
-      const res = await fetch(`/api/pincode/city-search?city=${encodeURIComponent(trimmed)}`)
+      const res = await fetch(
+        `/api/pincode/city-search?city=${encodeURIComponent(trimmed)}`,
+      )
       const body = await res.json()
       if (!res.ok || body.error || !body.data?.length) return
       const results: CitySearchResult[] = body.data
@@ -171,9 +216,12 @@ export function AddressForm({
     } finally {
       setSearchingCity(false)
     }
-  }, [city, isIndia])
+  }, [city, isIndia, pincodeVerified])
 
-  const selectPincodeFromCity = (result: CitySearchResult, pincodeValue: string) => {
+  const selectPincodeFromCity = (
+    result: CitySearchResult,
+    pincodeValue: string,
+  ) => {
     setPincode(pincodeValue)
     setState(result.state)
     setCountry('India')
@@ -184,7 +232,13 @@ export function AddressForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     await onSubmit({
-      fullName, phone, line1, line2, city, state, pincode,
+      fullName,
+      phone,
+      line1,
+      line2,
+      city,
+      state,
+      pincode,
       country: isOtherCountry ? customCountry : country,
       isDefault,
     })
@@ -200,89 +254,278 @@ export function AddressForm({
       )}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <label htmlFor="address-fullName" className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase">Full Name</label>
-          <input id="address-fullName" type="text" required value={fullName} onChange={(e) => setFullName(e.target.value)} className={textInputClass} placeholder={initialData?.fullName ? undefined : 'Receiver name'} />
+          <label
+            htmlFor="address-fullName"
+            className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase"
+          >
+            Full Name
+          </label>
+          <input
+            id="address-fullName"
+            type="text"
+            required
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            className={textInputClass}
+            placeholder={initialData?.fullName ? undefined : 'Receiver name'}
+          />
         </div>
         <div>
-          <label htmlFor="address-phone" className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase">Phone Number</label>
-          <PhoneInput value={phone} onChange={setPhone} placeholder={initialData?.phone ? undefined : '10-digit mobile'} />
+          <label
+            htmlFor="address-phone"
+            className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase"
+          >
+            Phone Number
+          </label>
+          <PhoneInput
+            value={phone}
+            onChange={setPhone}
+            placeholder={initialData?.phone ? undefined : '10-digit mobile'}
+          />
         </div>
       </div>
       <div>
-        <label htmlFor="address-line1" className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase">Address Line 1</label>
-        <input id="address-line1" type="text" required value={line1} onChange={(e) => setLine1(e.target.value)} className={textInputClass} placeholder={initialData?.line1 ? undefined : 'House/Flat No., Street, Area'} />
+        <label
+          htmlFor="address-line1"
+          className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase"
+        >
+          Address Line 1
+        </label>
+        <input
+          id="address-line1"
+          type="text"
+          required
+          value={line1}
+          onChange={(e) => setLine1(e.target.value)}
+          className={textInputClass}
+          placeholder={
+            initialData?.line1 ? undefined : 'House/Flat No., Street, Area'
+          }
+        />
       </div>
       <div>
-        <label htmlFor="address-line2" className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase">Address Line 2 (Optional)</label>
-        <input id="address-line2" type="text" value={line2} onChange={(e) => setLine2(e.target.value)} className={textInputClass} placeholder="Landmark, Suite, etc." />
+        <label
+          htmlFor="address-line2"
+          className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase"
+        >
+          Address Line 2 (Optional)
+        </label>
+        <input
+          id="address-line2"
+          type="text"
+          value={line2}
+          onChange={(e) => setLine2(e.target.value)}
+          className={textInputClass}
+          placeholder="Landmark, Suite, etc."
+        />
       </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div className="relative">
-          <label htmlFor="address-city" className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase">City</label>
+          <label
+            htmlFor="address-city"
+            className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase"
+          >
+            City
+          </label>
           <div className="relative">
-            <input id="address-city" type="text" required value={city} onChange={(e) => setCity(e.target.value)} onBlur={handleCityBlur} onFocus={() => { if (citySuggestions.length > 0) setShowSuggestions(true) }} className={`${textInputClass} pr-8`} placeholder={initialData?.city ? undefined : 'City'} />
-            {searchingCity && <Loader2 className="pointer-events-none absolute top-1/2 right-2.5 h-3.5 w-3.5 -translate-y-1/2 animate-spin text-neutral-400" />}
+            <input
+              id="address-city"
+              type="text"
+              required
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              onBlur={handleCityBlur}
+              onFocus={() => {
+                if (!pincodeVerified && citySuggestions.length > 0)
+                  setShowSuggestions(true)
+              }}
+              className={`${textInputClass} pr-8`}
+              placeholder={initialData?.city ? undefined : 'City'}
+            />
+            {searchingCity && (
+              <Loader2 className="pointer-events-none absolute top-1/2 right-2.5 h-3.5 w-3.5 -translate-y-1/2 animate-spin text-neutral-400" />
+            )}
           </div>
           {showSuggestions && citySuggestions.length > 0 && (
             <div className="absolute z-10 mt-1 w-full rounded-xl border border-neutral-200 bg-white shadow-lg">
               <div className="max-h-48 overflow-y-auto py-1">
                 {citySuggestions.map((result) =>
                   result.pincodes.map((pc) => (
-                    <button key={`${result.city}-${pc}`} type="button" onClick={() => selectPincodeFromCity(result, pc)} className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition-colors hover:bg-brand-50">
+                    <button
+                      key={`${result.city}-${pc}`}
+                      type="button"
+                      onClick={() => selectPincodeFromCity(result, pc)}
+                      className="hover:bg-brand-50 flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition-colors"
+                    >
                       <MapPin className="h-3 w-3 shrink-0 text-neutral-400" />
-                      <span className="font-display font-semibold text-neutral-900">{pc}</span>
-                      <span className="font-body text-neutral-500">{result.city}, {result.state}</span>
+                      <span className="font-display font-semibold text-neutral-900">
+                        {pc}
+                      </span>
+                      <span className="font-body text-neutral-500">
+                        {result.city}, {result.state}
+                      </span>
                     </button>
-                  ))
+                  )),
                 )}
               </div>
             </div>
           )}
         </div>
         <div>
-          <label htmlFor="address-state" className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase">State</label>
+          <label
+            htmlFor="address-state"
+            className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase"
+          >
+            State
+          </label>
           {isIndia ? (
             <div className="relative">
-              <select id="address-state" required value={state} onChange={(e) => setState(e.target.value)} className={`${inputClass} select-none`}>
-                <option value="" disabled>Select state</option>
-                {INDIAN_STATES.map((s) => (<option key={s.value} value={s.value}>{s.label}</option>))}
+              <select
+                id="address-state"
+                required
+                value={state}
+                onChange={(e) => setState(e.target.value)}
+                className={`${inputClass} select-none`}
+              >
+                <option value="" disabled>
+                  Select state
+                </option>
+                {INDIAN_STATES.map((s) => (
+                  <option key={s.value} value={s.value}>
+                    {s.label}
+                  </option>
+                ))}
               </select>
               <ChevronDown className="pointer-events-none absolute top-1/2 right-2.5 h-3.5 w-3.5 -translate-y-1/2 text-neutral-400" />
             </div>
           ) : (
-            <input id="address-state" type="text" required value={state} onChange={(e) => setState(e.target.value)} className={textInputClass} placeholder="State / Province" />
+            <input
+              id="address-state"
+              type="text"
+              required
+              value={state}
+              onChange={(e) => setState(e.target.value)}
+              className={textInputClass}
+              placeholder="State / Province"
+            />
           )}
         </div>
         <div>
-          <label htmlFor="address-pincode" className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase">Pincode</label>
+          <label
+            htmlFor="address-pincode"
+            className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase"
+          >
+            Pincode
+          </label>
           <div className="relative">
-            <input id="address-pincode" type="text" required inputMode="numeric" pattern={isIndia ? '^[1-9][0-9]{5}$' : undefined} value={pincode} onChange={handlePincodeChange} onBlur={handlePincodeBlur} aria-describedby="address-pincode-status" className={`${textInputClass} ${pincodeVerified ? 'border-brand-600 bg-brand-50/10 pr-8' : ''}`} placeholder="6-digit PIN" />
-            {verifyingPincode && <Loader2 className="pointer-events-none absolute top-1/2 right-2.5 h-3.5 w-3.5 -translate-y-1/2 animate-spin text-neutral-400" />}
-            {pincodeVerified && !verifyingPincode && <Check className="text-success pointer-events-none absolute top-1/2 right-2.5 h-3.5 w-3.5 -translate-y-1/2" />}
+            <input
+              id="address-pincode"
+              type="text"
+              required
+              inputMode="numeric"
+              pattern={isIndia ? '^[1-9][0-9]{5}$' : undefined}
+              value={pincode}
+              onChange={handlePincodeChange}
+              onBlur={handlePincodeBlur}
+              aria-describedby="address-pincode-status"
+              className={`${textInputClass} ${pincodeVerified ? 'border-brand-600 bg-brand-50/10 pr-8' : ''}`}
+              placeholder="6-digit PIN"
+            />
+            {verifyingPincode && (
+              <Loader2 className="pointer-events-none absolute top-1/2 right-2.5 h-3.5 w-3.5 -translate-y-1/2 animate-spin text-neutral-400" />
+            )}
+            {pincodeVerified && !verifyingPincode && (
+              <Check className="text-success pointer-events-none absolute top-1/2 right-2.5 h-3.5 w-3.5 -translate-y-1/2" />
+            )}
           </div>
-          {pincodeError && <p id="address-pincode-status" role="status" aria-live="polite" className="text-error mt-1 text-xs">{pincodeError}</p>}
-          {pincodeVerified && !pincodeError && <p id="address-pincode-status" role="status" aria-live="polite" className="text-success mt-1 text-xs">Verified &mdash; city &amp; state auto-filled. You can edit if needed.</p>}
+          {pincodeError && (
+            <p
+              id="address-pincode-status"
+              role="status"
+              aria-live="polite"
+              className="text-error mt-1 text-xs"
+            >
+              {pincodeError}
+            </p>
+          )}
+          {pincodeVerified && !pincodeError && (
+            <p
+              id="address-pincode-status"
+              role="status"
+              aria-live="polite"
+              className="sr-only"
+            >
+              Verified &mdash; city &amp; state auto-filled
+            </p>
+          )}
         </div>
       </div>
       <div>
-        <label htmlFor="address-country" className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase">Country</label>
+        <label
+          htmlFor="address-country"
+          className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase"
+        >
+          Country
+        </label>
         <div className="relative">
-          <select id="address-country" value={country} onChange={(e) => handleCountryChange(e.target.value)} className={`${inputClass} select-none`}>
-            {ALL_COUNTRIES.map((c) => (<option key={c.value} value={c.value}>{c.label}</option>))}
+          <select
+            id="address-country"
+            value={country}
+            onChange={(e) => handleCountryChange(e.target.value)}
+            className={`${inputClass} select-none`}
+          >
+            {ALL_COUNTRIES.map((c) => (
+              <option key={c.value} value={c.value}>
+                {c.label}
+              </option>
+            ))}
           </select>
           <ChevronDown className="pointer-events-none absolute top-1/2 right-2.5 h-3.5 w-3.5 -translate-y-1/2 text-neutral-400" />
         </div>
-        {isOtherCountry && <input id="address-customCountry" type="text" required aria-label="Custom country name" value={customCountry} onChange={(e) => setCustomCountry(e.target.value)} className={`${textInputClass} mt-2`} placeholder="Enter country name" />}
+        {isOtherCountry && (
+          <input
+            id="address-customCountry"
+            type="text"
+            required
+            aria-label="Custom country name"
+            value={customCountry}
+            onChange={(e) => setCustomCountry(e.target.value)}
+            className={`${textInputClass} mt-2`}
+            placeholder="Enter country name"
+          />
+        )}
       </div>
       {showDefaultCheckbox && (
         <div className="flex items-center gap-2">
-          <input type="checkbox" id="address-isDefault" checked={isDefault} onChange={(e) => setIsDefault(e.target.checked)} className="accent-brand-600 rounded border-neutral-300" />
-          <label htmlFor="address-isDefault" className="font-body text-xs text-neutral-600">Set as default shipping address</label>
+          <input
+            type="checkbox"
+            id="address-isDefault"
+            checked={isDefault}
+            onChange={(e) => setIsDefault(e.target.checked)}
+            className="accent-brand-600 rounded border-neutral-300"
+          />
+          <label
+            htmlFor="address-isDefault"
+            className="font-body text-xs text-neutral-600"
+          >
+            Set as default shipping address
+          </label>
         </div>
       )}
       <div className="flex justify-end gap-3 pt-2">
-        <Button type="button" variant="outline" onClick={onCancel} className="rounded-xl text-xs font-semibold">Cancel</Button>
-        <Button type="submit" disabled={isSubmitting} className="rounded-xl text-xs font-semibold">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onCancel}
+          className="rounded-xl text-xs font-semibold"
+        >
+          Cancel
+        </Button>
+        <Button
+          type="submit"
+          disabled={isSubmitting}
+          className="rounded-xl text-xs font-semibold"
+        >
           {isSubmitting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
           {isSubmitting ? 'Saving...' : submitLabel}
         </Button>

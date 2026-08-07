@@ -33,15 +33,12 @@ function getCityInput() {
   return screen.getByPlaceholderText('City') as HTMLInputElement
 }
 
-function getStateInput(): HTMLInputElement | HTMLSelectElement {
-  // The form has exactly two <select> elements: state (first) and country (second).
-  const selects = document.querySelectorAll('select')
-  return selects[0] as HTMLSelectElement
+function getStateInput(): HTMLSelectElement {
+  return screen.getByLabelText('State') as HTMLSelectElement
 }
 
-function getCountryInput() {
-  const selects = document.querySelectorAll('select')
-  return selects[1] as HTMLSelectElement
+function getCountryInput(): HTMLSelectElement {
+  return screen.getByLabelText('Country') as HTMLSelectElement
 }
 
 describe('AddressForm — pincode autofill', () => {
@@ -101,7 +98,7 @@ describe('AddressForm — pincode autofill', () => {
     )
   })
 
-  it('auto-fills city, state, country and shows verified message on success', async () => {
+  it('auto-fills city, state, and country automatically once a 6-digit pincode is typed — no blur needed', async () => {
     const user = userEvent.setup()
     const onSubmit = vi.fn()
     render(
@@ -113,12 +110,17 @@ describe('AddressForm — pincode autofill', () => {
     )
 
     await user.type(getPincodeInput(), '110001')
-    await user.tab()
 
-    await waitFor(() => {
-      expect(getCityInput().value).toBe('New Delhi')
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1), {
+      timeout: 2000,
     })
-    expect((getStateInput() as HTMLSelectElement).value).toBe('Delhi')
+    await waitFor(
+      () => {
+        expect(getCityInput().value).toBe('New Delhi')
+      },
+      { timeout: 2000 },
+    )
+    expect(getStateInput().value).toBe('Delhi')
     expect(getCountryInput().value).toBe('India')
     expect(
       await screen.findByText(/verified/i, {}, { timeout: 2000 }),

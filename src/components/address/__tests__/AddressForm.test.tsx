@@ -21,10 +21,10 @@ describe('AddressForm', () => {
     it('defaults country to India and shows the state dropdown', () => {
       render(<AddressForm {...baseProps} />)
 
-      const countrySelect = screen.getByRole('combobox', { name: /country/i })
+      const countrySelect = screen.getByRole('combobox', { name: 'Country' })
       expect(countrySelect).toHaveValue('India')
 
-      const stateSelect = screen.getByRole('combobox', { name: /state/i })
+      const stateSelect = screen.getByRole('combobox', { name: 'State' })
       expect(stateSelect).toBeInTheDocument()
       expect(stateSelect.tagName).toBe('SELECT')
     })
@@ -44,7 +44,7 @@ describe('AddressForm', () => {
         <AddressForm {...baseProps} initialData={{ state: 'Maharashtra' }} />,
       )
 
-      const countrySelect = screen.getByRole('combobox', { name: /country/i })
+      const countrySelect = screen.getByRole('combobox', { name: 'Country' })
       await user.selectOptions(countrySelect, 'United States')
 
       const stateInput = screen.getByPlaceholderText(/state \/ province/i)
@@ -57,7 +57,7 @@ describe('AddressForm', () => {
       const user = userEvent.setup()
       render(<AddressForm {...baseProps} />)
 
-      const countrySelect = screen.getByRole('combobox', { name: /country/i })
+      const countrySelect = screen.getByRole('combobox', { name: 'Country' })
       await user.selectOptions(countrySelect, OTHER_COUNTRY_VALUE)
 
       const customCountryInput =
@@ -69,7 +69,7 @@ describe('AddressForm', () => {
       const user = userEvent.setup()
       render(<AddressForm {...baseProps} />)
 
-      const countrySelect = screen.getByRole('combobox', { name: /country/i })
+      const countrySelect = screen.getByRole('combobox', { name: 'Country' })
       await user.selectOptions(countrySelect, OTHER_COUNTRY_VALUE)
 
       const customCountryInput =
@@ -89,7 +89,7 @@ describe('AddressForm', () => {
         />,
       )
 
-      const countrySelect = screen.getByRole('combobox', { name: /country/i })
+      const countrySelect = screen.getByRole('combobox', { name: 'Country' })
       expect(countrySelect).toHaveValue('United States')
 
       const stateInput = screen.getByPlaceholderText(/state \/ province/i)
@@ -105,7 +105,7 @@ describe('AddressForm', () => {
         />,
       )
 
-      const stateSelect = screen.getByRole('combobox', { name: /state/i })
+      const stateSelect = screen.getByRole('combobox', { name: 'State' })
       expect(stateSelect).toHaveValue('Maharashtra')
     })
 
@@ -117,7 +117,7 @@ describe('AddressForm', () => {
         />,
       )
 
-      const countrySelect = screen.getByRole('combobox', { name: /country/i })
+      const countrySelect = screen.getByRole('combobox', { name: 'Country' })
       expect(countrySelect).toHaveValue(OTHER_COUNTRY_VALUE)
 
       const customCountryInput =
@@ -138,7 +138,7 @@ describe('AddressForm', () => {
       const user = userEvent.setup()
       render(<AddressForm {...baseProps} />)
 
-      const countrySelect = screen.getByRole('combobox', { name: /country/i })
+      const countrySelect = screen.getByRole('combobox', { name: 'Country' })
       await user.selectOptions(countrySelect, 'United States')
 
       const pincodeInput = screen.getByPlaceholderText(/6-digit pin/i)
@@ -151,7 +151,7 @@ describe('AddressForm', () => {
       const user = userEvent.setup()
       render(<AddressForm {...baseProps} />)
 
-      const countrySelect = screen.getByRole('combobox', { name: /country/i })
+      const countrySelect = screen.getByRole('combobox', { name: 'Country' })
       await user.selectOptions(countrySelect, OTHER_COUNTRY_VALUE)
 
       const customCountryInput =
@@ -184,7 +184,7 @@ describe('AddressForm', () => {
         />,
       )
 
-      const countrySelect = screen.getByRole('combobox', { name: /country/i })
+      const countrySelect = screen.getByRole('combobox', { name: 'Country' })
       await user.selectOptions(countrySelect, OTHER_COUNTRY_VALUE)
 
       const stateInput = screen.getByPlaceholderText(/state \/ province/i)
@@ -230,7 +230,7 @@ describe('AddressForm', () => {
         />,
       )
 
-      const countrySelect = screen.getByRole('combobox', { name: /country/i })
+      const countrySelect = screen.getByRole('combobox', { name: 'Country' })
       await user.selectOptions(countrySelect, 'United States')
 
       const stateInput = screen.getByPlaceholderText(/state \/ province/i)
