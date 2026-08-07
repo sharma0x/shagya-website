@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import { Loader2, Check, AlertCircle, UserPlus, Mail } from 'lucide-react'
+import { Loader2, Check, AlertCircle, UserPlus, Mail, KeyRound } from 'lucide-react'
 
 interface GuestCheckoutProps {
   onVerified: (data: { name: string; email: string }) => void
@@ -177,17 +177,20 @@ export function GuestCheckout({ onVerified }: GuestCheckoutProps) {
             Enter OTP
           </label>
           <div className="flex gap-2">
-            <input
-              type="text"
-              inputMode="numeric"
-              maxLength={6}
-              value={otp}
-              onChange={(e) =>
-                setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))
-              }
-              className={inputClass}
-              placeholder="6-digit code"
-            />
+            <div className="relative flex-1">
+              <input
+                type="text"
+                inputMode="numeric"
+                maxLength={6}
+                value={otp}
+                onChange={(e) =>
+                  setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))
+                }
+                className={`${inputClass} pl-9`}
+                placeholder="6-digit code"
+              />
+              <KeyRound className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+            </div>
             <button
               type="button"
               onClick={handleVerifyOTP}

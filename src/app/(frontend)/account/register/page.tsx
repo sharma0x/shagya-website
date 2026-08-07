@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react'
 import { signIn } from '@/lib/auth-client'
 import Link from 'next/link'
-import { ArrowLeft, Mail, User, AlertCircle, Loader2 } from 'lucide-react'
+import { ArrowLeft, Mail, User, KeyRound, AlertCircle, Loader2 } from 'lucide-react'
 import { PhoneInput } from '@/components/ui/phone-input'
 
 export default function RegisterPage() {
@@ -205,6 +205,7 @@ export default function RegisterPage() {
                         className={inputClass}
                         placeholder="6-digit code"
                       />
+                      <KeyRound className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-neutral-400" />
                     </div>
                     <p className="font-body mt-1.5 text-[11px] text-neutral-400">
                       OTP sent to {email}

@@ -4,7 +4,7 @@ import { useState, useCallback } from 'react'
 import { signIn } from '@/lib/auth-client'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Mail, AlertCircle, Loader2 } from 'lucide-react'
+import { ArrowLeft, Mail, KeyRound, AlertCircle, Loader2 } from 'lucide-react'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -159,6 +159,7 @@ export default function LoginPage() {
                         className={inputClass}
                         placeholder="6-digit code"
                       />
+                      <KeyRound className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-neutral-400" />
                     </div>
                     <p className="font-body mt-1.5 text-[11px] text-neutral-400">
                       OTP sent to {email}
