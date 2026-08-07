@@ -6,21 +6,6 @@ import { ShoppingCart, Heart, AlertTriangle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useSession } from '@/lib/auth-client'
 
-const COLOR_HEX: Record<string, string> = {
-  red: '#DC2626',
-  burgundy: '#6B2448',
-  gold: '#D4A017',
-  green: '#166534',
-  blue: '#1D4ED8',
-  ivory: '#F5F0E8',
-  pink: '#E8A0B4',
-  purple: '#7C3AED',
-  orange: '#EA580C',
-  black: '#1A1A1A',
-  white: '#FFFFFF',
-  multicolor: '#94A3B8',
-}
-
 interface ProductActionsProps {
   product: {
     id: number | string
@@ -36,12 +21,17 @@ interface ProductActionsProps {
     quantity?: number
     lowStockThreshold?: number
     rating?: { average: number; count: number }
-    gallery?: Array<{ image: any; alt?: string }>
+    colorVariants: Array<{
+      color: { slug: string; name: string; hex: string }
+      gallery: Array<{ image: any; alt?: string }>
+      priceOverride: number | null
+      stock: number
+    }>
     fabric: string
     weave: string
-    colors?: string[]
   }
   isOutOfStock?: boolean
+  onVariantChange?: (imageUrls: string[]) => void
 }
 
 /* Temporarily disabled — size and blouse selection
@@ -56,7 +46,11 @@ const BLOUSE_SIZES = [
 ]
 */
 
-export function ProductActions({ product, isOutOfStock }: ProductActionsProps) {
+export function ProductActions({
+  product,
+  isOutOfStock,
+  onVariantChange,
+}: ProductActionsProps) {
   const { addItem } = useCart()
   const router = useRouter()
   const { data: session } = useSession()
@@ -65,12 +59,21 @@ export function ProductActions({ product, isOutOfStock }: ProductActionsProps) {
   const [size, setSize] = useState(SAREE_SIZES[0])
   const [blouseSize, setBlouseSize] = useState(BLOUSE_SIZES[0])
   */
-  const [selectedColor, setSelectedColor] = useState<string>(
-    product.colors?.[0] || '',
-  )
+  const [selectedVariantIndex, setSelectedVariantIndex] = useState(0)
   const [addedState, setAddedState] = useState<'idle' | 'added'>('idle')
   const [inWishlist, setInWishlist] = useState(false)
   const [wishlistLoading, setWishlistLoading] = useState(false)
+
+  const variants = product.colorVariants || []
+  const selectedVariant = variants[selectedVariantIndex] ?? null
+  const displayPrice = selectedVariant?.priceOverride ?? product.basePrice
+  const displayCompareAt =
+    selectedVariant?.priceOverride &&
+    product.basePrice > (selectedVariant.priceOverride ?? 0)
+      ? undefined
+      : product.compareAtPrice
+  const isVariantOOS = selectedVariant ? selectedVariant.stock <= 0 : false
+  const effectiveOOS = isOutOfStock || isVariantOOS
 
   useEffect(() => {
     if (!session?.user) return
@@ -113,24 +116,18 @@ export function ProductActions({ product, isOutOfStock }: ProductActionsProps) {
   }, [session?.user, product.id, router])
 
   const handleAddToCart = () => {
-    addItem(product, 1, {
-      color: {
-        slug: selectedColor,
-        name: selectedColor.charAt(0).toUpperCase() + selectedColor.slice(1),
-        hex: COLOR_HEX[selectedColor] || '#94A3B8',
-      },
+    if (!selectedVariant) return
+    addItem({ ...product, basePrice: displayPrice }, 1, {
+      color: selectedVariant.color,
     })
     setAddedState('added')
     setTimeout(() => setAddedState('idle'), 2200)
   }
 
   const handleBuyNow = () => {
-    addItem(product, 1, {
-      color: {
-        slug: selectedColor,
-        name: selectedColor.charAt(0).toUpperCase() + selectedColor.slice(1),
-        hex: COLOR_HEX[selectedColor] || '#94A3B8',
-      },
+    if (!selectedVariant) return
+    addItem({ ...product, basePrice: displayPrice }, 1, {
+      color: selectedVariant.color,
     })
     router.push('/checkout')
   }
@@ -138,33 +135,46 @@ export function ProductActions({ product, isOutOfStock }: ProductActionsProps) {
   return (
     <div className="space-y-7">
       {/* Color Variant Picker */}
-      {product.colors && product.colors.length > 1 && (
+      {variants.length > 1 && (
         <div>
           <p className="font-display text-xs font-semibold text-neutral-500">
-            Color —{' '}
-            {selectedColor.charAt(0).toUpperCase() + selectedColor.slice(1)}
+            Color — {selectedVariant?.color?.name || ''}
           </p>
           <div className="mt-2.5 flex flex-wrap gap-2.5">
-            {product.colors.map((color) => {
-              const hex = COLOR_HEX[color] || '#94A3B8'
-              return (
-                <button
-                  key={color}
-                  type="button"
-                  onClick={() => setSelectedColor(color)}
-                  title={color.charAt(0).toUpperCase() + color.slice(1)}
-                  className={`h-8 w-8 rounded-full border-2 transition-all ${
-                    selectedColor === color
-                      ? 'border-brand-600 ring-brand-200 scale-110 ring-2'
-                      : 'border-neutral-200 hover:border-neutral-400'
-                  }`}
-                  style={{ backgroundColor: hex }}
-                />
-              )
-            })}
+            {variants.map((v, idx) => (
+              <button
+                key={v.color.slug}
+                type="button"
+                onClick={() => {
+                  setSelectedVariantIndex(idx)
+                  if (onVariantChange && v.gallery.length > 0) {
+                    const urls = v.gallery.map((g: any) =>
+                      typeof g.image === 'object' && g.image !== null
+                        ? g.image.url
+                        : '/images/placeholder.jpg',
+                    )
+                    onVariantChange(urls)
+                  }
+                }}
+                title={v.color.name}
+                className={`h-8 w-8 rounded-full border-2 transition-all ${
+                  selectedVariantIndex === idx
+                    ? 'border-brand-600 ring-brand-200 scale-110 ring-2'
+                    : 'border-neutral-200 hover:border-neutral-400'
+                }`}
+                style={{ backgroundColor: v.color.hex }}
+              />
+            ))}
           </div>
         </div>
       )}
+
+      {selectedVariant?.priceOverride &&
+        selectedVariant.priceOverride !== product.basePrice && (
+          <p className="font-body mt-1 text-[11px] text-neutral-500">
+            This color: ₹{displayPrice.toLocaleString('en-IN')}
+          </p>
+        )}
 
       {/* Temporarily disabled — size and blouse selection
       <div>
@@ -195,7 +205,7 @@ export function ProductActions({ product, isOutOfStock }: ProductActionsProps) {
       */}
 
       {/* CTAs — Out of Stock or Cart / Buy Now / Wishlist */}
-      {isOutOfStock ? (
+      {effectiveOOS ? (
         <div className="space-y-3">
           <div className="border-brand-200 bg-brand-50 flex items-center gap-2 rounded-lg border px-3 py-2">
             <AlertTriangle className="text-brand-600 h-4 w-4 shrink-0" />

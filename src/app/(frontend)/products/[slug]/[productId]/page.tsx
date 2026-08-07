@@ -10,8 +10,7 @@ import {
   RefreshCw,
   Sparkles,
 } from 'lucide-react'
-import { ProductActions } from '@/components/product/ProductActions'
-import { ProductGallery } from '@/components/product/ProductGallery'
+import { PDPClientSection } from '@/components/product/PDPClientSection'
 import { RefreshRouteOnSave } from '@/components/live-preview/RefreshRouteOnSave'
 import { WhatsAppOrderButton } from '@/components/product/WhatsAppOrderButton'
 import {
@@ -30,9 +29,6 @@ type Props = {
   params: Promise<{ slug: string; productId: string }>
   searchParams: Promise<{ preview?: string; id?: string }>
 }
-
-const ph = (w: number, h: number, bg: string, fg: string, text: string) =>
-  `https://placehold.co/${w}x${h}/${bg}/${fg}?text=${encodeURIComponent(text)}&font=lora`
 
 function LexicalRenderer({ content }: { content: any }) {
   if (!content?.root?.children) return null
@@ -216,19 +212,6 @@ export default async function ProductDetailPage({
   const couponsData = couponsRes.ok ? await couponsRes.json() : { coupons: [] }
   const productCoupons = couponsData.coupons || []
 
-  const firstVariant = (product.colorVariants || []).find(
-    (v: any) => v.enabled !== false && v.color,
-  )
-  const defaultGallery = firstVariant?.gallery || []
-  const imageUrls =
-    defaultGallery.length > 0
-      ? defaultGallery.map((g: any) =>
-          typeof g.image === 'object' && g.image !== null
-            ? g.image.url
-            : '/images/placeholder.jpg',
-        )
-      : [ph(1200, 1500, '69254e', 'f5e8ee', product.name)]
-
   const serializableProduct = {
     id: product.id,
     name: product.name,
@@ -327,153 +310,136 @@ export default async function ProductDetailPage({
 
           {/* ── Main PDP Grid ── */}
           <div className="mt-8 grid gap-10 lg:grid-cols-12 lg:gap-14">
-            {/* Left — Gallery */}
-            <div className="lg:col-span-7">
-              <ProductGallery
-                imageUrls={imageUrls}
-                productName={product.name}
-              />
-            </div>
-
-            {/* Right — Info (sticky on desktop) */}
-            <div className="lg:col-span-5">
-              <div className="lg:sticky lg:top-24">
-                {/* Brand + Category */}
-                <div className="flex flex-wrap items-center gap-2">
-                  {serializableProduct.brand && (
-                    <span className="font-display text-[11px] font-semibold tracking-wider text-neutral-500 uppercase">
-                      {serializableProduct.brand}
-                    </span>
-                  )}
-                  <span className="font-display bg-brand-50 text-brand-700 rounded-md px-2.5 py-1 text-[11px] font-semibold tracking-wide">
-                    {product.weave.charAt(0).toUpperCase() +
-                      product.weave.slice(1)}{' '}
-                    Weave
+            <PDPClientSection
+              product={serializableProduct}
+              isOutOfStock={
+                product.trackQuantity === true && (product.quantity ?? 0) <= 0
+              }
+            >
+              {/* Brand + Category */}
+              <div className="flex flex-wrap items-center gap-2">
+                {serializableProduct.brand && (
+                  <span className="font-display text-[11px] font-semibold tracking-wider text-neutral-500 uppercase">
+                    {serializableProduct.brand}
                   </span>
-                  {product.occasion && (
-                    <span className="font-body text-xs text-neutral-400">
-                      {product.occasion}
+                )}
+                <span className="font-display bg-brand-50 text-brand-700 rounded-md px-2.5 py-1 text-[11px] font-semibold tracking-wide">
+                  {product.weave.charAt(0).toUpperCase() +
+                    product.weave.slice(1)}{' '}
+                  Weave
+                </span>
+                {product.occasion && (
+                  <span className="font-body text-xs text-neutral-400">
+                    {product.occasion}
+                  </span>
+                )}
+              </div>
+
+              {/* Title */}
+              <h1 className="font-display mt-4 text-2xl font-semibold tracking-tight text-neutral-900 md:text-3xl">
+                {product.name}
+              </h1>
+
+              {/* Pricing */}
+              <div className="mt-5 border-b border-neutral-100 pb-5">
+                <div className="flex flex-wrap items-baseline gap-3">
+                  <span className="font-display text-2xl font-semibold text-neutral-900">
+                    ₹{product.basePrice.toLocaleString('en-IN')}
+                  </span>
+                  {product.compareAtPrice &&
+                    product.compareAtPrice > product.basePrice && (
+                      <span className="font-display text-sm text-neutral-400 line-through">
+                        ₹{product.compareAtPrice.toLocaleString('en-IN')}
+                      </span>
+                    )}
+                  {serializableProduct.discountPercentage > 0 && (
+                    <span className="font-display rounded-md bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700">
+                      {serializableProduct.discountPercentage}% OFF
                     </span>
                   )}
                 </div>
+                <p className="font-body mt-1 text-[11px] text-neutral-400">
+                  Inclusive of all taxes
+                </p>
+              </div>
 
-                {/* Title */}
-                <h1 className="font-display mt-4 text-2xl font-semibold tracking-tight text-neutral-900 md:text-3xl">
-                  {product.name}
-                </h1>
+              {/* Available Offers — Amazon style */}
+              <OffersSection
+                coupons={productCoupons}
+                variant="banner"
+                className="mt-4"
+              />
 
-                {/* Pricing */}
-                <div className="mt-5 border-b border-neutral-100 pb-5">
-                  <div className="flex flex-wrap items-baseline gap-3">
-                    <span className="font-display text-2xl font-semibold text-neutral-900">
-                      ₹{product.basePrice.toLocaleString('en-IN')}
-                    </span>
-                    {product.compareAtPrice &&
-                      product.compareAtPrice > product.basePrice && (
-                        <span className="font-display text-sm text-neutral-400 line-through">
-                          ₹{product.compareAtPrice.toLocaleString('en-IN')}
-                        </span>
-                      )}
-                    {serializableProduct.discountPercentage > 0 && (
-                      <span className="font-display rounded-md bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700">
-                        {serializableProduct.discountPercentage}% OFF
-                      </span>
-                    )}
-                  </div>
-                  <p className="font-body mt-1 text-[11px] text-neutral-400">
-                    Inclusive of all taxes
-                  </p>
-                </div>
-
-                {/* Available Offers — Amazon style */}
-                <OffersSection
-                  coupons={productCoupons}
-                  variant="banner"
-                  className="mt-4"
-                />
-
-                {/* Rating + Purchase count */}
-                {serializableProduct.rating.count > 0 && (
-                  <div className="mt-3 flex items-center gap-3 text-xs text-neutral-500">
-                    <Rating
-                      value={Math.round(serializableProduct.rating.average)}
-                      size="sm"
-                    />
-                    <span>{serializableProduct.rating.count} reviews</span>
-                    {serializableProduct.purchaseCount > 0 && (
-                      <span className="text-neutral-300">·</span>
-                    )}
-                    {serializableProduct.purchaseCount > 0 && (
-                      <span>{serializableProduct.purchaseCount} purchases</span>
-                    )}
-                  </div>
-                )}
-
-                {/* Stock urgency */}
-                {serializableProduct.quantity > 0 &&
-                  serializableProduct.quantity <=
-                    serializableProduct.lowStockThreshold && (
-                    <p className="mt-2 text-xs font-medium text-amber-700">
-                      {serializableProduct.quantity === 1
-                        ? 'Only 1 left in stock'
-                        : `Only ${serializableProduct.quantity} left in stock`}
-                    </p>
-                  )}
-
-                {/* Tags */}
-                {serializableProduct.tags.length > 0 && (
-                  <div className="mt-3 flex flex-wrap gap-1.5">
-                    {serializableProduct.tags.map((tag: string) => (
-                      <span
-                        key={tag}
-                        className="rounded-full border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-[10px] text-neutral-500"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                )}
-
-                {/* Features / Badges */}
-                {serializableProduct.features.length > 0 && (
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {serializableProduct.features.map((feat: string) => (
-                      <span
-                        key={feat}
-                        className="bg-brand-50 text-brand-700 inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-[10px] font-medium"
-                      >
-                        <Sparkles className="h-3 w-3" />
-                        {feat}
-                      </span>
-                    ))}
-                  </div>
-                )}
-
-                {/* Size, stitching, CTAs */}
-                <div className="mt-7">
-                  <ProductActions
-                    product={serializableProduct}
-                    isOutOfStock={
-                      product.trackQuantity === true &&
-                      (product.quantity ?? 0) <= 0
-                    }
+              {/* Rating + Purchase count */}
+              {serializableProduct.rating.count > 0 && (
+                <div className="mt-3 flex items-center gap-3 text-xs text-neutral-500">
+                  <Rating
+                    value={Math.round(serializableProduct.rating.average)}
+                    size="sm"
                   />
+                  <span>{serializableProduct.rating.count} reviews</span>
+                  {serializableProduct.purchaseCount > 0 && (
+                    <span className="text-neutral-300">·</span>
+                  )}
+                  {serializableProduct.purchaseCount > 0 && (
+                    <span>{serializableProduct.purchaseCount} purchases</span>
+                  )}
                 </div>
+              )}
 
-                {/* Trust signals — inline list, no icon circles */}
-                <div className="mt-8 space-y-3.5 border-t border-neutral-100 pt-8">
-                  {TRUST.map(({ icon: Icon, text }) => (
-                    <div
-                      key={text}
-                      className="flex items-start gap-3 text-sm text-neutral-600"
+              {/* Stock urgency */}
+              {serializableProduct.quantity > 0 &&
+                serializableProduct.quantity <=
+                  serializableProduct.lowStockThreshold && (
+                  <p className="mt-2 text-xs font-medium text-amber-700">
+                    {serializableProduct.quantity === 1
+                      ? 'Only 1 left in stock'
+                      : `Only ${serializableProduct.quantity} left in stock`}
+                  </p>
+                )}
+
+              {/* Tags */}
+              {serializableProduct.tags.length > 0 && (
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {serializableProduct.tags.map((tag: string) => (
+                    <span
+                      key={tag}
+                      className="rounded-full border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-[10px] text-neutral-500"
                     >
-                      <Icon className="text-brand-600 mt-0.5 h-4 w-4 shrink-0" />
-                      <span>{text}</span>
-                    </div>
+                      {tag}
+                    </span>
                   ))}
                 </div>
+              )}
+
+              {/* Features / Badges */}
+              {serializableProduct.features.length > 0 && (
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {serializableProduct.features.map((feat: string) => (
+                    <span
+                      key={feat}
+                      className="bg-brand-50 text-brand-700 inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-[10px] font-medium"
+                    >
+                      <Sparkles className="h-3 w-3" />
+                      {feat}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {/* Trust signals — inline list, no icon circles */}
+              <div className="mt-8 space-y-3.5 border-t border-neutral-100 pt-8">
+                {TRUST.map(({ icon: Icon, text }) => (
+                  <div
+                    key={text}
+                    className="flex items-start gap-3 text-sm text-neutral-600"
+                  >
+                    <Icon className="text-brand-600 mt-0.5 h-4 w-4 shrink-0" />
+                    <span>{text}</span>
+                  </div>
+                ))}
               </div>
-            </div>
+            </PDPClientSection>
           </div>
 
           {/* ── Details: Story + Specs ── */}

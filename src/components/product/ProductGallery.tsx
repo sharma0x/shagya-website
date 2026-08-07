@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { SkeletonImage } from '@/components/ui/SkeletonImage'
 import { ProductImageZoom } from '@/components/product/ProductImageZoom'
@@ -15,6 +15,10 @@ export function ProductGallery({
   productName,
 }: ProductGalleryProps) {
   const [activeIdx, setActiveIdx] = useState(0)
+
+  useEffect(() => {
+    setActiveIdx(0)
+  }, [imageUrls])
 
   if (!imageUrls || imageUrls.length === 0) {
     return (
