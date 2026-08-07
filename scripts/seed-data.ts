@@ -29,13 +29,20 @@ export interface SeedBrand {
   description: string
 }
 
+export interface SeedColorVariant {
+  colorName: string
+  imagePath: string
+  galleryImages?: string[]
+  priceOverride?: number
+  stock?: number
+}
+
 export interface SeedProduct {
   name: string
   status: 'draft' | 'published' | 'archived'
   fabric: string
   weave: string
   pattern: string
-  color: string
   basePrice: number
   compareAtPrice?: number
   description: string
@@ -46,13 +53,30 @@ export interface SeedProduct {
   occasion: string
   gstPercent: number
   shippingPrice: number
-  imagePath: string
-  galleryImages?: string[]
   length: number
   trackQuantity: boolean
   quantity: number
   lowStockThreshold: number
+  colorVariants: SeedColorVariant[]
 }
+
+export interface SeedColor {
+  name: string
+  hex: string
+}
+
+export const colors: SeedColor[] = [
+  { name: 'Ruby Red', hex: '#E0115F' },
+  { name: 'Royal Blue', hex: '#4169E1' },
+  { name: 'Emerald Green', hex: '#50C878' },
+  { name: 'Saffron Gold', hex: '#F4C430' },
+  { name: 'Deep Burgundy', hex: '#800020' },
+  { name: 'Ivory Cream', hex: '#FFFFF0' },
+  { name: 'Navy Blue', hex: '#000080' },
+  { name: 'Mint Green', hex: '#98FB98' },
+  { name: 'Lavender Purple', hex: '#E6E6FA' },
+  { name: 'Charcoal Black', hex: '#36454F' },
+]
 
 // ---------------------------------------------------------------------------
 // Page Content Blocks
@@ -420,9 +444,10 @@ export const products: SeedProduct[] = [
     fabric: 'silk',
     weave: 'banarasi',
     pattern: 'embroidered',
-    color: 'green',
     basePrice: 18500,
     compareAtPrice: 22000,
+    description:
+      'A masterpiece from the looms of Varanasi. This mehendi green Banarasi silk saree features the intricate Kadhwa weaving technique where each motif is woven independently — no floating threads on the reverse. The body is adorned with a dense floral jaal in gold zari, while the pallu showcases elaborate meenakari work with copper and gold interplay. The 8-inch border carries traditional elephant and peacock motifs — symbols of royalty in Indian textile art. Pure silk warp and weft ensure a luxurious drape suitable for the most important occasions. Comes with a running blouse piece featuring a matching zari border.',
     blouseType: 'Running blouse with zari border',
     palluDetails:
       'Rich kadhwa woven pallu with floral jaal and meenakari detailing in gold and copper zari',
@@ -433,18 +458,28 @@ export const products: SeedProduct[] = [
     occasion: 'festive',
     gstPercent: 5,
     shippingPrice: 0,
-    description:
-      'A masterpiece from the looms of Varanasi. This mehendi green Banarasi silk saree features the intricate Kadhwa weaving technique where each motif is woven independently — no floating threads on the reverse. The body is adorned with a dense floral jaal in gold zari, while the pallu showcases elaborate meenakari work with copper and gold interplay. The 8-inch border carries traditional elephant and peacock motifs — symbols of royalty in Indian textile art. Pure silk warp and weft ensure a luxurious drape suitable for the most important occasions. Comes with a running blouse piece featuring a matching zari border.',
-    imagePath: '/images/products/saree-01.jpg',
-    galleryImages: [
-      '/images/products/saree-04.jpg',
-      '/images/products/saree-18.jpg',
-      '/images/products/saree-11.jpg',
-    ],
     length: 5.5,
     trackQuantity: true,
     quantity: 15,
     lowStockThreshold: 3,
+    colorVariants: [
+      {
+        colorName: 'Ruby Red',
+        imagePath: 'images/products/saree-01.jpg',
+        stock: 5,
+      },
+      {
+        colorName: 'Emerald Green',
+        imagePath: 'images/products/saree-02.jpg',
+        stock: 5,
+      },
+      {
+        colorName: 'Saffron Gold',
+        imagePath: 'images/products/saree-03.jpg',
+        stock: 5,
+        priceOverride: 19500,
+      },
+    ],
   },
   {
     name: 'Kanjivaram Temple Border Silk Saree',
@@ -452,9 +487,10 @@ export const products: SeedProduct[] = [
     fabric: 'silk',
     weave: 'kanchipuram',
     pattern: 'embroidered',
-    color: 'burgundy',
     basePrice: 24500,
     compareAtPrice: 32000,
+    description:
+      'Pure Kanjivaram silk saree woven in the sacred town of Kanchipuram by master weavers with generations of expertise. The deep pomegranate-red body provides the perfect canvas for real gold zari work — each thread is silk twisted with pure gold. The Korvai technique means the body and the contrasting border are woven on separate looms and interlocked with a distinctive serrated edge, ensuring the border never detaches from the body. The pallu features annam (divine swans) and rudraksha beads arranged in a grand composition. Three strands of mulberry silk twisted together give this saree its characteristic weight, rustle, and longevity — an heirloom that will last generations.',
     blouseType: 'Contrast blouse with temple motifs',
     palluDetails:
       'Grand pallu with annam (swan) and rudraksha motifs woven in real zari against rich red body',
@@ -465,18 +501,28 @@ export const products: SeedProduct[] = [
     occasion: 'bridal',
     gstPercent: 5,
     shippingPrice: 0,
-    description:
-      'Pure Kanjivaram silk saree woven in the sacred town of Kanchipuram by master weavers with generations of expertise. The deep pomegranate-red body provides the perfect canvas for real gold zari work — each thread is silk twisted with pure gold. The Korvai technique means the body and the contrasting border are woven on separate looms and interlocked with a distinctive serrated edge, ensuring the border never detaches from the body. The pallu features annam (divine swans) and rudraksha beads arranged in a grand composition. Three strands of mulberry silk twisted together give this saree its characteristic weight, rustle, and longevity — an heirloom that will last generations.',
-    imagePath: '/images/products/saree-02.jpg',
-    galleryImages: [
-      '/images/products/saree-14.jpg',
-      '/images/products/saree-03.jpg',
-      '/images/products/saree-14.jpg',
-    ],
     length: 5.5,
     trackQuantity: true,
     quantity: 8,
     lowStockThreshold: 2,
+    colorVariants: [
+      {
+        colorName: 'Ruby Red',
+        imagePath: 'images/products/saree-04.jpg',
+        stock: 3,
+      },
+      {
+        colorName: 'Deep Burgundy',
+        imagePath: 'images/products/saree-05.jpg',
+        stock: 3,
+        priceOverride: 25500,
+      },
+      {
+        colorName: 'Saffron Gold',
+        imagePath: 'images/products/saree-06.jpg',
+        stock: 2,
+      },
+    ],
   },
   {
     name: 'Bengal Tant Cotton Saree in Jamdani Weave',
@@ -484,9 +530,10 @@ export const products: SeedProduct[] = [
     fabric: 'cotton',
     weave: 'tant',
     pattern: 'printed',
-    color: 'ivory',
     basePrice: 2400,
     compareAtPrice: 2900,
+    description:
+      'A classic Bengal Tant saree with Jamdani-inspired motifs — an UNESCO Intangible Cultural Heritage. Woven in Phulia, West Bengal, this saree combines the crispness of fine cotton with the artistry of supplementary weft Jamdani. The off-white body is scattered with delicate geometric butis, while the pallu graduates to larger paisleys and floral motifs. The thick contrasting border with double-line geometry gives structure to the drape. Extremely lightweight and breathable — ideal for Kolkata summers or any humid climate. Each saree takes a weaver 5-7 days to complete on a traditional pit loom. Machine washable on gentle cycle — the cotton becomes softer with every wash.',
     blouseType: 'Running blouse in solid contrast color',
     palluDetails:
       'Elaborate Jamdani-style pallu with geometric butis graduating to large paisley motifs',
@@ -496,18 +543,27 @@ export const products: SeedProduct[] = [
     occasion: 'daily-wear',
     gstPercent: 5,
     shippingPrice: 100,
-    description:
-      'A classic Bengal Tant saree with Jamdani-inspired motifs — an UNESCO Intangible Cultural Heritage. Woven in Phulia, West Bengal, this saree combines the crispness of fine cotton with the artistry of supplementary weft Jamdani. The off-white body is scattered with delicate geometric butis, while the pallu graduates to larger paisleys and floral motifs. The thick contrasting border with double-line geometry gives structure to the drape. Extremely lightweight and breathable — ideal for Kolkata summers or any humid climate. Each saree takes a weaver 5-7 days to complete on a traditional pit loom. Machine washable on gentle cycle — the cotton becomes softer with every wash.',
-    imagePath: '/images/products/saree-03.jpg',
-    galleryImages: [
-      '/images/products/saree-17.jpg',
-      '/images/products/saree-17.jpg',
-      '/images/products/saree-14.jpg',
-    ],
     length: 5.5,
     trackQuantity: true,
     quantity: 30,
     lowStockThreshold: 5,
+    colorVariants: [
+      {
+        colorName: 'Ivory Cream',
+        imagePath: 'images/products/saree-07.jpg',
+        stock: 10,
+      },
+      {
+        colorName: 'Mint Green',
+        imagePath: 'images/products/saree-08.jpg',
+        stock: 10,
+      },
+      {
+        colorName: 'Lavender Purple',
+        imagePath: 'images/products/saree-09.jpg',
+        stock: 10,
+      },
+    ],
   },
   {
     name: 'Bandhani Silk Saree from Bhuj — Chandrokhani Pattern',
@@ -515,9 +571,10 @@ export const products: SeedProduct[] = [
     fabric: 'silk',
     weave: 'bandhani',
     pattern: 'printed',
-    color: 'red',
     basePrice: 9500,
     compareAtPrice: 12000,
+    description:
+      'Hand-tied Bandhani silk saree from the artisans of Bhuj, Gujarat. Each tiny dot on this saree has been individually tied with thread, dyed, and untied — a labor of love spanning 3-4 weeks per saree. The Chandrokhani pattern features concentric circles inspired by the moon, creating a mesmerizing optical effect on the rich silk fabric. The vibrant combination of red base with yellow and white dot clusters is classic Kutchi Bandhani. The saree is finished with a fine gota (gold ribbon) trim along the border for festive sparkle. Comes with a certificate of authenticity from the Bhuj Bandhani Weavers Cooperative.',
     blouseType: 'Contrast blouse in solid color matching border',
     palluDetails:
       'Elaborate chandrokhani (moon-inspired) bandhani pattern with concentric circles graduating in size',
@@ -527,18 +584,27 @@ export const products: SeedProduct[] = [
     occasion: 'festive',
     gstPercent: 5,
     shippingPrice: 0,
-    description:
-      'Hand-tied Bandhani silk saree from the artisans of Bhuj, Gujarat. Each tiny dot on this saree has been individually tied with thread, dyed, and untied — a labor of love spanning 3-4 weeks per saree. The Chandrokhani pattern features concentric circles inspired by the moon, creating a mesmerizing optical effect on the rich silk fabric. The vibrant combination of red base with yellow and white dot clusters is classic Kutchi Bandhani. The saree is finished with a fine gota (gold ribbon) trim along the border for festive sparkle. Comes with a certificate of authenticity from the Bhuj Bandhani Weavers Cooperative.',
-    imagePath: '/images/products/saree-04.jpg',
-    galleryImages: [
-      '/images/products/saree-12.jpg',
-      '/images/products/saree-07.jpg',
-      '/images/products/saree-01.jpg',
-    ],
     length: 5.5,
     trackQuantity: true,
     quantity: 12,
     lowStockThreshold: 3,
+    colorVariants: [
+      {
+        colorName: 'Ruby Red',
+        imagePath: 'images/products/saree-10.jpg',
+        stock: 4,
+      },
+      {
+        colorName: 'Saffron Gold',
+        imagePath: 'images/products/saree-11.jpg',
+        stock: 4,
+      },
+      {
+        colorName: 'Deep Burgundy',
+        imagePath: 'images/products/saree-12.jpg',
+        stock: 4,
+      },
+    ],
   },
   {
     name: 'Chanderi Silk-Cotton with Gold Booti',
@@ -546,9 +612,10 @@ export const products: SeedProduct[] = [
     fabric: 'blend',
     weave: 'chanderi',
     pattern: 'embroidered',
-    color: 'ivory',
     basePrice: 5500,
     compareAtPrice: 6800,
+    description:
+      'Ethereal Chanderi saree from the historic weaving town of Chanderi, Madhya Pradesh. The unique silk-cotton blend creates a fabric that is simultaneously sheer, glossy, and lightweight — often described as "woven air." The pastel body is adorned with evenly spaced gold zari bootis (small floral motifs) that catch the light as you move. The pallu features a denser arrangement of bootis graduating to a rich gold-striped end. A delicate scalloped zari border frames the saree beautifully. Perfect for women who want sophistication without the weight of heavy silk. This saree weighs just 350 grams — you will barely feel it on you.',
     blouseType: 'Matching blouse piece with zari border',
     palluDetails:
       'Sheer pallu with dense gold booti work and zari-striped border graduation',
@@ -558,18 +625,27 @@ export const products: SeedProduct[] = [
     occasion: 'casual',
     gstPercent: 5,
     shippingPrice: 0,
-    description:
-      'Ethereal Chanderi saree from the historic weaving town of Chanderi, Madhya Pradesh. The unique silk-cotton blend creates a fabric that is simultaneously sheer, glossy, and lightweight — often described as "woven air." The pastel body is adorned with evenly spaced gold zari bootis (small floral motifs) that catch the light as you move. The pallu features a denser arrangement of bootis graduating to a rich gold-striped end. A delicate scalloped zari border frames the saree beautifully. Perfect for women who want sophistication without the weight of heavy silk. This saree weighs just 350 grams — you will barely feel it on you.',
-    imagePath: '/images/products/saree-05.jpg',
-    galleryImages: [
-      '/images/products/saree-15.jpg',
-      '/images/products/saree-01.jpg',
-      '/images/products/saree-14.jpg',
-    ],
     length: 5.5,
     trackQuantity: true,
     quantity: 20,
     lowStockThreshold: 4,
+    colorVariants: [
+      {
+        colorName: 'Ivory Cream',
+        imagePath: 'images/products/saree-13.jpg',
+        stock: 7,
+      },
+      {
+        colorName: 'Saffron Gold',
+        imagePath: 'images/products/saree-14.jpg',
+        stock: 7,
+      },
+      {
+        colorName: 'Mint Green',
+        imagePath: 'images/products/saree-15.jpg',
+        stock: 6,
+      },
+    ],
   },
   {
     name: 'Patola Double Ikat Saree from Patan',
@@ -577,9 +653,10 @@ export const products: SeedProduct[] = [
     fabric: 'silk',
     weave: 'patola',
     pattern: 'printed',
-    color: 'multicolor',
     basePrice: 42000,
     compareAtPrice: 55000,
+    description:
+      'A genuine Patan Patola — among the rarest and most complex textiles in the world. This double ikat saree from Patan, Gujarat, requires a master weaver and his family to spend 6-8 months on a single piece. Both warp and weft threads are individually resist-dyed according to a precise mathematical design before weaving begins. When the threads intersect on the loom, the pattern emerges with perfect alignment — a feat of engineering and art combined. The bhat (design) on this piece features the classic nari-kunj motif — elephants amidst floral vines within a nine-element geometric grid. The silk is sourced from Karnataka mulberry farms and the natural dyes use indigo, madder root, turmeric, and pomegranate rind. Only a handful of families in Patan still practice this 900-year-old craft. This saree comes with a detailed provenance document and care instructions for preservation.',
     blouseType: 'Plain silk blouse in dominant border color',
     palluDetails:
       'Complex nari-kunj (elephant-floral) bhat design with nine-element geometric grid',
@@ -590,18 +667,23 @@ export const products: SeedProduct[] = [
     occasion: 'bridal',
     gstPercent: 5,
     shippingPrice: 0,
-    description:
-      'A genuine Patan Patola — among the rarest and most complex textiles in the world. This double ikat saree from Patan, Gujarat, requires a master weaver and his family to spend 6-8 months on a single piece. Both warp and weft threads are individually resist-dyed according to a precise mathematical design before weaving begins. When the threads intersect on the loom, the pattern emerges with perfect alignment — a feat of engineering and art combined. The bhat (design) on this piece features the classic nari-kunj motif — elephants amidst floral vines within a nine-element geometric grid. The silk is sourced from Karnataka mulberry farms and the natural dyes use indigo, madder root, turmeric, and pomegranate rind. Only a handful of families in Patan still practice this 900-year-old craft. This saree comes with a detailed provenance document and care instructions for preservation.',
-    imagePath: '/images/products/saree-06.jpg',
-    galleryImages: [
-      '/images/products/saree-11.jpg',
-      '/images/products/saree-13.jpg',
-      '/images/products/saree-13.jpg',
-    ],
     length: 5.5,
     trackQuantity: true,
     quantity: 2,
     lowStockThreshold: 1,
+    colorVariants: [
+      {
+        colorName: 'Deep Burgundy',
+        imagePath: 'images/products/saree-16.jpg',
+        stock: 1,
+      },
+      {
+        colorName: 'Saffron Gold',
+        imagePath: 'images/products/saree-17.jpg',
+        stock: 1,
+        priceOverride: 45000,
+      },
+    ],
   },
   {
     name: 'Kalamkari Hand-Painted Cotton Saree — Tree of Life',
@@ -609,9 +691,10 @@ export const products: SeedProduct[] = [
     fabric: 'cotton',
     weave: 'kalamkari',
     pattern: 'painted',
-    color: 'multicolor',
     basePrice: 6500,
     compareAtPrice: 8000,
+    description:
+      'A walking canvas. This saree is hand-painted in the Srikalahasti style of Kalamkari by artisans in Andhra Pradesh using a bamboo kalam (pen) dipped in natural dyes. Each line, each wash of color, is applied entirely by hand — no blocks, no screens, no shortcuts. The body features delicate floral creepers, while the pallu is dominated by the spectacular Tree of Life — its branches filled with peacocks, parrots, deer, and celestial flowers. The border narrates stories from the Panchatantra. The dyes are all natural: black from jaggery and iron filings, red from madder root, blue from indigo, yellow from pomegranate rind, green from myrobalan. The painting alone takes 15-20 days per saree. Every piece is unique — no two are exactly alike.',
     blouseType: 'Solid blouse in natural base color',
     palluDetails:
       'Elaborate Tree of Life spanning full pallu width with birds, flowers, and celestial elements',
@@ -622,18 +705,27 @@ export const products: SeedProduct[] = [
     occasion: 'casual',
     gstPercent: 5,
     shippingPrice: 0,
-    description:
-      'A walking canvas. This saree is hand-painted in the Srikalahasti style of Kalamkari by artisans in Andhra Pradesh using a bamboo kalam (pen) dipped in natural dyes. Each line, each wash of color, is applied entirely by hand — no blocks, no screens, no shortcuts. The body features delicate floral creepers, while the pallu is dominated by the spectacular Tree of Life — its branches filled with peacocks, parrots, deer, and celestial flowers. The border narrates stories from the Panchatantra. The dyes are all natural: black from jaggery and iron filings, red from madder root, blue from indigo, yellow from pomegranate rind, green from myrobalan. The painting alone takes 15-20 days per saree. Every piece is unique — no two are exactly alike.',
-    imagePath: '/images/products/saree-07.jpg',
-    galleryImages: [
-      '/images/products/saree-18.jpg',
-      '/images/products/saree-12.jpg',
-      '/images/products/saree-06.jpg',
-    ],
     length: 5.5,
     trackQuantity: true,
     quantity: 6,
     lowStockThreshold: 2,
+    colorVariants: [
+      {
+        colorName: 'Ivory Cream',
+        imagePath: 'images/products/saree-18.jpg',
+        stock: 2,
+      },
+      {
+        colorName: 'Emerald Green',
+        imagePath: 'images/products/saree-19.jpg',
+        stock: 2,
+      },
+      {
+        colorName: 'Charcoal Black',
+        imagePath: 'images/products/saree-20.jpg',
+        stock: 2,
+      },
+    ],
   },
   {
     name: 'Paithani Silk Saree in Parrot Green',
@@ -641,9 +733,10 @@ export const products: SeedProduct[] = [
     fabric: 'silk',
     weave: 'paithani',
     pattern: 'embroidered',
-    color: 'green',
     basePrice: 16500,
     compareAtPrice: 21000,
+    description:
+      'A regal Paithani saree from Yeola, Maharashtra — the royal textile of the Maratha empire. The parrot green body is woven with pure mulberry silk shot with gold zari, creating an iridescent quality that shifts color as it catches light. The signature Paithani pallu features the mayur (peacock) motif in an extraordinary seven-color tapestry weave — each color change requires the weaver to manually insert a new thread. The border is adorned with alternating gold and silver zari oval butis interspersed with peacock feather motifs. The saree takes approximately 8-10 weeks to weave and weighs 850 grams. A traditional Marathi bridal choice, this saree is worn with the pallu draped over the left shoulder (the Nauvari style) for a distinctive look.',
     blouseType: 'Contrast blouse in pallu color',
     palluDetails:
       'Spectacular peacock motif pallu in seven colors — the signature Yeola weave',
@@ -654,18 +747,28 @@ export const products: SeedProduct[] = [
     occasion: 'festive',
     gstPercent: 5,
     shippingPrice: 0,
-    description:
-      'A regal Paithani saree from Yeola, Maharashtra — the royal textile of the Maratha empire. The parrot green body is woven with pure mulberry silk shot with gold zari, creating an iridescent quality that shifts color as it catches light. The signature Paithani pallu features the mayur (peacock) motif in an extraordinary seven-color tapestry weave — each color change requires the weaver to manually insert a new thread. The border is adorned with alternating gold and silver zari oval butis interspersed with peacock feather motifs. The saree takes approximately 8-10 weeks to weave and weighs 850 grams. A traditional Marathi bridal choice, this saree is worn with the pallu draped over the left shoulder (the Nauvari style) for a distinctive look.',
-    imagePath: '/images/products/saree-08.jpg',
-    galleryImages: [
-      '/images/products/saree-14.jpg',
-      '/images/products/saree-19.jpg',
-      '/images/products/saree-10.jpg',
-    ],
     length: 5.5,
     trackQuantity: true,
     quantity: 10,
     lowStockThreshold: 2,
+    colorVariants: [
+      {
+        colorName: 'Emerald Green',
+        imagePath: 'images/products/saree-21.jpg',
+        stock: 4,
+      },
+      {
+        colorName: 'Royal Blue',
+        imagePath: 'images/products/saree-22.jpg',
+        stock: 3,
+      },
+      {
+        colorName: 'Ruby Red',
+        imagePath: 'images/products/saree-23.jpg',
+        stock: 3,
+        priceOverride: 17500,
+      },
+    ],
   },
   {
     name: 'Maheshwari Cotton-Silk in Turmeric Yellow',
@@ -673,9 +776,10 @@ export const products: SeedProduct[] = [
     fabric: 'blend',
     weave: 'maheshwari',
     pattern: 'solid',
-    color: 'gold',
     basePrice: 3200,
     compareAtPrice: 4000,
+    description:
+      'The saree that defined a royal decree. In the 18th century, Queen Ahilyabai Holkar commissioned the weavers of Maheshwar to create a saree light enough to be worn in the intense Malwa summers yet elegant enough for court appearances. The result was the Maheshwari — a cotton-silk blend with distinctive reversible borders and five-stripe pallus. This turmeric yellow piece carries forward that 250-year tradition. The saree weighs just 250 grams, folds into a handbag, and emerges wrinkle-free. The gold zari stripes on the pallu catch light subtly rather than shouting for attention. Wear it to work with minimalist jewelry for an effortlessly sophisticated look. Machine washable — this is a saree designed to be lived in, not locked away.',
     blouseType: 'Matching blouse with border detail',
     palluDetails:
       'Five-stripe pallu in gold and red zari with reversible design',
@@ -686,18 +790,27 @@ export const products: SeedProduct[] = [
     occasion: 'daily-wear',
     gstPercent: 5,
     shippingPrice: 100,
-    description:
-      'The saree that defined a royal decree. In the 18th century, Queen Ahilyabai Holkar commissioned the weavers of Maheshwar to create a saree light enough to be worn in the intense Malwa summers yet elegant enough for court appearances. The result was the Maheshwari — a cotton-silk blend with distinctive reversible borders and five-stripe pallus. This turmeric yellow piece carries forward that 250-year tradition. The saree weighs just 250 grams, folds into a handbag, and emerges wrinkle-free. The gold zari stripes on the pallu catch light subtly rather than shouting for attention. Wear it to work with minimalist jewelry for an effortlessly sophisticated look. Machine washable — this is a saree designed to be lived in, not locked away.',
-    imagePath: '/images/products/saree-09.jpg',
-    galleryImages: [
-      '/images/products/saree-17.jpg',
-      '/images/products/saree-09.jpg',
-      '/images/products/saree-15.jpg',
-    ],
     length: 5.5,
     trackQuantity: true,
     quantity: 25,
     lowStockThreshold: 5,
+    colorVariants: [
+      {
+        colorName: 'Saffron Gold',
+        imagePath: 'images/products/saree-01.jpg',
+        stock: 9,
+      },
+      {
+        colorName: 'Lavender Purple',
+        imagePath: 'images/products/saree-02.jpg',
+        stock: 8,
+      },
+      {
+        colorName: 'Mint Green',
+        imagePath: 'images/products/saree-03.jpg',
+        stock: 8,
+      },
+    ],
   },
   {
     name: 'Baluchari Silk Saree — Ramayana Pallu',
@@ -705,9 +818,10 @@ export const products: SeedProduct[] = [
     fabric: 'silk',
     weave: 'baluchari',
     pattern: 'embroidered',
-    color: 'purple',
     basePrice: 22000,
     compareAtPrice: 28000,
+    description:
+      'A Baluchari that tells the Ramayana. Woven in Bishnupur, West Bengal, this saree uses a Jacquard loom to create miniature narrative panels on the pallu — each panel depicting a key scene from the great epic: Rama breaking the bow at Sita\'s swayamvar, the exile into the forest, the golden deer, Hanuman\'s leap to Lanka, the battle, and the triumphant return to Ayodhya. The body is a deep, rich purple — the color of royalty in Bengal — with delicate floral motifs scattered across. The border carries continuation of the narrative with small animal and nature motifs. Each Baluchari requires 15-20 days of weaving on a complex Jacquard setup where the design is "programmed" through thousands of punched cards — an early form of computing in textile art. A museum-quality piece that preserves a 200-year-old Bengali storytelling tradition.',
     blouseType: 'Plain silk blouse in body color',
     palluDetails:
       "Narrative pallu depicting the entire Ramayana — from Rama's exile to the coronation at Ayodhya",
@@ -718,18 +832,28 @@ export const products: SeedProduct[] = [
     occasion: 'festive',
     gstPercent: 5,
     shippingPrice: 0,
-    description:
-      'A Baluchari that tells the Ramayana. Woven in Bishnupur, West Bengal, this saree uses a Jacquard loom to create miniature narrative panels on the pallu — each panel depicting a key scene from the great epic: Rama breaking the bow at Sita\'s swayamvar, the exile into the forest, the golden deer, Hanuman\'s leap to Lanka, the battle, and the triumphant return to Ayodhya. The body is a deep, rich purple — the color of royalty in Bengal — with delicate floral motifs scattered across. The border carries continuation of the narrative with small animal and nature motifs. Each Baluchari requires 15-20 days of weaving on a complex Jacquard setup where the design is "programmed" through thousands of punched cards — an early form of computing in textile art. A museum-quality piece that preserves a 200-year-old Bengali storytelling tradition.',
-    imagePath: '/images/products/saree-10.jpg',
-    galleryImages: [
-      '/images/products/saree-15.jpg',
-      '/images/products/saree-19.jpg',
-      '/images/products/saree-18.jpg',
-    ],
     length: 5.5,
     trackQuantity: true,
     quantity: 4,
     lowStockThreshold: 1,
+    colorVariants: [
+      {
+        colorName: 'Deep Burgundy',
+        imagePath: 'images/products/saree-04.jpg',
+        stock: 2,
+      },
+      {
+        colorName: 'Navy Blue',
+        imagePath: 'images/products/saree-05.jpg',
+        stock: 1,
+      },
+      {
+        colorName: 'Ruby Red',
+        imagePath: 'images/products/saree-06.jpg',
+        stock: 1,
+        priceOverride: 23500,
+      },
+    ],
   },
   {
     name: 'Organza Silk with Chikankari Embroidery',
@@ -737,8 +861,9 @@ export const products: SeedProduct[] = [
     fabric: 'silk',
     weave: 'ikkat',
     pattern: 'embroidered',
-    color: 'pink',
     basePrice: 12500,
+    description:
+      "Where the lightness of organza meets the intricacy of Lucknow's chikankari. This saree combines two distinct Indian textile traditions: the sheer, crisp silk organza from Varanasi and the hand-embroidered chikankari work from Lucknow. The pastel pink base is the perfect canvas for white thread embroidery — delicate floral sprays, paisley vines, and geometric jaali (lattice) work that creates beautiful shadow effects on the sheer fabric. The pallu is a dense garden of chikankari in multiple stitch styles: bakhiya (shadow work), phanda (knot stitch), keel kangan (buttonhole), and murri (rice-grain stitch). Each saree requires 25-30 days of embroidery by skilled Lucknowi karigars. Weighing just 400 grams, this is the ideal summer occasion saree — grand without the weight.",
     blouseType: 'Embroidered blouse piece in matching organza',
     palluDetails:
       'Dense chikankari pallu — flowers, paisleys, and jaali work in white thread on pastel organza',
@@ -749,18 +874,28 @@ export const products: SeedProduct[] = [
     occasion: 'festive',
     gstPercent: 5,
     shippingPrice: 0,
-    description:
-      "Where the lightness of organza meets the intricacy of Lucknow's chikankari. This saree combines two distinct Indian textile traditions: the sheer, crisp silk organza from Varanasi and the hand-embroidered chikankari work from Lucknow. The pastel pink base is the perfect canvas for white thread embroidery — delicate floral sprays, paisley vines, and geometric jaali (lattice) work that creates beautiful shadow effects on the sheer fabric. The pallu is a dense garden of chikankari in multiple stitch styles: bakhiya (shadow work), phanda (knot stitch), keel kangan (buttonhole), and murri (rice-grain stitch). Each saree requires 25-30 days of embroidery by skilled Lucknowi karigars. Weighing just 400 grams, this is the ideal summer occasion saree — grand without the weight.",
-    imagePath: '/images/products/saree-11.jpg',
-    galleryImages: [
-      '/images/products/saree-02.jpg',
-      '/images/products/saree-10.jpg',
-      '/images/products/saree-14.jpg',
-    ],
     length: 5.5,
     trackQuantity: true,
     quantity: 10,
     lowStockThreshold: 2,
+    colorVariants: [
+      {
+        colorName: 'Ivory Cream',
+        imagePath: 'images/products/saree-07.jpg',
+        stock: 4,
+      },
+      {
+        colorName: 'Lavender Purple',
+        imagePath: 'images/products/saree-08.jpg',
+        stock: 3,
+      },
+      {
+        colorName: 'Mint Green',
+        imagePath: 'images/products/saree-09.jpg',
+        stock: 3,
+        priceOverride: 13500,
+      },
+    ],
   },
   {
     name: 'Pochampally Ikat Silk-Cotton in Geometric Blue',
@@ -768,9 +903,10 @@ export const products: SeedProduct[] = [
     fabric: 'blend',
     weave: 'ikkat',
     pattern: 'printed',
-    color: 'blue',
     basePrice: 4200,
     compareAtPrice: 5200,
+    description:
+      "Bold geometry meets traditional ikat technique. This Pochampally silk-cotton saree features striking geometric patterns in deep indigo blue and white — the hallmark of Telangana's ikat tradition. The warp threads were resist-dyed before weaving, creating the characteristic slightly blurred edges where the pattern meets the white — a sign of authentic hand-crafted ikat (not digital print). The body alternates between bands of diamond lozenges and solid color blocks, while the pallu expands into large statement geometrics. The silk-cotton blend gives the sheen of silk with the comfort of cotton. Pairs beautifully with contemporary silver jewelry for a modern Indian aesthetic. The geometric precision of ikat has influenced international designers from Missoni to Dries Van Noten — wear a piece of that global design conversation.",
     blouseType: 'Solid blouse in navy blue',
     palluDetails:
       'Expanding diamond motifs graduating from small repeats to large statement geometrics',
@@ -780,18 +916,27 @@ export const products: SeedProduct[] = [
     occasion: 'casual',
     gstPercent: 5,
     shippingPrice: 0,
-    description:
-      "Bold geometry meets traditional ikat technique. This Pochampally silk-cotton saree features striking geometric patterns in deep indigo blue and white — the hallmark of Telangana's ikat tradition. The warp threads were resist-dyed before weaving, creating the characteristic slightly blurred edges where the pattern meets the white — a sign of authentic hand-crafted ikat (not digital print). The body alternates between bands of diamond lozenges and solid color blocks, while the pallu expands into large statement geometrics. The silk-cotton blend gives the sheen of silk with the comfort of cotton. Pairs beautifully with contemporary silver jewelry for a modern Indian aesthetic. The geometric precision of ikat has influenced international designers from Missoni to Dries Van Noten — wear a piece of that global design conversation.",
-    imagePath: '/images/products/saree-12.jpg',
-    galleryImages: [
-      '/images/products/saree-14.jpg',
-      '/images/products/saree-08.jpg',
-      '/images/products/saree-12.jpg',
-    ],
     length: 5.5,
     trackQuantity: true,
     quantity: 18,
     lowStockThreshold: 4,
+    colorVariants: [
+      {
+        colorName: 'Royal Blue',
+        imagePath: 'images/products/saree-10.jpg',
+        stock: 6,
+      },
+      {
+        colorName: 'Navy Blue',
+        imagePath: 'images/products/saree-11.jpg',
+        stock: 6,
+      },
+      {
+        colorName: 'Emerald Green',
+        imagePath: 'images/products/saree-12.jpg',
+        stock: 6,
+      },
+    ],
   },
   {
     name: 'Khadi Cotton Saree in Natural Indigo',
@@ -799,9 +944,10 @@ export const products: SeedProduct[] = [
     fabric: 'cotton',
     weave: 'tant',
     pattern: 'solid',
-    color: 'blue',
     basePrice: 2800,
     compareAtPrice: 3500,
+    description:
+      "Fabric with a conscience. This saree is made from hand-spun khadi cotton — the fabric that symbolized India's freedom movement under Gandhi's vision of swadeshi. The cotton was grown organically in Vidarbha, hand-spun on a charkha (spinning wheel) by women in a rural cooperative, and hand-woven on a pit loom — zero electricity, zero carbon footprint. The natural indigo dye is fermented in traditional vats using the age-old reduction method. The result is a saree that breathes beautifully, softens with every wash, and carries a lineage of sustainability and self-reliance. No two pieces are exactly identical — the slight variations in slub and color are signatures of the handmade process, not defects. Wear it and feel the connection to India's greatest textile tradition.",
     blouseType: 'Matching solid blouse',
     palluDetails: 'Subtle self-stripe pallu — texture over ornamentation',
     borderType:
@@ -811,18 +957,27 @@ export const products: SeedProduct[] = [
     occasion: 'daily-wear',
     gstPercent: 5,
     shippingPrice: 100,
-    description:
-      "Fabric with a conscience. This saree is made from hand-spun khadi cotton — the fabric that symbolized India's freedom movement under Gandhi's vision of swadeshi. The cotton was grown organically in Vidarbha, hand-spun on a charkha (spinning wheel) by women in a rural cooperative, and hand-woven on a pit loom — zero electricity, zero carbon footprint. The natural indigo dye is fermented in traditional vats using the age-old reduction method. The result is a saree that breathes beautifully, softens with every wash, and carries a lineage of sustainability and self-reliance. No two pieces are exactly identical — the slight variations in slub and color are signatures of the handmade process, not defects. Wear it and feel the connection to India's greatest textile tradition.",
-    imagePath: '/images/products/saree-13.jpg',
-    galleryImages: [
-      '/images/products/saree-15.jpg',
-      '/images/products/saree-07.jpg',
-      '/images/products/saree-18.jpg',
-    ],
     length: 5.5,
     trackQuantity: true,
     quantity: 22,
     lowStockThreshold: 5,
+    colorVariants: [
+      {
+        colorName: 'Navy Blue',
+        imagePath: 'images/products/saree-13.jpg',
+        stock: 8,
+      },
+      {
+        colorName: 'Charcoal Black',
+        imagePath: 'images/products/saree-14.jpg',
+        stock: 7,
+      },
+      {
+        colorName: 'Deep Burgundy',
+        imagePath: 'images/products/saree-15.jpg',
+        stock: 7,
+      },
+    ],
   },
   {
     name: 'Kota Doria Silk Saree in Mint Green',
@@ -830,9 +985,10 @@ export const products: SeedProduct[] = [
     fabric: 'blend',
     weave: 'maheshwari',
     pattern: 'solid',
-    color: 'green',
     basePrice: 3800,
     compareAtPrice: 4500,
+    description:
+      'The saree that floats. Kota Doria is woven in Kaithoon, Rajasthan, using a technique passed down through generations that creates a distinctive square check pattern called "khat." The secret lies in the sizing — the yarn is treated with a mixture of onion juice and rice paste before weaving, giving it extraordinary strength despite being incredibly fine. The mint green body is translucent and feather-light (280 grams), with a subtle khat pattern catching light. The pallu features gold zari stripes against the sheer background. This is the perfect summer occasion saree — cool, elegant, and effortlessly stylish. Pairs wonderfully with silver or kundan jewelry. The saree that every woman in Rajasthan has in her wardrobe — now available to you.',
     blouseType: 'Matching blouse with border trim',
     palluDetails: 'Zari-striped sheer pallu with khat (square check) pattern',
     borderType: 'Fine gold zari border with delicate khat weave pattern',
@@ -841,18 +997,27 @@ export const products: SeedProduct[] = [
     occasion: 'casual',
     gstPercent: 5,
     shippingPrice: 0,
-    description:
-      'The saree that floats. Kota Doria is woven in Kaithoon, Rajasthan, using a technique passed down through generations that creates a distinctive square check pattern called "khat." The secret lies in the sizing — the yarn is treated with a mixture of onion juice and rice paste before weaving, giving it extraordinary strength despite being incredibly fine. The mint green body is translucent and feather-light (280 grams), with a subtle khat pattern catching light. The pallu features gold zari stripes against the sheer background. This is the perfect summer occasion saree — cool, elegant, and effortlessly stylish. Pairs wonderfully with silver or kundan jewelry. The saree that every woman in Rajasthan has in her wardrobe — now available to you.',
-    imagePath: '/images/products/saree-14.jpg',
-    galleryImages: [
-      '/images/products/saree-11.jpg',
-      '/images/products/saree-20.jpg',
-      '/images/products/saree-10.jpg',
-    ],
     length: 5.5,
     trackQuantity: true,
     quantity: 18,
     lowStockThreshold: 4,
+    colorVariants: [
+      {
+        colorName: 'Mint Green',
+        imagePath: 'images/products/saree-16.jpg',
+        stock: 6,
+      },
+      {
+        colorName: 'Ivory Cream',
+        imagePath: 'images/products/saree-17.jpg',
+        stock: 6,
+      },
+      {
+        colorName: 'Lavender Purple',
+        imagePath: 'images/products/saree-18.jpg',
+        stock: 6,
+      },
+    ],
   },
   {
     name: 'Mysore Silk Crepe Saree in Royal Blue',
@@ -860,9 +1025,10 @@ export const products: SeedProduct[] = [
     fabric: 'crepe',
     weave: 'chanderi',
     pattern: 'solid',
-    color: 'blue',
     basePrice: 7800,
     compareAtPrice: 9500,
+    description:
+      'The pride of Karnataka. Mysore silk is renowned worldwide for its purity, luster, and richness — the mulberry silk cocoons come exclusively from the sericulture farms around Mysore and Ramanagara. This crepe silk variant has a distinctive crinkled texture that adds body and volume to the drape, making you look regal without needing a heavy saree. The royal blue body has a natural sheen that shifts from cobalt to sapphire as you move. The gold zari border with peacock eye motifs and the richly woven pallu add the perfect touch of celebration. Comes with the KSIC (Karnataka Silk Industries Corporation) hologram for authenticity. A saree that will be the center of attention at any gathering.',
     blouseType: 'Contrast blouse in gold',
     palluDetails:
       'Rich gold zari pallu with alternating floral and geometric bands',
@@ -872,18 +1038,28 @@ export const products: SeedProduct[] = [
     occasion: 'festive',
     gstPercent: 5,
     shippingPrice: 0,
-    description:
-      'The pride of Karnataka. Mysore silk is renowned worldwide for its purity, luster, and richness — the mulberry silk cocoons come exclusively from the sericulture farms around Mysore and Ramanagara. This crepe silk variant has a distinctive crinkled texture that adds body and volume to the drape, making you look regal without needing a heavy saree. The royal blue body has a natural sheen that shifts from cobalt to sapphire as you move. The gold zari border with peacock eye motifs and the richly woven pallu add the perfect touch of celebration. Comes with the KSIC (Karnataka Silk Industries Corporation) hologram for authenticity. A saree that will be the center of attention at any gathering.',
-    imagePath: '/images/products/saree-15.jpg',
-    galleryImages: [
-      '/images/products/saree-19.jpg',
-      '/images/products/saree-10.jpg',
-      '/images/products/saree-07.jpg',
-    ],
     length: 5.5,
     trackQuantity: true,
     quantity: 14,
     lowStockThreshold: 3,
+    colorVariants: [
+      {
+        colorName: 'Royal Blue',
+        imagePath: 'images/products/saree-19.jpg',
+        stock: 5,
+      },
+      {
+        colorName: 'Navy Blue',
+        imagePath: 'images/products/saree-20.jpg',
+        stock: 5,
+      },
+      {
+        colorName: 'Deep Burgundy',
+        imagePath: 'images/products/saree-21.jpg',
+        stock: 4,
+        priceOverride: 8500,
+      },
+    ],
   },
   {
     name: 'Tussar Silk Saree with Tribal Embroidery',
@@ -891,9 +1067,10 @@ export const products: SeedProduct[] = [
     fabric: 'silk',
     weave: 'tant',
     pattern: 'embroidered',
-    color: 'gold',
     basePrice: 8500,
     compareAtPrice: 10000,
+    description:
+      'Where the wild meets the refined. Tussar silk comes from Antheraea moths raised in the forests of Jharkhand, Bihar, and Chhattisgarh — the silk is not reeled from cultivated cocoons but from wild ones, giving it a natural golden-beige color and a textured, slubby surface. This saree pairs that raw silk beauty with hand-embroidered Kantha work from Bengal — rows of running stitch in vibrant multicolored threads creating floral and geometric patterns across the pallu. The contrast between the rustic, textured silk and the colorful, rhythmic embroidery is stunning. Each Kantha stitch is a meditation — the women who do this work sit in groups, stitching and singing. Your saree carries their stories.',
     blouseType: 'Plain tussar blouse',
     palluDetails:
       'Hand-embroidered pallu with Kantha running stitch in multi-colored threads',
@@ -903,18 +1080,27 @@ export const products: SeedProduct[] = [
     occasion: 'casual',
     gstPercent: 5,
     shippingPrice: 0,
-    description:
-      'Where the wild meets the refined. Tussar silk comes from Antheraea moths raised in the forests of Jharkhand, Bihar, and Chhattisgarh — the silk is not reeled from cultivated cocoons but from wild ones, giving it a natural golden-beige color and a textured, slubby surface. This saree pairs that raw silk beauty with hand-embroidered Kantha work from Bengal — rows of running stitch in vibrant multicolored threads creating floral and geometric patterns across the pallu. The contrast between the rustic, textured silk and the colorful, rhythmic embroidery is stunning. Each Kantha stitch is a meditation — the women who do this work sit in groups, stitching and singing. Your saree carries their stories.',
-    imagePath: '/images/products/saree-16.jpg',
-    galleryImages: [
-      '/images/products/saree-01.jpg',
-      '/images/products/saree-16.jpg',
-      '/images/products/saree-03.jpg',
-    ],
     length: 5.5,
     trackQuantity: true,
     quantity: 9,
     lowStockThreshold: 2,
+    colorVariants: [
+      {
+        colorName: 'Saffron Gold',
+        imagePath: 'images/products/saree-22.jpg',
+        stock: 3,
+      },
+      {
+        colorName: 'Emerald Green',
+        imagePath: 'images/products/saree-23.jpg',
+        stock: 3,
+      },
+      {
+        colorName: 'Ruby Red',
+        imagePath: 'images/products/saree-01.jpg',
+        stock: 3,
+      },
+    ],
   },
   {
     name: 'Venkatagiri Cotton Saree in Rose Pink',
@@ -922,9 +1108,10 @@ export const products: SeedProduct[] = [
     fabric: 'cotton',
     weave: 'ikkat',
     pattern: 'printed',
-    color: 'pink',
     basePrice: 2200,
     compareAtPrice: 2800,
+    description:
+      'Elegance in simplicity. Venkatagiri cotton sarees from Andhra Pradesh are woven with the finest count cotton (100s count), making them extraordinarily soft and lightweight. The rose pink body features delicate gold zari butis, while the pallu expands into a more elaborate design. The zari border with leaf motifs adds a touch of occasion-worthiness without being overwhelming. At just 300 grams, this saree is a joy to wear — drapes beautifully, stays in place, and keeps you cool. The finesse of the weave means it looks equally appropriate at work, at a puja, or at a family lunch. Machine washable.',
     blouseType: 'Matching blouse with border',
     palluDetails:
       'Elaborate jamdani-style pallu with geometric butis and contrasting border',
@@ -934,18 +1121,27 @@ export const products: SeedProduct[] = [
     occasion: 'daily-wear',
     gstPercent: 5,
     shippingPrice: 100,
-    description:
-      'Elegance in simplicity. Venkatagiri cotton sarees from Andhra Pradesh are woven with the finest count cotton (100s count), making them extraordinarily soft and lightweight. The rose pink body features delicate gold zari butis, while the pallu expands into a more elaborate design. The zari border with leaf motifs adds a touch of occasion-worthiness without being overwhelming. At just 300 grams, this saree is a joy to wear — drapes beautifully, stays in place, and keeps you cool. The finesse of the weave means it looks equally appropriate at work, at a puja, or at a family lunch. Machine washable.',
-    imagePath: '/images/products/saree-17.jpg',
-    galleryImages: [
-      '/images/products/saree-02.jpg',
-      '/images/products/saree-14.jpg',
-      '/images/products/saree-02.jpg',
-    ],
     length: 5.5,
     trackQuantity: true,
     quantity: 28,
     lowStockThreshold: 5,
+    colorVariants: [
+      {
+        colorName: 'Lavender Purple',
+        imagePath: 'images/products/saree-02.jpg',
+        stock: 10,
+      },
+      {
+        colorName: 'Ivory Cream',
+        imagePath: 'images/products/saree-03.jpg',
+        stock: 9,
+      },
+      {
+        colorName: 'Mint Green',
+        imagePath: 'images/products/saree-04.jpg',
+        stock: 9,
+      },
+    ],
   },
   {
     name: 'Kantha Stitch Silk Saree — Upcycled Vintage',
@@ -953,8 +1149,9 @@ export const products: SeedProduct[] = [
     fabric: 'silk',
     weave: 'tant',
     pattern: 'embroidered',
-    color: 'multicolor',
     basePrice: 9500,
+    description:
+      'A textile with two lives. This is an upcycled Kantha saree — two vintage silk sarees have been layered together and entirely hand-stitched with the Kantha running stitch, creating a quilted, textured fabric that is warmer, heavier, and more sculptural than a single saree. The embroidery covers the entire surface with narrative and floral motifs in threads sourced from old saree borders — a true zero-waste creation. The artisans are women from the SHE (Self-Help Enterprise) collective in Bolpur, West Bengal, who have revived this dying craft. No two pieces are similar — each is a unique work of art. Wearing this saree carries almost a century of textile tradition: the silk was likely woven decades ago, and now it has been reborn through the needle and thread of a Kantha artisan.',
     blouseType: 'Plain silk blouse',
     palluDetails:
       'Dense Kantha stitch tapestry — entirely hand-embroidered with narrative and floral motifs',
@@ -965,18 +1162,27 @@ export const products: SeedProduct[] = [
     occasion: 'casual',
     gstPercent: 5,
     shippingPrice: 0,
-    description:
-      'A textile with two lives. This is an upcycled Kantha saree — two vintage silk sarees have been layered together and entirely hand-stitched with the Kantha running stitch, creating a quilted, textured fabric that is warmer, heavier, and more sculptural than a single saree. The embroidery covers the entire surface with narrative and floral motifs in threads sourced from old saree borders — a true zero-waste creation. The artisans are women from the SHE (Self-Help Enterprise) collective in Bolpur, West Bengal, who have revived this dying craft. No two pieces are similar — each is a unique work of art. Wearing this saree carries almost a century of textile tradition: the silk was likely woven decades ago, and now it has been reborn through the needle and thread of a Kantha artisan.',
-    imagePath: '/images/products/saree-18.jpg',
-    galleryImages: [
-      '/images/products/saree-07.jpg',
-      '/images/products/saree-08.jpg',
-      '/images/products/saree-20.jpg',
-    ],
     length: 5.5,
     trackQuantity: true,
     quantity: 4,
     lowStockThreshold: 1,
+    colorVariants: [
+      {
+        colorName: 'Saffron Gold',
+        imagePath: 'images/products/saree-05.jpg',
+        stock: 2,
+      },
+      {
+        colorName: 'Deep Burgundy',
+        imagePath: 'images/products/saree-06.jpg',
+        stock: 1,
+      },
+      {
+        colorName: 'Emerald Green',
+        imagePath: 'images/products/saree-07.jpg',
+        stock: 1,
+      },
+    ],
   },
   {
     name: 'Sambalpuri Cotton Saree in Earth Tones',
@@ -984,8 +1190,9 @@ export const products: SeedProduct[] = [
     fabric: 'cotton',
     weave: 'ikkat',
     pattern: 'printed',
-    color: 'orange',
     basePrice: 2800,
+    description:
+      'From the looms of Bargarh, Odisha, comes this Sambalpuri cotton saree in rich earth tones — rust, terracotta, black, and cream. The ikat technique used here is called "Bandha" in Odia, where both warp and weft threads are resist-dyed before weaving, creating precise patterns with a characteristic softness at the edges. The body features a delicate repeat of conch shell and flower motifs, while the pallu expands into larger rudraksha bead and wave patterns. The border carries elephant and fish symbols — both auspicious in Odia culture. The cotton is handwoven and breathable, softening with each wash. A piece of Odisha\'s living textile heritage at an accessible price point.',
     blouseType: 'Matching blouse in solid earth tone',
     palluDetails:
       'Expanding rudraksha and conch shell motifs in jala (net) pattern',
@@ -995,18 +1202,27 @@ export const products: SeedProduct[] = [
     occasion: 'daily-wear',
     gstPercent: 5,
     shippingPrice: 100,
-    description:
-      'From the looms of Bargarh, Odisha, comes this Sambalpuri cotton saree in rich earth tones — rust, terracotta, black, and cream. The ikat technique used here is called "Bandha" in Odia, where both warp and weft threads are resist-dyed before weaving, creating precise patterns with a characteristic softness at the edges. The body features a delicate repeat of conch shell and flower motifs, while the pallu expands into larger rudraksha bead and wave patterns. The border carries elephant and fish symbols — both auspicious in Odia culture. The cotton is handwoven and breathable, softening with each wash. A piece of Odisha\'s living textile heritage at an accessible price point.',
-    imagePath: '/images/products/saree-19.jpg',
-    galleryImages: [
-      '/images/products/saree-15.jpg',
-      '/images/products/saree-07.jpg',
-      '/images/products/saree-02.jpg',
-    ],
     length: 5.5,
     trackQuantity: true,
     quantity: 20,
     lowStockThreshold: 5,
+    colorVariants: [
+      {
+        colorName: 'Saffron Gold',
+        imagePath: 'images/products/saree-08.jpg',
+        stock: 7,
+      },
+      {
+        colorName: 'Deep Burgundy',
+        imagePath: 'images/products/saree-09.jpg',
+        stock: 7,
+      },
+      {
+        colorName: 'Charcoal Black',
+        imagePath: 'images/products/saree-10.jpg',
+        stock: 6,
+      },
+    ],
   },
   {
     name: 'Gota Patti Silk Saree in Fuchsia Pink',
@@ -1014,9 +1230,10 @@ export const products: SeedProduct[] = [
     fabric: 'silk',
     weave: 'maheshwari',
     pattern: 'embellished',
-    color: 'pink',
     basePrice: 8500,
     compareAtPrice: 11000,
+    description:
+      "The sound of celebration. Gota patti work — where ribbons of gold and silver are cut, shaped, and appliquéd onto fabric — is Rajasthan's gift to festive dressing. This fuchsia pink silk saree is alive with gota work: floral medallions across the body, an elaborate scalloped pallu, and a thick gota ribbon border. Each piece of gota is individually shaped and stitched — a single saree requires weeks of meticulous handwork. The fabric rustles with a distinctive sound as you move, a sound that in Rajasthani tradition announces joy and celebration. Wear this to a mehendi, sangeet, or Diwali party — it demands dancing.",
     blouseType: 'Contrast blouse with gota work',
     palluDetails:
       'Elaborate gota patti pallu with floral medallions and scalloped edges',
@@ -1026,18 +1243,28 @@ export const products: SeedProduct[] = [
     occasion: 'festive',
     gstPercent: 5,
     shippingPrice: 0,
-    description:
-      "The sound of celebration. Gota patti work — where ribbons of gold and silver are cut, shaped, and appliquéd onto fabric — is Rajasthan's gift to festive dressing. This fuchsia pink silk saree is alive with gota work: floral medallions across the body, an elaborate scalloped pallu, and a thick gota ribbon border. Each piece of gota is individually shaped and stitched — a single saree requires weeks of meticulous handwork. The fabric rustles with a distinctive sound as you move, a sound that in Rajasthani tradition announces joy and celebration. Wear this to a mehendi, sangeet, or Diwali party — it demands dancing.",
-    imagePath: '/images/products/saree-20.jpg',
-    galleryImages: [
-      '/images/products/saree-20.jpg',
-      '/images/products/saree-12.jpg',
-      '/images/products/saree-01.jpg',
-    ],
     length: 5.5,
     trackQuantity: true,
     quantity: 12,
     lowStockThreshold: 3,
+    colorVariants: [
+      {
+        colorName: 'Ruby Red',
+        imagePath: 'images/products/saree-11.jpg',
+        stock: 4,
+      },
+      {
+        colorName: 'Deep Burgundy',
+        imagePath: 'images/products/saree-12.jpg',
+        stock: 4,
+      },
+      {
+        colorName: 'Saffron Gold',
+        imagePath: 'images/products/saree-13.jpg',
+        stock: 4,
+        priceOverride: 9200,
+      },
+    ],
   },
   {
     name: 'Pure Chiffon Saree with Stone Work — Rose Gold',
@@ -1045,9 +1272,10 @@ export const products: SeedProduct[] = [
     fabric: 'chiffon',
     weave: 'chanderi',
     pattern: 'embellished',
-    color: 'pink',
     basePrice: 3500,
     compareAtPrice: 5500,
+    description:
+      'A stunning rose gold chiffon saree adorned with hand-applied stone and bead work. The lightweight chiffon drapes effortlessly while the subtle sheen catches light at every turn. A scalloped pallu with stone and bead edging adds a dramatic finish. Perfect for evening parties and cocktail events where you want to shine without the weight of heavy silk.',
     blouseType: 'Matching chiffon blouse',
     palluDetails: 'Scalloped pallu with stone and bead edging',
     borderType: '1-inch stone-studded border',
@@ -1055,17 +1283,27 @@ export const products: SeedProduct[] = [
     occasion: 'party-wear',
     gstPercent: 5,
     shippingPrice: 0,
-    description:
-      'A stunning rose gold chiffon saree adorned with hand-applied stone and bead work. The lightweight chiffon drapes effortlessly while the subtle sheen catches light at every turn. A scalloped pallu with stone and bead edging adds a dramatic finish. Perfect for evening parties and cocktail events where you want to shine without the weight of heavy silk.',
-    imagePath: '/images/products/saree-21.jpg',
-    galleryImages: [
-      '/images/products/saree-12.jpg',
-      '/images/products/saree-08.jpg',
-    ],
     length: 5.5,
     trackQuantity: true,
     quantity: 18,
     lowStockThreshold: 4,
+    colorVariants: [
+      {
+        colorName: 'Ruby Red',
+        imagePath: 'images/products/saree-14.jpg',
+        stock: 6,
+      },
+      {
+        colorName: 'Navy Blue',
+        imagePath: 'images/products/saree-15.jpg',
+        stock: 6,
+      },
+      {
+        colorName: 'Emerald Green',
+        imagePath: 'images/products/saree-16.jpg',
+        stock: 6,
+      },
+    ],
   },
   {
     name: 'Georgette Saree with Mirror Work — Midnight Navy',
@@ -1073,9 +1311,10 @@ export const products: SeedProduct[] = [
     fabric: 'georgette',
     weave: 'banarasi',
     pattern: 'embellished',
-    color: 'blue',
     basePrice: 5200,
     compareAtPrice: 7800,
+    description:
+      'Inspired by Kutchi shisha embroidery, this midnight navy georgette saree features dense mirror work across the body and pallu. Each tiny mirror is individually stitched by artisans from Kutch using traditional techniques. The dark navy base makes the mirrors pop like constellations against a night sky. The blouse piece carries matching mirror work. A statement piece for festive nights under the stars.',
     blouseType: 'Contrast mirror-work blouse',
     palluDetails: 'Dense mirror-work pallu with geometric patterns',
     borderType: '2-inch mirror-encrusted border with ralli-inspired motifs',
@@ -1084,17 +1323,27 @@ export const products: SeedProduct[] = [
     occasion: 'festive',
     gstPercent: 5,
     shippingPrice: 0,
-    description:
-      'Inspired by Kutchi shisha embroidery, this midnight navy georgette saree features dense mirror work across the body and pallu. Each tiny mirror is individually stitched by artisans from Kutch using traditional techniques. The dark navy base makes the mirrors pop like constellations against a night sky. The blouse piece carries matching mirror work. A statement piece for festive nights under the stars.',
-    imagePath: '/images/products/saree-22.jpg',
-    galleryImages: [
-      '/images/products/saree-02.jpg',
-      '/images/products/saree-16.jpg',
-    ],
     length: 5.5,
     trackQuantity: true,
     quantity: 12,
     lowStockThreshold: 3,
+    colorVariants: [
+      {
+        colorName: 'Navy Blue',
+        imagePath: 'images/products/saree-17.jpg',
+        stock: 4,
+      },
+      {
+        colorName: 'Charcoal Black',
+        imagePath: 'images/products/saree-18.jpg',
+        stock: 4,
+      },
+      {
+        colorName: 'Deep Burgundy',
+        imagePath: 'images/products/saree-19.jpg',
+        stock: 4,
+      },
+    ],
   },
   {
     name: 'Linen Saree with Hand Block Print — Sunflower Yellow',
@@ -1102,9 +1351,10 @@ export const products: SeedProduct[] = [
     fabric: 'linen',
     weave: 'tant',
     pattern: 'printed',
-    color: 'gold',
     basePrice: 1800,
     compareAtPrice: 3200,
+    description:
+      'Hand-block printed on pure linen using natural dyes — this sunflower yellow saree brings the cheer of a Rajasthan morning to your wardrobe. The body is scattered with small floral butis while the pallu features large floral and bird motifs. The running leaf border in natural indigo gives it a grounded, earthy finish. Linen is naturally breathable and gets softer with every wash. A joyful everyday saree that costs less than a dinner out.',
     blouseType: 'Solid linen blouse',
     palluDetails: 'Large floral block-print pallu with alternating bird motifs',
     borderType: 'Running leaf border in natural indigo',
@@ -1113,17 +1363,27 @@ export const products: SeedProduct[] = [
     occasion: 'daily-wear',
     gstPercent: 5,
     shippingPrice: 100,
-    description:
-      'Hand-block printed on pure linen using natural dyes — this sunflower yellow saree brings the cheer of a Rajasthan morning to your wardrobe. The body is scattered with small floral butis while the pallu features large floral and bird motifs. The running leaf border in natural indigo gives it a grounded, earthy finish. Linen is naturally breathable and gets softer with every wash. A joyful everyday saree that costs less than a dinner out.',
-    imagePath: '/images/products/saree-23.jpg',
-    galleryImages: [
-      '/images/products/saree-05.jpg',
-      '/images/products/saree-09.jpg',
-    ],
     length: 5.5,
     trackQuantity: true,
     quantity: 25,
     lowStockThreshold: 5,
+    colorVariants: [
+      {
+        colorName: 'Saffron Gold',
+        imagePath: 'images/products/saree-20.jpg',
+        stock: 9,
+      },
+      {
+        colorName: 'Mint Green',
+        imagePath: 'images/products/saree-21.jpg',
+        stock: 8,
+      },
+      {
+        colorName: 'Ivory Cream',
+        imagePath: 'images/products/saree-22.jpg',
+        stock: 8,
+      },
+    ],
   },
 ]
 
