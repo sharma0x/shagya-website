@@ -47,6 +47,57 @@ const WEAVES = [
   'baluchari',
 ]
 
+interface ExplodedProduct {
+  key: string
+  id: string | number
+  name: string
+  slug: string
+  basePrice: number
+  compareAtPrice?: number
+  weave?: string
+  fabric?: string
+  gallery: any[]
+  quantity?: number
+  trackQuantity?: boolean
+  lowStockThreshold?: number
+  effectivePrice: number
+  color: { slug: string; name: string; hex: string }
+  _product: any
+}
+
+function explodeProducts(products: any[]): ExplodedProduct[] {
+  const exploded: ExplodedProduct[] = []
+  for (const p of products) {
+    const variants = p.colorVariants || []
+    if (variants.length === 0) continue
+    for (const v of variants) {
+      if (v.enabled === false || !v.color) continue
+      exploded.push({
+        key: `${p.id}::${v.color.slug}`,
+        id: p.id,
+        name: p.name,
+        slug: p.slug,
+        basePrice: p.basePrice,
+        compareAtPrice: p.compareAtPrice,
+        weave: p.weave,
+        fabric: p.fabric,
+        gallery: v.gallery || [],
+        quantity: v.stock ?? 0,
+        trackQuantity: true,
+        lowStockThreshold: p.lowStockThreshold ?? 5,
+        effectivePrice: v.priceOverride ?? p.basePrice,
+        color: {
+          slug: v.color.slug,
+          name: v.color.name,
+          hex: v.color.hex,
+        },
+        _product: p,
+      })
+    }
+  }
+  return exploded
+}
+
 function buildWhere(sParams: FilterParams, slug: string) {
   const where: Record<string, any> = {
     status: { equals: 'published' },
@@ -151,33 +202,6 @@ export default async function CategoryPage({
     contextFilter.weave = slug.toLowerCase()
   }
 
-  // Variant-based filters (color, size) — sub-query
-  const colorParam = getCommaParam(sParams, 'color')
-  const sizeParam = (sParams.size as string) || ''
-
-  if (colorParam.length > 0 || sizeParam) {
-    const variantWhere: Record<string, any> = {}
-    if (colorParam.length > 0) variantWhere.color = { in: colorParam }
-    if (sizeParam) variantWhere.size = { equals: sizeParam }
-
-    const matchingVariants = await payload.find({
-      collection: 'variants',
-      where: variantWhere,
-      limit: 500,
-      pagination: false,
-    })
-
-    const productIds = [
-      ...new Set(matchingVariants.docs.map((v: any) => v.product)),
-    ]
-    if (productIds.length > 0) {
-      where.id = { in: productIds }
-    } else {
-      // No matching variants — empty result
-      where.id = { in: [0] }
-    }
-  }
-
   // Pagination
   const page = Math.max(1, parseInt((sParams.page as string) || '1', 10))
   const prodLimit = Math.max(
@@ -231,6 +255,14 @@ export default async function CategoryPage({
   const totalDocs = result.totalDocs
   const totalPages = result.totalPages
 
+  let explodedProducts = explodeProducts(products)
+  const colorParam = getCommaParam(sParams, 'color')
+  if (colorParam.length > 0) {
+    explodedProducts = explodedProducts.filter((ep) =>
+      colorParam.includes(ep.color.slug),
+    )
+  }
+
   return (
     <div className="bg-surface min-h-screen py-10">
       <div className="container-page">
@@ -270,8 +302,8 @@ export default async function CategoryPage({
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div className="flex items-center gap-4 text-sm text-neutral-500">
                   <span>
-                    {totalDocs > 0
-                      ? `Showing ${(page - 1) * prodLimit + 1}–${Math.min(page * prodLimit, totalDocs)} of ${totalDocs} products`
+                    {explodedProducts.length > 0
+                      ? `Showing ${explodedProducts.length} products`
                       : '0 products found'}
                   </span>
                 </div>
@@ -333,7 +365,7 @@ export default async function CategoryPage({
             </div>
 
             {/* Product Grid */}
-            {products.length === 0 ? (
+            {explodedProducts.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 text-center">
                 <h3 className="font-display text-lg font-semibold text-neutral-800">
                   No products found
@@ -351,10 +383,14 @@ export default async function CategoryPage({
               </div>
             ) : (
               <div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-5 sm:gap-x-4 sm:gap-y-8 lg:grid-cols-3 xl:grid-cols-4">
-                {products.map((p) => (
+                {explodedProducts.map((ep) => (
                   <ProductCard
-                    key={p.id}
-                    product={p}
+                    key={ep.key}
+                    product={{
+                      ...ep._product,
+                      gallery: ep.gallery,
+                      basePrice: ep.effectivePrice,
+                    }}
                     variant="grid"
                     showWishlist
                   />

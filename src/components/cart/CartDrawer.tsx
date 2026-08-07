@@ -86,7 +86,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
 
                 return (
                   <div
-                    key={`${item.product.id}-${index}`}
+                    key={`${item.product.id}-${item.variant?.color?.slug || 'default'}`}
                     className="flex items-start gap-4 border-b border-neutral-100 pb-6 last:border-0"
                   >
                     {/* Image */}
@@ -113,13 +113,28 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                           Size: {item.variant.size}
                         </p>
                       )}
+                      {item.variant?.color && (
+                        <div className="mt-1 flex items-center gap-1.5">
+                          <span
+                            className="inline-block h-3 w-3 rounded-full border border-neutral-300"
+                            style={{ backgroundColor: item.variant.color.hex }}
+                          />
+                          <span className="font-body text-[11px] text-neutral-500">
+                            {item.variant.color.name}
+                          </span>
+                        </div>
+                      )}
 
                       {/* Controls */}
                       <div className="mt-4 flex items-center justify-between">
                         <div className="flex items-center rounded-lg border border-neutral-200">
                           <button
                             onClick={() =>
-                              updateQuantity(item.product.id, item.quantity - 1)
+                              updateQuantity(
+                                item.product.id,
+                                item.quantity - 1,
+                                item.variant?.color?.slug,
+                              )
                             }
                             disabled={item.quantity <= 1}
                             className="p-1.5 text-neutral-500 hover:text-neutral-900 disabled:opacity-30"
@@ -132,7 +147,11 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                           </span>
                           <button
                             onClick={() =>
-                              updateQuantity(item.product.id, item.quantity + 1)
+                              updateQuantity(
+                                item.product.id,
+                                item.quantity + 1,
+                                item.variant?.color?.slug,
+                              )
                             }
                             disabled={
                               item.product.trackQuantity
@@ -147,7 +166,12 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                         </div>
 
                         <button
-                          onClick={() => removeItem(item.product.id)}
+                          onClick={() =>
+                            removeItem(
+                              item.product.id,
+                              item.variant?.color?.slug,
+                            )
+                          }
                           className="p-2 text-neutral-400 transition-colors hover:text-red-600"
                           aria-label="Remove item"
                         >

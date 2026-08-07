@@ -61,6 +61,7 @@ interface CartItem {
     title?: string
     size?: string
     blouseCustomization?: string
+    color?: { slug: string; name: string; hex: string }
   } | null
   quantity: number
   unitPrice: number
@@ -80,7 +81,7 @@ export default function CheckoutPage() {
   // Guest cart derived from reactive Zustand hook — never stale
   const guestCart: Cart = {
     items: zCart.items.map((i) => ({
-      id: String(i.product.id),
+      id: `${i.product.id}-${i.variant?.color?.slug || 'default'}`,
       product: {
         id: String(i.product.id),
         name: i.product.name,
@@ -1001,12 +1002,18 @@ export default function CheckoutPage() {
                           {item.product.name}
                         </h4>
 
-                        {item.variant && (
-                          <p className="font-body mt-0.5 text-xs text-neutral-500">
-                            {item.variant.title ||
-                              item.variant.size ||
-                              'Custom Option'}
-                          </p>
+                        {item.variant?.color && (
+                          <div className="mt-0.5 flex items-center gap-1.5">
+                            <span
+                              className="inline-block h-3 w-3 rounded-full border border-neutral-300"
+                              style={{
+                                backgroundColor: item.variant.color.hex,
+                              }}
+                            />
+                            <span className="font-body text-xs text-neutral-500">
+                              {item.variant.color.name}
+                            </span>
+                          </div>
                         )}
 
                         <div className="mt-1.5 flex items-center justify-between">
