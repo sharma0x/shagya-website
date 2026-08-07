@@ -16,6 +16,7 @@ import {
   collections,
   tags,
   brands,
+  colors,
   products,
   pages,
   blogPosts,
@@ -367,11 +368,44 @@ async function uploadMedia(
   }
 }
 
-export async function seedProducts(payload: Payload): Promise<void> {
+export async function seedColors(payload: Payload): Promise<Map<string, any>> {
+  console.log(`\n🎨 Seeding ${colors.length} colors...`)
+
+  const createdColors = new Map<string, any>()
+
+  for (const c of colors) {
+    const existing = await payload.find({
+      collection: 'colors',
+      where: { name: { equals: c.name } },
+      limit: 1,
+      overrideAccess: true,
+    })
+
+    if (existing.docs.length > 0) {
+      createdColors.set(c.name, existing.docs[0])
+      console.log(`  ⏭️  Color already exists: ${c.name}`)
+    } else {
+      const created = await payload.create({
+        collection: 'colors',
+        data: { name: c.name, hex: c.hex },
+        overrideAccess: true,
+      })
+      createdColors.set(c.name, created)
+      console.log(`  ✅ Created color: ${c.name} (${c.hex})`)
+    }
+  }
+
+  return createdColors
+}
+
+export async function seedProducts(
+  payload: Payload,
+  createdColors: Map<string, any>,
+): Promise<void> {
   console.log(`\n👗 Seeding ${products.length} products...`)
 
   for (const prod of products) {
-    const { description, ...rest } = prod
+    const { description, colorVariants, ...rest } = prod
     const existing = await (payload.find as any)({
       collection: 'products',
       where: { name: { equals: prod.name } },
@@ -418,32 +452,51 @@ export async function seedProducts(payload: Payload): Promise<void> {
       collectionIds.push(...foundCols.docs.map((c) => c.id as any))
     }
 
-    if (existing.totalDocs === 0) {
-      let gallery: any[] = []
-      if (prod.imagePath) {
-        const mediaId = await uploadMedia(payload, prod.imagePath, prod.name)
-        if (mediaId) {
-          gallery.push({ image: mediaId, alt: prod.name })
+    const variantData = await Promise.all(
+      colorVariants.map(async (cv, vi) => {
+        const gallery: { image: number; alt?: string }[] = []
+        const mainImageId = await uploadMedia(
+          payload,
+          cv.imagePath,
+          `${prod.name} - ${cv.colorName}`,
+        )
+        if (mainImageId) {
+          gallery.push({
+            image: mainImageId,
+            alt: `${prod.name} - ${cv.colorName}`,
+          })
         }
-      }
-      if (prod.galleryImages && prod.galleryImages.length > 0) {
-        for (let i = 0; i < prod.galleryImages.length; i++) {
-          const mId = await uploadMedia(
-            payload,
-            prod.galleryImages[i],
-            `${prod.name} ${i + 2}`,
-          )
-          if (mId) {
-            gallery.push({ image: mId, alt: `${prod.name} view ${i + 2}` })
+        if (cv.galleryImages && cv.galleryImages.length > 0) {
+          for (let i = 0; i < cv.galleryImages.length; i++) {
+            const mId = await uploadMedia(
+              payload,
+              cv.galleryImages[i],
+              `${prod.name} - ${cv.colorName} ${i + 2}`,
+            )
+            if (mId) {
+              gallery.push({
+                image: mId,
+                alt: `${prod.name} - ${cv.colorName} view ${i + 2}`,
+              })
+            }
           }
         }
-      }
+        return {
+          color: createdColors.get(cv.colorName)?.id,
+          gallery,
+          priceOverride: cv.priceOverride ?? undefined,
+          stock: cv.stock ?? 1,
+          enabled: true,
+        }
+      }),
+    )
 
+    if (existing.totalDocs === 0) {
       await (payload.create as any)({
         collection: 'products',
         data: {
           ...rest,
-          gallery,
+          colorVariants: variantData,
           collections: collectionIds,
           description: lexicalRichText(description),
           length: 5.5,
@@ -457,45 +510,17 @@ export async function seedProducts(payload: Payload): Promise<void> {
       const doc = existing.docs[0]
       const updateData: any = {}
 
-      // Update gallery if missing or only has 1 image when more are requested
+      // Update colorVariants if missing or empty
       if (
-        !doc.gallery ||
-        doc.gallery.length === 0 ||
-        (prod.galleryImages &&
-          doc.gallery.length < prod.galleryImages.length + 1)
+        !(doc as any).colorVariants ||
+        (doc as any).colorVariants.length === 0
       ) {
-        let newGallery: any[] = []
-        if (prod.imagePath) {
-          const mediaId = await uploadMedia(payload, prod.imagePath, prod.name)
-          if (mediaId) {
-            newGallery.push({ image: mediaId, alt: prod.name })
-          }
-        }
-        if (prod.galleryImages && prod.galleryImages.length > 0) {
-          for (let i = 0; i < prod.galleryImages.length; i++) {
-            const mId = await uploadMedia(
-              payload,
-              prod.galleryImages[i],
-              `${prod.name} ${i + 2}`,
-            )
-            if (mId) {
-              newGallery.push({ image: mId, alt: `${prod.name} view ${i + 2}` })
-            }
-          }
-        }
-        if (newGallery.length > 0) {
-          updateData.gallery = newGallery
-        }
+        updateData.colorVariants = variantData
       }
 
       // Update collections if missing or empty
       if (!doc.collections || doc.collections.length === 0) {
         updateData.collections = collectionIds
-      }
-
-      // Update color if missing (field was newly added)
-      if (!(doc as any).color) {
-        updateData.color = prod.color
       }
 
       if (Object.keys(updateData).length > 0) {
@@ -799,7 +824,8 @@ async function main(): Promise<void> {
     await seedCollections(payload)
     await seedTags(payload)
     await seedBrands(payload)
-    await seedProducts(payload)
+    const createdColors = await seedColors(payload)
+    await seedProducts(payload, createdColors)
     await seedPages(payload)
     await seedBlogPosts(payload)
     await seedNavigation(payload)

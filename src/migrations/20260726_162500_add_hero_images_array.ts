@@ -1,4 +1,4 @@
-import { MigrateUpArgs } from '@payloadcms/db-postgres'
+import { MigrateUpArgs, MigrateDownArgs } from '@payloadcms/db-postgres'
 
 export async function up({ payload }: MigrateUpArgs) {
   // Create pages_blocks_hero_images (array field for hero block)
@@ -58,3 +58,5 @@ export async function up({ payload }: MigrateUpArgs) {
     END $$;
   `)
 }
+
+export async function down({ payload }: MigrateDownArgs): Promise<void> {}

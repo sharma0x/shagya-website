@@ -84,20 +84,6 @@ export const enum_products_pattern = pgEnum('enum_products_pattern', [
   'embellished',
   'painted',
 ])
-export const enum_products_color = pgEnum('enum_products_color', [
-  'red',
-  'burgundy',
-  'gold',
-  'green',
-  'blue',
-  'ivory',
-  'pink',
-  'purple',
-  'orange',
-  'black',
-  'white',
-  'multicolor',
-])
 export const enum_products_delivery_time = pgEnum(
   'enum_products_delivery_time',
   [
@@ -145,23 +131,6 @@ export const enum__products_v_version_weave = pgEnum(
 export const enum__products_v_version_pattern = pgEnum(
   'enum__products_v_version_pattern',
   ['solid', 'printed', 'embroidered', 'embellished', 'painted'],
-)
-export const enum__products_v_version_color = pgEnum(
-  'enum__products_v_version_color',
-  [
-    'red',
-    'burgundy',
-    'gold',
-    'green',
-    'blue',
-    'ivory',
-    'pink',
-    'purple',
-    'orange',
-    'black',
-    'white',
-    'multicolor',
-  ],
 )
 export const enum__products_v_version_delivery_time = pgEnum(
   'enum__products_v_version_delivery_time',
@@ -517,11 +486,11 @@ export const products_features = pgTable(
   ],
 )
 
-export const products_gallery = pgTable(
-  'products_gallery',
+export const products_color_variants_gallery = pgTable(
+  'products_color_variants_gallery',
   {
     _order: integer('_order').notNull(),
-    _parentID: integer('_parent_id').notNull(),
+    _parentID: varchar('_parent_id').notNull(),
     id: varchar('id').primaryKey(),
     image: integer('image_id').references(() => media.id, {
       onDelete: 'set null',
@@ -529,13 +498,41 @@ export const products_gallery = pgTable(
     alt: varchar('alt'),
   },
   (columns) => [
-    index('products_gallery_order_idx').on(columns._order),
-    index('products_gallery_parent_id_idx').on(columns._parentID),
-    index('products_gallery_image_idx').on(columns.image),
+    index('products_color_variants_gallery_order_idx').on(columns._order),
+    index('products_color_variants_gallery_parent_id_idx').on(
+      columns._parentID,
+    ),
+    index('products_color_variants_gallery_image_idx').on(columns.image),
+    foreignKey({
+      columns: [columns['_parentID']],
+      foreignColumns: [products_color_variants.id],
+      name: 'products_color_variants_gallery_parent_id_fk',
+    }).onDelete('cascade'),
+  ],
+)
+
+export const products_color_variants = pgTable(
+  'products_color_variants',
+  {
+    _order: integer('_order').notNull(),
+    _parentID: integer('_parent_id').notNull(),
+    id: varchar('id').primaryKey(),
+    color: integer('color_id').references(() => colors.id, {
+      onDelete: 'set null',
+    }),
+    priceOverride: numeric('price_override', { mode: 'number' }),
+    stock: numeric('stock', { mode: 'number' }).default(0),
+    sku: varchar('sku'),
+    enabled: boolean('enabled').default(true),
+  },
+  (columns) => [
+    index('products_color_variants_order_idx').on(columns._order),
+    index('products_color_variants_parent_id_idx').on(columns._parentID),
+    index('products_color_variants_color_idx').on(columns.color),
     foreignKey({
       columns: [columns['_parentID']],
       foreignColumns: [products.id],
-      name: 'products_gallery_parent_id_fk',
+      name: 'products_color_variants_parent_id_fk',
     }).onDelete('cascade'),
   ],
 )
@@ -559,7 +556,6 @@ export const products = pgTable(
     cityOfOrigin: varchar('city_of_origin'),
     occasion: varchar('occasion'),
     tags: varchar('tags'),
-    color: enum_products_color('color'),
     basePrice: numeric('base_price', { mode: 'number' }),
     compareAtPrice: numeric('compare_at_price', { mode: 'number' }),
     discountPercentage: numeric('discount_percentage', { mode: 'number' }),
@@ -679,8 +675,8 @@ export const _products_v_version_features = pgTable(
   ],
 )
 
-export const _products_v_version_gallery = pgTable(
-  '_products_v_version_gallery',
+export const _products_v_version_color_variants_gallery = pgTable(
+  '_products_v_version_color_variants_gallery',
   {
     _order: integer('_order').notNull(),
     _parentID: integer('_parent_id').notNull(),
@@ -692,13 +688,48 @@ export const _products_v_version_gallery = pgTable(
     _uuid: varchar('_uuid'),
   },
   (columns) => [
-    index('_products_v_version_gallery_order_idx').on(columns._order),
-    index('_products_v_version_gallery_parent_id_idx').on(columns._parentID),
-    index('_products_v_version_gallery_image_idx').on(columns.image),
+    index('_products_v_version_color_variants_gallery_order_idx').on(
+      columns._order,
+    ),
+    index('_products_v_version_color_variants_gallery_parent_id_idx').on(
+      columns._parentID,
+    ),
+    index('_products_v_version_color_variants_gallery_image_idx').on(
+      columns.image,
+    ),
+    foreignKey({
+      columns: [columns['_parentID']],
+      foreignColumns: [_products_v_version_color_variants.id],
+      name: '_products_v_version_color_variants_gallery_parent_id_fk',
+    }).onDelete('cascade'),
+  ],
+)
+
+export const _products_v_version_color_variants = pgTable(
+  '_products_v_version_color_variants',
+  {
+    _order: integer('_order').notNull(),
+    _parentID: integer('_parent_id').notNull(),
+    id: serial('id').primaryKey(),
+    color: integer('color_id').references(() => colors.id, {
+      onDelete: 'set null',
+    }),
+    priceOverride: numeric('price_override', { mode: 'number' }),
+    stock: numeric('stock', { mode: 'number' }).default(0),
+    sku: varchar('sku'),
+    enabled: boolean('enabled').default(true),
+    _uuid: varchar('_uuid'),
+  },
+  (columns) => [
+    index('_products_v_version_color_variants_order_idx').on(columns._order),
+    index('_products_v_version_color_variants_parent_id_idx').on(
+      columns._parentID,
+    ),
+    index('_products_v_version_color_variants_color_idx').on(columns.color),
     foreignKey({
       columns: [columns['_parentID']],
       foreignColumns: [_products_v.id],
-      name: '_products_v_version_gallery_parent_id_fk',
+      name: '_products_v_version_color_variants_parent_id_fk',
     }).onDelete('cascade'),
   ],
 )
@@ -726,7 +757,6 @@ export const _products_v = pgTable(
     version_cityOfOrigin: varchar('version_city_of_origin'),
     version_occasion: varchar('version_occasion'),
     version_tags: varchar('version_tags'),
-    version_color: enum__products_v_version_color('version_color'),
     version_basePrice: numeric('version_base_price', { mode: 'number' }),
     version_compareAtPrice: numeric('version_compare_at_price', {
       mode: 'number',
@@ -3684,18 +3714,36 @@ export const relations_products_features = relations(
     }),
   }),
 )
-export const relations_products_gallery = relations(
-  products_gallery,
+export const relations_products_color_variants_gallery = relations(
+  products_color_variants_gallery,
   ({ one }) => ({
-    _parentID: one(products, {
-      fields: [products_gallery._parentID],
-      references: [products.id],
+    _parentID: one(products_color_variants, {
+      fields: [products_color_variants_gallery._parentID],
+      references: [products_color_variants.id],
       relationName: 'gallery',
     }),
     image: one(media, {
-      fields: [products_gallery.image],
+      fields: [products_color_variants_gallery.image],
       references: [media.id],
       relationName: 'image',
+    }),
+  }),
+)
+export const relations_products_color_variants = relations(
+  products_color_variants,
+  ({ one, many }) => ({
+    _parentID: one(products, {
+      fields: [products_color_variants._parentID],
+      references: [products.id],
+      relationName: 'colorVariants',
+    }),
+    color: one(colors, {
+      fields: [products_color_variants.color],
+      references: [colors.id],
+      relationName: 'color',
+    }),
+    gallery: many(products_color_variants_gallery, {
+      relationName: 'gallery',
     }),
   }),
 )
@@ -3730,8 +3778,8 @@ export const relations_products = relations(products, ({ one, many }) => ({
   features: many(products_features, {
     relationName: 'features',
   }),
-  gallery: many(products_gallery, {
-    relationName: 'gallery',
+  colorVariants: many(products_color_variants, {
+    relationName: 'colorVariants',
   }),
   brand: one(brands, {
     fields: [products.brand],
@@ -3755,18 +3803,36 @@ export const relations__products_v_version_features = relations(
     }),
   }),
 )
-export const relations__products_v_version_gallery = relations(
-  _products_v_version_gallery,
+export const relations__products_v_version_color_variants_gallery = relations(
+  _products_v_version_color_variants_gallery,
   ({ one }) => ({
-    _parentID: one(_products_v, {
-      fields: [_products_v_version_gallery._parentID],
-      references: [_products_v.id],
-      relationName: 'version_gallery',
+    _parentID: one(_products_v_version_color_variants, {
+      fields: [_products_v_version_color_variants_gallery._parentID],
+      references: [_products_v_version_color_variants.id],
+      relationName: 'gallery',
     }),
     image: one(media, {
-      fields: [_products_v_version_gallery.image],
+      fields: [_products_v_version_color_variants_gallery.image],
       references: [media.id],
       relationName: 'image',
+    }),
+  }),
+)
+export const relations__products_v_version_color_variants = relations(
+  _products_v_version_color_variants,
+  ({ one, many }) => ({
+    _parentID: one(_products_v, {
+      fields: [_products_v_version_color_variants._parentID],
+      references: [_products_v.id],
+      relationName: 'version_colorVariants',
+    }),
+    color: one(colors, {
+      fields: [_products_v_version_color_variants.color],
+      references: [colors.id],
+      relationName: 'color',
+    }),
+    gallery: many(_products_v_version_color_variants_gallery, {
+      relationName: 'gallery',
     }),
   }),
 )
@@ -3811,8 +3877,8 @@ export const relations__products_v = relations(
     version_features: many(_products_v_version_features, {
       relationName: 'version_features',
     }),
-    version_gallery: many(_products_v_version_gallery, {
-      relationName: 'version_gallery',
+    version_colorVariants: many(_products_v_version_color_variants, {
+      relationName: 'version_colorVariants',
     }),
     version_brand: one(brands, {
       fields: [_products_v.version_brand],
@@ -4933,13 +4999,11 @@ type DatabaseSchema = {
   enum_products_fabric: typeof enum_products_fabric
   enum_products_weave: typeof enum_products_weave
   enum_products_pattern: typeof enum_products_pattern
-  enum_products_color: typeof enum_products_color
   enum_products_delivery_time: typeof enum_products_delivery_time
   enum__products_v_version_status: typeof enum__products_v_version_status
   enum__products_v_version_fabric: typeof enum__products_v_version_fabric
   enum__products_v_version_weave: typeof enum__products_v_version_weave
   enum__products_v_version_pattern: typeof enum__products_v_version_pattern
-  enum__products_v_version_color: typeof enum__products_v_version_color
   enum__products_v_version_delivery_time: typeof enum__products_v_version_delivery_time
   enum__products_v_published_locale: typeof enum__products_v_published_locale
   enum_variants_size: typeof enum_variants_size
@@ -4973,12 +5037,14 @@ type DatabaseSchema = {
   colors: typeof colors
   email_templates: typeof email_templates
   products_features: typeof products_features
-  products_gallery: typeof products_gallery
+  products_color_variants_gallery: typeof products_color_variants_gallery
+  products_color_variants: typeof products_color_variants
   products: typeof products
   products_locales: typeof products_locales
   products_rels: typeof products_rels
   _products_v_version_features: typeof _products_v_version_features
-  _products_v_version_gallery: typeof _products_v_version_gallery
+  _products_v_version_color_variants_gallery: typeof _products_v_version_color_variants_gallery
+  _products_v_version_color_variants: typeof _products_v_version_color_variants
   _products_v: typeof _products_v
   _products_v_locales: typeof _products_v_locales
   _products_v_rels: typeof _products_v_rels
@@ -5067,12 +5133,14 @@ type DatabaseSchema = {
   relations_colors: typeof relations_colors
   relations_email_templates: typeof relations_email_templates
   relations_products_features: typeof relations_products_features
-  relations_products_gallery: typeof relations_products_gallery
+  relations_products_color_variants_gallery: typeof relations_products_color_variants_gallery
+  relations_products_color_variants: typeof relations_products_color_variants
   relations_products_locales: typeof relations_products_locales
   relations_products_rels: typeof relations_products_rels
   relations_products: typeof relations_products
   relations__products_v_version_features: typeof relations__products_v_version_features
-  relations__products_v_version_gallery: typeof relations__products_v_version_gallery
+  relations__products_v_version_color_variants_gallery: typeof relations__products_v_version_color_variants_gallery
+  relations__products_v_version_color_variants: typeof relations__products_v_version_color_variants
   relations__products_v_locales: typeof relations__products_v_locales
   relations__products_v_rels: typeof relations__products_v_rels
   relations__products_v: typeof relations__products_v

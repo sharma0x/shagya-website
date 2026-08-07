@@ -1,4 +1,4 @@
-import { MigrateUpArgs } from '@payloadcms/db-postgres'
+import { MigrateUpArgs, MigrateDownArgs } from '@payloadcms/db-postgres'
 
 export async function up({ payload }: MigrateUpArgs) {
   // Create site_settings_announcement_bar_announcements (array field)
@@ -76,3 +76,5 @@ export async function up({ payload }: MigrateUpArgs) {
     ALTER TABLE "_site_settings_v" DROP COLUMN IF EXISTS "version_announcement_bar_text";
   `)
 }
+
+export async function down({ payload }: MigrateDownArgs): Promise<void> {}
