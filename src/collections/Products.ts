@@ -235,41 +235,65 @@ export const Products: CollectionConfig = {
       ],
     },
     {
-      name: 'color',
-      type: 'select',
-      required: true,
-      options: [
-        { label: 'Red', value: 'red' },
-        { label: 'Burgundy', value: 'burgundy' },
-        { label: 'Gold', value: 'gold' },
-        { label: 'Green', value: 'green' },
-        { label: 'Blue', value: 'blue' },
-        { label: 'Ivory', value: 'ivory' },
-        { label: 'Pink', value: 'pink' },
-        { label: 'Purple', value: 'purple' },
-        { label: 'Orange', value: 'orange' },
-        { label: 'Black', value: 'black' },
-        { label: 'White', value: 'white' },
-        { label: 'Multicolor', value: 'multicolor' },
-      ],
-    },
-    {
-      name: 'gallery',
+      name: 'colorVariants',
       type: 'array',
-      label: 'Product Images',
+      label: 'Color Variants',
       minRows: 1,
-      maxRows: 8,
+      admin: {
+        description:
+          'Each color variant has its own gallery, price, and stock.',
+      },
       fields: [
         {
-          name: 'image',
-          type: 'upload',
-          relationTo: 'media',
+          name: 'color',
+          type: 'relationship',
+          relationTo: 'colors',
           required: true,
         },
         {
-          name: 'alt',
+          name: 'gallery',
+          type: 'array',
+          label: 'Variant Images',
+          minRows: 1,
+          maxRows: 8,
+          fields: [
+            {
+              name: 'image',
+              type: 'upload',
+              relationTo: 'media',
+              required: true,
+            },
+            {
+              name: 'alt',
+              type: 'text',
+              label: 'Alt Text',
+            },
+          ],
+        },
+        {
+          name: 'priceOverride',
+          type: 'number',
+          min: 0,
+          admin: {
+            description:
+              'Overrides basePrice for this color. Leave empty to use basePrice.',
+          },
+        },
+        {
+          name: 'stock',
+          type: 'number',
+          min: 0,
+          defaultValue: 0,
+        },
+        {
+          name: 'sku',
           type: 'text',
-          label: 'Alt Text',
+          admin: { description: 'Optional per-variant SKU' },
+        },
+        {
+          name: 'enabled',
+          type: 'checkbox',
+          defaultValue: true,
         },
       ],
     },

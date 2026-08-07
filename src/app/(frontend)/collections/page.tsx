@@ -71,10 +71,11 @@ export default async function CollectionsPage() {
           if (productsRes.docs.length > 0) {
             const firstProd = productsRes.docs[0]
             if (
-              firstProd.gallery?.[0]?.image &&
-              typeof firstProd.gallery[0].image === 'object'
+              firstProd.colorVariants?.[0]?.gallery?.[0]?.image &&
+              typeof firstProd.colorVariants[0].gallery[0].image === 'object'
             ) {
-              coverImage = firstProd.gallery[0].image.url || coverImage
+              coverImage =
+                firstProd.colorVariants[0].gallery[0].image.url || coverImage
             }
           }
         } catch {

@@ -321,23 +321,29 @@ export interface Product {
         id?: string | null;
       }[]
     | null;
-  color:
-    | 'red'
-    | 'burgundy'
-    | 'gold'
-    | 'green'
-    | 'blue'
-    | 'ivory'
-    | 'pink'
-    | 'purple'
-    | 'orange'
-    | 'black'
-    | 'white'
-    | 'multicolor';
-  gallery?:
+  /**
+   * Each color variant has its own gallery, price, and stock.
+   */
+  colorVariants?:
     | {
-        image: number | Media;
-        alt?: string | null;
+        color: number | Color;
+        gallery?:
+          | {
+              image: number | Media;
+              alt?: string | null;
+              id?: string | null;
+            }[]
+          | null;
+        /**
+         * Overrides basePrice for this color. Leave empty to use basePrice.
+         */
+        priceOverride?: number | null;
+        stock?: number | null;
+        /**
+         * Optional per-variant SKU
+         */
+        sku?: string | null;
+        enabled?: boolean | null;
         id?: string | null;
       }[]
     | null;
@@ -1423,12 +1429,21 @@ export interface ProductsSelect<T extends boolean = true> {
         label?: T;
         id?: T;
       };
-  color?: T;
-  gallery?:
+  colorVariants?:
     | T
     | {
-        image?: T;
-        alt?: T;
+        color?: T;
+        gallery?:
+          | T
+          | {
+              image?: T;
+              alt?: T;
+              id?: T;
+            };
+        priceOverride?: T;
+        stock?: T;
+        sku?: T;
+        enabled?: T;
         id?: T;
       };
   basePrice?: T;

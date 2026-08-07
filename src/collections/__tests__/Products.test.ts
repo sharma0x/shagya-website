@@ -233,23 +233,37 @@ describe('Products collection', () => {
       expect(field).toBeDefined()
       expect(field?.type).toBe('text')
     })
-    it('has exactly 26 fields in total', () => {
-      expect(Products.fields).toHaveLength(26)
+    it('has exactly 32 fields in total', () => {
+      expect(Products.fields).toHaveLength(32)
     })
   })
 
-  describe('Gallery field', () => {
-    it('has gallery array field with image upload', () => {
+  describe('Color variants field', () => {
+    it('has colorVariants array field with color relationship', () => {
       const field = Products.fields?.find(
-        (f: any) => f.name === 'gallery',
+        (f: any) => f.name === 'colorVariants',
       ) as any
       expect(field).toBeDefined()
       expect(field?.type).toBe('array')
-      expect(field?.label).toBe('Product Images')
+      expect(field?.label).toBe('Color Variants')
       expect(field?.minRows).toBe(1)
-      expect(field?.maxRows).toBe(8)
-      expect(field?.fields).toHaveLength(2)
-      const imageField = field?.fields?.find((sf: any) => sf.name === 'image')
+
+      const colorField = field?.fields?.find((sf: any) => sf.name === 'color')
+      expect(colorField?.type).toBe('relationship')
+      expect(colorField?.relationTo).toBe('colors')
+      expect(colorField?.required).toBe(true)
+
+      const galleryField = field?.fields?.find(
+        (sf: any) => sf.name === 'gallery',
+      )
+      expect(galleryField?.type).toBe('array')
+      expect(galleryField?.label).toBe('Variant Images')
+      expect(galleryField?.minRows).toBe(1)
+      expect(galleryField?.maxRows).toBe(8)
+
+      const imageField = galleryField?.fields?.find(
+        (sf: any) => sf.name === 'image',
+      )
       expect(imageField?.type).toBe('upload')
       expect(imageField?.relationTo).toBe('media')
     })
