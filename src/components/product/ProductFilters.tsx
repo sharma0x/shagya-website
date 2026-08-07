@@ -5,8 +5,6 @@ import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { Filter, X, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { RangeSlider } from '@/components/ui/range-slider'
-import { COLOR_PALETTE } from '@/lib/colors'
-
 const INITIAL_COLOR_COUNT = 12
 
 // ---------------------------------------------------------------------------
@@ -153,6 +151,9 @@ export function ProductFilters({
 
   const [mobileOpen, setMobileOpen] = useState(false)
   const [facets, setFacets] = useState<FacetsData | null>(null)
+  const [dbColors, setDbColors] = useState<
+    { slug: string; name: string; hex: string }[]
+  >([])
 
   // Section expand/collapse
   const [expandedSections, setExpandedSections] = useState<
@@ -230,6 +231,21 @@ export function ProductFilters({
   useEffect(() => {
     fetchFacets()
   }, [fetchFacets])
+
+  useEffect(() => {
+    fetch('/api/colors?limit=100')
+      .then((r) => r.json())
+      .then((data) => {
+        setDbColors(
+          (data.docs || []).map((c: any) => ({
+            slug: c.slug,
+            name: c.name,
+            hex: c.hex,
+          })),
+        )
+      })
+      .catch(() => {})
+  }, [])
 
   // Prevent stale async state updates after unmount
   useEffect(() => {
@@ -601,28 +617,33 @@ export function ProductFilters({
         onToggle={() => toggleSection('color')}
       >
         {(() => {
-          const visibleColors = COLOR_PALETTE.filter(
+          const visibleColors = dbColors.filter(
             (c) =>
               !facets ||
-              color.some((sel) => sel.toLowerCase() === c.value) ||
-              facets.colors?.some((f) => f.value.toLowerCase() === c.value),
+              color.some((sel) => sel.toLowerCase() === c.slug.toLowerCase()) ||
+              facets.colors?.some(
+                (f) => f.value.toLowerCase() === c.slug.toLowerCase(),
+              ),
           )
           const showCount = visibleColors.length
           return (
             <>
+              {showCount === 0 && (
+                <p className="text-xs text-neutral-400">Loading colors...</p>
+              )}
               <div className="grid grid-cols-3 gap-1.5">
                 {visibleColors
                   .slice(0, showAllColors ? showCount : INITIAL_COLOR_COUNT)
                   .map((c) => {
                     const isSelected = color.some(
-                      (sel) => sel.toLowerCase() === c.value,
+                      (sel) => sel.toLowerCase() === c.slug.toLowerCase(),
                     )
                     return (
                       <button
-                        key={c.value}
+                        key={c.slug}
                         type="button"
                         onClick={() =>
-                          toggleArrayFilter(c.value, color, setColor)
+                          toggleArrayFilter(c.slug, color, setColor)
                         }
                         className={cn(
                           'flex items-center gap-1.5 rounded-lg px-1.5 py-1 text-left transition-colors',
@@ -634,10 +655,10 @@ export function ProductFilters({
                         <span
                           className="h-3.5 w-3.5 shrink-0 rounded-sm border border-neutral-200"
                           style={{ backgroundColor: c.hex }}
-                          title={c.label}
+                          title={c.name}
                         />
                         <span className="font-body truncate text-[10px] leading-tight text-neutral-700">
-                          {c.label}
+                          {c.name}
                         </span>
                       </button>
                     )
