@@ -117,18 +117,22 @@ export function ProductActions({
 
   const handleAddToCart = () => {
     if (!selectedVariant) return
-    addItem({ ...product, basePrice: displayPrice }, 1, {
-      color: selectedVariant.color,
-    })
+    addItem(
+      { ...product, basePrice: displayPrice, gallery: selectedVariant.gallery },
+      1,
+      { color: selectedVariant.color },
+    )
     setAddedState('added')
     setTimeout(() => setAddedState('idle'), 2200)
   }
 
   const handleBuyNow = () => {
     if (!selectedVariant) return
-    addItem({ ...product, basePrice: displayPrice }, 1, {
-      color: selectedVariant.color,
-    })
+    addItem(
+      { ...product, basePrice: displayPrice, gallery: selectedVariant.gallery },
+      1,
+      { color: selectedVariant.color },
+    )
     router.push('/checkout')
   }
 
