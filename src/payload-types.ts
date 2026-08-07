@@ -576,6 +576,10 @@ export interface Order {
   shipping?: number | null;
   tax?: number | null;
   discount?: number | null;
+  /**
+   * The coupon applied to this order
+   */
+  coupon?: (number | null) | Coupon;
   total: number;
   paymentId?: string | null;
   /**
@@ -641,6 +645,43 @@ export interface Order {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "coupons".
+ */
+export interface Coupon {
+  id: number;
+  code: string;
+  /**
+   * e.g., Diwali Sale 2026, Welcome Offer, Influencer — Ananya
+   */
+  description?: string | null;
+  /**
+   * Optional: unique identifier for influencer/collaborator tracking
+   */
+  influencerCode?: string | null;
+  type: 'percentage' | 'fixed_amount' | 'free_shipping';
+  value?: number | null;
+  minCartValue?: number | null;
+  maxDiscount?: number | null;
+  /**
+   * Total number of times this coupon can be used across all customers
+   */
+  usageLimit?: number | null;
+  /**
+   * Number of times a single customer can use this coupon (e.g., 1 for one-time use)
+   */
+  perUserUsageLimit?: number | null;
+  usedCount?: number | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  isActive?: boolean | null;
+  categoriesConditions?: (number | Category)[] | null;
+  productsConditions?: (number | Product)[] | null;
+  customersConditions?: (number | Customer)[] | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "customers".
  */
 export interface Customer {
@@ -698,36 +739,6 @@ export interface Cart {
   coupon?: (number | null) | Coupon;
   subtotal?: number | null;
   lastActivity?: string | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "coupons".
- */
-export interface Coupon {
-  id: number;
-  code: string;
-  /**
-   * e.g., Diwali Sale 2026, Welcome Offer, Influencer — Ananya
-   */
-  description?: string | null;
-  /**
-   * Optional: unique identifier for influencer/collaborator tracking
-   */
-  influencerCode?: string | null;
-  type: 'percentage' | 'fixed_amount' | 'free_shipping';
-  value?: number | null;
-  minCartValue?: number | null;
-  maxDiscount?: number | null;
-  usageLimit?: number | null;
-  usedCount?: number | null;
-  startDate?: string | null;
-  endDate?: string | null;
-  isActive?: boolean | null;
-  categoriesConditions?: (number | Category)[] | null;
-  productsConditions?: (number | Product)[] | null;
-  customersConditions?: (number | Customer)[] | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1526,6 +1537,7 @@ export interface OrdersSelect<T extends boolean = true> {
   shipping?: T;
   tax?: T;
   discount?: T;
+  coupon?: T;
   total?: T;
   paymentId?: T;
   notes?: T;
@@ -1636,6 +1648,7 @@ export interface CouponsSelect<T extends boolean = true> {
   minCartValue?: T;
   maxDiscount?: T;
   usageLimit?: T;
+  perUserUsageLimit?: T;
   usedCount?: T;
   startDate?: T;
   endDate?: T;

@@ -87,6 +87,19 @@ export const Coupons: CollectionConfig = {
       name: 'usageLimit',
       type: 'number',
       min: 0,
+      admin: {
+        description:
+          'Total number of times this coupon can be used across all customers',
+      },
+    },
+    {
+      name: 'perUserUsageLimit',
+      type: 'number',
+      min: 0,
+      admin: {
+        description:
+          'Number of times a single customer can use this coupon (e.g., 1 for one-time use)',
+      },
     },
     {
       name: 'usedCount',

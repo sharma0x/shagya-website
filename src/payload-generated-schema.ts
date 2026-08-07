@@ -47,6 +47,7 @@ export const enum_email_templates_slug = pgEnum('enum_email_templates_slug', [
   'magic-link',
   'back-in-stock',
   'password-reset',
+  'otp-email',
 ])
 export const enum_products_status = pgEnum('enum_products_status', [
   'draft',
@@ -1054,6 +1055,9 @@ export const orders = pgTable(
     shipping: numeric('shipping', { mode: 'number' }).default(0),
     tax: numeric('tax', { mode: 'number' }).default(0),
     discount: numeric('discount', { mode: 'number' }).default(0),
+    coupon: integer('coupon_id').references(() => coupons.id, {
+      onDelete: 'set null',
+    }),
     total: numeric('total', { mode: 'number' }).notNull(),
     paymentId: varchar('payment_id'),
     notes: varchar('notes'),
@@ -1112,6 +1116,7 @@ export const orders = pgTable(
   },
   (columns) => [
     uniqueIndex('orders_order_number_idx').on(columns.orderNumber),
+    index('orders_coupon_idx').on(columns.coupon),
     index('orders_updated_at_idx').on(columns.updatedAt),
     index('orders_created_at_idx').on(columns.createdAt),
   ],
@@ -1270,6 +1275,7 @@ export const coupons = pgTable(
     minCartValue: numeric('min_cart_value', { mode: 'number' }).default(0),
     maxDiscount: numeric('max_discount', { mode: 'number' }),
     usageLimit: numeric('usage_limit', { mode: 'number' }),
+    perUserUsageLimit: numeric('per_user_usage_limit', { mode: 'number' }),
     usedCount: numeric('used_count', { mode: 'number' }).default(0),
     startDate: timestamp('start_date', {
       mode: 'string',
@@ -3936,7 +3942,12 @@ export const relations_orders_items = relations(orders_items, ({ one }) => ({
     relationName: 'variant',
   }),
 }))
-export const relations_orders = relations(orders, ({ many }) => ({
+export const relations_orders = relations(orders, ({ one, many }) => ({
+  coupon: one(coupons, {
+    fields: [orders.coupon],
+    references: [coupons.id],
+    relationName: 'coupon',
+  }),
   items: many(orders_items, {
     relationName: 'items',
   }),

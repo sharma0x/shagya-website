@@ -6,9 +6,6 @@ import { auth } from '@/lib/auth'
 export async function POST(request: Request) {
   try {
     const session = await auth.api.getSession({ headers: request.headers })
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
 
     const { code, subtotal, productIds } = await request.json()
     if (!code) {
@@ -68,6 +65,37 @@ export async function POST(request: Request) {
       )
     }
 
+    // Check per-user usage limit
+    if (coupon.perUserUsageLimit && session?.user) {
+      const customers = await payload.find({
+        collection: 'customers',
+        where: { betterAuthUserId: { equals: session.user.id } },
+        limit: 1,
+      })
+      if (customers.docs.length > 0) {
+        const customerEmail = customers.docs[0].email
+        const pastOrders = await payload.count({
+          collection: 'orders',
+          where: {
+            and: [
+              { customerEmail: { equals: customerEmail } },
+              { coupon: { equals: coupon.id } },
+              { status: { not_equals: 'cancelled' } },
+            ],
+          },
+        })
+        if (pastOrders.totalDocs >= coupon.perUserUsageLimit) {
+          return NextResponse.json(
+            {
+              valid: false,
+              error: 'You have already reached the usage limit for this coupon',
+            },
+            { status: 200 },
+          )
+        }
+      }
+    }
+
     // Check minimum cart value
     if (coupon.minCartValue && subtotal < coupon.minCartValue) {
       const shortage = coupon.minCartValue - subtotal
@@ -82,6 +110,13 @@ export async function POST(request: Request) {
 
     // Check customer conditions
     if (coupon.customersConditions?.length > 0) {
+      if (!session?.user) {
+        return NextResponse.json(
+          { valid: false, error: 'Please log in to use this exclusive offer' },
+          { status: 200 },
+        )
+      }
+
       const customers = await payload.find({
         collection: 'customers',
         where: { betterAuthUserId: { equals: session.user.id } },
