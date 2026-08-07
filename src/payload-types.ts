@@ -2162,6 +2162,18 @@ export interface SiteSetting {
   gstPercent?: number | null;
   currency?: string | null;
   /**
+   * The cost for standard shipping.
+   */
+  standardShippingRate?: number | null;
+  /**
+   * The cost for express shipping.
+   */
+  expressShippingRate?: number | null;
+  /**
+   * Cart subtotal value required to qualify for free shipping.
+   */
+  freeShippingThreshold?: number | null;
+  /**
    * Select coupons to display on the checkout page under pre-populated offers
    */
   activeCoupons?: (number | Coupon)[] | null;
@@ -2202,6 +2214,9 @@ export interface SiteSettingsSelect<T extends boolean = true> {
       };
   gstPercent?: T;
   currency?: T;
+  standardShippingRate?: T;
+  expressShippingRate?: T;
+  freeShippingThreshold?: T;
   activeCoupons?: T;
   _status?: T;
   updatedAt?: T;

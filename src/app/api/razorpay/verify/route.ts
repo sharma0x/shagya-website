@@ -21,6 +21,7 @@ export async function POST(request: Request) {
       guestPhone = '',
       shippingType = 'standard',
       cartItems: guestCartItems,
+      appliedCouponCode,
     } = body
 
     if (!shippingAddress) {
@@ -139,10 +140,27 @@ export async function POST(request: Request) {
       })
     }
 
-    const shipping = subtotal >= 5000 ? 0 : 150
+    const siteSettings = await payload.findGlobal({
+      slug: 'site-settings',
+    })
+    const standardRate = (siteSettings as any).standardShippingRate ?? 150
+    const expressRate = (siteSettings as any).expressShippingRate ?? 350
+    const freeThreshold = (siteSettings as any).freeShippingThreshold ?? 5000
+
+    const shippingBase =
+      subtotal >= freeThreshold
+        ? 0
+        : shippingType === 'express'
+          ? expressRate
+          : standardRate
+    let shipping = shippingBase
 
     let discount = 0
-    // For logged-in users with coupon
+    let usedCouponId: string | number | null = null
+
+    // For logged-in users with coupon, OR guests with appliedCouponCode
+    let couponDoc: any = null
+
     if (!isGuest && cartId) {
       const cart = (await payload.findByID({
         collection: 'carts',
@@ -153,31 +171,43 @@ export async function POST(request: Request) {
           typeof (cart as any).coupon === 'object'
             ? (cart as any).coupon.id
             : (cart as any).coupon
-        const coupon = (await payload.findByID({
+        couponDoc = (await payload.findByID({
           collection: 'coupons',
           id: couponId,
         } as any)) as any
-        if (coupon && coupon.isActive) {
-          if (coupon.type === 'percentage') {
-            discount = Math.round((subtotal * (coupon.value || 0)) / 100)
-            if (coupon.maxDiscount && discount > coupon.maxDiscount)
-              discount = coupon.maxDiscount
-          } else if (coupon.type === 'fixed_amount') {
-            discount = coupon.value || 0
-          }
-          // Increment usedCount
-          if (coupon) {
-            try {
-              await payload.update({
-                collection: 'coupons',
-                id: coupon.id,
-                data: { usedCount: (coupon.usedCount || 0) + 1 },
-              } as any)
-            } catch {
-              // Non-critical — don't block order
-            }
-          }
-        }
+      }
+    } else if (appliedCouponCode) {
+      const coupons = await payload.find({
+        collection: 'coupons',
+        where: { code: { equals: appliedCouponCode.trim().toUpperCase() } },
+        limit: 1,
+      })
+      if (coupons.docs.length > 0) {
+        couponDoc = coupons.docs[0]
+      }
+    }
+
+    if (couponDoc && couponDoc.isActive) {
+      usedCouponId = couponDoc.id
+      if (couponDoc.type === 'percentage') {
+        discount = Math.round((subtotal * (couponDoc.value || 0)) / 100)
+        if (couponDoc.maxDiscount && discount > couponDoc.maxDiscount)
+          discount = couponDoc.maxDiscount
+      } else if (couponDoc.type === 'fixed_amount') {
+        discount = couponDoc.value || 0
+      } else if (couponDoc.type === 'free_shipping') {
+        shipping = 0 // Actually zero out the shipping cost
+      }
+
+      // Increment usedCount
+      try {
+        await payload.update({
+          collection: 'coupons',
+          id: couponDoc.id,
+          data: { usedCount: (couponDoc.usedCount || 0) + 1 },
+        } as any)
+      } catch {
+        // Non-critical — don't block order
       }
     }
 
@@ -245,6 +275,7 @@ export async function POST(request: Request) {
             billingAddress?.country || shippingAddress.country || 'India',
         },
         items: orderItems,
+        coupon: usedCouponId,
       },
     } as any)
 

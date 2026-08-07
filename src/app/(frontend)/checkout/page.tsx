@@ -22,6 +22,7 @@ import {
   Ticket,
   ShoppingBag,
   ShieldCheck,
+  X,
 } from 'lucide-react'
 
 interface Address {
@@ -138,6 +139,29 @@ export default function CheckoutPage() {
   const [couponError, setCouponError] = useState('')
   const [appliedCoupon, setAppliedCoupon] = useState<any>(null)
   const [activeCoupons, setActiveCoupons] = useState<any[]>([])
+
+  // Shipping Configuration
+  const [shippingConfig, setShippingConfig] = useState({
+    standard: 150,
+    express: 350,
+    freeThreshold: 5000,
+  })
+
+  // Fetch Site Settings once
+  useEffect(() => {
+    fetch('/api/globals/site-settings')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data) {
+          setShippingConfig({
+            standard: data.standardShippingRate ?? 150,
+            express: data.expressShippingRate ?? 350,
+            freeThreshold: data.freeShippingThreshold ?? 5000,
+          })
+        }
+      })
+      .catch(() => {})
+  }, [])
 
   // Load cart and addresses — run only once on mount
   const didLoad = useRef(false)
@@ -360,8 +384,16 @@ export default function CheckoutPage() {
 
   // Cost calculations
   const subtotal = effectiveCart?.subtotal || 0
-  const shipping = shippingType === 'express' ? 350 : subtotal >= 5000 ? 0 : 150
+
+  let shippingBase =
+    shippingType === 'express'
+      ? shippingConfig.express
+      : subtotal >= shippingConfig.freeThreshold
+        ? 0
+        : shippingConfig.standard
+  let shipping = shippingBase
   let discount = 0
+
   if (appliedCoupon) {
     if (appliedCoupon.type === 'percentage') {
       discount = Math.round((subtotal * (appliedCoupon.value || 0)) / 100)
@@ -370,6 +402,8 @@ export default function CheckoutPage() {
       }
     } else if (appliedCoupon.type === 'fixed_amount') {
       discount = appliedCoupon.value || 0
+    } else if (appliedCoupon.type === 'free_shipping') {
+      shipping = 0
     }
   }
   const total = Math.max(0, subtotal + shipping - discount)
@@ -399,6 +433,7 @@ export default function CheckoutPage() {
             guestEmail: guestData?.email || '',
             guestPhone: '',
             shippingType,
+            appliedCouponCode: appliedCoupon?.code,
             cartItems: !isLoggedIn
               ? effectiveCart?.items.map((i) => ({
                   product: i.product.id,
@@ -435,6 +470,7 @@ export default function CheckoutPage() {
             guestEmail: guestData?.email || '',
             guestPhone: '',
             shippingType,
+            appliedCouponCode: appliedCoupon?.code,
             cartItems: !isLoggedIn
               ? effectiveCart?.items.map((i) => ({
                   product: i.product.id,
@@ -486,6 +522,8 @@ export default function CheckoutPage() {
                   notes: orderNotes,
                   guestEmail: guestData?.email || '',
                   guestPhone: '',
+                  shippingType,
+                  appliedCouponCode: appliedCoupon?.code,
                   cartItems: !isLoggedIn
                     ? effectiveCart?.items.map((i) => ({
                         product: i.product.id,
@@ -532,6 +570,8 @@ export default function CheckoutPage() {
               notes: orderNotes,
               guestEmail: guestData?.email || '',
               guestPhone: '',
+              shippingType,
+              appliedCouponCode: appliedCoupon?.code,
               cartItems: !isLoggedIn
                 ? effectiveCart?.items.map((i) => ({
                     product: i.product.id,
@@ -817,7 +857,9 @@ export default function CheckoutPage() {
                       </div>
                     </div>
                     <span className="font-display text-sm font-semibold whitespace-nowrap text-neutral-900">
-                      {subtotal >= 5000 ? 'FREE' : '₹150'}
+                      {subtotal >= shippingConfig.freeThreshold
+                        ? 'FREE'
+                        : `₹${shippingConfig.standard}`}
                     </span>
                   </div>
 
@@ -851,7 +893,7 @@ export default function CheckoutPage() {
                       </div>
                     </div>
                     <span className="font-display text-sm font-semibold whitespace-nowrap text-neutral-900">
-                      ₹350
+                      {`₹${shippingConfig?.express || 0}`}
                     </span>
                   </div>
 
@@ -1006,9 +1048,17 @@ export default function CheckoutPage() {
                           {item.product.name}
                         </h4>
 
-                        {[item.product.weave, item.product.fabric, item.variant?.color?.name].filter(Boolean).length > 0 && (
+                        {[
+                          item.product.weave,
+                          item.product.fabric,
+                          item.variant?.color?.name,
+                        ].filter(Boolean).length > 0 && (
                           <p className="font-body mt-0.5 text-xs text-neutral-500">
-                            {[item.product.weave, item.product.fabric, item.variant?.color?.name]
+                            {[
+                              item.product.weave,
+                              item.product.fabric,
+                              item.variant?.color?.name,
+                            ]
                               .filter(Boolean)
                               .map((s) => (s ?? '').toLowerCase())
                               .join(' · ')}
@@ -1073,7 +1123,10 @@ export default function CheckoutPage() {
                       </button>
                     </div>
                     {couponError && (
-                      <p className="text-[10px] text-red-500">{couponError}</p>
+                      <div className="mt-2 flex items-start gap-1.5 rounded-lg border border-red-100 bg-red-50 p-2 text-xs text-red-600">
+                        <X className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                        <span>{couponError}</span>
+                      </div>
                     )}
                     {isLoggedIn && activeCoupons.length > 0 && (
                       <OffersSection

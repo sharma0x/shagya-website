@@ -7,7 +7,13 @@ import Razorpay from 'razorpay'
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { shippingAddress, phone, isCod = false } = body
+    const {
+      shippingAddress,
+      phone,
+      isCod = false,
+      shippingType = 'standard',
+      appliedCouponCode,
+    } = body
     const guestEmail = body.guestEmail || ''
     const guestCartItems = body.cartItems
 
@@ -16,6 +22,7 @@ export async function POST(request: Request) {
     let subtotal = 0
     let shipping = 0
     let discount = 0
+    let cartId: string | null = null
 
     const payload = await getPayload({ config })
 
@@ -61,6 +68,7 @@ export async function POST(request: Request) {
       }
 
       const cart = carts.docs[0] as any
+      cartId = cart.id
       subtotal =
         cart.subtotal ||
         (cart.items || []).reduce(
@@ -68,27 +76,64 @@ export async function POST(request: Request) {
             acc + (item.unitPrice || 0) * (item.quantity || 1),
           0,
         )
+    }
 
-      if (cart.coupon) {
+    const siteSettings = await payload.findGlobal({
+      slug: 'site-settings',
+    })
+    const standardRate = (siteSettings as any).standardShippingRate ?? 150
+    const expressRate = (siteSettings as any).expressShippingRate ?? 350
+    const freeThreshold = (siteSettings as any).freeShippingThreshold ?? 5000
+
+    const shippingBase =
+      subtotal >= freeThreshold
+        ? 0
+        : shippingType === 'express'
+          ? expressRate
+          : standardRate
+    shipping = shippingBase
+
+    // Find coupon document either from logged-in cart OR from appliedCouponCode
+    let couponDoc: any = null
+
+    if (!isGuest && cartId) {
+      const carts = await payload.find({
+        collection: 'carts',
+        where: { id: { equals: cartId } },
+        limit: 1,
+      })
+      const cart = carts.docs[0] as any
+      if (cart?.coupon) {
         const couponId =
           typeof cart.coupon === 'object' ? cart.coupon.id : cart.coupon
-        const coupon = (await payload.findByID({
+        couponDoc = await payload.findByID({
           collection: 'coupons',
           id: couponId,
-        } as any)) as any
-        if (coupon && coupon.isActive) {
-          if (coupon.type === 'percentage') {
-            discount = Math.round((subtotal * (coupon.value || 0)) / 100)
-            if (coupon.maxDiscount && discount > coupon.maxDiscount)
-              discount = coupon.maxDiscount
-          } else if (coupon.type === 'fixed_amount') {
-            discount = coupon.value || 0
-          }
-        }
+        } as any)
+      }
+    } else if (appliedCouponCode) {
+      const coupons = await payload.find({
+        collection: 'coupons',
+        where: { code: { equals: appliedCouponCode.trim().toUpperCase() } },
+        limit: 1,
+      })
+      if (coupons.docs.length > 0) {
+        couponDoc = coupons.docs[0]
       }
     }
 
-    shipping = subtotal >= 5000 ? 0 : 150
+    if (couponDoc && couponDoc.isActive) {
+      if (couponDoc.type === 'percentage') {
+        discount = Math.round((subtotal * (couponDoc.value || 0)) / 100)
+        if (couponDoc.maxDiscount && discount > couponDoc.maxDiscount)
+          discount = couponDoc.maxDiscount
+      } else if (couponDoc.type === 'fixed_amount') {
+        discount = couponDoc.value || 0
+      } else if (couponDoc.type === 'free_shipping') {
+        shipping = 0
+      }
+    }
+
     const total = Math.max(0, subtotal + shipping - discount)
 
     // For COD, no Razorpay order needed

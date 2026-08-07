@@ -2347,4 +2347,7 @@ export const siteSettingsData = {
     'Returns are accepted within 15 days of delivery. Items must be in original condition with tags attached. Custom-stitched blouses are not eligible for returns.',
   gstPercent: 5,
   currency: 'INR',
+  standardShippingRate: 150,
+  expressShippingRate: 350,
+  freeShippingThreshold: 5000,
 }

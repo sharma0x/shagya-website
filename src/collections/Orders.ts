@@ -290,6 +290,14 @@ export const Orders: CollectionConfig = {
       defaultValue: 0,
     },
     {
+      name: 'coupon',
+      type: 'relationship',
+      relationTo: 'coupons',
+      admin: {
+        description: 'The coupon applied to this order',
+      },
+    },
+    {
       name: 'total',
       type: 'number',
       required: true,

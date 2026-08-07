@@ -3518,6 +3518,15 @@ export const site_settings = pgTable(
     announcementBar_enabled: boolean('announcement_bar_enabled').default(true),
     gstPercent: numeric('gst_percent', { mode: 'number' }).default(5),
     currency: varchar('currency').default('INR'),
+    standardShippingRate: numeric('standard_shipping_rate', {
+      mode: 'number',
+    }).default(150),
+    expressShippingRate: numeric('express_shipping_rate', {
+      mode: 'number',
+    }).default(350),
+    freeShippingThreshold: numeric('free_shipping_threshold', {
+      mode: 'number',
+    }).default(5000),
     _status: enum_site_settings_status('_status').default('draft'),
     updatedAt: timestamp('updated_at', {
       mode: 'string',
@@ -3618,6 +3627,15 @@ export const _site_settings_v = pgTable(
       mode: 'number',
     }).default(5),
     version_currency: varchar('version_currency').default('INR'),
+    version_standardShippingRate: numeric('version_standard_shipping_rate', {
+      mode: 'number',
+    }).default(150),
+    version_expressShippingRate: numeric('version_express_shipping_rate', {
+      mode: 'number',
+    }).default(350),
+    version_freeShippingThreshold: numeric('version_free_shipping_threshold', {
+      mode: 'number',
+    }).default(5000),
     version__status:
       enum__site_settings_v_version_status('version__status').default('draft'),
     version_updatedAt: timestamp('version_updated_at', {

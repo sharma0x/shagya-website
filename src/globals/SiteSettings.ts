@@ -154,6 +154,34 @@ export const SiteSettings: GlobalConfig = {
       label: 'Currency',
       defaultValue: 'INR',
     },
+    {
+      name: 'standardShippingRate',
+      type: 'number',
+      label: 'Standard Shipping Rate',
+      defaultValue: 150,
+      admin: {
+        description: 'The cost for standard shipping.',
+      },
+    },
+    {
+      name: 'expressShippingRate',
+      type: 'number',
+      label: 'Express Shipping Rate',
+      defaultValue: 350,
+      admin: {
+        description: 'The cost for express shipping.',
+      },
+    },
+    {
+      name: 'freeShippingThreshold',
+      type: 'number',
+      label: 'Free Shipping Threshold',
+      defaultValue: 5000,
+      admin: {
+        description:
+          'Cart subtotal value required to qualify for free shipping.',
+      },
+    },
 
     // ---- Coupons & Offers ----
     {
