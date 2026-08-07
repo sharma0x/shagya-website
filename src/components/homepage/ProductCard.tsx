@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useRef } from 'react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { getProductUrl } from '@/lib/product-url'
@@ -8,13 +8,7 @@ import { SkeletonImage } from '@/components/ui/SkeletonImage'
 import { WishlistButton } from '@/components/product/WishlistButton'
 import { ProductBadge } from '@/components/ui/ProductBadge'
 import { Rating } from '@/components/ui/Rating'
-import { useCart } from '@/lib/store/cart'
-import {
-  IconShoppingCart,
-  IconCheck,
-  IconChevronLeft,
-  IconChevronRight,
-} from '@tabler/icons-react'
+import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react'
 
 const ph = (w: number, h: number, bg: string, fg: string, text: string) =>
   `https://placehold.co/${w}x${h}/${bg}/${fg}?text=${encodeURIComponent(text)}&font=lora`
@@ -41,6 +35,7 @@ interface ProductCardProduct {
         id?: string | null
       }[]
     | null
+  color?: { slug: string; name: string; hex: string } | null
 }
 
 interface ProductCardProps {
@@ -56,8 +51,6 @@ export function ProductCard({
   rating,
   className,
 }: ProductCardProps) {
-  const { addItem } = useCart()
-  const [added, setAdded] = useState(false)
   const imageUrl =
     product.gallery?.[0]?.image && typeof product.gallery[0].image === 'object'
       ? product.gallery[0].image.sizes?.card?.url ||
@@ -72,23 +65,6 @@ export function ProductCard({
             100,
         )
       : 0
-
-  const handleAddToCart = (e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    addItem({
-      id: product.id,
-      name: product.name,
-      slug: product.slug || '',
-      basePrice: product.basePrice,
-      compareAtPrice: product.compareAtPrice ?? undefined,
-      gallery: product.gallery as any,
-      fabric: product.fabric || '',
-      weave: product.weave || '',
-    })
-    setAdded(true)
-    setTimeout(() => setAdded(false), 1200)
-  }
 
   return (
     <Link
@@ -128,26 +104,6 @@ export function ProductCard({
             </span>
           </div>
         )}
-
-        {/* Cart button — always visible */}
-        <div className="absolute right-2 bottom-2 z-10">
-          <button
-            onClick={handleAddToCart}
-            className={cn(
-              'flex h-8 w-8 items-center justify-center rounded-full text-white shadow-lg transition-all active:scale-95',
-              added
-                ? 'scale-110 bg-green-500'
-                : 'bg-brand-600 hover:bg-brand-500',
-            )}
-            aria-label="Add to cart"
-          >
-            {added ? (
-              <IconCheck className="h-3.5 w-3.5" />
-            ) : (
-              <IconShoppingCart className="h-3.5 w-3.5" />
-            )}
-          </button>
-        </div>
       </div>
 
       {/* Product Info */}
@@ -155,6 +111,17 @@ export function ProductCard({
         <p className="font-display text-brand-950 group-hover:text-brand-700 text-sm font-semibold transition-colors">
           {product.name}
         </p>
+        {product.color && (
+          <div className="mt-1 flex items-center gap-1.5">
+            <span
+              className="inline-block h-3 w-3 flex-shrink-0 rounded-full border border-neutral-300"
+              style={{ backgroundColor: product.color.hex }}
+            />
+            <span className="font-body truncate text-[10px] text-neutral-500">
+              {product.color.name}
+            </span>
+          </div>
+        )}
         {(product.weave || product.fabric) && (
           <p className="text-brand-700/60 mt-0.5 text-xs">
             {[product.weave, product.fabric].filter(Boolean).join(' · ')}

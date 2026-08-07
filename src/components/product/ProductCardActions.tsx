@@ -12,6 +12,7 @@ interface ProductCardActionsProps {
   product: any
   isOutOfStock: boolean
   variant?: 'grid' | 'compact'
+  color?: { slug: string; name: string; hex: string } | null
 }
 
 const defaultVariant = {} as any
@@ -26,6 +27,7 @@ export function ProductCardActions({
   product,
   isOutOfStock,
   variant = 'grid',
+  color,
 }: ProductCardActionsProps) {
   const router = useRouter()
   const { addItem, items } = useCart()
@@ -33,7 +35,11 @@ export function ProductCardActions({
   const [buyNowClicked, setBuyNowClicked] = useState(false)
   const isCompact = variant === 'compact'
 
-  const isInCart = items.some((i) => i.product.id === Number(productId))
+  const isInCart = items.some(
+    (i) =>
+      i.product.id === Number(productId) &&
+      (color ? i.variant?.color?.slug === color.slug : true),
+  )
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -51,7 +57,7 @@ export function ProductCardActions({
         weave: (product.weave as string) || '',
       },
       1,
-      defaultVariant,
+      color ? { color } : defaultVariant,
     )
     setAdded(true)
     setTimeout(() => setAdded(false), 1500)
@@ -75,7 +81,7 @@ export function ProductCardActions({
           weave: (product.weave as string) || '',
         },
         1,
-        defaultVariant,
+        color ? { color } : defaultVariant,
       )
     }
     router.push('/checkout')
