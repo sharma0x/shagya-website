@@ -467,8 +467,8 @@ export const products: SeedProduct[] = [
         colorName: 'Ruby Red',
         imagePath: 'images/products/saree-01.jpg',
         galleryImages: [
-          'images/products/saree-02.jpg',
-          'images/products/saree-03.jpg',
+          'images/products/saree-24.jpg',
+          'images/products/saree-25.jpg',
         ],
         stock: 5,
       },
@@ -476,14 +476,18 @@ export const products: SeedProduct[] = [
         colorName: 'Emerald Green',
         imagePath: 'images/products/saree-02.jpg',
         galleryImages: [
-          'images/products/saree-04.jpg',
-          'images/products/saree-05.jpg',
+          'images/products/saree-26.jpg',
+          'images/products/saree-27.jpg',
         ],
         stock: 5,
       },
       {
         colorName: 'Saffron Gold',
         imagePath: 'images/products/saree-03.jpg',
+        galleryImages: [
+          'images/products/saree-28.jpg',
+          'images/products/saree-29.jpg',
+        ],
         stock: 5,
         priceOverride: 19500,
       },
@@ -518,8 +522,8 @@ export const products: SeedProduct[] = [
         colorName: 'Ruby Red',
         imagePath: 'images/products/saree-04.jpg',
         galleryImages: [
-          'images/products/saree-07.jpg',
-          'images/products/saree-10.jpg',
+          'images/products/saree-30.jpg',
+          'images/products/saree-31.jpg',
         ],
         stock: 3,
       },
@@ -527,8 +531,8 @@ export const products: SeedProduct[] = [
         colorName: 'Deep Burgundy',
         imagePath: 'images/products/saree-05.jpg',
         galleryImages: [
-          'images/products/saree-08.jpg',
-          'images/products/saree-11.jpg',
+          'images/products/saree-32.jpg',
+          'images/products/saree-33.jpg',
         ],
         stock: 3,
         priceOverride: 25500,
@@ -536,6 +540,10 @@ export const products: SeedProduct[] = [
       {
         colorName: 'Saffron Gold',
         imagePath: 'images/products/saree-06.jpg',
+        galleryImages: [
+          'images/products/saree-34.jpg',
+          'images/products/saree-35.jpg',
+        ],
         stock: 2,
       },
     ],
@@ -567,16 +575,28 @@ export const products: SeedProduct[] = [
       {
         colorName: 'Ivory Cream',
         imagePath: 'images/products/saree-07.jpg',
+        galleryImages: [
+          'images/products/saree-36.jpg',
+          'images/products/saree-37.jpg',
+        ],
         stock: 10,
       },
       {
         colorName: 'Mint Green',
         imagePath: 'images/products/saree-08.jpg',
+        galleryImages: [
+          'images/products/saree-38.jpg',
+          'images/products/saree-39.jpg',
+        ],
         stock: 10,
       },
       {
         colorName: 'Lavender Purple',
         imagePath: 'images/products/saree-09.jpg',
+        galleryImages: [
+          'images/products/saree-40.jpg',
+          'images/products/saree-41.jpg',
+        ],
         stock: 10,
       },
     ],
@@ -608,16 +628,28 @@ export const products: SeedProduct[] = [
       {
         colorName: 'Ruby Red',
         imagePath: 'images/products/saree-10.jpg',
+        galleryImages: [
+          'images/products/saree-42.jpg',
+          'images/products/saree-43.jpg',
+        ],
         stock: 4,
       },
       {
         colorName: 'Saffron Gold',
         imagePath: 'images/products/saree-11.jpg',
+        galleryImages: [
+          'images/products/saree-44.jpg',
+          'images/products/saree-45.jpg',
+        ],
         stock: 4,
       },
       {
         colorName: 'Deep Burgundy',
         imagePath: 'images/products/saree-12.jpg',
+        galleryImages: [
+          'images/products/saree-46.jpg',
+          'images/products/saree-47.jpg',
+        ],
         stock: 4,
       },
     ],
@@ -649,16 +681,28 @@ export const products: SeedProduct[] = [
       {
         colorName: 'Ivory Cream',
         imagePath: 'images/products/saree-13.jpg',
+        galleryImages: [
+          'images/products/saree-48.jpg',
+          'images/products/saree-49.jpg',
+        ],
         stock: 7,
       },
       {
         colorName: 'Saffron Gold',
         imagePath: 'images/products/saree-14.jpg',
+        galleryImages: [
+          'images/products/saree-50.jpg',
+          'images/products/saree-51.jpg',
+        ],
         stock: 7,
       },
       {
         colorName: 'Mint Green',
         imagePath: 'images/products/saree-15.jpg',
+        galleryImages: [
+          'images/products/saree-52.jpg',
+          'images/products/saree-53.jpg',
+        ],
         stock: 6,
       },
     ],
@@ -691,11 +735,19 @@ export const products: SeedProduct[] = [
       {
         colorName: 'Deep Burgundy',
         imagePath: 'images/products/saree-16.jpg',
+        galleryImages: [
+          'images/products/saree-54.jpg',
+          'images/products/saree-55.jpg',
+        ],
         stock: 1,
       },
       {
         colorName: 'Saffron Gold',
         imagePath: 'images/products/saree-17.jpg',
+        galleryImages: [
+          'images/products/saree-56.jpg',
+          'images/products/saree-57.jpg',
+        ],
         stock: 1,
         priceOverride: 45000,
       },
@@ -729,16 +781,28 @@ export const products: SeedProduct[] = [
       {
         colorName: 'Ivory Cream',
         imagePath: 'images/products/saree-18.jpg',
+        galleryImages: [
+          'images/products/saree-58.jpg',
+          'images/products/saree-59.jpg',
+        ],
         stock: 2,
       },
       {
         colorName: 'Emerald Green',
         imagePath: 'images/products/saree-19.jpg',
+        galleryImages: [
+          'images/products/saree-60.jpg',
+          'images/products/saree-61.jpg',
+        ],
         stock: 2,
       },
       {
         colorName: 'Charcoal Black',
         imagePath: 'images/products/saree-20.jpg',
+        galleryImages: [
+          'images/products/saree-62.jpg',
+          'images/products/saree-63.jpg',
+        ],
         stock: 2,
       },
     ],
@@ -771,16 +835,28 @@ export const products: SeedProduct[] = [
       {
         colorName: 'Emerald Green',
         imagePath: 'images/products/saree-21.jpg',
+        galleryImages: [
+          'images/products/saree-64.jpg',
+          'images/products/saree-65.jpg',
+        ],
         stock: 4,
       },
       {
         colorName: 'Royal Blue',
         imagePath: 'images/products/saree-22.jpg',
+        galleryImages: [
+          'images/products/saree-66.jpg',
+          'images/products/saree-67.jpg',
+        ],
         stock: 3,
       },
       {
         colorName: 'Ruby Red',
         imagePath: 'images/products/saree-23.jpg',
+        galleryImages: [
+          'images/products/saree-68.jpg',
+          'images/products/saree-69.jpg',
+        ],
         stock: 3,
         priceOverride: 17500,
       },
@@ -814,11 +890,19 @@ export const products: SeedProduct[] = [
       {
         colorName: 'Saffron Gold',
         imagePath: 'images/products/saree-01.jpg',
+        galleryImages: [
+          'images/products/saree-70.jpg',
+          'images/products/saree-71.jpg',
+        ],
         stock: 9,
       },
       {
         colorName: 'Lavender Purple',
         imagePath: 'images/products/saree-02.jpg',
+        galleryImages: [
+          'images/products/saree-72.jpg',
+          'images/products/saree-73.jpg',
+        ],
         stock: 8,
       },
       {
