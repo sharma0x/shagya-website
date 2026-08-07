@@ -9,6 +9,7 @@ import { MobileFilterBar } from '@/components/filters/MobileFilterBar'
 import { FilterDrawerProvider } from '@/components/filters/filter-drawer-context'
 import { ActiveFilterChips } from '@/components/filters/ActiveFilterChips'
 import { buildWhereClause } from '@/lib/filters/build-where-clause'
+import { getProductUrl } from '@/lib/product-url'
 
 const ph = (w: number, h: number, bg: string, fg: string, text: string) =>
   `https://placehold.co/${w}x${h}/${bg}/${fg}?text=${encodeURIComponent(text)}&font=lora`
@@ -279,11 +280,11 @@ export default async function SearchPage({
                           <h2 className="font-display text-gold-600 mb-6 text-xs font-semibold tracking-[0.18em] uppercase">
                             Sarees ({products.length})
                           </h2>
-                          <div className="grid grid-cols-2 gap-x-4 gap-y-10 sm:gap-x-6 sm:gap-y-12 lg:grid-cols-3 xl:grid-cols-4">
+                          <div className="grid grid-cols-2 gap-x-5 gap-y-10 sm:gap-x-6 sm:gap-y-12 lg:grid-cols-3 xl:grid-cols-4">
                             {products.map((p) => (
                               <Link
                                 key={p.id}
-                                href={`/products/${p.slug}`}
+                                href={getProductUrl(p.slug, p.id)}
                                 className="group block"
                               >
                                 <div className="relative overflow-hidden rounded-xl transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-md">

@@ -27,7 +27,67 @@ export const Products: CollectionConfig = {
             .replace(/-+/g, '-')
             .replace(/^-+|-+$/g, '')
         }
+        if (
+          data?.compareAtPrice != null &&
+          data?.basePrice != null &&
+          data.compareAtPrice > 0 &&
+          data.compareAtPrice > data.basePrice
+        ) {
+          data.discountPercentage = Math.round(
+            ((data.compareAtPrice - data.basePrice) / data.compareAtPrice) *
+              100,
+          )
+        } else {
+          data.discountPercentage = 0
+        }
         return data
+      },
+    ],
+    afterChange: [
+      async ({ doc, previousDoc, req }) => {
+        // Trigger back-in-stock notifications when product goes from OOS to in-stock
+        const wasOOS =
+          (previousDoc as any)?.quantity === 0 &&
+          (previousDoc as any)?.trackQuantity
+        const nowInStock =
+          (doc as any)?.quantity > 0 && (doc as any)?.trackQuantity
+
+        if (wasOOS && nowInStock) {
+          try {
+            const wishlists = await req.payload.find({
+              collection: 'wishlist',
+              where: {
+                'items.product': { equals: (doc as any).id },
+              },
+              depth: 1,
+              limit: 100,
+            })
+
+            const notifiedCustomers = new Set<string>()
+            for (const wishlist of wishlists.docs as any[]) {
+              const customerEmail = wishlist.customer?.email
+
+              if (!customerEmail || notifiedCustomers.has(customerEmail))
+                continue
+              notifiedCustomers.add(customerEmail)
+
+              try {
+                const { sendBackInStockEmail } = await import('@/email/send')
+                await sendBackInStockEmail(
+                  req.payload,
+                  customerEmail,
+                  doc as any,
+                )
+              } catch {
+                // Skip failed notifications
+              }
+            }
+          } catch {
+            // Hook failure must not block product save
+          }
+        }
+
+        return doc
       },
     ],
   },
@@ -137,8 +197,42 @@ export const Products: CollectionConfig = {
       type: 'text',
     },
     {
+      name: 'cityOfOrigin',
+      type: 'text',
+      label: 'City of Origin',
+      admin: {
+        description:
+          'The city/region where this saree originates (e.g., Varanasi, Kanchipuram)',
+      },
+    },
+    {
       name: 'occasion',
       type: 'text',
+    },
+    {
+      name: 'tags',
+      type: 'text',
+      label: 'Tags',
+      admin: {
+        description:
+          'Comma-separated tags (e.g., Zari Work, Handwoven, Eco Friendly)',
+      },
+    },
+    {
+      name: 'features',
+      type: 'array',
+      label: 'Product Badges',
+      admin: {
+        description:
+          'Feature badges shown on product page (e.g., Handloom Verified, Premium Fabric)',
+      },
+      fields: [
+        {
+          name: 'label',
+          type: 'text',
+          required: true,
+        },
+      ],
     },
     {
       name: 'color',
@@ -191,6 +285,17 @@ export const Products: CollectionConfig = {
       min: 0,
     },
     {
+      name: 'discountPercentage',
+      type: 'number',
+      min: 0,
+      max: 100,
+      admin: {
+        readOnly: true,
+        hidden: true,
+        description: 'Auto-computed from basePrice and compareAtPrice',
+      },
+    },
+    {
       name: 'costPrice',
       type: 'number',
       min: 0,
@@ -204,6 +309,21 @@ export const Products: CollectionConfig = {
       name: 'shippingPrice',
       type: 'number',
       min: 0,
+    },
+    {
+      name: 'deliveryTime',
+      type: 'select',
+      label: 'Estimated Delivery Time',
+      options: [
+        { label: 'By Tomorrow', value: 'by-tomorrow' },
+        { label: 'Within 2 Days', value: 'within-2-days' },
+        { label: 'Within 5 Days', value: 'within-5-days' },
+        { label: 'Within 7 Days', value: 'within-7-days' },
+        { label: '7+ Days', value: '7-plus-days' },
+      ],
+      admin: {
+        description: 'Estimated delivery time displayed to customers',
+      },
     },
     {
       name: 'trackQuantity',
@@ -223,6 +343,16 @@ export const Products: CollectionConfig = {
       defaultValue: 5,
     },
     {
+      name: 'purchaseCount',
+      type: 'number',
+      min: 0,
+      defaultValue: 0,
+      admin: {
+        description:
+          'Auto-incremented on confirmed orders. Used for trending/popular ranking.',
+      },
+    },
+    {
       name: 'allowBackorder',
       type: 'checkbox',
       defaultValue: false,
@@ -239,6 +369,15 @@ export const Products: CollectionConfig = {
       hasMany: true,
       admin: {
         description: 'Curated editorial collections this product belongs to',
+      },
+    },
+    {
+      name: 'brand',
+      type: 'relationship',
+      relationTo: 'brands',
+      hasMany: false,
+      admin: {
+        description: 'Brand associated with this product',
       },
     },
   ],

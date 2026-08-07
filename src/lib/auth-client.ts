@@ -3,6 +3,7 @@ import { getServerURL } from './env'
 
 export const authClient = createAuthClient({
   baseURL: typeof window !== 'undefined' ? undefined : getServerURL(),
+  plugins: [],
 })
 
 export const { signIn, signUp, useSession, signOut } = authClient

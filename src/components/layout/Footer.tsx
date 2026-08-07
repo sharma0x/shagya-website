@@ -7,10 +7,9 @@ const footerLinks = {
     links: [
       { label: 'Silk Sarees', href: '/category/silk' },
       { label: 'Cotton Sarees', href: '/category/cotton' },
-      { label: 'Handloom', href: '/category/handloom' },
-      { label: 'Designer', href: '/category/designer' },
-      { label: 'New Arrivals', href: '/collections' },
-      { label: 'Bestsellers', href: '/category/silk' },
+      { label: 'Banarasi Sarees', href: '/category/banarasi' },
+      { label: 'Kanchipuram Sarees', href: '/category/kanchipuram' },
+      { label: 'All Sarees', href: '/category/all' },
     ],
   },
   company: {

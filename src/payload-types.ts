@@ -230,7 +230,9 @@ export interface EmailTemplate {
     | 'admin-order-refunded'
     | 'welcome-customer'
     | 'verify-email'
-    | 'magic-link';
+    | 'magic-link'
+    | 'back-in-stock'
+    | 'password-reset';
   /**
    * When unchecked, the system falls back to the built-in default template for this email.
    */
@@ -286,7 +288,24 @@ export interface Product {
   palluDetails?: string | null;
   borderType?: string | null;
   weavePattern?: string | null;
+  /**
+   * The city/region where this saree originates (e.g., Varanasi, Kanchipuram)
+   */
+  cityOfOrigin?: string | null;
   occasion?: string | null;
+  /**
+   * Comma-separated tags (e.g., Zari Work, Handwoven, Eco Friendly)
+   */
+  tags?: string | null;
+  /**
+   * Feature badges shown on product page (e.g., Handloom Verified, Premium Fabric)
+   */
+  features?:
+    | {
+        label: string;
+        id?: string | null;
+      }[]
+    | null;
   color:
     | 'red'
     | 'burgundy'
@@ -309,18 +328,34 @@ export interface Product {
     | null;
   basePrice: number;
   compareAtPrice?: number | null;
+  /**
+   * Auto-computed from basePrice and compareAtPrice
+   */
+  discountPercentage?: number | null;
   costPrice?: number | null;
   gstPercent?: number | null;
   shippingPrice?: number | null;
+  /**
+   * Estimated delivery time displayed to customers
+   */
+  deliveryTime?: ('by-tomorrow' | 'within-2-days' | 'within-5-days' | 'within-7-days' | '7-plus-days') | null;
   trackQuantity?: boolean | null;
   quantity?: number | null;
   lowStockThreshold?: number | null;
+  /**
+   * Auto-incremented on confirmed orders. Used for trending/popular ranking.
+   */
+  purchaseCount?: number | null;
   allowBackorder?: boolean | null;
   soldIndividually?: boolean | null;
   /**
    * Curated editorial collections this product belongs to
    */
   collections?: (number | Collection)[] | null;
+  /**
+   * Brand associated with this product
+   */
+  brand?: (number | null) | Brand;
   meta?: {
     title?: string | null;
     description?: string | null;
@@ -402,6 +437,18 @@ export interface Collection {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "brands".
+ */
+export interface Brand {
+  id: number;
+  name: string;
+  slug?: string | null;
+  description?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "categories".
  */
 export interface Category {
@@ -425,7 +472,67 @@ export interface Variant {
   id: number;
   product: number | Product;
   size: 'XS' | 'S' | 'M' | 'L' | 'XL' | '2XL' | '3XL' | '4XL' | '5XL' | '6XL' | 'Free';
-  color: string;
+  color:
+    | 'white'
+    | 'off-white'
+    | 'cream'
+    | 'ivory'
+    | 'beige'
+    | 'nude'
+    | 'black'
+    | 'charcoal'
+    | 'grey'
+    | 'silver'
+    | 'taupe'
+    | 'red'
+    | 'maroon'
+    | 'burgundy'
+    | 'wine'
+    | 'crimson'
+    | 'ruby'
+    | 'cherry'
+    | 'rose'
+    | 'pink'
+    | 'hot-pink'
+    | 'fuchsia'
+    | 'magenta'
+    | 'blush'
+    | 'peach'
+    | 'coral'
+    | 'salmon'
+    | 'orange'
+    | 'tangerine'
+    | 'rust'
+    | 'mustard'
+    | 'yellow'
+    | 'gold'
+    | 'saffron'
+    | 'amber'
+    | 'green'
+    | 'olive'
+    | 'emerald'
+    | 'mint'
+    | 'teal'
+    | 'sage'
+    | 'mehendi'
+    | 'pista'
+    | 'blue'
+    | 'navy-blue'
+    | 'royal-blue'
+    | 'sky-blue'
+    | 'turquoise'
+    | 'indigo'
+    | 'cobalt'
+    | 'purple'
+    | 'lavender'
+    | 'lilac'
+    | 'violet'
+    | 'plum'
+    | 'mauve'
+    | 'brown'
+    | 'tan'
+    | 'coffee'
+    | 'khaki';
   blouseSize?: string | null;
   sku?: string | null;
   stock?: number | null;
@@ -449,6 +556,34 @@ export interface Order {
   discount?: number | null;
   total: number;
   paymentId?: string | null;
+  /**
+   * Customer notes or delivery instructions
+   */
+  notes?: string | null;
+  /**
+   * Set when status changes to confirmed
+   */
+  confirmedAt?: string | null;
+  /**
+   * Set when status changes to shipped
+   */
+  shippedAt?: string | null;
+  /**
+   * Set when status changes to delivered
+   */
+  deliveredAt?: string | null;
+  /**
+   * Enter tracking ID from shipping provider (e.g. Shiprocket, Delhivery, India Post)
+   */
+  trackingId?: string | null;
+  /**
+   * Direct link to track this package
+   */
+  trackingUrl?: string | null;
+  /**
+   * Shipping method chosen at checkout
+   */
+  shippingType: 'standard' | 'express';
   shippingAddress?: {
     fullName?: string | null;
     phone?: string | null;
@@ -488,7 +623,7 @@ export interface Order {
  */
 export interface Customer {
   id: number;
-  name: string;
+  name?: string | null;
   email: string;
   phone?: string | null;
   betterAuthUserId?: string | null;
@@ -551,6 +686,14 @@ export interface Cart {
 export interface Coupon {
   id: number;
   code: string;
+  /**
+   * e.g., Diwali Sale 2026, Welcome Offer, Influencer — Ananya
+   */
+  description?: string | null;
+  /**
+   * Optional: unique identifier for influencer/collaborator tracking
+   */
+  influencerCode?: string | null;
   type: 'percentage' | 'fixed_amount' | 'free_shipping';
   value?: number | null;
   minCartValue?: number | null;
@@ -581,6 +724,15 @@ export interface Page {
         | {
             heading?: string | null;
             subheading?: string | null;
+            images?:
+              | {
+                  image: number | Media;
+                  id?: string | null;
+                }[]
+              | null;
+            /**
+             * Legacy single image. Used as fallback if "Images" array is empty.
+             */
             backgroundImage?: (number | null) | Media;
             ctaText?: string | null;
             ctaLink?: string | null;
@@ -731,18 +883,6 @@ export interface Review {
  * via the `definition` "tags".
  */
 export interface Tag {
-  id: number;
-  name: string;
-  slug?: string | null;
-  description?: string | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "brands".
- */
-export interface Brand {
   id: number;
   name: string;
   slug?: string | null;
@@ -1243,7 +1383,15 @@ export interface ProductsSelect<T extends boolean = true> {
   palluDetails?: T;
   borderType?: T;
   weavePattern?: T;
+  cityOfOrigin?: T;
   occasion?: T;
+  tags?: T;
+  features?:
+    | T
+    | {
+        label?: T;
+        id?: T;
+      };
   color?: T;
   gallery?:
     | T
@@ -1254,15 +1402,19 @@ export interface ProductsSelect<T extends boolean = true> {
       };
   basePrice?: T;
   compareAtPrice?: T;
+  discountPercentage?: T;
   costPrice?: T;
   gstPercent?: T;
   shippingPrice?: T;
+  deliveryTime?: T;
   trackQuantity?: T;
   quantity?: T;
   lowStockThreshold?: T;
+  purchaseCount?: T;
   allowBackorder?: T;
   soldIndividually?: T;
   collections?: T;
+  brand?: T;
   meta?:
     | T
     | {
@@ -1329,6 +1481,13 @@ export interface OrdersSelect<T extends boolean = true> {
   discount?: T;
   total?: T;
   paymentId?: T;
+  notes?: T;
+  confirmedAt?: T;
+  shippedAt?: T;
+  deliveredAt?: T;
+  trackingId?: T;
+  trackingUrl?: T;
+  shippingType?: T;
   shippingAddress?:
     | T
     | {
@@ -1423,6 +1582,8 @@ export interface CartsSelect<T extends boolean = true> {
  */
 export interface CouponsSelect<T extends boolean = true> {
   code?: T;
+  description?: T;
+  influencerCode?: T;
   type?: T;
   value?: T;
   minCartValue?: T;
@@ -1518,6 +1679,12 @@ export interface PagesSelect<T extends boolean = true> {
           | {
               heading?: T;
               subheading?: T;
+              images?:
+                | T
+                | {
+                    image?: T;
+                    id?: T;
+                  };
               backgroundImage?: T;
               ctaText?: T;
               ctaLink?: T;
@@ -1924,10 +2091,20 @@ export interface SiteSetting {
   returnPolicy?: string | null;
   announcementBar?: {
     enabled?: boolean | null;
-    text?: string | null;
+    announcements?:
+      | {
+          text: string;
+          link?: string | null;
+          id?: string | null;
+        }[]
+      | null;
   };
   gstPercent?: number | null;
   currency?: string | null;
+  /**
+   * Select coupons to display on the checkout page under pre-populated offers
+   */
+  activeCoupons?: (number | Coupon)[] | null;
   _status?: ('draft' | 'published') | null;
   updatedAt?: string | null;
   createdAt?: string | null;
@@ -1955,10 +2132,17 @@ export interface SiteSettingsSelect<T extends boolean = true> {
     | T
     | {
         enabled?: T;
-        text?: T;
+        announcements?:
+          | T
+          | {
+              text?: T;
+              link?: T;
+              id?: T;
+            };
       };
   gstPercent?: T;
   currency?: T;
+  activeCoupons?: T;
   _status?: T;
   updatedAt?: T;
   createdAt?: T;

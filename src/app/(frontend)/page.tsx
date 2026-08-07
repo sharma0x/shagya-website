@@ -4,7 +4,6 @@ import {
   RotateCcw,
   ShieldCheck,
   Sparkles,
-  Lock,
 } from 'lucide-react'
 import {
   IconBrandInstagram,
@@ -31,9 +30,35 @@ import { InstagramGallery } from '@/components/homepage/InstagramGallery'
 import { OccasionButton } from '@/components/homepage/OccasionButton'
 import { TestimonialCard } from '@/components/homepage/TestimonialCard'
 import { TrendingColors } from '@/components/homepage/TrendingColors'
+import { HeroCarousel } from '@/components/homepage/HeroCarousel'
 
 const ph = (w: number, h: number, bg: string, fg: string, text: string) =>
   `https://placehold.co/${w}x${h}/${bg}/${fg}?text=${encodeURIComponent(text)}&font=lora`
+
+function LexicalRenderer({ content }: { content: any }) {
+  if (!content || !content.root || !Array.isArray(content.root.children)) {
+    return null
+  }
+  return (
+    <div className="font-body space-y-4 text-[1.125rem] leading-relaxed text-neutral-600">
+      {content.root.children.map((block: any, idx: number) => {
+        if (block.type === 'paragraph' && Array.isArray(block.children)) {
+          return (
+            <p key={idx}>
+              {block.children.map((node: any, nIdx: number) => {
+                if (node.type === 'text') {
+                  return node.text
+                }
+                return null
+              })}
+            </p>
+          )
+        }
+        return null
+      })}
+    </div>
+  )
+}
 
 function ImagePanel({
   src,
@@ -269,6 +294,9 @@ export default async function HomePage({ searchParams }: Props) {
         subheading?: string | null
         ctaText?: string | null
         ctaLink?: string | null
+        images?:
+          | { image: { url?: string | null } | number; id?: string }[]
+          | null
         backgroundImage?: { url?: string | null } | number | null
         blockType: 'hero'
       }
@@ -332,11 +360,6 @@ export default async function HomePage({ searchParams }: Props) {
       title: 'Premium Fabric',
       description: 'Handpicked quality materials',
     },
-    {
-      icon: <Lock className="h-7 w-7" />,
-      title: 'Secure Payment',
-      description: 'Protected checkout',
-    },
   ]
 
   // ─── Determine which product block is which ──────────
@@ -370,104 +393,71 @@ export default async function HomePage({ searchParams }: Props) {
     },
   ]
 
-  const heroBackgroundUrl =
+  const fallbackHeroUrl =
     typeof heroBlock?.backgroundImage === 'object' &&
     heroBlock.backgroundImage?.url
       ? heroBlock.backgroundImage.url
       : '/images/hero/hero-main.png'
+
+  const heroSlides = (() => {
+    const imgs = heroBlock?.images
+    if (imgs && imgs.length > 0) {
+      return imgs.map((entry) => {
+        const url =
+          typeof entry.image === 'object' && entry.image?.url
+            ? entry.image.url
+            : fallbackHeroUrl
+        return {
+          imageUrl: url,
+          heading: heroBlock?.heading || (
+            <>
+              <span className="text-white">Timeless</span>{' '}
+              <span className="text-white">Elegance</span>
+              <br />
+              <span className="text-brand-300">in every drape</span>
+            </>
+          ),
+          subheading:
+            heroBlock?.subheading ||
+            "Every saree carries the story of the hands that wove it. Direct from India's weaving clusters — no middlemen, no markup.",
+          ctaText: heroBlock?.ctaText || 'Shop the collection',
+          ctaLink: heroBlock?.ctaLink || '/category/all',
+          secondaryCtaText: 'Our craft story',
+          secondaryCtaLink: '/about',
+        }
+      })
+    }
+    // Fallback: single slide from backgroundImage
+    return [
+      {
+        imageUrl: fallbackHeroUrl,
+        heading: heroBlock?.heading || (
+          <>
+            <span className="text-white">Timeless</span>{' '}
+            <span className="text-white">Elegance</span>
+            <br />
+            <span className="text-brand-300">in every drape</span>
+          </>
+        ),
+        subheading:
+          heroBlock?.subheading ||
+          "Every saree carries the story of the hands that wove it. Direct from India's weaving clusters — no middlemen, no markup.",
+        ctaText: heroBlock?.ctaText || 'Shop the collection',
+        ctaLink: heroBlock?.ctaLink || '/category/all',
+        secondaryCtaText: 'Our craft story',
+        secondaryCtaLink: '/about',
+      },
+    ]
+  })()
 
   return (
     <div className="overflow-hidden">
       {isPreview && <RefreshRouteOnSave />}
 
       {/* ═══════════════════════════════════════════════════
-          SECTION 1: HERO — Full-bleed background image
+          SECTION 1: HERO — Full-bleed background image(s)
           ═══════════════════════════════════════════════════ */}
-      <section className="relative overflow-hidden">
-        {/* Full-bleed background image */}
-        <div className="absolute inset-0">
-          <SkeletonImage
-            src={heroBackgroundUrl}
-            alt=""
-            fill
-            sizes="100vw"
-            className="object-cover"
-            loading="eager"
-            priority
-          />
-          {/* Dark overlay for text readability */}
-          <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-transparent" />
-        </div>
-
-        <div className="container-page relative flex items-center py-4 sm:py-6">
-          <div className="max-w-xl">
-            {/* Subtle branding tag */}
-            <div className="mb-3 flex items-center gap-2 text-[10px] font-medium tracking-[0.2em] text-white/70 uppercase">
-              <span className="bg-brand-400 h-px w-6" />
-              Shayga Handlooms
-            </div>
-
-            {/* Tagline */}
-            <h1 className="font-display text-3xl leading-[1.1] font-bold tracking-tight text-white sm:text-4xl md:text-5xl">
-              {heroBlock?.heading || (
-                <>
-                  <span className="text-white">Timeless</span>{' '}
-                  <span className="text-white">Elegance</span>
-                  <br />
-                  <span className="text-brand-300">in every drape</span>
-                </>
-              )}
-            </h1>
-
-            <p className="mt-3 max-w-[50ch] text-sm leading-relaxed text-white/80 sm:text-base">
-              {heroBlock?.subheading ||
-                "Every saree carries the story of the hands that wove it. Direct from India's weaving clusters — no middlemen, no markup."}
-            </p>
-
-            {/* CTAs */}
-            <div className="mt-5 flex flex-row flex-wrap items-center gap-3">
-              <Link
-                href={heroBlock?.ctaLink || '/category/all'}
-                className="group bg-brand-600 hover:bg-brand-500 inline-flex h-11 items-center gap-2 rounded-xl px-5 text-sm font-semibold text-white transition-all active:scale-[0.97]"
-              >
-                {heroBlock?.ctaText || 'Shop the collection'}
-                <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
-              </Link>
-              <Link
-                href="/about"
-                className="group text-brand-950 inline-flex h-11 items-center gap-2 rounded-xl border border-white/20 bg-white/90 px-5 text-sm font-semibold shadow-sm transition-all hover:bg-white active:scale-[0.97]"
-              >
-                Our craft story
-                <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
-              </Link>
-            </div>
-
-            {/* Stats bar */}
-            <div className="mt-6 flex items-center gap-5 text-xs text-white/60">
-              <div>
-                <span className="font-display block text-base font-semibold text-white">
-                  6
-                </span>
-                <span className="text-[10px]">Weaving clusters</span>
-              </div>
-              <div className="h-8 w-px bg-white/20" />
-              <div>
-                <span className="font-display block text-base font-semibold text-white">
-                  10+
-                </span>
-                <span className="text-[10px]">Traditional weaves</span>
-              </div>
-              <div className="h-8 w-px bg-white/20" />
-              <div>
-                <span className="font-display block text-base font-semibold text-white">
-                  100%
-                </span>
-                <span className="text-[10px]">Maker-traced</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <HeroCarousel slides={heroSlides} />
 
       {/* ═══════════════════════════════════════════════════
           SECTION 2: TRUST FEATURES
@@ -826,6 +816,7 @@ export default async function HomePage({ searchParams }: Props) {
                       'Customer'
                     }
                     rating={review.rating}
+                    avatarUrl={review.customer?.image || null}
                   />
                 ))
             ) : (
@@ -853,6 +844,55 @@ export default async function HomePage({ searchParams }: Props) {
           </div>
         </div>
       </section>
+
+      {/* ═══════════════════════════════════════════════════
+          CMS CONTENT BLOCKS — Admin-configurable sections
+          from the Home page layout in Payload
+          ═══════════════════════════════════════════════════ */}
+      {homeDoc?.content?.map((block: any, idx: number) => {
+        if (block.blockType === 'textImage') {
+          const imgSrc =
+            block.image && typeof block.image === 'object'
+              ? block.image.sizes?.card?.url || block.image.url
+              : ph(800, 800, 'a97e34', 'fff8ec', 'Craft Story')
+
+          return (
+            <section
+              key={`cms-${idx}`}
+              className="scroll-reveal border-y border-neutral-200 bg-neutral-50"
+            >
+              <div className="container-page grid items-center gap-8 py-16 sm:gap-12 sm:py-24 md:py-32 lg:grid-cols-12 lg:gap-20">
+                <div
+                  className={`lg:col-span-5 ${block.imagePosition === 'right' ? 'lg:order-2' : ''}`}
+                >
+                  <ImagePanel
+                    src={imgSrc}
+                    alt={block.heading}
+                    className="aspect-square w-full shadow-lg"
+                  />
+                </div>
+                <div
+                  className={`lg:col-span-7 ${block.imagePosition === 'right' ? 'lg:order-1' : ''}`}
+                >
+                  <div
+                    className="bg-gold-400 mb-5 h-px w-12"
+                    aria-hidden="true"
+                  />
+                  <h2 className="text-headline font-display font-semibold tracking-tight text-neutral-900">
+                    {block.heading}
+                  </h2>
+                  <div className="mt-6 max-w-[58ch]">
+                    {block.body ? (
+                      <LexicalRenderer content={block.body} />
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+            </section>
+          )
+        }
+        return null
+      })}
 
       {/* ═══════════════════════════════════════════════════
           SECTION 10: NEWSLETTER + PROMISE (side by side)

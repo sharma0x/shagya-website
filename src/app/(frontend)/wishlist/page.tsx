@@ -3,31 +3,28 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import Image from 'next/image'
 import { useSession } from '@/lib/auth-client'
-import { ArrowLeft, ShoppingBag, Trash2, Heart, Loader2 } from 'lucide-react'
+import { useCart } from '@/lib/store/cart'
+import { ArrowLeft, ShoppingBag, Heart, Loader2 } from 'lucide-react'
+import {
+  ProductCard,
+  type ProductCardProduct,
+} from '@/components/product/ProductCard'
 
 interface WishlistItem {
   id: string
-  product: {
-    id: number
-    name: string
-    slug: string
-    basePrice: number
-    compareAtPrice?: number
-    fabric?: string
-    weave?: string
-    gallery?: Array<{ image?: { url?: string }; alt?: string }>
+  product: ProductCardProduct & {
+    gallery?: any
+    trackQuantity?: boolean
+    quantity?: number
   }
   variant?: number | { id: number } | null
 }
 
-const ph = (w: number, h: number, bg: string, fg: string, text: string) =>
-  `https://placehold.co/${w}x${h}/${bg}/${fg}?text=${encodeURIComponent(text)}&font=lora`
-
 export default function WishlistPage() {
   const router = useRouter()
   const { data: sessionData, isPending } = useSession()
+  const { addItem } = useCart()
 
   const [items, setItems] = useState<WishlistItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -77,23 +74,24 @@ export default function WishlistPage() {
   }
 
   const handleMoveToCart = async (product: WishlistItem['product']) => {
+    if (product.trackQuantity && (product.quantity ?? 0) <= 0) {
+      return
+    }
     setActionLoading(String(product.id))
     try {
-      const res = await fetch('/api/cart', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          items: [
-            {
-              product: product.id,
-              quantity: 1,
-              unitPrice: product.basePrice,
-            },
-          ],
-        }),
-      })
-
-      if (!res.ok) throw new Error('Failed to add to cart')
+      addItem(
+        {
+          id: Number(product.id),
+          name: product.name,
+          slug: product.slug || '',
+          basePrice: product.basePrice || 0,
+          compareAtPrice: product.compareAtPrice ?? undefined,
+          gallery: product.gallery as any,
+          fabric: product.fabric || '',
+          weave: product.weave || '',
+        },
+        1,
+      )
 
       await fetch('/api/wishlist', {
         method: 'POST',
@@ -163,93 +161,45 @@ export default function WishlistPage() {
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
+          <div className="grid grid-cols-2 gap-x-3 gap-y-5 sm:gap-x-4 sm:gap-y-8 lg:grid-cols-3 xl:grid-cols-4">
             {items.map((item) => {
               const product = item.product
-              const imageUrl = product.gallery?.[0]?.image?.url
               const isThisLoading = actionLoading === String(product.id)
+              const isOOS =
+                product.trackQuantity === true && (product.quantity ?? 0) <= 0
               return (
-                <div
-                  key={item.id}
-                  className="group flex flex-col overflow-hidden rounded-2xl border border-neutral-100 bg-white shadow-xs transition-all duration-300 hover:shadow-md"
-                >
-                  {/* Image Frame */}
-                  <Link
-                    href={`/products/${product.slug}`}
-                    className="relative block h-80 w-full overflow-hidden border-b border-neutral-100 bg-neutral-100"
-                  >
-                    {imageUrl ? (
-                      <Image
-                        src={imageUrl}
-                        alt={product.name}
-                        fill
-                        sizes="33vw"
-                        className="object-cover transition-transform duration-700 group-hover:scale-105"
-                        unoptimized={imageUrl.startsWith(
-                          'https://placehold.co',
-                        )}
-                      />
+                <div key={item.id} className="flex flex-col">
+                  <ProductCard
+                    product={product}
+                    variant="grid"
+                    showWishlist={false}
+                  />
+                  <div className="mt-2 flex gap-2">
+                    {isOOS ? (
+                      <span className="font-display flex h-9 flex-1 items-center justify-center rounded-lg border border-neutral-200 bg-neutral-50 text-[11px] font-semibold text-neutral-400">
+                        Out of Stock
+                      </span>
                     ) : (
-                      <div className="relative h-full w-full">
-                        <Image
-                          src={ph(
-                            400,
-                            500,
-                            '69254e',
-                            'f5e8ee',
-                            product.name?.charAt(0) || 'S',
-                          )}
-                          alt={product.name || 'Shayga saree'}
-                          fill
-                          sizes="33vw"
-                          className="object-cover"
-                          unoptimized
-                        />
-                      </div>
+                      <button
+                        disabled={isThisLoading}
+                        onClick={() => handleMoveToCart(product)}
+                        className="bg-brand-600 hover:bg-brand-700 font-display flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg text-[11px] font-semibold text-white transition-all active:scale-95 disabled:opacity-50"
+                      >
+                        {isThisLoading ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <ShoppingBag className="h-3 w-3" />
+                        )}
+                        Move to Bag
+                      </button>
                     )}
                     <button
                       disabled={!!actionLoading}
-                      onClick={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                        handleRemove(product.id)
-                      }}
-                      className="absolute top-4 right-4 flex h-8 w-8 items-center justify-center rounded-full border border-neutral-200/50 bg-white/90 text-neutral-600 shadow-xs transition-colors hover:bg-white hover:text-red-600"
+                      onClick={() => handleRemove(product.id as number)}
+                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-neutral-200 bg-white text-neutral-400 transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-500"
                       title="Remove from Wishlist"
                     >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </Link>
-
-                  {/* Details */}
-                  <div className="flex flex-1 flex-col justify-between p-5">
-                    <div>
-                      <Link href={`/products/${product.slug}`}>
-                        <h3 className="font-display hover:text-brand-700 line-clamp-1 text-sm leading-snug font-semibold tracking-tight text-neutral-900 transition-colors">
-                          {product.name}
-                        </h3>
-                      </Link>
-                      {product.weave && (
-                        <p className="font-body mt-1 text-[10px] tracking-wider text-neutral-400 uppercase">
-                          {product.weave} · {product.fabric}
-                        </p>
-                      )}
-                      <p className="font-body mt-2 text-sm font-bold text-neutral-950">
-                        ₹{product.basePrice?.toLocaleString('en-IN')}
-                      </p>
-                    </div>
-
-                    <button
-                      disabled={isThisLoading}
-                      onClick={() => handleMoveToCart(product)}
-                      className="hover:bg-brand-700 font-display mt-5 inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-xl bg-neutral-900 text-xs font-semibold text-white transition-all active:scale-95 disabled:opacity-50"
-                    >
-                      {isThisLoading ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      ) : (
-                        <ShoppingBag className="h-3.5 w-3.5" />
-                      )}
-                      Move to Bag
+                      <Heart className="h-3.5 w-3.5 fill-current" />
                     </button>
                   </div>
                 </div>

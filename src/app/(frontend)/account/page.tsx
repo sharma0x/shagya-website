@@ -14,8 +14,12 @@ import {
   Loader2,
   Calendar,
   CreditCard,
-  ShieldCheck,
+  Pencil,
+  Check,
+  X,
+  TicketPercent,
 } from 'lucide-react'
+import { PhoneInput } from '@/components/ui/phone-input'
 
 interface Order {
   id: string
@@ -43,6 +47,14 @@ export default function AccountDashboardPage() {
   const [defaultAddress, setDefaultAddress] = useState<Address | null>(null)
   const [loadingData, setLoadingData] = useState(true)
 
+  const [profileName, setProfileName] = useState('')
+  const [profilePhone, setProfilePhone] = useState('')
+  const [profileEmail, setProfileEmail] = useState('')
+  const [editing, setEditing] = useState(false)
+  const [editName, setEditName] = useState('')
+  const [editPhone, setEditPhone] = useState('')
+  const [saving, setSaving] = useState(false)
+
   useEffect(() => {
     if (isPending) return
     if (!sessionData?.user) {
@@ -52,9 +64,10 @@ export default function AccountDashboardPage() {
 
     async function loadDashboardData() {
       try {
-        const [ordersRes, addrRes] = await Promise.all([
+        const [ordersRes, addrRes, profileRes] = await Promise.all([
           fetch('/api/orders'),
           fetch('/api/addresses'),
+          fetch('/api/customers/me'),
         ])
 
         if (ordersRes.ok) {
@@ -66,6 +79,15 @@ export default function AccountDashboardPage() {
           const aData = await addrRes.json()
           const defAddr = aData.addresses?.find((a: Address) => a.isDefault)
           setDefaultAddress(defAddr || aData.addresses?.[0] || null)
+        }
+
+        if (profileRes.ok) {
+          const pData = await profileRes.json()
+          setProfileName(pData.name || '')
+          setProfilePhone(pData.phone || '')
+          setProfileEmail(pData.email || sessionData?.user?.email || '')
+        } else {
+          setProfileEmail(sessionData?.user?.email || '')
         }
       } catch (err) {
         console.error('Failed to load dashboard data', err)
@@ -80,6 +102,35 @@ export default function AccountDashboardPage() {
   const handleSignOut = async () => {
     await signOut()
     router.push('/account/login')
+  }
+
+  const handleStartEdit = () => {
+    setEditName(profileName)
+    setEditPhone(profilePhone)
+    setEditing(true)
+  }
+
+  const handleCancelEdit = () => {
+    setEditing(false)
+  }
+
+  const handleSave = async () => {
+    setSaving(true)
+    try {
+      const res = await fetch('/api/customers/me', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: editName, phone: editPhone }),
+      })
+      if (!res.ok) throw new Error('Failed to update profile')
+      setProfileName(editName)
+      setProfilePhone(editPhone)
+      setEditing(false)
+    } catch (err) {
+      console.error('Failed to update profile', err)
+    } finally {
+      setSaving(false)
+    }
   }
 
   if (isPending || loadingData) {
@@ -105,11 +156,8 @@ export default function AccountDashboardPage() {
               Customer Area
             </span>
             <h1 className="font-display mt-1 text-3xl font-bold text-neutral-900">
-              Namaste, {user?.name}
+              Namaste, {profileName || user?.name || 'Guest'}
             </h1>
-            <p className="font-body mt-1 text-sm text-neutral-500">
-              {user?.email}
-            </p>
           </div>
           <button
             onClick={handleSignOut}
@@ -120,54 +168,175 @@ export default function AccountDashboardPage() {
           </button>
         </div>
 
+        {/* Profile Card */}
+        <div className="mb-8 rounded-2xl border border-neutral-100 bg-white p-5 shadow-xs sm:p-6">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="font-display flex items-center gap-2 text-lg font-semibold text-neutral-900">
+              <User className="text-brand-600 h-5 w-5" />
+              Profile
+            </h2>
+            {!editing ? (
+              <button
+                onClick={handleStartEdit}
+                className="font-display inline-flex items-center gap-1.5 rounded-xl border border-neutral-200 bg-white px-3 py-1.5 text-xs font-semibold text-neutral-600 transition-colors hover:bg-neutral-50"
+              >
+                <Pencil className="h-3.5 w-3.5" />
+                Edit
+              </button>
+            ) : (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="bg-brand-600 hover:bg-brand-700 font-display inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold text-white transition-colors disabled:opacity-50"
+                >
+                  {saving ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Check className="h-3.5 w-3.5" />
+                  )}
+                  Save
+                </button>
+                <button
+                  onClick={handleCancelEdit}
+                  className="font-display inline-flex items-center gap-1.5 rounded-xl border border-neutral-200 bg-white px-3 py-1.5 text-xs font-semibold text-neutral-600 transition-colors hover:bg-neutral-50"
+                >
+                  <X className="h-3.5 w-3.5" />
+                  Cancel
+                </button>
+              </div>
+            )}
+          </div>
+
+          {!editing ? (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <div>
+                <span className="font-display text-[10px] font-semibold tracking-wider text-neutral-400 uppercase">
+                  Name
+                </span>
+                <p className="font-body mt-0.5 text-sm text-neutral-900">
+                  {profileName || '\u2014'}
+                </p>
+              </div>
+              <div>
+                <span className="font-display text-[10px] font-semibold tracking-wider text-neutral-400 uppercase">
+                  Email
+                </span>
+                <p className="font-body mt-0.5 text-sm text-neutral-500">
+                  {profileEmail || '\u2014'}
+                </p>
+              </div>
+              <div>
+                <span className="font-display text-[10px] font-semibold tracking-wider text-neutral-400 uppercase">
+                  Phone
+                </span>
+                <p className="font-body mt-0.5 text-sm text-neutral-900">
+                  {profilePhone || '\u2014'}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <div>
+                <label className="font-display block text-[10px] font-semibold tracking-wider text-neutral-400 uppercase">
+                  Name
+                </label>
+                <input
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="font-body focus:border-brand-500 mt-1 h-10 w-full rounded-lg border border-neutral-200 bg-white px-3 text-sm text-neutral-900 transition-colors outline-none"
+                  placeholder="Your name"
+                />
+              </div>
+              <div>
+                <label className="font-display block text-[10px] font-semibold tracking-wider text-neutral-400 uppercase">
+                  Email
+                </label>
+                <p className="font-body mt-2 text-sm text-neutral-400">
+                  {profileEmail}
+                </p>
+              </div>
+              <div>
+                <label className="font-display block text-[10px] font-semibold tracking-wider text-neutral-400 uppercase">
+                  Phone
+                </label>
+                <div className="mt-1">
+                  <PhoneInput
+                    value={editPhone}
+                    onChange={setEditPhone}
+                    placeholder="98765 43210"
+                    className="h-10"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Dashboard Hub Navigation Cards */}
-        <div className="mb-10 grid grid-cols-1 gap-6 md:grid-cols-3">
+        <div className="mb-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Link
             href="/account/orders"
-            className="hover:border-brand-300 group rounded-2xl border border-neutral-100 bg-white p-6 shadow-xs transition-all"
+            className="hover:border-brand-300 group rounded-2xl border border-neutral-100 bg-white p-5 shadow-xs transition-all"
           >
-            <div className="bg-brand-50 text-brand-700 mb-4 flex h-10 w-10 items-center justify-center rounded-xl transition-transform group-hover:scale-110">
-              <ShoppingBag className="h-5 w-5" />
+            <div className="bg-brand-50 text-brand-700 mb-3 flex h-9 w-9 items-center justify-center rounded-xl transition-transform group-hover:scale-110">
+              <ShoppingBag className="h-4.5 w-4.5" />
             </div>
             <h3 className="font-display flex items-center justify-between text-sm font-semibold text-neutral-900">
               Order History
               <ArrowRight className="group-hover:text-brand-600 h-4 w-4 text-neutral-300 transition-colors" />
             </h3>
-            <p className="font-body mt-2 text-xs text-neutral-500">
-              Review and track your saree dispatches, invoices, and details.
+            <p className="font-body mt-1.5 text-[11px] text-neutral-500">
+              Track your saree dispatches and invoices.
             </p>
           </Link>
 
           <Link
             href="/account/addresses"
-            className="hover:border-brand-300 group rounded-2xl border border-neutral-100 bg-white p-6 shadow-xs transition-all"
+            className="hover:border-brand-300 group rounded-2xl border border-neutral-100 bg-white p-5 shadow-xs transition-all"
           >
-            <div className="bg-brand-50 text-brand-700 mb-4 flex h-10 w-10 items-center justify-center rounded-xl transition-transform group-hover:scale-110">
-              <MapPin className="h-5 w-5" />
+            <div className="bg-brand-50 text-brand-700 mb-3 flex h-9 w-9 items-center justify-center rounded-xl transition-transform group-hover:scale-110">
+              <MapPin className="h-4.5 w-4.5" />
             </div>
             <h3 className="font-display flex items-center justify-between text-sm font-semibold text-neutral-900">
               Addresses
               <ArrowRight className="group-hover:text-brand-600 h-4 w-4 text-neutral-300 transition-colors" />
             </h3>
-            <p className="font-body mt-2 text-xs text-neutral-500">
-              Manage your delivery addresses and set defaults for quick
-              checkout.
+            <p className="font-body mt-1.5 text-[11px] text-neutral-500">
+              Manage delivery addresses and defaults.
             </p>
           </Link>
 
           <Link
             href="/wishlist"
-            className="hover:border-brand-300 group rounded-2xl border border-neutral-100 bg-white p-6 shadow-xs transition-all"
+            className="hover:border-brand-300 group rounded-2xl border border-neutral-100 bg-white p-5 shadow-xs transition-all"
           >
-            <div className="bg-brand-50 text-brand-700 mb-4 flex h-10 w-10 items-center justify-center rounded-xl transition-transform group-hover:scale-110">
-              <Heart className="h-5 w-5" />
+            <div className="bg-brand-50 text-brand-700 mb-3 flex h-9 w-9 items-center justify-center rounded-xl transition-transform group-hover:scale-110">
+              <Heart className="h-4.5 w-4.5" />
             </div>
             <h3 className="font-display flex items-center justify-between text-sm font-semibold text-neutral-900">
               Wishlist
               <ArrowRight className="group-hover:text-brand-600 h-4 w-4 text-neutral-300 transition-colors" />
             </h3>
-            <p className="font-body mt-2 text-xs text-neutral-500">
-              Save your favorite handlooms, weaves, and patterns for later.
+            <p className="font-body mt-1.5 text-[11px] text-neutral-500">
+              Save handlooms and weaves for later.
+            </p>
+          </Link>
+
+          <Link
+            href="/account/offers"
+            className="hover:border-brand-300 group rounded-2xl border border-neutral-100 bg-white p-5 shadow-xs transition-all"
+          >
+            <div className="bg-brand-50 text-brand-700 mb-3 flex h-9 w-9 items-center justify-center rounded-xl transition-transform group-hover:scale-110">
+              <TicketPercent className="h-4.5 w-4.5" />
+            </div>
+            <h3 className="font-display flex items-center justify-between text-sm font-semibold text-neutral-900">
+              My Offers
+              <ArrowRight className="group-hover:text-brand-600 h-4 w-4 text-neutral-300 transition-colors" />
+            </h3>
+            <p className="font-body mt-1.5 text-[11px] text-neutral-500">
+              Active coupons and special discounts for you.
             </p>
           </Link>
         </div>

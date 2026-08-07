@@ -9,9 +9,7 @@ export async function proxy(request: NextRequest) {
   const sessionCookie = getSessionCookie(request)
   const isLoginPage =
     cleanPath === '/account/login' || cleanPath === '/account/register'
-  const isCustomerProtected =
-    (cleanPath.startsWith('/account') || cleanPath.startsWith('/checkout')) &&
-    !isLoginPage
+  const isCustomerProtected = cleanPath.startsWith('/account') && !isLoginPage
 
   if (isCustomerProtected && !sessionCookie) {
     const url = request.nextUrl.clone()

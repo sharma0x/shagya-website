@@ -23,6 +23,24 @@ export const Coupons: CollectionConfig = {
       index: true,
     },
     {
+      name: 'description',
+      type: 'text',
+      label: 'Campaign Description',
+      admin: {
+        description:
+          'e.g., Diwali Sale 2026, Welcome Offer, Influencer — Ananya',
+      },
+    },
+    {
+      name: 'influencerCode',
+      type: 'text',
+      label: 'Influencer Tracking Code',
+      admin: {
+        description:
+          'Optional: unique identifier for influencer/collaborator tracking',
+      },
+    },
+    {
       name: 'type',
       type: 'select',
       required: true,
@@ -37,6 +55,16 @@ export const Coupons: CollectionConfig = {
       name: 'value',
       type: 'number',
       min: 0,
+      validate: (val: number | null | undefined, { data }: { data: any }) => {
+        if (
+          data?.type &&
+          data.type !== 'free_shipping' &&
+          (val == null || val <= 0)
+        ) {
+          return 'Discount value is required for percentage and fixed amount coupons'
+        }
+        return true
+      },
       admin: {
         condition: (data) => data?.type && data.type !== 'free_shipping',
       },

@@ -1,16 +1,15 @@
 export const getServerURL = (): string => {
-  if (process.env.NEXT_PUBLIC_SERVER_URL) {
-    return process.env.NEXT_PUBLIC_SERVER_URL
+  // Client-side: use the browser's current origin — always correct
+  if (typeof window !== 'undefined') {
+    return window.location.origin
   }
 
-  if (process.env.NEXT_PUBLIC_VERCEL_URL) {
-    return `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
-  }
-
+  // Server-side in Vercel: use the auto-assigned deployment URL
   if (process.env.VERCEL_URL) {
     return `https://${process.env.VERCEL_URL}`
   }
 
+  // Local development
   return 'http://localhost:3000'
 }
 

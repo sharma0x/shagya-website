@@ -1,14 +1,16 @@
 'use client'
 
-import { useCallback, useRef, useState } from 'react'
-import { AlertCircle, Check, ChevronDown, Loader2 } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { AlertCircle, Check, ChevronDown, Loader2, MapPin } from 'lucide-react'
 import {
   ALL_COUNTRIES,
   DEFAULT_COUNTRY,
   OTHER_COUNTRY_VALUE,
 } from '@/lib/countries'
 import { INDIAN_STATES } from '@/lib/indian-states'
+import type { CitySearchResult } from '@/lib/india-post'
 import { Button } from '@/components/ui/button'
+import { PhoneInput } from '@/components/ui/phone-input'
 
 export interface AddressFormData {
   fullName: string
@@ -81,72 +83,92 @@ export function AddressForm({
     initialData?.pincode ?? '',
   )
 
-  // Monotonic request token. Each call to handlePincodeBlur increments the
-  // ref. When a response resolves, it only mutates state if its token is the
-  // latest one — otherwise a stale response can clobber a newer one.
   const requestTokenRef = useRef(0)
+  const verifyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (verifyTimerRef.current) {
+        clearTimeout(verifyTimerRef.current)
+        verifyTimerRef.current = null
+      }
+      requestTokenRef.current += 1
+    }
+  }, [])
+
+  const [searchingCity, setSearchingCity] = useState(false)
+  const [citySuggestions, setCitySuggestions] = useState<CitySearchResult[]>([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
 
   const isOtherCountry = country === OTHER_COUNTRY_VALUE
   const isIndia = country === DEFAULT_COUNTRY
 
   const handleCountryChange = (value: string) => {
-    if (value !== DEFAULT_COUNTRY) {
-      setState('')
-    }
+    if (value !== DEFAULT_COUNTRY) setState('')
     setCountry(value)
   }
 
-  const handlePincodeBlur = useCallback(async () => {
-    const trimmed = pincode.trim()
-    if (trimmed.length !== 6) return
-    if (trimmed === verifiedPincode && pincodeVerified) return
-    if (!/^[1-9][0-9]{5}$/.test(trimmed)) {
-      setPincodeError('Invalid pincode format')
-      return
-    }
-
-    const token = ++requestTokenRef.current
-    setVerifyingPincode(true)
-    setPincodeError('')
-    setPincodeVerified(false)
-
-    try {
-      const res = await fetch('/api/pincode/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pincode: trimmed }),
-      })
-
-      // A newer call has started — drop this stale response.
-      if (token !== requestTokenRef.current) return
-
-      const body = await res.json()
-
-      if (token !== requestTokenRef.current) return
-
-      if (!res.ok || body.error) {
-        setPincodeError(body.error || 'Pincode not found')
+  const verifyPincode = useCallback(
+    async (trimmed: string) => {
+      if (trimmed.length !== 6) return
+      if (trimmed === verifiedPincode && pincodeVerified) return
+      if (!/^[1-9][0-9]{5}$/.test(trimmed)) {
+        setPincodeError('Invalid pincode format')
         return
       }
 
-      const data = body.data
-      setPincodeVerified(true)
-      setVerifiedPincode(trimmed)
-
-      setCity(data.city)
-      setState(data.state)
-      setCountry('India')
-
+      const token = ++requestTokenRef.current
+      setVerifyingPincode(true)
       setPincodeError('')
-    } catch {
-      if (token !== requestTokenRef.current) return
-      setPincodeError('Could not verify pincode. Try again.')
-    } finally {
-      if (token === requestTokenRef.current) {
-        setVerifyingPincode(false)
+      setPincodeVerified(false)
+
+      try {
+        const res = await fetch('/api/pincode/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pincode: trimmed }),
+        })
+        if (token !== requestTokenRef.current) return
+        const body = await res.json()
+        if (token !== requestTokenRef.current) return
+        if (!res.ok || body.error) {
+          setPincodeError(body.error || 'Pincode not found')
+          return
+        }
+        const data = body.data
+        setPincodeVerified(true)
+        setVerifiedPincode(trimmed)
+        setCity(data.city)
+        setState(data.state)
+        setCountry('India')
+        setPincodeError('')
+        setCitySuggestions([])
+        setShowSuggestions(false)
+      } catch {
+        if (token !== requestTokenRef.current) return
+        setPincodeError('Could not verify pincode. Try again.')
+      } finally {
+        if (token === requestTokenRef.current) setVerifyingPincode(false)
       }
-    }
-  }, [pincode, verifiedPincode, pincodeVerified])
+    },
+    [verifiedPincode, pincodeVerified],
+  )
+
+  const scheduleVerify = useCallback(
+    (value: string) => {
+      if (verifyTimerRef.current) {
+        clearTimeout(verifyTimerRef.current)
+      }
+      const trimmed = value.trim()
+      if (trimmed.length === 6 && /^[1-9][0-9]{5}$/.test(trimmed)) {
+        verifyTimerRef.current = setTimeout(() => {
+          verifyTimerRef.current = null
+          verifyPincode(trimmed)
+        }, 450)
+      }
+    },
+    [verifyPincode],
+  )
 
   const handlePincodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, '').slice(0, 6)
@@ -155,6 +177,56 @@ export function AddressForm({
       setPincodeVerified(false)
       setPincodeError('')
     }
+    scheduleVerify(value)
+  }
+
+  const handlePincodeBlur = () => {
+    if (verifyTimerRef.current) {
+      clearTimeout(verifyTimerRef.current)
+      verifyTimerRef.current = null
+    }
+    verifyPincode(pincode.trim())
+  }
+
+  const handleCityBlur = useCallback(async () => {
+    setShowSuggestions(false)
+    if (pincodeVerified) return
+    const trimmed = city.trim()
+    if (trimmed.length < 3) return
+    if (!isIndia) return
+    setSearchingCity(true)
+    setCitySuggestions([])
+    try {
+      const res = await fetch(
+        `/api/pincode/city-search?city=${encodeURIComponent(trimmed)}`,
+      )
+      const body = await res.json()
+      if (!res.ok || body.error || !body.data?.length) return
+      const results: CitySearchResult[] = body.data
+      if (results.length === 1 && results[0].pincodes.length === 1) {
+        const r = results[0]
+        setPincode(r.pincodes[0])
+        setState(r.state)
+        setCountry('India')
+      } else {
+        setCitySuggestions(results)
+        setShowSuggestions(true)
+      }
+    } catch {
+    } finally {
+      setSearchingCity(false)
+    }
+  }, [city, isIndia, pincodeVerified])
+
+  const selectPincodeFromCity = (
+    result: CitySearchResult,
+    pincodeValue: string,
+  ) => {
+    setPincode(pincodeValue)
+    setState(result.state)
+    setCountry('India')
+    setShowSuggestions(false)
+    setCitySuggestions([])
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -205,18 +277,13 @@ export function AddressForm({
           >
             Phone Number
           </label>
-          <input
-            id="address-phone"
-            type="tel"
-            required
+          <PhoneInput
             value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            className={textInputClass}
+            onChange={setPhone}
             placeholder={initialData?.phone ? undefined : '10-digit mobile'}
           />
         </div>
       </div>
-
       <div>
         <label
           htmlFor="address-line1"
@@ -236,7 +303,6 @@ export function AddressForm({
           }
         />
       </div>
-
       <div>
         <label
           htmlFor="address-line2"
@@ -253,24 +319,57 @@ export function AddressForm({
           placeholder="Landmark, Suite, etc."
         />
       </div>
-
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div>
+        <div className="relative">
           <label
             htmlFor="address-city"
             className="font-display mb-1 block text-xs font-semibold tracking-wider text-neutral-500 uppercase"
           >
             City
           </label>
-          <input
-            id="address-city"
-            type="text"
-            required
-            value={city}
-            onChange={(e) => setCity(e.target.value)}
-            className={textInputClass}
-            placeholder={initialData?.city ? undefined : 'City'}
-          />
+          <div className="relative">
+            <input
+              id="address-city"
+              type="text"
+              required
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              onBlur={handleCityBlur}
+              onFocus={() => {
+                if (!pincodeVerified && citySuggestions.length > 0)
+                  setShowSuggestions(true)
+              }}
+              className={`${textInputClass} pr-8`}
+              placeholder={initialData?.city ? undefined : 'City'}
+            />
+            {searchingCity && (
+              <Loader2 className="pointer-events-none absolute top-1/2 right-2.5 h-3.5 w-3.5 -translate-y-1/2 animate-spin text-neutral-400" />
+            )}
+          </div>
+          {showSuggestions && citySuggestions.length > 0 && (
+            <div className="absolute z-10 mt-1 w-full rounded-xl border border-neutral-200 bg-white shadow-lg">
+              <div className="max-h-48 overflow-y-auto py-1">
+                {citySuggestions.map((result) =>
+                  result.pincodes.map((pc) => (
+                    <button
+                      key={`${result.city}-${pc}`}
+                      type="button"
+                      onClick={() => selectPincodeFromCity(result, pc)}
+                      className="hover:bg-brand-50 flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition-colors"
+                    >
+                      <MapPin className="h-3 w-3 shrink-0 text-neutral-400" />
+                      <span className="font-display font-semibold text-neutral-900">
+                        {pc}
+                      </span>
+                      <span className="font-body text-neutral-500">
+                        {result.city}, {result.state}
+                      </span>
+                    </button>
+                  )),
+                )}
+              </div>
+            </div>
+          )}
         </div>
         <div>
           <label
@@ -354,15 +453,13 @@ export function AddressForm({
               id="address-pincode-status"
               role="status"
               aria-live="polite"
-              className="text-success mt-1 text-xs"
+              className="sr-only"
             >
-              Verified &mdash; city &amp; state auto-filled. You can edit if
-              needed.
+              Verified &mdash; city &amp; state auto-filled
             </p>
           )}
         </div>
       </div>
-
       <div>
         <label
           htmlFor="address-country"
@@ -398,7 +495,6 @@ export function AddressForm({
           />
         )}
       </div>
-
       {showDefaultCheckbox && (
         <div className="flex items-center gap-2">
           <input
@@ -416,7 +512,6 @@ export function AddressForm({
           </label>
         </div>
       )}
-
       <div className="flex justify-end gap-3 pt-2">
         <Button
           type="button"

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import { auth } from '@/lib/auth'
+import { mergeCartItems, normalizeVariant } from '@/lib/cart-merge'
 
 /**
  * GET /api/cart
@@ -117,7 +118,7 @@ export async function POST(request: Request): Promise<NextResponse> {
           typeof item.product === 'object' && item.product !== null
             ? item.product.id
             : item.product,
-        variant: item.variant || null,
+        variant: normalizeVariant(item.variant),
         quantity: item.quantity,
         unitPrice: item.unitPrice,
       })),
@@ -130,7 +131,18 @@ export async function POST(request: Request): Promise<NextResponse> {
     }
 
     if (carts.docs.length > 0) {
-      // Update cart
+      // Merge incoming items with existing cart items. Existing items come
+      // back from payload.find with relationships populated (default depth
+      // >= 1), so keys must normalize populated product objects + variants.
+      const existingItems = (carts.docs[0] as any).items || []
+
+      data.items = mergeCartItems(existingItems, data.items)
+      data.subtotal = data.items.reduce(
+        (acc: number, item: any) =>
+          acc + (item.unitPrice || 0) * (item.quantity || 1),
+        0,
+      )
+
       cart = await payload.update({
         collection: 'carts',
         id: carts.docs[0].id,

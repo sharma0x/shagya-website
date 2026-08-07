@@ -96,6 +96,7 @@ export interface SeedHeroBlock {
   blockType: 'hero'
   heading?: string
   subheading?: string
+  imagePaths?: string[]
   imagePath?: string
   ctaText?: string
   ctaLink?: string
@@ -174,8 +175,6 @@ export const blogImagePath = (index: number) =>
   `/images/blogs/blog-${index}.jpg`
 export const avatarImagePath = (index: number) =>
   `/images/avatars/avatar-${index}.jpg`
-export const instagramImagePath = (index: number) =>
-  `/images/instagram/ig-${index}.jpg`
 
 // ---------------------------------------------------------------------------
 // Admin
@@ -1143,9 +1142,10 @@ export const pages: SeedPage[] = [
     blocks: [
       {
         blockType: 'hero',
-        heading: 'Timeless Elegance in Every Drape',
+        heading: 'Shayga — Handwoven narratives from Varanasi',
         subheading:
           'Discover the heritage of Indian handloom. Each saree is a testament to centuries of artisanal weaving, bringing the rich history of Varanasi to your wardrobe.',
+        imagePaths: [heroImagePath(1), heroImagePath(2)],
         imagePath: '/images/hero/hero-main.png',
         ctaText: 'Shop the collection',
         ctaLink: '/category/all',
@@ -1837,53 +1837,6 @@ export const navigations: SeedNavigation[] = [
 ]
 
 // ---------------------------------------------------------------------------
-// Instagram Posts (manual fallback — shown when Graph API is not configured)
-// ---------------------------------------------------------------------------
-
-export interface SeedInstagramPost {
-  caption: string
-  permalink: string
-  sortOrder: number
-  imagePath: string
-}
-
-export const instagramPosts: SeedInstagramPost[] = [
-  {
-    caption:
-      'Handwoven Banarasi in pure silk — every thread tells a story. 🧵✨',
-    permalink: 'https://instagram.com/shayga',
-    sortOrder: 0,
-    imagePath: instagramImagePath(1),
-  },
-  {
-    caption:
-      'The richer the zari, the more it catches the light — and your heart. 💛',
-    permalink: 'https://instagram.com/shayga',
-    sortOrder: 1,
-    imagePath: instagramImagePath(2),
-  },
-  {
-    caption:
-      'From the looms of Varanasi to your wardrobe. Tag us in your drapes! 🪡',
-    permalink: 'https://instagram.com/shayga',
-    sortOrder: 2,
-    imagePath: instagramImagePath(3),
-  },
-  {
-    caption: 'That perfect drape that turns every corner into a catwalk. 🔥',
-    permalink: 'https://instagram.com/shayga',
-    sortOrder: 3,
-    imagePath: instagramImagePath(4),
-  },
-  {
-    caption: 'Six yards of elegance, woven with love and heritage. 🇮🇳❤️',
-    permalink: 'https://instagram.com/shayga',
-    sortOrder: 4,
-    imagePath: instagramImagePath(5),
-  },
-]
-
-// ---------------------------------------------------------------------------
 // Site Settings
 // ---------------------------------------------------------------------------
 
@@ -1899,7 +1852,17 @@ export const siteSettingsData = {
   pinterestUrl: 'https://pinterest.com/shayga',
   announcementBar: {
     enabled: true,
-    text: 'Free shipping on orders above ₹999 \u00A0·\u00A0 Easy 7-day returns',
+    announcements: [
+      {
+        text: 'Free shipping on orders above ₹999 \u00A0·\u00A0 Easy 7-day returns',
+      },
+      {
+        text: 'Use code FIRST10 for 10% off your first order',
+      },
+      {
+        text: 'New arrivals every week \u00A0·\u00A0 Handwoven across India',
+      },
+    ],
   },
   shippingPolicy:
     'We offer free shipping on all orders above ₹5,000. Standard delivery takes 5-7 business days. Express delivery is available for an additional fee.',

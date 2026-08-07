@@ -1,0 +1,248 @@
+'use client'
+
+import { useState, useEffect, useRef } from 'react'
+import {
+  Copy,
+  TicketPercent,
+  Check,
+  CheckCircle2,
+  Loader2,
+  X,
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
+
+interface CouponData {
+  id: string | number
+  code: string
+  description: string
+  type: 'percentage' | 'fixed_amount' | 'free_shipping'
+  value: number | null
+  minCartValue: number
+  maxDiscount?: number | null
+  endDate?: string | null
+}
+
+interface OffersSectionProps {
+  coupons: CouponData[]
+  variant: 'banner' | 'card'
+  className?: string
+  onApply?: (code: string) => Promise<boolean>
+}
+
+function formatDiscount(c: CouponData): string {
+  if (c.type === 'percentage') return `${c.value || 0}% off`
+  if (c.type === 'fixed_amount') return `₹${c.value || 0} off`
+  return 'Free shipping'
+}
+
+function CouponApplyButton({
+  code,
+  onApply,
+}: {
+  code: string
+  onApply: (code: string) => Promise<boolean>
+}) {
+  const [state, setState] = useState<'idle' | 'loading' | 'success' | 'error'>(
+    'idle',
+  )
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current)
+    }
+  }, [])
+
+  const handleApply = async () => {
+    setState('loading')
+    const success = await onApply(code)
+    setState(success ? 'success' : 'error')
+    timerRef.current = setTimeout(() => setState('idle'), 2000)
+  }
+
+  return (
+    <button
+      onClick={handleApply}
+      disabled={state !== 'idle'}
+      className={cn(
+        'font-display inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[10px] font-semibold tracking-wider uppercase transition-all',
+        state === 'success' && 'bg-green-50 text-green-600',
+        state === 'error' && 'bg-red-50 text-red-600',
+        state === 'idle' && 'bg-brand-600 hover:bg-brand-700 text-white',
+        state === 'loading' && 'bg-brand-400 cursor-wait text-white',
+      )}
+    >
+      {state === 'loading' ? (
+        <Loader2 className="h-3 w-3 animate-spin" />
+      ) : state === 'success' ? (
+        <>
+          <Check className="h-3 w-3" />
+          Applied
+        </>
+      ) : state === 'error' ? (
+        <>
+          <X className="h-3 w-3" />
+          Failed
+        </>
+      ) : (
+        'Apply'
+      )}
+    </button>
+  )
+}
+
+function CouponCopyButton({ code }: { code: string }) {
+  const [copied, setCopied] = useState(false)
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(code).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }
+
+  return (
+    <button
+      onClick={handleCopy}
+      className={cn(
+        'font-display inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[10px] font-semibold tracking-wider uppercase transition-all',
+        copied
+          ? 'bg-green-50 text-green-600'
+          : 'bg-brand-50 text-brand-600 hover:bg-brand-100',
+      )}
+    >
+      {copied ? (
+        <>
+          <Check className="h-3 w-3" />
+          Copied
+        </>
+      ) : (
+        <>
+          <Copy className="h-3 w-3" />
+          Copy
+        </>
+      )}
+    </button>
+  )
+}
+
+export function OffersSection({
+  coupons,
+  variant,
+  className,
+  onApply,
+}: OffersSectionProps) {
+  if (!coupons.length) return null
+
+  if (variant === 'banner') {
+    return (
+      <div
+        className={cn(
+          'rounded-xl border border-neutral-200 bg-white p-4',
+          className,
+        )}
+      >
+        <h4 className="font-display mb-3 text-xs font-semibold tracking-tight text-neutral-900">
+          Available Offers
+        </h4>
+        <div className="bg-gold-400 mb-3 h-px w-10" aria-hidden="true" />
+        <div className="space-y-2">
+          {coupons.map((c) => (
+            <div
+              key={c.id}
+              className="rounded-lg border border-neutral-100 bg-neutral-50/50 px-3 py-2.5"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex min-w-0 items-start gap-2">
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-600" />
+                  <div className="min-w-0">
+                    <p className="font-body text-xs font-medium text-neutral-900">
+                      Save{' '}
+                      {c.type === 'percentage'
+                        ? `${c.value || 0}%`
+                        : c.type === 'fixed_amount'
+                          ? `₹${c.value || 0}`
+                          : 'on shipping'}{' '}
+                      with coupon
+                    </p>
+                    <p className="mt-0.5 font-mono text-[11px] tracking-wider text-neutral-500">
+                      {c.code}
+                    </p>
+                    {(c.minCartValue > 0 || c.maxDiscount || c.endDate) && (
+                      <p className="font-body mt-0.5 text-[10px] text-neutral-400">
+                        {[
+                          c.minCartValue > 0 &&
+                            `Min. ₹${c.minCartValue.toLocaleString('en-IN')}`,
+                          c.maxDiscount &&
+                            c.type === 'percentage' &&
+                            `Max disc ₹${c.maxDiscount.toLocaleString('en-IN')}`,
+                          c.endDate &&
+                            `Till ${new Date(c.endDate).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })}`,
+                        ]
+                          .filter(Boolean)
+                          .join(' · ')}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <CouponCopyButton code={c.code} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  // variant === 'card'
+  return (
+    <div className={cn('space-y-3', className)}>
+      {coupons.map((c) => (
+        <div
+          key={c.id}
+          className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm"
+        >
+          <div className="flex items-start gap-3 p-4">
+            <div className="bg-brand-50 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
+              <TicketPercent className="text-brand-600 h-5 w-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center justify-between gap-2">
+                <p className="font-display text-sm font-semibold text-neutral-900">
+                  {c.code}
+                </p>
+                {onApply ? (
+                  <CouponApplyButton code={c.code} onApply={onApply} />
+                ) : (
+                  <CouponCopyButton code={c.code} />
+                )}
+              </div>
+              <p className="font-body mt-0.5 text-xs font-medium text-neutral-700">
+                {formatDiscount(c)}
+                {c.description && ` — ${c.description}`}
+              </p>
+              <div className="font-body mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] text-neutral-400">
+                {c.minCartValue > 0 && (
+                  <span>Min. ₹{c.minCartValue.toLocaleString('en-IN')}</span>
+                )}
+                {c.maxDiscount && c.type === 'percentage' && (
+                  <span>Max disc ₹{c.maxDiscount.toLocaleString('en-IN')}</span>
+                )}
+                {c.endDate && (
+                  <span>
+                    Valid till{' '}
+                    {new Date(c.endDate).toLocaleDateString('en-IN', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                    })}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}

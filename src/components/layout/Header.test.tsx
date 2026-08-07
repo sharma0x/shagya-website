@@ -27,7 +27,11 @@ vi.stubGlobal(
         return Promise.resolve({
           announcementBar: {
             enabled: true,
-            text: 'Free shipping on orders above ₹999 \u00A0·\u00A0 Easy 7-day returns',
+            announcements: [
+              {
+                text: 'Free shipping on orders above ₹999 \u00A0·\u00A0 Easy 7-day returns',
+              },
+            ],
           },
         })
       },
@@ -54,10 +58,7 @@ describe('Header', () => {
   it('renders all desktop nav links', () => {
     render(<Header />)
     const expected = [
-      { name: 'Silk', href: '/category/silk' },
-      { name: 'Cotton', href: '/category/cotton' },
-      { name: 'Handloom', href: '/category/handloom' },
-      { name: 'Designer', href: '/category/designer' },
+      { name: 'Sarees', href: '/category/all' },
       { name: 'Collections', href: '/collections' },
       { name: 'Journal', href: '/blog' },
     ]

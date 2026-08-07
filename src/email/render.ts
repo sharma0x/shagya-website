@@ -27,9 +27,13 @@ async function loadTemplate(
 
     if (result.docs.length > 0) {
       const doc = result.docs[0] as unknown as Record<string, unknown>
-      if (doc.subject && doc.body) {
+      if (doc.subject && doc.body && String(doc.body).trim().length > 0) {
         return { subject: doc.subject as string, body: doc.body as string }
       }
+      // Template exists but body is empty — log and fall back to default
+      payload.logger.warn(
+        `[Email] DB template "${slug}" has empty body, falling back to default`,
+      )
     }
   } catch (err) {
     payload.logger.warn(

@@ -1,36 +1,74 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useEffect, useCallback } from 'react'
-import { Search, ShoppingCart, Heart, User, Menu, X } from 'lucide-react'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import {
+  Search,
+  ShoppingCart,
+  Heart,
+  User,
+  Menu,
+  X,
+  ChevronDown,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Logo } from '@/components/layout/Logo'
 import { useCart } from '@/lib/store/cart'
+import { useUI } from '@/lib/store/ui'
 import { CartDrawer } from '@/components/cart/CartDrawer'
 import { SearchCommand } from '@/components/search/SearchCommand'
 import { useSession } from '@/lib/auth-client'
 
-const navLinks = [
-  { label: 'Silk', href: '/category/silk' },
-  { label: 'Cotton', href: '/category/cotton' },
-  { label: 'Handloom', href: '/category/handloom' },
-  { label: 'Designer', href: '/category/designer' },
+const megaMenu = {
+  fabrics: [
+    { label: 'Silk', value: 'silk' },
+    { label: 'Cotton', value: 'cotton' },
+    { label: 'Linen', value: 'linen' },
+    { label: 'Georgette', value: 'georgette' },
+    { label: 'Chiffon', value: 'chiffon' },
+    { label: 'Crepe', value: 'crepe' },
+    { label: 'Velvet', value: 'velvet' },
+    { label: 'Net', value: 'net' },
+    { label: 'Blend', value: 'blend' },
+  ],
+  weaves: [
+    { label: 'Banarasi', value: 'banarasi' },
+    { label: 'Kanchipuram', value: 'kanchipuram' },
+    { label: 'Bandhani', value: 'bandhani' },
+    { label: 'Patola', value: 'patola' },
+    { label: 'Kalamkari', value: 'kalamkari' },
+    { label: 'Ikat', value: 'ikkat' },
+    { label: 'Paithani', value: 'paithani' },
+    { label: 'Maheshwari', value: 'maheshwari' },
+    { label: 'Chanderi', value: 'chanderi' },
+    { label: 'Tant', value: 'tant' },
+    { label: 'Baluchari', value: 'baluchari' },
+  ],
+}
+
+const topNav = [
   { label: 'Collections', href: '/collections' },
   { label: 'Journal', href: '/blog' },
 ]
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [cartOpen, setCartOpen] = useState(false)
-  const [searchOpen, setSearchOpen] = useState(false)
+  const [mobileSareesOpen, setMobileSareesOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const [megaMenuOpen, setMegaMenuOpen] = useState(false)
+  const megaMenuTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const megaMenuRef = useRef<HTMLDivElement>(null)
   const [announcement, setAnnouncement] = useState<{
     enabled: boolean
-    text: string
+    announcements: { text: string; link?: string }[]
   } | null>(null)
+  const [activeAnnouncement, setActiveAnnouncement] = useState(0)
+  const announcementTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [wishlistCount, setWishlistCount] = useState(0)
   const { items } = useCart()
   const { data: sessionData } = useSession()
+  const { cartOpen, searchOpen, openCart, openSearch, closeCart, closeSearch } =
+    useUI()
 
   // Scroll listener for blur-on-scroll
   useEffect(() => {
@@ -62,16 +100,73 @@ export function Header() {
       .catch(() => {})
   }, [])
 
+  // Auto-rotate announcements every 5 seconds
+  useEffect(() => {
+    const count = announcement?.announcements?.length || 0
+    if (count <= 1) return
+
+    announcementTimer.current = setInterval(() => {
+      setActiveAnnouncement((prev) => (prev + 1) % count)
+    }, 5000)
+
+    return () => {
+      if (announcementTimer.current) clearInterval(announcementTimer.current)
+    }
+  }, [announcement?.announcements?.length])
+
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault()
-        setSearchOpen((prev) => !prev)
+        openSearch()
       }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
+  }, [openSearch])
+
+  // Sync guest cart on login — push localStorage items to server and hydrate merged result
+  const prevUserRef = useRef<any>(null)
+
+  useEffect(() => {
+    if (sessionData?.user && !prevUserRef.current) {
+      const { items, syncWithServer, loadFromServer } = useCart.getState()
+      if (items.length > 0) {
+        syncWithServer().then(() => loadFromServer())
+      }
+    }
+    prevUserRef.current = sessionData?.user
+  }, [sessionData?.user])
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (
+        megaMenuRef.current &&
+        !megaMenuRef.current.contains(e.target as Node)
+      ) {
+        setMegaMenuOpen(false)
+      }
+    }
+    if (megaMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [megaMenuOpen])
+
+  useEffect(() => {
+    return () => {
+      if (megaMenuTimeout.current) clearTimeout(megaMenuTimeout.current)
+    }
   }, [])
+
+  const openMegaMenu = () => {
+    if (megaMenuTimeout.current) clearTimeout(megaMenuTimeout.current)
+    setMegaMenuOpen(true)
+  }
+
+  const closeMegaMenu = () => {
+    megaMenuTimeout.current = setTimeout(() => setMegaMenuOpen(false), 150)
+  }
 
   const cartCount = items.reduce((acc, item) => acc + item.quantity, 0)
 
@@ -84,35 +179,93 @@ export function Header() {
         )}
       >
         {/* Announcement */}
-        {announcement?.enabled && (
-          <div className="bg-brand-600 relative overflow-hidden px-4 py-2 text-center text-xs text-white">
-            {/* Decorative dots */}
-            <span
-              className="absolute top-1/2 left-4 hidden -translate-y-1/2 sm:block"
-              aria-hidden="true"
+        {announcement?.enabled && announcement.announcements?.length > 0 && (
+          <div className="bg-brand-600 relative flex items-center justify-center overflow-hidden px-10 py-2 text-center text-xs text-white">
+            <div
+              className="relative grid items-center"
+              style={{ gridTemplateAreas: '"slide"' }}
             >
-              <span className="inline-block h-1 w-1 rounded-full bg-white/30" />
-              <span className="ml-1.5 inline-block h-1 w-1 rounded-full bg-white/30" />
-            </span>
-            <span
-              className="absolute top-1/2 right-4 hidden -translate-y-1/2 sm:block"
-              aria-hidden="true"
-            >
-              <span className="inline-block h-1 w-1 rounded-full bg-white/30" />
-              <span className="ml-1.5 inline-block h-1 w-1 rounded-full bg-white/30" />
-            </span>
-            <span className="relative inline-flex items-center gap-2">
-              <svg
-                className="text-gold-300 h-3 w-3 shrink-0"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-              >
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-              </svg>
-              <span className="font-medium tracking-wide">
-                {announcement.text}
-              </span>
-            </span>
+              {announcement.announcements.map((item, i) => {
+                const offset = i - activeAnnouncement
+                const isActive = offset === 0
+                const textEl = (
+                  <span
+                    key={`${i}-${item.text}`}
+                    className="font-medium tracking-wide whitespace-nowrap transition-all duration-500 ease-[cubic-bezier(0.25,0.1,0.25,1)]"
+                    style={{
+                      gridArea: 'slide',
+                      transform: `translateX(${offset * 30}%)`,
+                      opacity: isActive ? 1 : 0,
+                    }}
+                  >
+                    {item.text}
+                  </span>
+                )
+                if (item.link) {
+                  return (
+                    <a
+                      key={i}
+                      href={item.link}
+                      className="relative z-10"
+                      style={{ gridArea: 'slide' }}
+                      aria-label={item.text}
+                    >
+                      {textEl}
+                    </a>
+                  )
+                }
+                return textEl
+              })}
+            </div>
+            {/* Arrow navigation for multiple announcements */}
+            {announcement.announcements.length > 1 && (
+              <>
+                <button
+                  onClick={() =>
+                    setActiveAnnouncement(
+                      (prev) =>
+                        (prev - 1 + announcement.announcements.length) %
+                        announcement.announcements.length,
+                    )
+                  }
+                  className="absolute top-1/2 left-1 -translate-y-1/2 p-1.5 text-white/60 transition-all duration-200 hover:scale-110 hover:text-white"
+                  aria-label="Previous announcement"
+                >
+                  <svg
+                    className="h-3.5 w-3.5"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <polyline points="15 18 9 12 15 6" />
+                  </svg>
+                </button>
+                <button
+                  onClick={() =>
+                    setActiveAnnouncement(
+                      (prev) => (prev + 1) % announcement.announcements.length,
+                    )
+                  }
+                  className="absolute top-1/2 right-1 -translate-y-1/2 p-1.5 text-white/60 transition-all duration-200 hover:scale-110 hover:text-white"
+                  aria-label="Next announcement"
+                >
+                  <svg
+                    className="h-3.5 w-3.5"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                </button>
+              </>
+            )}
           </div>
         )}
 
@@ -123,7 +276,92 @@ export function Header() {
 
             {/* Desktop Nav */}
             <nav className="hidden items-center gap-1 lg:flex">
-              {navLinks.map((link) => (
+              {/* Sarees with mega dropdown */}
+              <div
+                ref={megaMenuRef}
+                className="relative"
+                onMouseEnter={() => openMegaMenu()}
+                onMouseLeave={() => closeMegaMenu()}
+              >
+                <Link
+                  href="/category/all"
+                  className="font-body hover:text-brand-700 after:bg-brand-600 relative flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium text-neutral-600 transition-colors after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:transition-transform hover:after:scale-x-100"
+                >
+                  Sarees
+                  <svg
+                    className="h-3 w-3"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="m6 9 6 6 6-6" />
+                  </svg>
+                </Link>
+
+                {megaMenuOpen && (
+                  <div
+                    className="absolute top-full left-0 z-50"
+                    onMouseEnter={() => openMegaMenu()}
+                    onMouseLeave={() => closeMegaMenu()}
+                  >
+                    <div className="min-w-[600px] overflow-hidden border-x border-b border-neutral-100 bg-white shadow-lg">
+                      <div className="flex gap-12 px-10 py-6">
+                        {/* Fabric column */}
+                        <div>
+                          <h4 className="font-display text-brand-600 mb-3 text-[10px] font-semibold tracking-wider uppercase">
+                            Fabric
+                          </h4>
+                          <div className="grid grid-cols-3 gap-x-6 gap-y-1.5">
+                            {megaMenu.fabrics.map((f) => (
+                              <Link
+                                key={f.value}
+                                href={`/category/${f.value}`}
+                                onClick={() => setMegaMenuOpen(false)}
+                                className="font-body hover:text-brand-700 after:bg-brand-600 relative rounded px-1.5 py-0.5 text-sm whitespace-nowrap text-neutral-600 transition-colors after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:transition-transform hover:after:scale-x-100"
+                              >
+                                {f.label}
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Weave column */}
+                        <div>
+                          <h4 className="font-display text-brand-600 mb-3 text-[10px] font-semibold tracking-wider uppercase">
+                            Weave
+                          </h4>
+                          <div className="grid grid-cols-3 gap-x-6 gap-y-1.5">
+                            {megaMenu.weaves.map((w) => (
+                              <Link
+                                key={w.value}
+                                href={`/category/${w.value}`}
+                                onClick={() => setMegaMenuOpen(false)}
+                                className="font-body hover:text-brand-700 after:bg-brand-600 relative rounded px-1.5 py-0.5 text-sm whitespace-nowrap text-neutral-600 transition-colors after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:transition-transform hover:after:scale-x-100"
+                              >
+                                {w.label}
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Shop All */}
+                      <div className="border-t border-neutral-100 px-10 py-3">
+                        <Link
+                          href="/category/all"
+                          onClick={() => setMegaMenuOpen(false)}
+                          className="font-display after:bg-brand-600 text-brand-600 hover:text-brand-700 relative text-xs font-semibold tracking-wider uppercase transition-colors after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:transition-transform hover:after:scale-x-100"
+                        >
+                          Shop All Sarees →
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {topNav.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
@@ -140,7 +378,7 @@ export function Header() {
             {/* Actions */}
             <div className="flex items-center gap-1">
               <button
-                onClick={() => setSearchOpen(true)}
+                onClick={() => openSearch()}
                 className="hover:text-brand-700 flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg p-2 text-neutral-600 transition-colors hover:bg-neutral-100"
                 aria-label="Search"
               >
@@ -177,7 +415,7 @@ export function Header() {
               </Link>
 
               <button
-                onClick={() => setCartOpen(true)}
+                onClick={() => openCart()}
                 className="hover:text-brand-700 relative flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg p-2 text-neutral-600 transition-colors hover:bg-neutral-100"
                 aria-label="Cart"
               >
@@ -223,7 +461,73 @@ export function Header() {
 
         <nav className="flex-1 overflow-y-auto px-6 py-4 sm:px-8">
           <div className="flex flex-col">
-            {navLinks.map((link, i) => (
+            <button
+              onClick={() => setMobileSareesOpen(!mobileSareesOpen)}
+              className={cn(
+                'font-body hover:text-brand-700 flex items-center justify-between border-b border-neutral-100 py-3 text-lg font-medium text-neutral-700 transition-colors',
+                mobileMenuOpen
+                  ? 'translate-y-0 opacity-100'
+                  : 'translate-y-4 opacity-0',
+              )}
+              style={{ transitionDelay: '150ms' }}
+            >
+              Sarees
+              <ChevronDown
+                className={cn(
+                  'h-4 w-4 text-neutral-400 transition-transform',
+                  mobileSareesOpen && 'rotate-180',
+                )}
+              />
+            </button>
+
+            {mobileSareesOpen && (
+              <div className="border-b border-neutral-100 pb-3">
+                {/* Fabric */}
+                <p className="text-brand-600 mt-3 text-[10px] font-semibold tracking-wider uppercase">
+                  Fabric
+                </p>
+                <div className="mt-2 grid grid-cols-2 gap-1">
+                  {megaMenu.fabrics.map((f) => (
+                    <Link
+                      key={f.value}
+                      href={`/category/${f.value}`}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="font-body hover:text-brand-700 rounded px-2 py-1 text-sm text-neutral-600 transition-colors"
+                    >
+                      {f.label}
+                    </Link>
+                  ))}
+                </div>
+
+                {/* Weave */}
+                <p className="text-brand-600 mt-3 text-[10px] font-semibold tracking-wider uppercase">
+                  Weave
+                </p>
+                <div className="mt-2 grid grid-cols-2 gap-1">
+                  {megaMenu.weaves.map((w) => (
+                    <Link
+                      key={w.value}
+                      href={`/category/${w.value}`}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="font-body hover:text-brand-700 rounded px-2 py-1 text-sm text-neutral-600 transition-colors"
+                    >
+                      {w.label}
+                    </Link>
+                  ))}
+                </div>
+
+                {/* Shop All */}
+                <Link
+                  href="/category/all"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="font-display text-brand-600 hover:text-brand-700 mt-3 inline-flex items-center gap-1 text-xs font-semibold"
+                >
+                  Shop All Sarees
+                  <span className="text-[10px]">→</span>
+                </Link>
+              </div>
+            )}
+            {topNav.map((link, i) => (
               <Link
                 key={link.href}
                 href={link.href}
@@ -233,7 +537,7 @@ export function Header() {
                     ? 'translate-y-0 opacity-100'
                     : 'translate-y-4 opacity-0',
                 )}
-                style={{ transitionDelay: `${i * 50 + 100}ms` }}
+                style={{ transitionDelay: `${(i + 1) * 50 + 100}ms` }}
                 onClick={() => setMobileMenuOpen(false)}
               >
                 {link.label}
@@ -248,7 +552,7 @@ export function Header() {
                 ? 'translate-y-0 opacity-100'
                 : 'translate-y-4 opacity-0',
             )}
-            style={{ transitionDelay: `${navLinks.length * 50 + 100}ms` }}
+            style={{ transitionDelay: `${(topNav.length + 1) * 50 + 100}ms` }}
           >
             <Link
               href="/account"
@@ -269,8 +573,8 @@ export function Header() {
           </div>
         </nav>
       </div>
-      <SearchCommand isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
-      <CartDrawer isOpen={cartOpen} onClose={() => setCartOpen(false)} />
+      <SearchCommand isOpen={searchOpen} onClose={() => closeSearch()} />
+      <CartDrawer isOpen={cartOpen} onClose={() => closeCart()} />
     </>
   )
 }

@@ -120,14 +120,15 @@ export default async function CollectionsPage() {
             <Link
               key={col.id}
               href={`/collections/${col.slug}`}
-              className="hover-lift group block overflow-hidden"
+              className="group block overflow-hidden rounded-2xl border border-neutral-100 bg-white shadow-xs transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md"
             >
               <ImagePanel
                 src={col.coverImage}
                 alt={col.name}
                 className="aspect-[3/4] w-full transition-transform duration-500 group-hover:scale-[1.02]"
+                rounded="rounded-none"
               />
-              <div className="mt-6">
+              <div className="p-5">
                 <div className="flex items-center justify-between">
                   <h3 className="font-display group-hover:text-brand-700 text-xl font-semibold text-neutral-900 transition-colors">
                     {col.name}

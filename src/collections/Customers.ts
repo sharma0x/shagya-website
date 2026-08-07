@@ -35,7 +35,6 @@ export const Customers: CollectionConfig = {
     {
       name: 'name',
       type: 'text',
-      required: true,
     },
     {
       name: 'email',

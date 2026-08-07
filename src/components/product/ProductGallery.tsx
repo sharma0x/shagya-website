@@ -1,9 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import Image from 'next/image'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { SkeletonImage } from '@/components/ui/SkeletonImage'
+import { ProductImageZoom } from '@/components/product/ProductImageZoom'
 
 interface ProductGalleryProps {
   imageUrls: string[]
@@ -35,32 +35,13 @@ export function ProductGallery({
   }
 
   return (
-    <div className="flex flex-col gap-3">
-      {/* Main image — all images stacked, active one fades in */}
-      <div className="group relative aspect-[3/4] w-full overflow-hidden rounded-2xl bg-neutral-100">
-        {imageUrls.map((url, idx) => (
-          <div
-            key={idx}
-            className="absolute inset-0"
-            style={{
-              opacity: idx === activeIdx ? 1 : 0,
-              transition: 'opacity 380ms ease-in-out',
-              zIndex: idx === activeIdx ? 1 : 0,
-            }}
-          >
-            <SkeletonImage
-              src={url}
-              alt={idx === 0 ? productName : `${productName} — view ${idx + 1}`}
-              fill
-              priority={idx === 0}
-              className="object-cover"
-              unoptimized={url.startsWith('https://placehold.co')}
-            />
-          </div>
-        ))}
-
-        {/* Inner border overlay */}
-        <div className="pointer-events-none absolute inset-0 z-10 rounded-2xl border border-neutral-900/5" />
+    <div className="mx-auto flex w-full max-w-[460px] flex-col gap-3">
+      {/* Main image with hover magnifier */}
+      <div className="group relative overflow-hidden rounded-2xl bg-neutral-100">
+        <ProductImageZoom
+          imageUrl={imageUrls[activeIdx]}
+          productName={`${productName} — image ${activeIdx + 1}`}
+        />
 
         {/* Prev / Next arrows */}
         {total > 1 && (

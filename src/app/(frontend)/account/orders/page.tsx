@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useSession } from '@/lib/auth-client'
+import { getProductUrl } from '@/lib/product-url'
 import {
   ArrowLeft,
   ShoppingBag,
@@ -19,6 +20,7 @@ import {
 interface OrderItem {
   id: string
   product: {
+    id?: string | number
     name: string
     slug: string
     gallery?: Array<{
@@ -254,7 +256,14 @@ export default function OrdersPage() {
 
                             return (
                               <Link
-                                href={`/products/${item.product?.slug || '#'}`}
+                                href={
+                                  item.product?.id
+                                    ? getProductUrl(
+                                        item.product.slug,
+                                        item.product.id,
+                                      )
+                                    : '#'
+                                }
                                 key={item.id}
                                 className="group hover:border-brand-200 hover:bg-brand-50/30 flex items-center gap-4 rounded-xl border border-neutral-100 bg-white p-3 transition-colors"
                               >

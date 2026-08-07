@@ -42,6 +42,7 @@ import { Navigation } from './collections/Navigation'
 import { Forms } from './collections/Forms'
 import { FormSubmissions } from './collections/FormSubmissions'
 import { NewsletterSubscribers } from './collections/NewsletterSubscribers'
+
 import { InstagramPosts } from './collections/InstagramPosts'
 import { SiteSettings } from './globals/SiteSettings'
 import { EmailTemplates } from './collections/EmailTemplates'
@@ -199,26 +200,35 @@ export const extractSearchText = (doc: Record<string, unknown>): string => {
 const FROM_NAME = process.env.EMAIL_FROM_NAME || 'Shayga'
 const FROM_ADDRESS = process.env.EMAIL_FROM_ADDRESS || 'noreply@shayga.in'
 
-const emailAdapter = process.env.MAILPIT_SMTP_HOST
-  ? nodemailerAdapter({
-      defaultFromName: FROM_NAME,
-      defaultFromAddress: FROM_ADDRESS,
-      transport: nodemailer.createTransport({
-        host: process.env.MAILPIT_SMTP_HOST,
-        port: Number(process.env.MAILPIT_SMTP_PORT || 1025),
-        secure: false,
-        ignoreTLS: true,
-      }),
-    })
-  : resendAdapter({
-      defaultFromName: FROM_NAME,
-      defaultFromAddress: FROM_ADDRESS,
-      apiKey: process.env.RESEND_API_KEY || '',
-    })
+const isProduction = process.env.NODE_ENV === 'production'
+const emailAdapter =
+  !isProduction && process.env.MAILPIT_SMTP_HOST
+    ? nodemailerAdapter({
+        defaultFromName: FROM_NAME,
+        defaultFromAddress: FROM_ADDRESS,
+        transport: nodemailer.createTransport({
+          host: process.env.MAILPIT_SMTP_HOST,
+          port: Number(process.env.MAILPIT_SMTP_PORT || 1025),
+          secure: false,
+          ignoreTLS: true,
+        }),
+      })
+    : resendAdapter({
+        defaultFromName: FROM_NAME,
+        defaultFromAddress: FROM_ADDRESS,
+        apiKey: process.env.RESEND_API_KEY || '',
+      })
 
 export default buildConfig({
   // Secret for encrypting JWT tokens, API keys, and cookies
   secret: process.env.PAYLOAD_SECRET || 'dev-secret-change-in-production',
+
+  // Public URL for constructing absolute media URLs and API responses
+  serverURL:
+    process.env.NEXT_PUBLIC_SERVER_URL ||
+    (process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : 'http://localhost:3000'),
 
   // ---------------------------------------------------------------------------
   // Email
@@ -267,7 +277,7 @@ export default buildConfig({
           return `${base}/blog/${data.slug}?preview=true&id=${data.id}`
         }
         if (collectionConfig?.slug === 'products' && data) {
-          return `${base}/products/${data.slug}?preview=true&id=${data.id}`
+          return `${base}/products/${data.slug}/${data.id}?preview=true`
         }
         if (globalConfig?.slug === 'site-settings') {
           return `${base}/?preview=true&id=site-settings`

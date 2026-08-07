@@ -2,6 +2,91 @@ import type { CollectionConfig } from 'payload'
 import { sendWebhook } from '@/lib/webhooks'
 import { sendOrderPlacedEmails, sendOrderStatusEmails } from '@/email/send'
 
+/**
+ * Runs email, webhook, event-log, and purchaseCount side-effects detached
+ * from the request transaction. This prevents Neon's idle-in-transaction
+ * timeout from killing the connection and rolling back the order save.
+ */
+function scheduleSideEffects(
+  payload: any,
+  docId: string,
+  orderId: string,
+  prevStatus: string | null,
+  newStatus: string,
+  items?: Array<{ product?: string | number; quantity?: number }>,
+) {
+  Promise.resolve().then(async () => {
+    try {
+      sendOrderStatusEmails(payload, docId, newStatus).catch(() => {})
+    } catch {}
+
+    try {
+      const webhookUrl = process.env.WEBHOOK_URL
+      if (webhookUrl) {
+        await sendWebhook(webhookUrl, {
+          event: 'order.status_changed',
+          orderId,
+          previousStatus: prevStatus ?? null,
+          newStatus,
+        })
+      }
+    } catch {}
+
+    try {
+      await payload.create({
+        collection: 'event-logs',
+        data: {
+          event: 'order.status_changed',
+          orderId,
+          status: newStatus,
+          payload: { orderId, previousStatus: prevStatus, newStatus },
+          response: { note: 'WEBHOOK_URL not configured — skipped' },
+        },
+        overrideAccess: true,
+      })
+    } catch {}
+
+    if (
+      newStatus === 'confirmed' &&
+      prevStatus !== 'confirmed' &&
+      items?.length
+    ) {
+      for (const item of items) {
+        if (!item.product) continue
+        try {
+          const pid =
+            typeof item.product === 'string'
+              ? item.product
+              : String(item.product)
+          const product = await payload.findByID({
+            collection: 'products',
+            id: pid,
+            overrideAccess: true,
+          })
+          if (product) {
+            const currentPurchase = (product as any).purchaseCount || 0
+            const currentQty = (product as any).quantity ?? 0
+            const trackQty = (product as any).trackQuantity === true
+            const orderQty = item.quantity || 1
+
+            await payload.update({
+              collection: 'products',
+              id: product.id,
+              data: {
+                purchaseCount: currentPurchase + orderQty,
+                quantity: trackQty
+                  ? Math.max(0, currentQty - orderQty)
+                  : currentQty,
+              },
+              overrideAccess: true,
+            })
+          }
+        } catch {}
+      }
+    }
+  })
+}
+
 const addressGroup = {
   name: 'address',
   type: 'group' as const,
@@ -48,6 +133,15 @@ export const Orders: CollectionConfig = {
     useAsTitle: 'orderNumber',
     group: 'Orders',
   },
+  access: {
+    read: ({ req: { user } }) => {
+      if (user) return true
+      return { id: { exists: false } }
+    },
+    create: () => true,
+    update: ({ req: { user } }) => Boolean(user),
+    delete: ({ req: { user } }) => Boolean(user),
+  },
   hooks: {
     afterOperation: [
       async ({ operation, result, req }) => {
@@ -64,7 +158,24 @@ export const Orders: CollectionConfig = {
       },
     ],
     beforeChange: [
-      async ({ data, operation, req }) => {
+      async ({ data, operation, originalDoc, req }) => {
+        // Auto-set status timestamps on update
+        if (operation === 'update' && originalDoc) {
+          const prevStatus = (originalDoc as any)?.status
+          const nextStatus = data?.status
+          if (prevStatus !== nextStatus) {
+            if (nextStatus === 'confirmed' && !data?.confirmedAt) {
+              data.confirmedAt = new Date().toISOString()
+            }
+            if (nextStatus === 'shipped' && !data?.shippedAt) {
+              data.shippedAt = new Date().toISOString()
+            }
+            if (nextStatus === 'delivered' && !data?.deliveredAt) {
+              data.deliveredAt = new Date().toISOString()
+            }
+          }
+        }
+
         if (operation === 'create' && !data?.orderNumber) {
           try {
             const existing = await req.payload.find({
@@ -93,7 +204,6 @@ export const Orders: CollectionConfig = {
     ],
     afterChange: [
       async ({ doc, previousDoc, operation, req }) => {
-        // Only fire webhooks on status changes during updates
         if (operation !== 'update') return doc
 
         const prevStatus = (previousDoc as Record<string, unknown> | undefined)
@@ -104,56 +214,20 @@ export const Orders: CollectionConfig = {
 
         if (!newStatus || prevStatus === newStatus) return doc
 
-        // Send transactional emails for the new status (fire-and-forget)
         const docId = (doc as Record<string, unknown>).id as string
-        sendOrderStatusEmails(req.payload, docId, newStatus).catch((err) =>
-          req.payload.logger.error(
-            `[Email] sendOrderStatusEmails failed: ${err}`,
-          ),
-        )
-
         const orderId = (doc as Record<string, unknown>).orderNumber as string
-        const webhookUrl = process.env.WEBHOOK_URL
+        const items = (doc as Record<string, unknown>).items as
+          | Array<{ product?: string | number; quantity?: number }>
+          | undefined
 
-        const payload: Record<string, unknown> = {
-          event: 'order.status_changed',
+        scheduleSideEffects(
+          req.payload,
+          docId,
           orderId,
-          previousStatus: prevStatus ?? null,
+          prevStatus ?? null,
           newStatus,
-          order: {
-            orderNumber: (doc as Record<string, unknown>).orderNumber,
-            customerEmail: (doc as Record<string, unknown>).customerEmail,
-            status: newStatus,
-            total: (doc as Record<string, unknown>).total,
-            updatedAt: (doc as Record<string, unknown>).updatedAt,
-          },
-        }
-
-        let webhookResult = null
-
-        if (webhookUrl) {
-          webhookResult = await sendWebhook(webhookUrl, payload)
-        }
-
-        // Always log the event to the audit trail
-        try {
-          await req.payload.create({
-            collection: 'event-logs',
-            data: {
-              event: 'order.status_changed',
-              orderId,
-              status: newStatus,
-              payload,
-              response: webhookResult ?? {
-                note: 'WEBHOOK_URL not configured — skipped',
-              },
-            },
-          } as any)
-        } catch (err) {
-          req.payload.logger.error(
-            `[orders.afterChange] Failed to create EventLog: ${String(err)}`,
-          )
-        }
+          items,
+        )
 
         return doc
       },
@@ -224,6 +298,64 @@ export const Orders: CollectionConfig = {
     {
       name: 'paymentId',
       type: 'text',
+    },
+    {
+      name: 'notes',
+      type: 'text',
+      label: 'Delivery Instructions',
+      admin: {
+        description: 'Customer notes or delivery instructions',
+      },
+    },
+    {
+      name: 'confirmedAt',
+      type: 'date',
+      admin: {
+        readOnly: true,
+        description: 'Set when status changes to confirmed',
+      },
+    },
+    {
+      name: 'shippedAt',
+      type: 'date',
+      admin: {
+        readOnly: true,
+        description: 'Set when status changes to shipped',
+      },
+    },
+    {
+      name: 'deliveredAt',
+      type: 'date',
+      admin: {
+        readOnly: true,
+        description: 'Set when status changes to delivered',
+      },
+    },
+    {
+      name: 'trackingId',
+      type: 'text',
+      label: 'Tracking Number',
+      admin: {
+        description:
+          'Enter tracking ID from shipping provider (e.g. Shiprocket, Delhivery, India Post)',
+      },
+    },
+    {
+      name: 'trackingUrl',
+      type: 'text',
+      label: 'Tracking URL',
+      admin: { description: 'Direct link to track this package' },
+    },
+    {
+      name: 'shippingType',
+      type: 'select',
+      defaultValue: 'standard',
+      required: true,
+      options: [
+        { label: 'Standard', value: 'standard' },
+        { label: 'Express', value: 'express' },
+      ],
+      admin: { description: 'Shipping method chosen at checkout' },
     },
     {
       name: 'shippingAddress',

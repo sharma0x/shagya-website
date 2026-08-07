@@ -90,7 +90,21 @@ Must be running **before** `make dev`:
 - `next.config.ts` must wrap config with `withPayload()` from `@payloadcms/next/withPayload`.
 - `@payloadcms/ui` must be a **direct dependency** in `package.json` (pnpm strict mode won't resolve it as a transitive dep).
 - `payload-types.ts` is auto-generated at `src/payload-types.ts` — run `make db-generate-types` after schema changes.
-- Schema push is enabled in dev (`push: process.env.NODE_ENV !== 'production'`). Use migrations in production.
+- Schema push is **disabled** (`push: false`) in `payload.config.ts`. **Always use migrations.**
+
+### Migrations (CRITICAL — ALWAYS generate migration scripts)
+
+**NEVER** hand-craft SQL tables or manually create database tables for Payload schema changes. **ALWAYS** use Payload's migration system:
+
+1. **Generate the schema diff**: `pnpm payload generate:db-schema`
+2. **Create the migration**: `pnpm payload migrate:create` (generates a `.ts` file in `src/migrations/`)
+3. **Review the generated migration** — ensure column types match the generated schema (e.g., `varchar` vs `integer` for `_parent_id` based on parent table's PK type)
+4. **Run the migration**: `make db-migrate`
+5. **Regenerate types**: `make db-generate-types`
+
+If `migrate:create` fails (known Payload 3.85 bug with drizzle introspection), write the migration `.ts` file manually in `src/migrations/` following the naming convention `YYYYMMDD_HHMMSS_description.ts`. Use the generated schema file (`src/payload-generated-schema.ts`) as the source of truth for column types, indexes, and foreign keys. Use `DO $$ BEGIN ... EXCEPTION WHEN duplicate_object THEN null; END $$;` for idempotent constraint creation.
+
+**Why**: Hand-crafted SQL tables (e.g., for array/relationship fields) cause silent schema drift, missing columns (`_uuid`), wrong column types (`varchar` vs `integer`), and broken admin panels. Payload's migration system tracks applied migrations in `payload_migrations` and avoids duplicate application.
 
 ## Known Issue: Admin Panel SSR
 

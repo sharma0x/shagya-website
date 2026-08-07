@@ -20,10 +20,46 @@ import {
   pages,
   blogPosts,
   navigations,
-  instagramPosts,
   siteSettingsData,
   type SeedBlock,
 } from './seed-data'
+
+// ---------------------------------------------------------------------------
+// Instagram fallback posts — used when the Graph API is not configured
+// ---------------------------------------------------------------------------
+
+const instagramFallbackPosts = [
+  {
+    caption:
+      'Handwoven Banarasi silk in pure zari — a masterpiece from our master weaver families in Varanasi. #Shayga #BanarasiSaree',
+    permalink: 'https://instagram.com/shayga',
+    imagePath: 'images/instagram/ig-1.jpg',
+  },
+  {
+    caption:
+      'The timeless elegance of Kanchipuram silk, draped to perfection. Every thread tells a story. #Shayga #Kanchipuram',
+    permalink: 'https://instagram.com/shayga',
+    imagePath: 'images/instagram/ig-2.jpg',
+  },
+  {
+    caption:
+      'Cotton comfort meets artisan craft — our Chanderi collection is perfect for everyday elegance. #Shayga #Chanderi',
+    permalink: 'https://instagram.com/shayga',
+    imagePath: 'images/instagram/ig-3.jpg',
+  },
+  {
+    caption:
+      'Bandhani at its finest — each dot hand-tied by artisans preserving a centuries-old tradition. #Shayga #Bandhani',
+    permalink: 'https://instagram.com/shayga',
+    imagePath: 'images/instagram/ig-4.jpg',
+  },
+  {
+    caption:
+      'Festive vibes in Patola — the double ikkat weave that takes months to perfect. #Shayga #Patola',
+    permalink: 'https://instagram.com/shayga',
+    imagePath: 'images/instagram/ig-5.jpg',
+  },
+]
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -113,6 +149,17 @@ async function processBlock(
   }
 
   if (block.blockType === 'hero') {
+    const images: { image: number }[] = []
+    if (block.imagePaths && block.imagePaths.length > 0) {
+      for (const imgPath of block.imagePaths) {
+        const imgId = await uploadMedia(
+          payload,
+          imgPath,
+          block.heading || 'Hero slide',
+        )
+        if (imgId) images.push({ image: imgId })
+      }
+    }
     let backgroundImageId = null
     if (block.imagePath) {
       backgroundImageId = await uploadMedia(
@@ -127,6 +174,7 @@ async function processBlock(
       subheading: block.subheading,
       ctaText: block.ctaText,
       ctaLink: block.ctaLink,
+      ...(images.length > 0 ? { images } : {}),
       ...(backgroundImageId ? { backgroundImage: backgroundImageId } : {}),
     }
   }
@@ -582,39 +630,6 @@ export async function seedBrands(payload: Payload): Promise<void> {
   }
 }
 
-export async function seedInstagramPosts(payload: Payload): Promise<void> {
-  console.log(`\n📸 Seeding ${instagramPosts.length} Instagram posts...`)
-
-  for (const ig of instagramPosts) {
-    const existing = await (payload.find as any)({
-      collection: 'instagram-posts',
-      where: { caption: { equals: ig.caption } },
-      overrideAccess: true,
-    })
-
-    if (existing.totalDocs === 0) {
-      const imageId = await uploadMedia(payload, ig.imagePath, ig.caption)
-      await (payload.create as any)({
-        collection: 'instagram-posts',
-        data: {
-          source: 'manual',
-          image: imageId,
-          caption: ig.caption,
-          permalink: ig.permalink,
-          mediaType: 'IMAGE',
-          sortOrder: ig.sortOrder,
-        },
-        overrideAccess: true,
-      })
-      console.log(`  ✅ Created Instagram post: ${ig.caption.slice(0, 50)}…`)
-    } else {
-      console.log(
-        `  ⏭️  Instagram post already exists: ${ig.caption.slice(0, 50)}…`,
-      )
-    }
-  }
-}
-
 export async function seedBlogPosts(payload: Payload): Promise<void> {
   console.log(`\n📝 Seeding ${blogPosts.length} blog posts...`)
 
@@ -657,11 +672,10 @@ export async function seedBlogPosts(payload: Payload): Promise<void> {
         ? await uploadMedia(payload, post.imagePath, post.title)
         : null
       if (featuredImageId) {
-        const oldImageId = doc.featuredImage
-          ? typeof doc.featuredImage === 'object'
+        const oldImageId =
+          typeof doc.featuredImage === 'object'
             ? (doc.featuredImage as any).id
             : doc.featuredImage
-          : null
         if (oldImageId !== featuredImageId) {
           await (payload.update as any)({
             collection: 'posts',
@@ -708,6 +722,48 @@ export async function seedNavigation(payload: Payload): Promise<void> {
   }
 }
 
+export async function seedInstagramPosts(payload: Payload): Promise<void> {
+  console.log(
+    `\n📸 Seeding ${instagramFallbackPosts.length} fallback Instagram posts...`,
+  )
+
+  const existing = await payload.find({
+    collection: 'instagram-posts',
+    limit: 1,
+    overrideAccess: true,
+  })
+
+  if (existing.totalDocs > 0) {
+    console.log('  ⏭️  Instagram posts already exist, skipping')
+    return
+  }
+
+  for (let i = 0; i < instagramFallbackPosts.length; i++) {
+    const post = instagramFallbackPosts[i]
+    const imageId = await uploadMedia(
+      payload,
+      post.imagePath,
+      post.caption.slice(0, 80),
+    )
+
+    await payload.create({
+      collection: 'instagram-posts',
+      data: {
+        source: 'manual',
+        caption: post.caption,
+        permalink: post.permalink,
+        mediaType: 'IMAGE',
+        sortOrder: i + 1,
+        ...(imageId ? { image: imageId } : {}),
+      },
+      overrideAccess: true,
+    })
+    console.log(
+      `  ✅ Created Instagram post ${i + 1}: ${post.caption.slice(0, 50)}...`,
+    )
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
@@ -743,12 +799,12 @@ async function main(): Promise<void> {
     await seedCollections(payload)
     await seedTags(payload)
     await seedBrands(payload)
-    await seedInstagramPosts(payload)
     await seedProducts(payload)
     await seedPages(payload)
     await seedBlogPosts(payload)
     await seedNavigation(payload)
     await seedSiteSettings(payload)
+    await seedInstagramPosts(payload)
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1)
     console.log(`\n🎉 Seed complete! (${elapsed}s)`)

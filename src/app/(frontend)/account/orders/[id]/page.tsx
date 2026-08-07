@@ -3,6 +3,8 @@ import Link from 'next/link'
 import { getPayload } from 'payload'
 import configPromise from '@payload-config'
 import { ArrowLeft, Calendar, CreditCard, Truck, Package } from 'lucide-react'
+import { OrderTimeline } from '@/components/order/OrderTimeline'
+import { getProductUrl } from '@/lib/product-url'
 
 // Page props in Next.js 15+ App Router are promises
 export default async function OrderDetailsPage({
@@ -77,18 +79,12 @@ export default async function OrderDetailsPage({
                 })}
               </p>
             </div>
-            <span
-              className={`font-display inline-block rounded-full px-3 py-1 text-[10px] font-bold tracking-wider uppercase ${
-                order.status === 'confirmed' || order.status === 'delivered'
-                  ? 'border border-green-100 bg-green-50 text-green-700'
-                  : order.status === 'cancelled'
-                    ? 'border border-red-100 bg-red-50 text-red-700'
-                    : 'border border-yellow-100 bg-yellow-50 text-yellow-700'
-              }`}
-            >
-              {order.status}
-            </span>
           </div>
+        </div>
+
+        {/* Order Timeline */}
+        <div className="mb-8 rounded-2xl border border-neutral-100 bg-white p-6 shadow-xs">
+          <OrderTimeline order={order} />
         </div>
 
         <div className="grid grid-cols-1 gap-8 md:grid-cols-12">
@@ -111,7 +107,11 @@ export default async function OrderDetailsPage({
 
                   return (
                     <Link
-                      href={`/products/${item.product?.slug || '#'}`}
+                      href={
+                        item.product?.id
+                          ? getProductUrl(item.product.slug, item.product.id)
+                          : '#'
+                      }
                       key={item.id || idx}
                       className="group hover:border-brand-200 hover:bg-brand-50/30 flex items-center gap-4 rounded-xl border border-neutral-100 bg-neutral-50/50 p-3 transition-colors"
                     >

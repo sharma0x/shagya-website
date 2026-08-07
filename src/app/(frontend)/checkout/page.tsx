@@ -1,12 +1,17 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useSession } from '@/lib/auth-client'
 import { useCart } from '@/lib/store/cart'
 import { loadRazorpayScript } from '@/lib/razorpay'
-import { AddressForm, type AddressFormData } from '@/components/address/AddressForm'
+import {
+  AddressForm,
+  type AddressFormData,
+} from '@/components/address/AddressForm'
+import { GuestCheckout } from '@/components/checkout/GuestCheckout'
+import { OffersSection } from '@/components/coupons/OffersSection'
 import {
   ArrowLeft,
   Check,
@@ -70,6 +75,26 @@ interface Cart {
 export default function CheckoutPage() {
   const router = useRouter()
   const { data: sessionData, isPending } = useSession()
+  const zCart = useCart()
+
+  // Guest cart derived from reactive Zustand hook — never stale
+  const guestCart: Cart = {
+    items: zCart.items.map((i) => ({
+      id: String(i.product.id),
+      product: {
+        id: String(i.product.id),
+        name: i.product.name,
+        slug: i.product.slug,
+        basePrice: i.unitPrice,
+        gallery: i.product.gallery,
+      },
+      variant: i.variant,
+      quantity: i.quantity,
+      unitPrice: i.unitPrice,
+    })),
+    subtotal: zCart.getSubtotal(),
+    coupon: zCart.coupon || undefined,
+  }
 
   const [step, setStep] = useState<1 | 2 | 3>(1)
   const [cart, setCart] = useState<Cart | null>(null)
@@ -78,6 +103,18 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState(false)
   const [error, setError] = useState('')
+  const [orderNotes, setOrderNotes] = useState('')
+
+  // Guest checkout
+  const [guestData, setGuestData] = useState<{
+    name: string
+    email: string
+  } | null>(null)
+
+  const isLoggedIn = !!sessionData?.user
+
+  // Effective cart: DB cart for logged-in, reactive hook cart for guests
+  const effectiveCart = isLoggedIn ? cart : guestCart
 
   // New address form state
   const [showNewAddressForm, setShowNewAddressForm] = useState(false)
@@ -86,12 +123,29 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState<'razorpay' | 'cod'>(
     'razorpay',
   )
+  const [shippingType, setShippingType] = useState<'standard' | 'express'>(
+    'standard',
+  )
 
-  // Load cart and addresses
+  // Coupon state
+  const [couponCode, setCouponCode] = useState('')
+  const [couponLoading, setCouponLoading] = useState(false)
+  const [couponError, setCouponError] = useState('')
+  const [appliedCoupon, setAppliedCoupon] = useState<any>(null)
+  const [activeCoupons, setActiveCoupons] = useState<any[]>([])
+
+  // Load cart and addresses — run only once on mount
+  const didLoad = useRef(false)
+
   useEffect(() => {
+    if (didLoad.current) return
     if (isPending) return
-    if (!sessionData?.user) {
-      router.push('/account/login?redirect=/checkout')
+
+    didLoad.current = true
+
+    if (!isLoggedIn) {
+      setLoading(false)
+      setShowNewAddressForm(true)
       return
     }
 
@@ -106,7 +160,7 @@ export default function CheckoutPage() {
           let cartData = await cartRes.json()
 
           // If DB cart is empty but local cart has items (e.g. they added items while logged out or sync failed earlier)
-          const localItems = useCart.getState().items
+          const localItems = zCart.items
           if (
             (!cartData.items || cartData.items.length === 0) &&
             localItems.length > 0
@@ -116,7 +170,7 @@ export default function CheckoutPage() {
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 items: localItems,
-                couponId: useCart.getState().coupon?.id || null,
+                couponId: zCart.coupon?.id || null,
               }),
             })
             if (syncRes.ok) {
@@ -153,11 +207,118 @@ export default function CheckoutPage() {
     }
 
     loadData()
-  }, [sessionData, isPending, router])
+  }, [sessionData, isPending]) // didLoad ref prevents re-runs after first mount
+
+  // Fetch pre-populated coupons
+  useEffect(() => {
+    if (!isLoggedIn) return
+    fetch('/api/coupons/available')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (d) setActiveCoupons(d.coupons || [])
+      })
+      .catch(() => {})
+  }, [isLoggedIn])
+
+  const handleApplyCouponWithCode = async (code: string): Promise<boolean> => {
+    setCouponError('')
+    setCouponLoading(true)
+    try {
+      const cartProductIds =
+        effectiveCart?.items?.map((item: any) =>
+          String(
+            typeof item.product === 'object' ? item.product.id : item.product,
+          ),
+        ) || []
+      const res = await fetch('/api/coupons/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: code.trim(),
+          subtotal,
+          productIds: cartProductIds,
+        }),
+      })
+      const data = await res.json()
+      if (data.valid) {
+        setAppliedCoupon(data.coupon)
+        setCouponCode('')
+        return true
+      } else {
+        setCouponError(data.error || 'Invalid coupon')
+        return false
+      }
+    } catch {
+      setCouponError('Could not validate coupon')
+      return false
+    } finally {
+      setCouponLoading(false)
+    }
+  }
+
+  const handleApplyCoupon = async () => {
+    setCouponError('')
+    if (!couponCode.trim()) return
+    setCouponLoading(true)
+    try {
+      const cartProductIds =
+        effectiveCart?.items?.map((item: any) =>
+          String(
+            typeof item.product === 'object' ? item.product.id : item.product,
+          ),
+        ) || []
+      const res = await fetch('/api/coupons/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: couponCode.trim(),
+          subtotal,
+          productIds: cartProductIds,
+        }),
+      })
+      const data = await res.json()
+      if (data.valid) {
+        setAppliedCoupon(data.coupon)
+        setCouponCode('')
+      } else {
+        setCouponError(data.error || 'Invalid coupon')
+      }
+    } catch {
+      setCouponError('Could not validate coupon')
+    } finally {
+      setCouponLoading(false)
+    }
+  }
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null)
+    setCouponError('')
+  }
 
   const handleAddNewAddress = async (data: AddressFormData) => {
     setActionLoading(true)
     setError('')
+
+    if (!isLoggedIn) {
+      // Guest — store address locally
+      const tempAddress = {
+        id: 'guest-addr',
+        fullName: data.fullName,
+        phone: data.phone,
+        line1: data.line1,
+        line2: data.line2 || '',
+        city: data.city,
+        state: data.state,
+        pincode: data.pincode,
+        country: data.country,
+        isDefault: false,
+      }
+      setAddresses([tempAddress])
+      setSelectedAddressId('guest-addr')
+      setShowNewAddressForm(false)
+      setActionLoading(false)
+      return
+    }
 
     try {
       const res = await fetch('/api/addresses', {
@@ -193,17 +354,17 @@ export default function CheckoutPage() {
   }
 
   // Cost calculations
-  const subtotal = cart?.subtotal || 0
-  const shipping = subtotal >= 5000 ? 0 : 150
+  const subtotal = effectiveCart?.subtotal || 0
+  const shipping = shippingType === 'express' ? 350 : subtotal >= 5000 ? 0 : 150
   let discount = 0
-  if (cart?.coupon) {
-    if (cart.coupon.type === 'percentage') {
-      discount = Math.round((subtotal * (cart.coupon.value || 0)) / 100)
-      if (cart.coupon.maxDiscount && discount > cart.coupon.maxDiscount) {
-        discount = cart.coupon.maxDiscount
+  if (appliedCoupon) {
+    if (appliedCoupon.type === 'percentage') {
+      discount = Math.round((subtotal * (appliedCoupon.value || 0)) / 100)
+      if (appliedCoupon.maxDiscount && discount > appliedCoupon.maxDiscount) {
+        discount = appliedCoupon.maxDiscount
       }
-    } else if (cart.coupon.type === 'fixed_amount') {
-      discount = cart.coupon.value || 0
+    } else if (appliedCoupon.type === 'fixed_amount') {
+      discount = appliedCoupon.value || 0
     }
   }
   const total = Math.max(0, subtotal + shipping - discount)
@@ -228,7 +389,18 @@ export default function CheckoutPage() {
           body: JSON.stringify({
             isCod: true,
             shippingAddress: selectedAddress,
-            phone: selectedAddress.phone,
+            phone: selectedAddress?.phone,
+            notes: orderNotes,
+            guestEmail: guestData?.email || '',
+            guestPhone: '',
+            shippingType,
+            cartItems: !isLoggedIn
+              ? effectiveCart?.items.map((i) => ({
+                  product: i.product.id,
+                  quantity: i.quantity,
+                  unitPrice: i.unitPrice,
+                }))
+              : undefined,
           }),
         })
 
@@ -238,7 +410,7 @@ export default function CheckoutPage() {
         }
 
         const data = await res.json()
-        useCart.getState().clearCart()
+        zCart.clearCart()
         router.push(`/checkout/success?orderNumber=${data.orderNumber}`)
       } else {
         // Razorpay checkout
@@ -251,6 +423,21 @@ export default function CheckoutPage() {
         const orderRes = await fetch('/api/razorpay/create-order', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            shippingAddress: selectedAddress,
+            phone: selectedAddress?.phone,
+            isCod: false,
+            guestEmail: guestData?.email || '',
+            guestPhone: '',
+            shippingType,
+            cartItems: !isLoggedIn
+              ? effectiveCart?.items.map((i) => ({
+                  product: i.product.id,
+                  quantity: i.quantity,
+                  unitPrice: i.unitPrice,
+                }))
+              : undefined,
+          }),
         })
 
         if (!orderRes.ok) {
@@ -273,7 +460,7 @@ export default function CheckoutPage() {
           order_id: razorpayOrder.id,
           prefill: {
             name: selectedAddress.fullName,
-            email: sessionData?.user?.email || '',
+            email: sessionData?.user?.email || guestData?.email || '',
             contact: selectedAddress.phone,
           },
           theme: {
@@ -291,6 +478,16 @@ export default function CheckoutPage() {
                   razorpay_signature: response.razorpay_signature,
                   shippingAddress: selectedAddress,
                   phone: selectedAddress.phone,
+                  notes: orderNotes,
+                  guestEmail: guestData?.email || '',
+                  guestPhone: '',
+                  cartItems: !isLoggedIn
+                    ? effectiveCart?.items.map((i) => ({
+                        product: i.product.id,
+                        quantity: i.quantity,
+                        unitPrice: i.unitPrice,
+                      }))
+                    : undefined,
                   isMock: razorpayOrder.isMock || false,
                 }),
               })
@@ -301,7 +498,7 @@ export default function CheckoutPage() {
               }
 
               const data = await verifyRes.json()
-              useCart.getState().clearCart()
+              zCart.clearCart()
               router.push(`/checkout/success?orderNumber=${data.orderNumber}`)
             } catch (err: any) {
               setError(err.message || 'Payment verification failed')
@@ -327,6 +524,16 @@ export default function CheckoutPage() {
               razorpay_signature: 'mock_signature',
               shippingAddress: selectedAddress,
               phone: selectedAddress.phone,
+              notes: orderNotes,
+              guestEmail: guestData?.email || '',
+              guestPhone: '',
+              cartItems: !isLoggedIn
+                ? effectiveCart?.items.map((i) => ({
+                    product: i.product.id,
+                    quantity: i.quantity,
+                    unitPrice: i.unitPrice,
+                  }))
+                : undefined,
               isMock: true,
             }),
           })
@@ -337,7 +544,7 @@ export default function CheckoutPage() {
           }
 
           const data = await verifyRes.json()
-          useCart.getState().clearCart()
+          zCart.clearCart()
           router.push(`/checkout/success?orderNumber=${data.orderNumber}`)
           return
         }
@@ -351,7 +558,8 @@ export default function CheckoutPage() {
     }
   }
 
-  if (loading || isPending) {
+  // Only show loading on first render — never on session re-checks (window focus)
+  if (loading && !didLoad.current) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
         <Loader2 className="text-brand-600 h-8 w-8 animate-spin" />
@@ -516,14 +724,49 @@ export default function CheckoutPage() {
                     )}
 
                     {selectedAddressId && (
-                      <div className="flex justify-end pt-4">
-                        <button
-                          onClick={() => setStep(2)}
-                          className="font-display bg-brand-600 hover:bg-brand-700 h-11 rounded-xl px-6 text-xs font-semibold text-white transition-all"
-                        >
-                          Proceed to Shipping
-                        </button>
-                      </div>
+                      <>
+                        {/* Guest checkout — email OTP verification */}
+                        {!isLoggedIn && !guestData && (
+                          <div className="mt-6 border-t border-neutral-100 pt-6">
+                            <GuestCheckout onVerified={setGuestData} />
+                          </div>
+                        )}
+
+                        {/* Guest verified */}
+                        {guestData && (
+                          <div className="mt-6 border-t border-neutral-100 pt-6">
+                            <div className="rounded-xl border border-green-100 bg-green-50 p-4">
+                              <p className="font-display text-xs font-semibold text-green-700">
+                                Verified — {guestData.name} · {guestData.email}
+                              </p>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Order notes */}
+                        <div className="mt-6 border-t border-neutral-100 pt-6">
+                          <h4 className="font-display mb-3 text-xs font-semibold tracking-wider text-neutral-500 uppercase">
+                            Delivery Instructions (Optional)
+                          </h4>
+                          <textarea
+                            value={orderNotes}
+                            onChange={(e) => setOrderNotes(e.target.value)}
+                            rows={2}
+                            placeholder="Landmark, gate code, or special instructions"
+                            className="font-body focus:border-brand-500 w-full resize-none rounded-xl border border-neutral-200 px-3 py-2 text-sm outline-none"
+                          />
+                        </div>
+
+                        <div className="flex justify-end pt-4">
+                          <button
+                            onClick={() => setStep(2)}
+                            disabled={!isLoggedIn && !guestData}
+                            className="font-display bg-brand-600 hover:bg-brand-700 h-11 rounded-xl px-6 text-xs font-semibold text-white transition-all disabled:bg-neutral-200 disabled:text-neutral-400"
+                          >
+                            Proceed to Shipping
+                          </button>
+                        </div>
+                      </>
                     )}
                   </div>
                 )}
@@ -539,16 +782,27 @@ export default function CheckoutPage() {
                 </h3>
 
                 <div className="space-y-4">
-                  <div className="flex items-start justify-between gap-4 rounded-xl border border-neutral-200 bg-neutral-50/50 p-4">
+                  {/* Standard Delivery */}
+                  <div
+                    onClick={() => setShippingType('standard')}
+                    className={`flex cursor-pointer items-start justify-between gap-4 rounded-xl border p-4 transition-all ${
+                      shippingType === 'standard'
+                        ? 'border-brand-600 bg-brand-50/20'
+                        : 'border-neutral-200 hover:border-neutral-300'
+                    }`}
+                  >
                     <div className="flex gap-3">
-                      <Truck className="text-brand-600 mt-0.5 h-5 w-5" />
+                      <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-neutral-300">
+                        {shippingType === 'standard' && (
+                          <div className="bg-brand-600 h-2.5 w-2.5 rounded-full" />
+                        )}
+                      </div>
                       <div>
                         <p className="font-display text-sm font-semibold text-neutral-900">
-                          Standard Handloom Dispatch
+                          Standard Delivery
                         </p>
                         <p className="font-body mt-1 text-xs text-neutral-500">
-                          Carefully verified, ironed, and packed in luxury
-                          storage box.
+                          Verified, ironed, and packed in luxury storage box.
                         </p>
                         <p className="font-body text-brand-700 mt-2 text-xs font-medium">
                           Est. Delivery: 4–6 business days to{' '}
@@ -557,8 +811,42 @@ export default function CheckoutPage() {
                         </p>
                       </div>
                     </div>
-                    <span className="font-display text-sm font-semibold text-neutral-900">
-                      {shipping === 0 ? 'FREE' : `₹${shipping}`}
+                    <span className="font-display text-sm font-semibold whitespace-nowrap text-neutral-900">
+                      {subtotal >= 5000 ? 'FREE' : '₹150'}
+                    </span>
+                  </div>
+
+                  {/* Express Delivery */}
+                  <div
+                    onClick={() => setShippingType('express')}
+                    className={`flex cursor-pointer items-start justify-between gap-4 rounded-xl border p-4 transition-all ${
+                      shippingType === 'express'
+                        ? 'border-brand-600 bg-brand-50/20'
+                        : 'border-neutral-200 hover:border-neutral-300'
+                    }`}
+                  >
+                    <div className="flex gap-3">
+                      <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-neutral-300">
+                        {shippingType === 'express' && (
+                          <div className="bg-brand-600 h-2.5 w-2.5 rounded-full" />
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-display text-sm font-semibold text-neutral-900">
+                          Express Delivery
+                        </p>
+                        <p className="font-body mt-1 text-xs text-neutral-500">
+                          Priority dispatch with fastest available courier.
+                        </p>
+                        <p className="font-body text-brand-700 mt-2 text-xs font-medium">
+                          Est. Delivery: 1–2 business days to{' '}
+                          {selectedAddress?.city || 'your city'} (
+                          {selectedAddress?.pincode})
+                        </p>
+                      </div>
+                    </div>
+                    <span className="font-display text-sm font-semibold whitespace-nowrap text-neutral-900">
+                      ₹350
                     </span>
                   </div>
 
@@ -677,7 +965,7 @@ export default function CheckoutPage() {
 
               {/* Items List */}
               <div className="mb-6 max-h-[320px] space-y-4 overflow-y-auto pr-2">
-                {cart?.items.map((item) => {
+                {effectiveCart?.items.map((item) => {
                   const firstImage = item.product.gallery?.[0]?.image
                   const imageUrl =
                     typeof firstImage === 'object' && firstImage !== null
@@ -735,6 +1023,63 @@ export default function CheckoutPage() {
                 })}
               </div>
 
+              {/* Coupon Code Section */}
+              <div className="border-t border-neutral-100 py-4">
+                {appliedCoupon ? (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Ticket className="text-success h-4 w-4" />
+                      <span className="font-display text-xs font-semibold text-neutral-900">
+                        {appliedCoupon.code} applied
+                      </span>
+                      <span className="font-body text-success text-[10px]">
+                        -₹{appliedCoupon.discount?.toLocaleString('en-IN') || 0}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleRemoveCoupon}
+                      className="font-display text-[11px] font-semibold text-red-500 hover:text-red-600"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={couponCode}
+                        onChange={(e) =>
+                          setCouponCode(e.target.value.toUpperCase())
+                        }
+                        placeholder="Enter coupon code"
+                        className="font-body focus:border-brand-500 h-9 flex-1 rounded-xl border border-neutral-200 px-3 text-xs outline-none"
+                        disabled={couponLoading}
+                      />
+                      <button
+                        type="button"
+                        onClick={handleApplyCoupon}
+                        disabled={couponLoading || !couponCode.trim()}
+                        className="font-display bg-brand-600 hover:bg-brand-700 h-9 rounded-xl px-4 text-[11px] font-semibold text-white transition-colors disabled:bg-neutral-200 disabled:text-neutral-400"
+                      >
+                        {couponLoading ? '...' : 'Apply'}
+                      </button>
+                    </div>
+                    {couponError && (
+                      <p className="text-[10px] text-red-500">{couponError}</p>
+                    )}
+                    {isLoggedIn && activeCoupons.length > 0 && (
+                      <OffersSection
+                        coupons={activeCoupons}
+                        variant="card"
+                        onApply={handleApplyCouponWithCode}
+                      />
+                    )}
+                  </div>
+                )}
+              </div>
+
               {/* Shipping Address Summary (if selected) */}
               {selectedAddress && (
                 <div className="border-t border-neutral-100 py-4 text-xs">
@@ -777,6 +1122,9 @@ export default function CheckoutPage() {
                   <span>Order Total</span>
                   <span>₹{total.toLocaleString('en-IN')}</span>
                 </div>
+                <p className="mt-1 text-right text-[10px] font-medium text-red-500">
+                  * Excluding delivery charges
+                </p>
               </div>
             </div>
           </div>

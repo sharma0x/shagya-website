@@ -423,19 +423,6 @@
   }
 }
 
-/* Navigation loader — top progress bar on page transitions */
-@keyframes loader-bar {
-  0% {
-    transform: translateX(-100%) scaleX(0.3);
-  }
-  40% {
-    transform: translateX(0%) scaleX(0.6);
-  }
-  100% {
-    transform: translateX(100%) scaleX(0.3);
-  }
-}
-
 /* Skeleton shimmer — image and card loading states */
 @keyframes skeleton-shimmer {
   0% {
@@ -457,10 +444,28 @@
   animation: skeleton-shimmer 1.4s ease-in-out infinite;
 }
 
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.35;
+  }
+  100% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
+
+.animate-pulse-ring {
+  animation: pulse-ring 2.2s cubic-bezier(0.33, 0, 0.67, 1) infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .skeleton {
     animation: none;
     background: oklch(0.9 0.005 346);
+  }
+  .animate-pulse-ring {
+    animation: none;
   }
 }
 

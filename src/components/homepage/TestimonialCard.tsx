@@ -6,6 +6,7 @@ interface TestimonialCardProps {
   name: string
   location?: string
   rating?: number
+  avatarUrl?: string | null
   className?: string
 }
 
@@ -14,6 +15,7 @@ export function TestimonialCard({
   name,
   location,
   rating = 5,
+  avatarUrl,
   className,
 }: TestimonialCardProps) {
   return (
@@ -43,9 +45,17 @@ export function TestimonialCard({
 
       {/* Author */}
       <div className="border-brand-100/40 mt-5 flex items-center gap-3 border-t pt-4">
-        <div className="bg-brand-100 text-brand-600 flex h-9 w-9 items-center justify-center rounded-full text-xs font-semibold">
-          {name.charAt(0).toUpperCase()}
-        </div>
+        {avatarUrl ? (
+          <img
+            src={avatarUrl}
+            alt={name}
+            className="h-9 w-9 rounded-full object-cover"
+          />
+        ) : (
+          <div className="bg-brand-100 text-brand-600 flex h-9 w-9 items-center justify-center rounded-full text-xs font-semibold">
+            {name.charAt(0).toUpperCase()}
+          </div>
+        )}
         <div>
           <cite className="font-display text-brand-900 text-sm font-semibold not-italic">
             {name}

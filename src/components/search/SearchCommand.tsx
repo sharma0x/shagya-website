@@ -6,6 +6,7 @@ import { Search, X, CornerDownLeft } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
+import { getProductUrl } from '@/lib/product-url'
 
 interface FTSProductResult {
   id: number
@@ -48,7 +49,7 @@ const ph = (w: number, h: number, bg: string, fg: string, text: string) =>
   `https://placehold.co/${w}x${h}/${bg}/${fg}?text=${encodeURIComponent(text)}&font=lora`
 
 function getResultUrl(doc: SearchResult): string {
-  if (doc.type === 'product') return `/products/${doc.slug}`
+  if (doc.type === 'product') return getProductUrl(doc.slug, doc.id)
   return `/blog/${doc.slug}`
 }
 

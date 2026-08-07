@@ -81,7 +81,7 @@ export function WishlistButton({
       }}
       disabled={loading}
       className={cn(
-        'flex h-8 w-8 items-center justify-center rounded-full border border-neutral-200/50 bg-white/90 text-neutral-600 shadow-xs transition-colors hover:bg-white',
+        'flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-neutral-200/50 bg-white/90 text-neutral-600 shadow-xs transition-colors hover:bg-white',
         className,
       )}
       aria-label={inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'}
