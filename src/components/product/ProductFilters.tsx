@@ -550,7 +550,7 @@ export function ProductFilters({
         expanded={expandedSections.weave}
         onToggle={() => toggleSection('weave')}
       >
-        <div className="max-h-48 space-y-2 overflow-y-auto">
+        <div className="space-y-2">
           {WEAVE_OPTIONS.filter(
             (opt) =>
               !facets ||
@@ -807,7 +807,9 @@ export function ProductFilters({
                 </button>
               )}
             </div>
-            <div className="mt-4">{filterContent}</div>
+            <div className="mt-4 max-h-[calc(100vh-7rem)] overflow-y-auto pr-2">
+              {filterContent}
+            </div>
           </div>
         </aside>
       )}
