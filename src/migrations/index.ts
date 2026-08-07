@@ -11,6 +11,7 @@ import * as migration_20260719_123300_add_coupons_fields_and_rels from './202607
 import * as migration_20260726_162500_add_hero_images_array from './20260726_162500_add_hero_images_array'
 import * as migration_20260726_165100_announcement_bar_array from './20260726_165100_announcement_bar_array'
 import * as migration_20260807_150206 from './20260807_150206'
+import * as migration_20260807_204000_color_variants from './20260807_204000_color_variants'
 
 export const migrations = [
   {
@@ -77,5 +78,10 @@ export const migrations = [
     up: migration_20260807_150206.up,
     down: migration_20260807_150206.down,
     name: '20260807_150206',
+  },
+  {
+    up: migration_20260807_204000_color_variants.up,
+    down: migration_20260807_204000_color_variants.down,
+    name: '20260807_204000_color_variants',
   },
 ]
