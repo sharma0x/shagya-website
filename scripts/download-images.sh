@@ -35,7 +35,7 @@ all_exist() {
   return 0
 }
 
-all_exist "$PROD" saree jpg 23 yes && all_exist "$BLOG" blog jpg 5 no && all_exist "$HERO" hero jpg 2 no && all_exist "$AVTR" avatar jpg 3 no && all_exist "$IG" ig jpg 5 no && { echo "  ✅  All seed images already present. Skipping."; exit 0; }
+all_exist "$PROD" saree jpg 97 yes && all_exist "$BLOG" blog jpg 5 no && all_exist "$HERO" hero jpg 2 no && all_exist "$AVTR" avatar jpg 3 no && all_exist "$IG" ig jpg 5 no && { echo "  ✅  All seed images already present. Skipping."; exit 0; }
 
 # Download a batch from Pinterest to a temp dir, then rename sequentially.
 # Args: query dest_dir prefix ext count printf_fmt
@@ -65,9 +65,32 @@ download_batch() {
 }
 
 # ---------------------------------------------------------------------------
-# Product images — 23 saree photos (zero-padded: saree-01.jpg)
+# Product images — 100 saree photos (zero-padded: saree-01.jpg through saree-99.jpg)
+# Multiple queries for variety. All download into a shared temp dir, then
+# renamed sequentially with zero-padded numbering.
 # ---------------------------------------------------------------------------
-download_batch "saaree instagram models" "$PROD" saree jpg 23 "%02d"
+  echo ""
+  echo "  📸  products/ (100 images, multiple queries)..."
+  TMP_DIR="$TEMP_DIR/products"
+  rm -rf "$TMP_DIR"
+  mkdir -p "$TMP_DIR"
+
+  uv run scripts/pinterest-dl.py "saree instagram models" "$TMP_DIR" --num 30 --delay 0.5
+  uv run scripts/pinterest-dl.py "indian silk saree models" "$TMP_DIR" --num 30 --delay 0.5
+  uv run scripts/pinterest-dl.py "handloom cotton saree models" "$TMP_DIR" --num 30 --delay 0.5
+  uv run scripts/pinterest-dl.py "indian bridal wedding saree models" "$TMP_DIR" --num 30 --delay 0.5
+
+  local i=1
+  while IFS= read -r -d '' f; do
+    dest=$(printf "%s/%s-%02d.jpg" "$PROD" saree "$i")
+    if [[ "$f" != *.jpg && "$f" != *.jpeg ]]; then
+      sips -s format jpeg "$f" --out "$dest" &>/dev/null 2>&1
+    else
+      cp "$f" "$dest"
+    fi
+    echo "    ✅  $(basename "$dest")"
+    i=$((i + 1))
+  done < <(find "$TMP_DIR" -maxdepth 1 -type f \( -name '*.jpg' -o -name '*.jpeg' -o -name '*.png' -o -name '*.webp' \) -print0)
 
 # ---------------------------------------------------------------------------
 # Blog images — 5 featured images (blog-1.jpg to blog-5.jpg)
