@@ -137,6 +137,7 @@ export function ProductCard({
             <p className="font-body mt-0.5 text-xs text-neutral-400">
               {[product.weave, product.fabric, product.color?.name]
                 .filter(Boolean)
+                .map((s) => (s ?? '').toLowerCase())
                 .join(' · ')}
             </p>
           </div>
@@ -261,6 +262,7 @@ export function ProductCard({
             <p className="text-brand-700/60 mt-0.5 text-xs">
               {[product.weave, product.fabric, product.color?.name]
                 .filter(Boolean)
+                .map((s) => (s ?? '').toLowerCase())
                 .join(' · ')}
             </p>
           )}
