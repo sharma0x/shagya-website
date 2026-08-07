@@ -216,9 +216,13 @@ export default async function ProductDetailPage({
   const couponsData = couponsRes.ok ? await couponsRes.json() : { coupons: [] }
   const productCoupons = couponsData.coupons || []
 
+  const firstVariant = (product.colorVariants || []).find(
+    (v: any) => v.enabled !== false && v.color,
+  )
+  const defaultGallery = firstVariant?.gallery || []
   const imageUrls =
-    product.gallery && product.gallery.length > 0
-      ? product.gallery.map((g: any) =>
+    defaultGallery.length > 0
+      ? defaultGallery.map((g: any) =>
           typeof g.image === 'object' && g.image !== null
             ? g.image.url
             : '/images/placeholder.jpg',
@@ -247,18 +251,25 @@ export default async function ProductDetailPage({
       average: avgRating,
       count: reviews.length,
     },
-    colors: (() => {
-      const colorSet = new Set<string>()
-      if (product.color) colorSet.add(product.color)
-      return Array.from(colorSet)
-    })(),
-    gallery: product.gallery?.map((g: any) => ({
-      image:
-        typeof g.image === 'object' && g.image !== null
-          ? { url: g.image.url, sizes: g.image.sizes }
-          : g.image,
-      alt: g.alt || product.name,
-    })),
+    colorVariants: (product.colorVariants || [])
+      .filter((v: any) => v.enabled !== false && v.color)
+      .map((v: any) => ({
+        color: {
+          slug: v.color.slug,
+          name: v.color.name,
+          hex: v.color.hex,
+        },
+        gallery: (v.gallery || []).map((g: any) => ({
+          image:
+            typeof g.image === 'object' && g.image !== null
+              ? { url: g.image.url, sizes: g.image.sizes }
+              : g.image,
+          alt: g.alt || product.name,
+        })),
+        priceOverride: v.priceOverride ?? null,
+        stock: v.stock ?? 0,
+        sku: v.sku ?? null,
+      })),
     fabric: product.fabric,
     weave: product.weave,
   }
