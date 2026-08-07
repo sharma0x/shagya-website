@@ -139,12 +139,12 @@ export function ProductActions({
   return (
     <div className="space-y-7">
       {/* Color Variant Picker */}
-      {variants.length > 1 && (
+      {variants.length > 1 ? (
         <div>
           <p className="font-display text-xs font-semibold text-neutral-500">
             Color — {selectedVariant?.color?.name || ''}
           </p>
-          <div className="mt-2.5 flex flex-wrap gap-2.5">
+          <div className="mt-2.5 flex flex-wrap gap-2">
             {variants.map((v, idx) => (
               <button
                 key={v.color.slug}
@@ -161,17 +161,31 @@ export function ProductActions({
                   }
                 }}
                 title={v.color.name}
-                className={`h-8 w-8 rounded-full border-2 transition-all ${
+                className={`h-9 w-9 rounded-full transition-all duration-200 ${
                   selectedVariantIndex === idx
-                    ? 'border-brand-600 ring-brand-200 scale-110 ring-2'
-                    : 'border-neutral-200 hover:border-neutral-400'
+                    ? 'scale-110 shadow-md'
+                    : 'opacity-70 hover:scale-105 hover:opacity-100'
                 }`}
-                style={{ backgroundColor: v.color.hex }}
+                style={{
+                  backgroundColor: v.color.hex,
+                  outline:
+                    selectedVariantIndex === idx
+                      ? `2px solid ${v.color.hex}`
+                      : '2px solid transparent',
+                  outlineOffset: '2px',
+                }}
               />
             ))}
           </div>
         </div>
-      )}
+      ) : variants.length === 1 ? (
+        <div>
+          <p className="font-display text-xs font-semibold text-neutral-500">
+            Color —{' '}
+            <span className="text-neutral-800">{variants[0].color.name}</span>
+          </p>
+        </div>
+      ) : null}
 
       {selectedVariant?.priceOverride &&
         selectedVariant.priceOverride !== product.basePrice && (
