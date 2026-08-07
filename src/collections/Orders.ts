@@ -143,20 +143,6 @@ export const Orders: CollectionConfig = {
     delete: ({ req: { user } }) => Boolean(user),
   },
   hooks: {
-    afterOperation: [
-      async ({ operation, result, req }) => {
-        if (operation !== 'create') return result
-        const id = (result as Record<string, unknown>)?.id as string | undefined
-        if (!id) return result
-        // Fire-and-forget — email failure must never affect the order response
-        sendOrderPlacedEmails(req.payload, id).catch((err) =>
-          req.payload.logger.error(
-            `[Email] sendOrderPlacedEmails failed: ${err}`,
-          ),
-        )
-        return result
-      },
-    ],
     beforeChange: [
       async ({ data, operation, originalDoc, req }) => {
         // Auto-set status timestamps on update
@@ -204,6 +190,40 @@ export const Orders: CollectionConfig = {
     ],
     afterChange: [
       async ({ doc, previousDoc, operation, req }) => {
+        if (operation === 'create') {
+          const docId = (doc as Record<string, unknown>).id as string
+          if (docId) {
+            // Await to guarantee execution in serverless environments (e.g. Vercel)
+            try {
+              await sendOrderPlacedEmails(req.payload, docId)
+            } catch (err) {
+              req.payload.logger.error(
+                `[Email] sendOrderPlacedEmails failed: ${err}`,
+              )
+            }
+
+            const initialStatus = (doc as Record<string, unknown>).status as
+              | string
+              | undefined
+            if (initialStatus && initialStatus !== 'pending') {
+              const orderId = (doc as Record<string, unknown>)
+                .orderNumber as string
+              const items = (doc as Record<string, unknown>).items as
+                | Array<{ product?: string | number; quantity?: number }>
+                | undefined
+              scheduleSideEffects(
+                req.payload,
+                docId,
+                orderId,
+                null,
+                initialStatus,
+                items,
+              )
+            }
+          }
+          return doc
+        }
+
         if (operation !== 'update') return doc
 
         const prevStatus = (previousDoc as Record<string, unknown> | undefined)
