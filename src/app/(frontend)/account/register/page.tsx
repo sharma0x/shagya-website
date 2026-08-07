@@ -3,7 +3,14 @@
 import { useState, useCallback } from 'react'
 import { signIn } from '@/lib/auth-client'
 import Link from 'next/link'
-import { ArrowLeft, Mail, User, KeyRound, AlertCircle, Loader2 } from 'lucide-react'
+import {
+  ArrowLeft,
+  Mail,
+  User,
+  KeyRound,
+  AlertCircle,
+  Loader2,
+} from 'lucide-react'
 import { PhoneInput } from '@/components/ui/phone-input'
 
 export default function RegisterPage() {

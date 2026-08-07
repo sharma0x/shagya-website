@@ -106,7 +106,11 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                         {item.product.name}
                       </h4>
                       <p className="font-body mt-0.5 text-xs text-neutral-500">
-                        {[item.product.weave, item.product.fabric, item.variant?.color?.name]
+                        {[
+                          item.product.weave,
+                          item.product.fabric,
+                          item.variant?.color?.name,
+                        ]
                           .filter(Boolean)
                           .map((s) => (s ?? '').toLowerCase())
                           .join(' · ')}

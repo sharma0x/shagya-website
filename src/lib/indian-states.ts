@@ -11,7 +11,10 @@ export const INDIAN_STATES: IndianStateOption[] = [
   { label: 'Bihar', value: 'Bihar' },
   { label: 'Chandigarh', value: 'Chandigarh' },
   { label: 'Chhattisgarh', value: 'Chhattisgarh' },
-  { label: 'Dadra & Nagar Haveli and Daman & Diu', value: 'Dadra and Nagar Haveli and Daman and Diu' },
+  {
+    label: 'Dadra & Nagar Haveli and Daman & Diu',
+    value: 'Dadra and Nagar Haveli and Daman and Diu',
+  },
   { label: 'Delhi', value: 'Delhi' },
   { label: 'Goa', value: 'Goa' },
   { label: 'Gujarat', value: 'Gujarat' },

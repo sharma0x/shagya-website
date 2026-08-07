@@ -3,7 +3,6 @@ import { Public_Sans, Sora, Noto_Sans_Devanagari } from 'next/font/google'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav'
-import { NavigationLoader } from '@/components/ui/NavigationLoader'
 import './globals.css'
 
 const sora = Sora({
@@ -57,7 +56,6 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="font-body flex min-h-screen flex-col pb-16 antialiased lg:pb-0">
-        <NavigationLoader />
         <Header />
         <main className="flex-1">{children}</main>
         <Footer />

@@ -1,7 +1,14 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import { Loader2, Check, AlertCircle, UserPlus, Mail, KeyRound } from 'lucide-react'
+import {
+  Loader2,
+  Check,
+  AlertCircle,
+  UserPlus,
+  Mail,
+  KeyRound,
+} from 'lucide-react'
 
 interface GuestCheckoutProps {
   onVerified: (data: { name: string; email: string }) => void

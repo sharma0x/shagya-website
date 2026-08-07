@@ -17,6 +17,15 @@ import { useCart } from '@/lib/store/cart'
 import { useUI } from '@/lib/store/ui'
 import { CartDrawer } from '@/components/cart/CartDrawer'
 import { SearchCommand } from '@/components/search/SearchCommand'
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  navigationMenuTriggerStyle,
+} from '@/components/ui/navigation-menu'
 import { useSession } from '@/lib/auth-client'
 
 const megaMenu = {
@@ -55,9 +64,6 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [mobileSareesOpen, setMobileSareesOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-  const [megaMenuOpen, setMegaMenuOpen] = useState(false)
-  const megaMenuTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const megaMenuRef = useRef<HTMLDivElement>(null)
   const [announcement, setAnnouncement] = useState<{
     enabled: boolean
     announcements: { text: string; link?: string }[]
@@ -137,36 +143,6 @@ export function Header() {
     }
     prevUserRef.current = sessionData?.user
   }, [sessionData?.user])
-
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (
-        megaMenuRef.current &&
-        !megaMenuRef.current.contains(e.target as Node)
-      ) {
-        setMegaMenuOpen(false)
-      }
-    }
-    if (megaMenuOpen) {
-      document.addEventListener('mousedown', handleClickOutside)
-    }
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [megaMenuOpen])
-
-  useEffect(() => {
-    return () => {
-      if (megaMenuTimeout.current) clearTimeout(megaMenuTimeout.current)
-    }
-  }, [])
-
-  const openMegaMenu = () => {
-    if (megaMenuTimeout.current) clearTimeout(megaMenuTimeout.current)
-    setMegaMenuOpen(true)
-  }
-
-  const closeMegaMenu = () => {
-    megaMenuTimeout.current = setTimeout(() => setMegaMenuOpen(false), 150)
-  }
 
   const cartCount = items.reduce((acc, item) => acc + item.quantity, 0)
 
@@ -275,72 +251,47 @@ export function Header() {
             <Logo wordmarkClassName="text-neutral-900" />
 
             {/* Desktop Nav */}
-            <nav className="hidden items-center gap-1 lg:flex">
-              {/* Sarees with mega dropdown */}
-              <div
-                ref={megaMenuRef}
-                className="relative"
-                onMouseEnter={() => openMegaMenu()}
-                onMouseLeave={() => closeMegaMenu()}
-              >
-                <Link
-                  href="/category/all"
-                  className="font-body hover:text-brand-700 after:bg-brand-600 relative flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium text-neutral-600 transition-colors after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:transition-transform hover:after:scale-x-100"
-                >
-                  Sarees
-                  <svg
-                    className="h-3 w-3"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <path d="m6 9 6 6 6-6" />
-                  </svg>
-                </Link>
-
-                {megaMenuOpen && (
-                  <div
-                    className="absolute top-full left-1/2 z-50 -translate-x-1/2 pt-2"
-                    onMouseEnter={() => openMegaMenu()}
-                    onMouseLeave={() => closeMegaMenu()}
-                  >
-                    <div className="animate-scale-in origin-top overflow-hidden rounded-xl border border-neutral-200/60 bg-white shadow-lg ring-1 ring-black/3">
+            <div className="hidden items-center lg:flex">
+              <NavigationMenu>
+                <NavigationMenuList className="gap-1">
+                  <NavigationMenuItem>
+                    <NavigationMenuTrigger className="font-body hover:text-brand-700 after:bg-brand-600 relative h-auto rounded-lg bg-transparent px-3 py-2 text-sm font-medium text-neutral-600 transition-colors after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:transition-transform hover:bg-transparent hover:after:scale-x-100">
+                      Sarees
+                    </NavigationMenuTrigger>
+                    <NavigationMenuContent>
                       <div className="flex divide-x divide-neutral-100">
                         {/* Fabric column */}
-                        <div className="px-8 py-6">
+                        <div className="min-w-max px-8 py-6">
                           <h4 className="font-display text-gold-500 mb-4 text-[11px] font-semibold tracking-[0.15em] uppercase">
                             By Fabric
                           </h4>
                           <div className="grid grid-cols-2 gap-x-8 gap-y-0.5">
                             {megaMenu.fabrics.map((f) => (
-                              <Link
+                              <NavigationMenuLink
                                 key={f.value}
-                                href={`/category/${f.value}`}
-                                onClick={() => setMegaMenuOpen(false)}
-                                className="font-body hover:text-brand-700 hover:bg-brand-50/60 rounded-md px-2.5 py-1.5 text-sm tracking-wide text-neutral-600 transition-colors"
+                                render={<Link href={`/category/${f.value}`} />}
+                                className="font-body hover:text-brand-700 hover:bg-brand-50/60 block rounded-md px-2.5 py-1.5 text-sm tracking-wide whitespace-nowrap text-neutral-600 transition-colors"
                               >
                                 {f.label}
-                              </Link>
+                              </NavigationMenuLink>
                             ))}
                           </div>
                         </div>
 
                         {/* Weave column */}
-                        <div className="px-8 py-6">
+                        <div className="min-w-max px-8 py-6">
                           <h4 className="font-display text-gold-500 mb-4 text-[11px] font-semibold tracking-[0.15em] uppercase">
                             By Weave
                           </h4>
                           <div className="grid grid-cols-2 gap-x-8 gap-y-0.5">
                             {megaMenu.weaves.map((w) => (
-                              <Link
+                              <NavigationMenuLink
                                 key={w.value}
-                                href={`/category/${w.value}`}
-                                onClick={() => setMegaMenuOpen(false)}
-                                className="font-body hover:text-brand-700 hover:bg-brand-50/60 rounded-md px-2.5 py-1.5 text-sm tracking-wide text-neutral-600 transition-colors"
+                                render={<Link href={`/category/${w.value}`} />}
+                                className="font-body hover:text-brand-700 hover:bg-brand-50/60 block rounded-md px-2.5 py-1.5 text-sm tracking-wide whitespace-nowrap text-neutral-600 transition-colors"
                               >
                                 {w.label}
-                              </Link>
+                              </NavigationMenuLink>
                             ))}
                           </div>
                         </div>
@@ -351,31 +302,27 @@ export function Header() {
                             <h4 className="font-display text-gold-500 mb-4 text-[11px] font-semibold tracking-[0.15em] uppercase">
                               Curated
                             </h4>
-                            <Link
-                              href="/collections"
-                              onClick={() => setMegaMenuOpen(false)}
-                              className="font-display text-brand-600 hover:text-brand-700 block text-sm leading-relaxed font-medium tracking-wide transition-colors"
+                            <NavigationMenuLink
+                              render={<Link href="/collections" />}
+                              className="font-display text-brand-600 hover:text-brand-700 block text-sm leading-relaxed font-medium tracking-wide whitespace-nowrap transition-colors"
                             >
                               New Arrivals
-                            </Link>
-                            <Link
-                              href="/category/silk"
-                              onClick={() => setMegaMenuOpen(false)}
-                              className="font-display text-brand-600 hover:text-brand-700 mt-2 block text-sm leading-relaxed font-medium tracking-wide transition-colors"
+                            </NavigationMenuLink>
+                            <NavigationMenuLink
+                              render={<Link href="/category/silk" />}
+                              className="font-display text-brand-600 hover:text-brand-700 mt-2 block text-sm leading-relaxed font-medium tracking-wide whitespace-nowrap transition-colors"
                             >
                               Pure Silks
-                            </Link>
-                            <Link
-                              href="/category/banarasi"
-                              onClick={() => setMegaMenuOpen(false)}
-                              className="font-display text-brand-600 hover:text-brand-700 mt-2 block text-sm leading-relaxed font-medium tracking-wide transition-colors"
+                            </NavigationMenuLink>
+                            <NavigationMenuLink
+                              render={<Link href="/category/banarasi" />}
+                              className="font-display text-brand-600 hover:text-brand-700 mt-2 block text-sm leading-relaxed font-medium tracking-wide whitespace-nowrap transition-colors"
                             >
                               Banarasi Heritage
-                            </Link>
+                            </NavigationMenuLink>
                           </div>
-                          <Link
-                            href="/category/all"
-                            onClick={() => setMegaMenuOpen(false)}
+                          <NavigationMenuLink
+                            render={<Link href="/category/all" />}
                             className="font-display text-brand-600 hover:text-brand-700 inline-flex items-center gap-1 text-xs font-semibold tracking-wider uppercase transition-colors"
                           >
                             Shop All
@@ -388,24 +335,25 @@ export function Header() {
                             >
                               <path d="M5 12h14M12 5l7 7-7 7" />
                             </svg>
-                          </Link>
+                          </NavigationMenuLink>
                         </div>
                       </div>
-                    </div>
-                  </div>
-                )}
-              </div>
+                    </NavigationMenuContent>
+                  </NavigationMenuItem>
 
-              {topNav.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className="font-body hover:text-brand-700 after:bg-brand-600 relative rounded-lg px-3 py-2 text-sm font-medium text-neutral-600 transition-colors after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:transition-transform hover:after:scale-x-100"
-                >
-                  {link.label}
-                </Link>
-              ))}
-            </nav>
+                  {topNav.map((link) => (
+                    <NavigationMenuItem key={link.href}>
+                      <NavigationMenuLink
+                        render={<Link href={link.href} />}
+                        className="font-body hover:text-brand-700 after:bg-brand-600 relative rounded-lg px-3 py-2 text-sm font-medium text-neutral-600 transition-colors after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:transition-transform hover:after:scale-x-100"
+                      >
+                        {link.label}
+                      </NavigationMenuLink>
+                    </NavigationMenuItem>
+                  ))}
+                </NavigationMenuList>
+              </NavigationMenu>
+            </div>
 
             {/* Spacer */}
             <div className="hidden flex-1 lg:block" />
@@ -527,7 +475,7 @@ export function Header() {
                       key={f.value}
                       href={`/category/${f.value}`}
                       onClick={() => setMobileMenuOpen(false)}
-                      className="font-body hover:text-brand-700 rounded-md px-3 py-1.5 text-sm tracking-wide text-neutral-600 transition-colors"
+                      className="font-body hover:text-brand-700 block rounded-md px-3 py-1.5 text-sm tracking-wide text-neutral-600 transition-colors"
                     >
                       {f.label}
                     </Link>
@@ -544,7 +492,7 @@ export function Header() {
                       key={w.value}
                       href={`/category/${w.value}`}
                       onClick={() => setMobileMenuOpen(false)}
-                      className="font-body hover:text-brand-700 rounded-md px-3 py-1.5 text-sm tracking-wide text-neutral-600 transition-colors"
+                      className="font-body hover:text-brand-700 block rounded-md px-3 py-1.5 text-sm tracking-wide text-neutral-600 transition-colors"
                     >
                       {w.label}
                     </Link>
