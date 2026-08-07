@@ -330,4 +330,19 @@ ${btn('{{passwordResetUrl}}', 'Reset Password')}
 <p style="margin:28px 0 0;font-size:13px;color:#9B8E93;">If you didn't request this, you can safely ignore this email. Your current password will remain unchanged.</p>
 `),
   },
+
+  // ── Customer: OTP passcode ──────────────────────────────────────────────────
+  'otp-email': {
+    subject: '{{otp}} is your Shayga verification code',
+    body: wrap(`
+<h2 style="margin:0 0 6px;font-family:Georgia,serif;font-size:22px;font-weight:400;color:#6B2448;">Verification Code</h2>
+<p style="margin:0 0 24px;font-size:14px;color:#6B5E63;padding-bottom:20px;border-bottom:1px solid #E8DDE2;">Use the code below to verify your identity. This code expires in 5 minutes.</p>
+
+<div style="background:#FAF5F7;border:2px solid #E8DDE2;border-radius:8px;padding:28px;text-align:center;margin-bottom:20px">
+  <span style="font-family:monospace;font-size:36px;font-weight:700;letter-spacing:8px;color:#6B2448;">{{otp}}</span>
+</div>
+
+<p style="margin:0;font-size:13px;color:#9B8E93;">If you didn't request this code, you can safely ignore this email.</p>
+`),
+  },
 }

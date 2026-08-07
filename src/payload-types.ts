@@ -247,7 +247,8 @@ export interface EmailTemplate {
     | 'verify-email'
     | 'magic-link'
     | 'back-in-stock'
-    | 'password-reset';
+    | 'password-reset'
+    | 'otp-email';
   /**
    * When unchecked, the system falls back to the built-in default template for this email.
    */
