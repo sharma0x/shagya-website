@@ -106,23 +106,15 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                         {item.product.name}
                       </h4>
                       <p className="font-body mt-0.5 text-xs text-neutral-500">
-                        {item.product.weave} · {item.product.fabric}
+                        {[item.product.weave, item.product.fabric, item.variant?.color?.name]
+                          .filter(Boolean)
+                          .map((s) => (s ?? '').toLowerCase())
+                          .join(' · ')}
                       </p>
                       {item.variant?.size && (
                         <p className="font-body mt-1 text-[11px] text-neutral-400">
                           Size: {item.variant.size}
                         </p>
-                      )}
-                      {item.variant?.color && (
-                        <div className="mt-1 flex items-center gap-1.5">
-                          <span
-                            className="inline-block h-3 w-3 rounded-full border border-neutral-300"
-                            style={{ backgroundColor: item.variant.color.hex }}
-                          />
-                          <span className="font-body text-[11px] text-neutral-500">
-                            {item.variant.color.name}
-                          </span>
-                        </div>
                       )}
 
                       {/* Controls */}

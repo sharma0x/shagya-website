@@ -43,6 +43,8 @@ interface CartItem {
     id: string
     name: string
     slug: string
+    weave?: string
+    fabric?: string
     gallery?: Array<{
       image?:
         | {
@@ -86,6 +88,8 @@ export default function CheckoutPage() {
         id: String(i.product.id),
         name: i.product.name,
         slug: i.product.slug,
+        weave: i.product.weave,
+        fabric: i.product.fabric,
         basePrice: i.unitPrice,
         gallery: i.product.gallery,
       },
@@ -1002,18 +1006,13 @@ export default function CheckoutPage() {
                           {item.product.name}
                         </h4>
 
-                        {item.variant?.color && (
-                          <div className="mt-0.5 flex items-center gap-1.5">
-                            <span
-                              className="inline-block h-3 w-3 rounded-full border border-neutral-300"
-                              style={{
-                                backgroundColor: item.variant.color.hex,
-                              }}
-                            />
-                            <span className="font-body text-xs text-neutral-500">
-                              {item.variant.color.name}
-                            </span>
-                          </div>
+                        {[item.product.weave, item.product.fabric, item.variant?.color?.name].filter(Boolean).length > 0 && (
+                          <p className="font-body mt-0.5 text-xs text-neutral-500">
+                            {[item.product.weave, item.product.fabric, item.variant?.color?.name]
+                              .filter(Boolean)
+                              .map((s) => (s ?? '').toLowerCase())
+                              .join(' · ')}
+                          </p>
                         )}
 
                         <div className="mt-1.5 flex items-center justify-between">
