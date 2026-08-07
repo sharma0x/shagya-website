@@ -25,6 +25,13 @@
 - Always wrap constraints in `DO $$ BEGIN ... EXCEPTION WHEN duplicate_object THEN null; END $$;` for idempotency
 - `payload_migrations` table tracks applied migrations — no duplicate application
 
+## PDP Trust Signals — Admin-Editable (2026-08-08)
+
+- Product page trust signals ("Handloom verified" etc.) live in **Site Settings global → `trustSignals`** array (icon select: shield/truck/refresh/badge/package/sparkles, title, detail). Editable at `/admin/globals/site-settings`.
+- PDP renders them below the buy actions via `PDPClientSection`'s `belowActions` slot; `page.tsx` maps icon strings → lucide components via `TRUST_ICONS` (Record keyed by the generated `SiteSetting` type — adding an icon option in the global fails typecheck until mapped).
+- `defaultValue` pre-fills the 3 original signals; an admin deleting all rows intentionally hides the section (frontend falls back to `DEFAULT_TRUST` only when the global was never saved).
+- Fixed stale pre-existing failure: `SiteSettings.test.ts` field-count assertion now matches reality (22 fields).
+
 ## DB Reset Flow
 
 1. `make infra-reset` (nukes Docker volumes)

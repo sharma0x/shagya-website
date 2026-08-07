@@ -9,6 +9,9 @@ import {
   Truck,
   RefreshCw,
   Sparkles,
+  BadgeCheck,
+  Package,
+  type LucideIcon,
 } from 'lucide-react'
 import { PDPClientSection } from '@/components/product/PDPClientSection'
 import { RefreshRouteOnSave } from '@/components/live-preview/RefreshRouteOnSave'
@@ -91,18 +94,36 @@ function LexicalRenderer({ content }: { content: any }) {
   )
 }
 
-const TRUST = [
+type TrustSignal = NonNullable<SiteSetting['trustSignals']>[number]
+
+// Icon options must stay in sync with the `trustSignals.icon` select in the
+// SiteSettings global (typechecked — adding an option there fails here until mapped).
+const TRUST_ICONS: Record<TrustSignal['icon'], LucideIcon> = {
+  shield: ShieldCheck,
+  truck: Truck,
+  refresh: RefreshCw,
+  badge: BadgeCheck,
+  package: Package,
+  sparkles: Sparkles,
+}
+
+// Used only when Site Settings → trustSignals has never been saved. An admin
+// deleting all rows intentionally hides the section (no fallback then).
+const DEFAULT_TRUST: TrustSignal[] = [
   {
-    icon: ShieldCheck,
-    text: 'Handloom verified — sourced directly from the weaving cluster',
+    icon: 'shield',
+    title: 'Handloom verified',
+    detail: 'Sourced directly from the weaving cluster',
   },
   {
-    icon: Truck,
-    text: 'Free shipping across India · Delivered in 5–7 business days',
+    icon: 'truck',
+    title: 'Free shipping across India',
+    detail: 'Delivered in 5–7 business days',
   },
   {
-    icon: RefreshCw,
-    text: '7-day easy returns on unworn, tag-on sarees',
+    icon: 'refresh',
+    title: '7-day easy returns',
+    detail: 'On unworn, tag-on sarees',
   },
 ]
 
@@ -153,6 +174,9 @@ export default async function ProductDetailPage({
     slug: 'site-settings',
   })) as unknown as SiteSetting
   const contactPhone = settings.contactPhone || ''
+
+  // Trust signals are admin-editable (Site Settings → Product Page Trust Signals)
+  const trustSignals = settings.trustSignals ?? DEFAULT_TRUST
 
   // Fetch approved reviews for this product
   const reviewsRes = await payload.find({
@@ -315,6 +339,35 @@ export default async function ProductDetailPage({
               isOutOfStock={
                 product.trackQuantity === true && (product.quantity ?? 0) <= 0
               }
+              belowActions={
+                /* Trust signals — reassurance right below the buy actions */
+                trustSignals.length > 0 ? (
+                  <ul className="mt-8 space-y-4 border-t border-neutral-100 pt-7">
+                    {trustSignals.map(({ icon, title, detail, id }) => {
+                      const Icon = TRUST_ICONS[icon] ?? ShieldCheck
+                      return (
+                        <li
+                          key={id ?? title}
+                          className="flex items-start gap-3"
+                        >
+                          <Icon
+                            className="text-brand-600 mt-0.5 h-4 w-4 shrink-0"
+                            strokeWidth={1.75}
+                          />
+                          <div>
+                            <p className="font-display text-[13px] font-semibold text-neutral-800">
+                              {title}
+                            </p>
+                            <p className="font-body mt-0.5 text-xs leading-relaxed text-neutral-500">
+                              {detail}
+                            </p>
+                          </div>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                ) : undefined
+              }
             >
               {/* Brand + Category */}
               <div className="flex flex-wrap items-center gap-2">
@@ -426,19 +479,6 @@ export default async function ProductDetailPage({
                   ))}
                 </div>
               )}
-
-              {/* Trust signals — inline list, no icon circles */}
-              <div className="mt-8 space-y-3.5 border-t border-neutral-100 pt-8">
-                {TRUST.map(({ icon: Icon, text }) => (
-                  <div
-                    key={text}
-                    className="flex items-start gap-3 text-sm text-neutral-600"
-                  >
-                    <Icon className="text-brand-600 mt-0.5 h-4 w-4 shrink-0" />
-                    <span>{text}</span>
-                  </div>
-                ))}
-              </div>
             </PDPClientSection>
           </div>
 

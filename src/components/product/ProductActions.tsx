@@ -142,7 +142,10 @@ export function ProductActions({
       {variants.length > 1 ? (
         <div>
           <p className="font-display text-xs font-semibold text-neutral-500">
-            Color — {selectedVariant?.color?.name || ''}
+            Color —{' '}
+            <span className="text-neutral-800">
+              {selectedVariant?.color?.name || ''}
+            </span>
           </p>
           <div className="mt-2.5 flex flex-wrap gap-2">
             {variants.map((v, idx) => (

@@ -13,6 +13,7 @@ import * as migration_20260726_165100_announcement_bar_array from './20260726_16
 import * as migration_20260807_150206 from './20260807_150206'
 import * as migration_20260807_204000_color_variants from './20260807_204000_color_variants'
 import * as migration_20260807_204835 from './20260807_204835'
+import * as migration_20260807_221534_trust_signals from './20260807_221534_trust_signals'
 import * as migration_20260808_000000_coupon_enhancements from './20260808_000000_coupon_enhancements'
 
 export const migrations = [
@@ -90,6 +91,11 @@ export const migrations = [
     up: migration_20260807_204835.up,
     down: migration_20260807_204835.down,
     name: '20260807_204835',
+  },
+  {
+    up: migration_20260807_221534_trust_signals.up,
+    down: migration_20260807_221534_trust_signals.down,
+    name: '20260807_221534_trust_signals',
   },
   {
     up: migration_20260808_000000_coupon_enhancements.up,

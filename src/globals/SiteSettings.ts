@@ -106,6 +106,65 @@ export const SiteSettings: GlobalConfig = {
       label: 'Return Policy',
     },
 
+    // ---- Product Page Trust Signals ----
+    {
+      name: 'trustSignals',
+      type: 'array',
+      label: 'Product Page Trust Signals',
+      minRows: 0,
+      maxRows: 6,
+      defaultValue: [
+        {
+          icon: 'shield',
+          title: 'Handloom verified',
+          detail: 'Sourced directly from the weaving cluster',
+        },
+        {
+          icon: 'truck',
+          title: 'Free shipping across India',
+          detail: 'Delivered in 5–7 business days',
+        },
+        {
+          icon: 'refresh',
+          title: '7-day easy returns',
+          detail: 'On unworn, tag-on sarees',
+        },
+      ],
+      admin: {
+        description:
+          'Shown on every product page below the buy buttons. Remove all rows to hide the section.',
+      },
+      fields: [
+        {
+          name: 'icon',
+          type: 'select',
+          label: 'Icon',
+          required: true,
+          defaultValue: 'shield',
+          options: [
+            { label: 'Shield — verification', value: 'shield' },
+            { label: 'Truck — shipping', value: 'truck' },
+            { label: 'Arrows — returns/exchange', value: 'refresh' },
+            { label: 'Badge — quality/certified', value: 'badge' },
+            { label: 'Box — packaging/delivery', value: 'package' },
+            { label: 'Sparkles — highlights', value: 'sparkles' },
+          ],
+        },
+        {
+          name: 'title',
+          type: 'text',
+          label: 'Title',
+          required: true,
+        },
+        {
+          name: 'detail',
+          type: 'text',
+          label: 'Detail',
+          required: true,
+        },
+      ],
+    },
+
     // ---- Announcement Bar ----
     {
       name: 'announcementBar',

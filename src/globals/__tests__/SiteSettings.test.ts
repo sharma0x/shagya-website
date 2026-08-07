@@ -138,6 +138,31 @@ describe('SiteSettings global', () => {
     })
   })
 
+  // ---- Trust Signal Fields ----
+  describe('Trust signal fields', () => {
+    it('has trustSignals field (array, max 6 rows)', () => {
+      const field = findField('trustSignals')
+      expect(field).toBeDefined()
+      expect(field?.type).toBe('array')
+      expect(field?.maxRows).toBe(6)
+    })
+
+    it('trustSignals rows have icon/title/detail fields', () => {
+      const field = findField('trustSignals')
+      const rowFields = field?.fields?.map((f: any) => f.name)
+      expect(rowFields).toEqual(['icon', 'title', 'detail'])
+    })
+
+    it('trustSignals defaults to the three storefront signals', () => {
+      const field = findField('trustSignals')
+      expect(field?.defaultValue).toHaveLength(3)
+      expect(field?.defaultValue[0]).toMatchObject({
+        icon: 'shield',
+        title: 'Handloom verified',
+      })
+    })
+  })
+
   // ---- Store Configuration Fields ----
   describe('Store configuration fields', () => {
     it('has gstPercent field (number, default 5)', () => {
@@ -157,8 +182,8 @@ describe('SiteSettings global', () => {
 
   // ---- Count Assertion ----
   describe('Field count', () => {
-    it('has exactly 17 fields', () => {
-      expect(SiteSettings.fields).toHaveLength(17)
+    it('has exactly 22 fields', () => {
+      expect(SiteSettings.fields).toHaveLength(22)
     })
   })
 })

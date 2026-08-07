@@ -2149,6 +2149,17 @@ export interface SiteSetting {
   pinterestUrl?: string | null;
   shippingPolicy?: string | null;
   returnPolicy?: string | null;
+  /**
+   * Shown on every product page below the buy buttons. Remove all rows to hide the section.
+   */
+  trustSignals?:
+    | {
+        icon: 'shield' | 'truck' | 'refresh' | 'badge' | 'package' | 'sparkles';
+        title: string;
+        detail: string;
+        id?: string | null;
+      }[]
+    | null;
   announcementBar?: {
     enabled?: boolean | null;
     announcements?:
@@ -2200,6 +2211,14 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   pinterestUrl?: T;
   shippingPolicy?: T;
   returnPolicy?: T;
+  trustSignals?:
+    | T
+    | {
+        icon?: T;
+        title?: T;
+        detail?: T;
+        id?: T;
+      };
   announcementBar?:
     | T
     | {

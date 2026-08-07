@@ -8,12 +8,15 @@ interface PDPClientSectionProps {
   product: any
   isOutOfStock: boolean
   children: React.ReactNode
+  /** Rendered below the buy actions (color picker + CTAs) — e.g. trust signals */
+  belowActions?: React.ReactNode
 }
 
 export function PDPClientSection({
   product,
   isOutOfStock,
   children,
+  belowActions,
 }: PDPClientSectionProps) {
   const defaultVariant = product.colorVariants?.[0]
   const defaultUrls =
@@ -40,6 +43,7 @@ export function PDPClientSection({
               onVariantChange={setImageUrls}
             />
           </div>
+          {belowActions}
         </div>
       </div>
     </>
