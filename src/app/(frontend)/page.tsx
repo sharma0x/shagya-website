@@ -141,7 +141,7 @@ export default async function HomePage({ searchParams }: Props) {
         },
         limit: 2,
         sort: '-createdAt',
-        depth: 1,
+        depth: 2,
       }),
       // Recent orders for trending calculation
       payload.find({
@@ -169,7 +169,7 @@ export default async function HomePage({ searchParams }: Props) {
         where: { status: { equals: 'published' } },
         limit: 12,
         sort: '-createdAt',
-        depth: 1,
+        depth: 2,
       }),
     ])
   const homeDoc = pageRes.docs[0]
@@ -182,7 +182,7 @@ export default async function HomePage({ searchParams }: Props) {
       where: { status: { equals: 'published' } },
       limit: 2,
       sort: '-createdAt',
-      depth: 1,
+      depth: 2,
     })
   }
   const newArrivals = newArrivalsRes.docs as Product[]
@@ -214,7 +214,7 @@ export default async function HomePage({ searchParams }: Props) {
       collection: 'products',
       where: { id: { in: topIds } },
       limit: 2,
-      depth: 1,
+      depth: 2,
     })
     trendingNowDocs = trendingRes.docs as Product[]
   }
@@ -229,7 +229,7 @@ export default async function HomePage({ searchParams }: Props) {
       },
       limit: 2,
       sort: '-createdAt',
-      depth: 1,
+      depth: 2,
     })
     trendingNowDocs = fallbackRes.docs as Product[]
   }
@@ -253,11 +253,29 @@ export default async function HomePage({ searchParams }: Props) {
     where: { and: bestOffersWhere },
     limit: 10,
     sort: '-compareAtPrice',
-    depth: 1,
+    depth: 2,
   })
   const bestOffers = (bestOffersRes.docs as Product[])
     .filter((p) => (p as any).compareAtPrice > (p as any).basePrice)
     .slice(0, 2)
+
+  function mapProductWithVariant(p: any) {
+    const firstVariant = (p.colorVariants || []).find(
+      (v: any) => v.enabled !== false && v.color,
+    )
+    return {
+      ...p,
+      gallery: firstVariant?.gallery || [],
+      color: firstVariant?.color
+        ? {
+            slug: firstVariant.color.slug,
+            name: firstVariant.color.name,
+            hex: firstVariant.color.hex,
+          }
+        : null,
+      basePrice: firstVariant?.priceOverride ?? p.basePrice,
+    }
+  }
 
   // ─── Fetch categories ────────────────────────────────
   const categoriesRes = await payload.find({
@@ -546,7 +564,11 @@ export default async function HomePage({ searchParams }: Props) {
                   />
                   <div className="grid grid-cols-2 gap-2">
                     {newArrivals.map((p) => (
-                      <ProductCard key={p.id} product={p} badge="new" />
+                      <ProductCard
+                        key={p.id}
+                        product={mapProductWithVariant(p)}
+                        badge="new"
+                      />
                     ))}
                   </div>
                 </div>
@@ -564,7 +586,10 @@ export default async function HomePage({ searchParams }: Props) {
                   />
                   <div className="grid grid-cols-2 gap-2">
                     {trendingNow.map((p) => (
-                      <ProductCard key={p.id} product={p} />
+                      <ProductCard
+                        key={p.id}
+                        product={mapProductWithVariant(p)}
+                      />
                     ))}
                   </div>
                 </div>
@@ -582,7 +607,11 @@ export default async function HomePage({ searchParams }: Props) {
                   />
                   <div className="grid grid-cols-2 gap-2">
                     {bestOffers.map((p) => (
-                      <ProductCard key={p.id} product={p} badge="sale" />
+                      <ProductCard
+                        key={p.id}
+                        product={mapProductWithVariant(p)}
+                        badge="sale"
+                      />
                     ))}
                   </div>
                 </div>
@@ -696,10 +725,9 @@ export default async function HomePage({ searchParams }: Props) {
               viewAllLabel={productBlocks[1].ctaText || 'Shop All'}
             />
             <ProductCarousel
-              products={(allProductsRes.docs as Product[]).slice(
-                0,
-                productBlockLimit(productBlocks[1]),
-              )}
+              products={(allProductsRes.docs as Product[])
+                .slice(0, productBlockLimit(productBlocks[1]))
+                .map(mapProductWithVariant)}
             />
           </div>
         </section>
