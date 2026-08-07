@@ -14,9 +14,6 @@ const existingItem = (product: any, variant: any, quantity = 1) => ({
 
 describe('mergeCartItems', () => {
   it('merges the same product+variant instead of duplicating when existing items have populated product objects', () => {
-    // Existing items come back from payload.find with relationships populated
-    // (default depth >= 1), so `product` is an object, while incoming items
-    // carry the normalized numeric id.
     const existing = [existingItem({ id: 21, title: 'Saree' }, null)]
     const incoming = [existingItem(21, null, 2)]
 
@@ -46,26 +43,6 @@ describe('mergeCartItems', () => {
 
     expect(merged).toHaveLength(1)
     expect(merged[0].quantity).toBe(4)
-  })
-
-  it('merges the same product even with different variants into one line', () => {
-    const existing = [existingItem(21, { size: 'M' })]
-    const incoming = [existingItem(21, { size: 'L' })]
-
-    const merged = mergeCartItems(existing, incoming)
-
-    expect(merged).toHaveLength(1)
-  })
-
-  it('merges homepage (no variant) with PDP (color variant) adds of the same product', () => {
-    const existing = [existingItem(21, null, 1)]
-    const incoming = [existingItem(21, { color: 'rose' }, 1)]
-
-    const merged = mergeCartItems(existing, incoming)
-
-    expect(merged).toHaveLength(1)
-    expect(merged[0].variant).toEqual({ color: 'rose' })
-    expect(merged[0].quantity).toBe(1)
   })
 
   it('keeps distinct products as separate line items', () => {
@@ -99,6 +76,41 @@ describe('mergeCartItems', () => {
 
     expect(merged).toHaveLength(1)
     expect(merged[0].unitPrice).toBe(250)
+  })
+
+  it('keeps same product with different colors as separate lines', () => {
+    const rose = { color: { slug: 'rose', name: 'Rose', hex: '#e11d48' } }
+    const gold = { color: { slug: 'gold', name: 'Gold', hex: '#fbbf24' } }
+
+    const existing = [existingItem(21, rose)]
+    const incoming = [existingItem(21, gold)]
+
+    const merged = mergeCartItems(existing, incoming)
+
+    expect(merged).toHaveLength(2)
+  })
+
+  it('merges same product with same color into one line', () => {
+    const rose = { color: { slug: 'rose', name: 'Rose', hex: '#e11d48' } }
+
+    const existing = [existingItem(21, rose, 1)]
+    const incoming = [existingItem(21, rose, 2)]
+
+    const merged = mergeCartItems(existing, incoming)
+
+    expect(merged).toHaveLength(1)
+    expect(merged[0].quantity).toBe(2)
+  })
+
+  it('keeps product with color separate from product without color', () => {
+    const rose = { color: { slug: 'rose', name: 'Rose', hex: '#e11d48' } }
+
+    const existing = [existingItem(21, null)]
+    const incoming = [existingItem(21, rose)]
+
+    const merged = mergeCartItems(existing, incoming)
+
+    expect(merged).toHaveLength(2)
   })
 })
 
@@ -154,23 +166,35 @@ describe('dedupeCartItems', () => {
     expect(merged[0].quantity).toBe(3)
   })
 
-  it('merges same product added with different colors into one line', () => {
-    const items = [
-      existingItem(21, { color: 'rose' }, 1),
-      existingItem(21, { color: 'gold' }, 1),
-    ]
-
-    const merged = dedupeCartItems(items)
-
-    expect(merged).toHaveLength(1)
-    expect(merged[0].quantity).toBe(2)
-  })
-
   it('caps summed quantity at 10', () => {
     const items = [existingItem(21, null, 6), existingItem(21, null, 6)]
 
     const merged = dedupeCartItems(items)
 
     expect(merged[0].quantity).toBe(10)
+  })
+
+  it('keeps same product with different colors as separate lines', () => {
+    const rose = { color: { slug: 'rose', name: 'Rose', hex: '#e11d48' } }
+    const gold = { color: { slug: 'gold', name: 'Gold', hex: '#fbbf24' } }
+
+    const items = [existingItem(21, rose, 1), existingItem(21, gold, 2)]
+
+    const merged = dedupeCartItems(items)
+
+    expect(merged).toHaveLength(2)
+    expect(merged[0].quantity).toBe(1)
+    expect(merged[1].quantity).toBe(2)
+  })
+
+  it('merges same product with same color', () => {
+    const rose = { color: { slug: 'rose', name: 'Rose', hex: '#e11d48' } }
+
+    const items = [existingItem(21, rose, 1), existingItem(21, rose, 2)]
+
+    const merged = dedupeCartItems(items)
+
+    expect(merged).toHaveLength(1)
+    expect(merged[0].quantity).toBe(3)
   })
 })

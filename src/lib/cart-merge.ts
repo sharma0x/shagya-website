@@ -35,11 +35,20 @@ function productId(product: unknown): string {
   return String(normalizeProduct(product) ?? '')
 }
 
-// Cart line identity is the PRODUCT ONLY — the same saree added from the
-// homepage (no variant) and from the PDP (with a color) must land on the
-// same line, and a product can never hold more than one color in the cart.
+function colorSlug(variant: unknown): string {
+  if (variant && typeof variant === 'object' && 'color' in variant) {
+    const color = (variant as any).color
+    if (color && typeof color === 'object' && 'slug' in color) {
+      return String(color.slug)
+    }
+  }
+  return ''
+}
+
 export function cartMergeKey(item: MergeableItem): string {
-  return productId(item.product)
+  const pid = productId(item.product)
+  const cid = colorSlug(item.variant)
+  return cid ? `${pid}::${cid}` : pid
 }
 
 export function mergeCartItems(

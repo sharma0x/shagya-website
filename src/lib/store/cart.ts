@@ -27,6 +27,11 @@ export interface CartItem {
     trackQuantity?: boolean | null
   }
   variant?: {
+    color?: {
+      slug: string
+      name: string
+      hex: string
+    }
     size?: string
     blouseCustomization?: string
     [key: string]: any
@@ -49,8 +54,12 @@ interface CartState {
     quantity?: number,
     variant?: CartItem['variant'],
   ) => void
-  removeItem: (productId: number | string) => void
-  updateQuantity: (productId: number | string, quantity: number) => void
+  removeItem: (productId: number | string, colorSlug?: string) => void
+  updateQuantity: (
+    productId: number | string,
+    quantity: number,
+    colorSlug?: string,
+  ) => void
   clearCart: () => void
   setItems: (items: CartItem[]) => void
   setCoupon: (coupon: CartState['coupon']) => void
@@ -59,11 +68,6 @@ interface CartState {
   getSubtotal: () => number
   getTotal: () => number
 }
-
-// A cart line is identified by its product — the same saree added from the
-// homepage and the PDP must merge into one line, and one product can never
-// hold multiple colors in the cart. The variant (color/size) rides along on
-// the line for display/checkout but never changes line identity.
 
 export const useCart = create<CartState>()(
   persist(
@@ -77,9 +81,13 @@ export const useCart = create<CartState>()(
         const normalizedVariant = normalizeVariant(
           variant,
         ) as CartItem['variant']
-        const existingIndex = currentItems.findIndex(
-          (item) => item.product.id === product.id,
-        )
+        const colorSlug = normalizedVariant?.color?.slug ?? ''
+
+        const existingIndex = currentItems.findIndex((item) => {
+          const sameProduct = item.product.id === product.id
+          const itemColorSlug = item.variant?.color?.slug ?? ''
+          return sameProduct && itemColorSlug === colorSlug
+        })
 
         let newItems = [...currentItems]
         if (existingIndex > -1) {
@@ -102,19 +110,32 @@ export const useCart = create<CartState>()(
         get().syncWithServer()
       },
 
-      removeItem: (productId) => {
-        const newItems = get().items.filter(
-          (item) => item.product.id !== productId,
-        )
+      removeItem: (productId, colorSlug?) => {
+        const newItems = get().items.filter((item) => {
+          const sameProduct = item.product.id === productId
+          if (colorSlug !== undefined) {
+            const itemColorSlug = item.variant?.color?.slug ?? ''
+            return !(sameProduct && itemColorSlug === colorSlug)
+          }
+          return !sameProduct
+        })
         set({ items: newItems })
         get().syncWithServer()
       },
 
-      updateQuantity: (productId, quantity) => {
+      updateQuantity: (productId, quantity, colorSlug?) => {
         const qty = Math.max(1, Math.min(10, quantity))
-        const newItems = get().items.map((item) =>
-          item.product.id === productId ? { ...item, quantity: qty } : item,
-        )
+        const newItems = get().items.map((item) => {
+          const sameProduct = item.product.id === productId
+          if (colorSlug !== undefined) {
+            const itemColorSlug = item.variant?.color?.slug ?? ''
+            if (sameProduct && itemColorSlug === colorSlug) {
+              return { ...item, quantity: qty }
+            }
+            return item
+          }
+          return sameProduct ? { ...item, quantity: qty } : item
+        })
         set({ items: newItems })
         get().syncWithServer()
       },

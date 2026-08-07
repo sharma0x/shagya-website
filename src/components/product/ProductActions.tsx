@@ -113,13 +113,25 @@ export function ProductActions({ product, isOutOfStock }: ProductActionsProps) {
   }, [session?.user, product.id, router])
 
   const handleAddToCart = () => {
-    addItem(product, 1, { color: selectedColor })
+    addItem(product, 1, {
+      color: {
+        slug: selectedColor,
+        name: selectedColor.charAt(0).toUpperCase() + selectedColor.slice(1),
+        hex: COLOR_HEX[selectedColor] || '#94A3B8',
+      },
+    })
     setAddedState('added')
     setTimeout(() => setAddedState('idle'), 2200)
   }
 
   const handleBuyNow = () => {
-    addItem(product, 1, { color: selectedColor })
+    addItem(product, 1, {
+      color: {
+        slug: selectedColor,
+        name: selectedColor.charAt(0).toUpperCase() + selectedColor.slice(1),
+        hex: COLOR_HEX[selectedColor] || '#94A3B8',
+      },
+    })
     router.push('/checkout')
   }
 
