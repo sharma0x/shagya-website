@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useSession } from '@/lib/auth-client'
 import { useCart } from '@/lib/store/cart'
+import { liftVariantGallery } from '@/lib/product-utils'
 import { ArrowLeft, ShoppingBag, Heart, Loader2 } from 'lucide-react'
 import {
   ProductCard,
@@ -79,14 +80,15 @@ export default function WishlistPage() {
     }
     setActionLoading(String(product.id))
     try {
+      const adapted = liftVariantGallery(product)
       addItem(
         {
           id: Number(product.id),
           name: product.name,
           slug: product.slug || '',
-          basePrice: product.basePrice || 0,
+          basePrice: adapted.basePrice || 0,
           compareAtPrice: product.compareAtPrice ?? undefined,
-          gallery: product.gallery as any,
+          gallery: adapted.gallery as any,
           fabric: product.fabric || '',
           weave: product.weave || '',
         },

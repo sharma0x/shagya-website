@@ -1,5 +1,6 @@
 import { getPayload } from 'payload'
 import config from '@payload-config'
+import { liftVariantGallery } from '@/lib/product-utils'
 
 /**
  * Get products related to the current product by matching
@@ -27,6 +28,7 @@ export async function getRelatedProducts(
       },
       limit: 8,
       sort: '-createdAt',
+      depth: 2,
     })
     results.push(...fabricRes.docs.map((d) => ({ product: d, score: 3 })))
   }
@@ -42,6 +44,7 @@ export async function getRelatedProducts(
       },
       limit: 8,
       sort: '-createdAt',
+      depth: 2,
     })
     results.push(...weaveRes.docs.map((d) => ({ product: d, score: 2 })))
   }
@@ -57,6 +60,7 @@ export async function getRelatedProducts(
       },
       limit: 6,
       sort: '-createdAt',
+      depth: 2,
     })
     results.push(...colRes.docs.map((d) => ({ product: d, score: 1 })))
   }
@@ -67,7 +71,7 @@ export async function getRelatedProducts(
   for (const entry of results.sort((a, b) => b.score - a.score)) {
     if (seen.has(entry.product.id)) continue
     seen.add(entry.product.id)
-    merged.push(entry.product)
+    merged.push(liftVariantGallery(entry.product))
     if (merged.length >= limit) break
   }
 
@@ -87,8 +91,9 @@ export async function getTrendingProducts(limit = 6) {
     },
     sort: '-purchaseCount',
     limit,
+    depth: 2,
   })
-  return res.docs
+  return res.docs.map(liftVariantGallery)
 }
 
 /**
@@ -105,8 +110,14 @@ export async function getProductsByIds(ids: (string | number)[]) {
     },
     limit: ids.length,
     sort: '-createdAt',
+    depth: 2,
   })
   // Preserve cookie order
   const productMap = new Map(res.docs.map((d: any) => [String(d.id), d]))
-  return ids.map((id) => productMap.get(String(id))).filter(Boolean) as any[]
+  return ids
+    .map((id) => {
+      const p = productMap.get(String(id))
+      return p ? liftVariantGallery(p) : null
+    })
+    .filter(Boolean) as any[]
 }

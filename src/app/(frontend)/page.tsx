@@ -20,6 +20,7 @@ import Link from 'next/link'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import type { Product } from '@/payload-types'
+import { liftVariantGallery } from '@/lib/product-utils'
 import { NewsletterForm } from '@/components/newsletter/NewsletterForm'
 import { SkeletonImage } from '@/components/ui/SkeletonImage'
 import { RefreshRouteOnSave } from '@/components/live-preview/RefreshRouteOnSave'
@@ -260,21 +261,7 @@ export default async function HomePage({ searchParams }: Props) {
     .slice(0, 2)
 
   function mapProductWithVariant(p: any) {
-    const firstVariant = (p.colorVariants || []).find(
-      (v: any) => v.enabled !== false && v.color,
-    )
-    return {
-      ...p,
-      gallery: firstVariant?.gallery || [],
-      color: firstVariant?.color
-        ? {
-            slug: firstVariant.color.slug,
-            name: firstVariant.color.name,
-            hex: firstVariant.color.hex,
-          }
-        : null,
-      basePrice: firstVariant?.priceOverride ?? p.basePrice,
-    }
+    return liftVariantGallery(p)
   }
 
   // ─── Fetch categories ────────────────────────────────

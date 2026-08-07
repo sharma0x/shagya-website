@@ -1,4 +1,4 @@
-import { MigrateUpArgs, sql } from '@payloadcms/db-postgres'
+import { MigrateUpArgs, MigrateDownArgs, sql } from '@payloadcms/db-postgres'
 
 export async function up({ db }: MigrateUpArgs): Promise<void> {
   await db.execute(sql`
@@ -108,5 +108,14 @@ export async function up({ db }: MigrateUpArgs): Promise<void> {
         FOREIGN KEY ("_parent_id") REFERENCES "_products_v_version_color_variants"("id") ON DELETE CASCADE;
     EXCEPTION WHEN duplicate_object THEN null;
     END $$;
+  `)
+}
+
+export async function down({ db }: MigrateDownArgs): Promise<void> {
+  await db.execute(sql`
+    DROP TABLE IF EXISTS "products_color_variants_gallery" CASCADE;
+    DROP TABLE IF EXISTS "products_color_variants" CASCADE;
+    DROP TABLE IF EXISTS "_products_v_version_color_variants_gallery" CASCADE;
+    DROP TABLE IF EXISTS "_products_v_version_color_variants" CASCADE;
   `)
 }
