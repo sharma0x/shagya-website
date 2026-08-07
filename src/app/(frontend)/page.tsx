@@ -469,10 +469,10 @@ export default async function HomePage({ searchParams }: Props) {
           ═══════════════════════════════════════════════════ */}
       <section className="border-brand-100/40 bg-brand-50/30 border-y">
         <div className="grid grid-cols-2 items-baseline justify-start gap-x-6 gap-y-3 px-4 py-4 sm:flex sm:flex-wrap sm:justify-center sm:gap-x-10 sm:py-5 md:gap-x-14 lg:gap-x-18">
-          {TRUST_FEATURES.map((feature, i) => (
+          {TRUST_FEATURES.map((feature) => (
             <div
               key={feature.title}
-              className={`flex items-start gap-2 ${i === TRUST_FEATURES.length - 1 ? 'col-span-2 sm:col-span-1' : ''}`}
+              className="flex items-start gap-2"
             >
               <div className="text-brand-600 flex h-8 w-8 shrink-0 items-center justify-center sm:h-9 sm:w-9">
                 {feature.icon}
