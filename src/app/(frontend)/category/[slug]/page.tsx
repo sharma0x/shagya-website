@@ -315,9 +315,9 @@ export default async function CategoryPage({
             </div>
 
             {/* Quick Filters */}
-            <div className="mt-4 flex flex-wrap items-center gap-3">
-              <span className="text-xs text-neutral-400">Quick:</span>
-              <div className="flex gap-1.5">
+            <div className="mt-4 flex items-center gap-3">
+              <span className="shrink-0 text-xs text-neutral-400">Quick:</span>
+              <div className="scrollbar-hide flex gap-1.5 overflow-x-auto whitespace-nowrap">
                 {['All', 'Banarasi', 'Kanchipuram', 'Chanderi', 'On Sale'].map(
                   (label) => {
                     const params = new URLSearchParams(
