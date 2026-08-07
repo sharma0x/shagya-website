@@ -301,24 +301,24 @@ export function Header() {
 
                 {megaMenuOpen && (
                   <div
-                    className="absolute top-full left-0 z-50"
+                    className="absolute top-full left-1/2 z-50 -translate-x-1/2 pt-2"
                     onMouseEnter={() => openMegaMenu()}
                     onMouseLeave={() => closeMegaMenu()}
                   >
-                    <div className="min-w-[600px] overflow-hidden border-x border-b border-neutral-100 bg-white shadow-lg">
-                      <div className="flex gap-12 px-10 py-6">
+                    <div className="animate-scale-in origin-top overflow-hidden rounded-xl border border-neutral-200/60 bg-white shadow-lg ring-1 ring-black/3">
+                      <div className="flex divide-x divide-neutral-100">
                         {/* Fabric column */}
-                        <div>
-                          <h4 className="font-display text-brand-600 mb-3 text-[10px] font-semibold tracking-wider uppercase">
-                            Fabric
+                        <div className="px-8 py-6">
+                          <h4 className="font-display text-gold-500 mb-4 text-[11px] font-semibold tracking-[0.15em] uppercase">
+                            By Fabric
                           </h4>
-                          <div className="grid grid-cols-3 gap-x-6 gap-y-1.5">
+                          <div className="grid grid-cols-2 gap-x-8 gap-y-0.5">
                             {megaMenu.fabrics.map((f) => (
                               <Link
                                 key={f.value}
                                 href={`/category/${f.value}`}
                                 onClick={() => setMegaMenuOpen(false)}
-                                className="font-body hover:text-brand-700 after:bg-brand-600 relative rounded px-1.5 py-0.5 text-sm whitespace-nowrap text-neutral-600 transition-colors after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:transition-transform hover:after:scale-x-100"
+                                className="font-body hover:text-brand-700 hover:bg-brand-50/60 rounded-md px-2.5 py-1.5 text-sm tracking-wide text-neutral-600 transition-colors"
                               >
                                 {f.label}
                               </Link>
@@ -327,34 +327,69 @@ export function Header() {
                         </div>
 
                         {/* Weave column */}
-                        <div>
-                          <h4 className="font-display text-brand-600 mb-3 text-[10px] font-semibold tracking-wider uppercase">
-                            Weave
+                        <div className="px-8 py-6">
+                          <h4 className="font-display text-gold-500 mb-4 text-[11px] font-semibold tracking-[0.15em] uppercase">
+                            By Weave
                           </h4>
-                          <div className="grid grid-cols-3 gap-x-6 gap-y-1.5">
+                          <div className="grid grid-cols-2 gap-x-8 gap-y-0.5">
                             {megaMenu.weaves.map((w) => (
                               <Link
                                 key={w.value}
                                 href={`/category/${w.value}`}
                                 onClick={() => setMegaMenuOpen(false)}
-                                className="font-body hover:text-brand-700 after:bg-brand-600 relative rounded px-1.5 py-0.5 text-sm whitespace-nowrap text-neutral-600 transition-colors after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:transition-transform hover:after:scale-x-100"
+                                className="font-body hover:text-brand-700 hover:bg-brand-50/60 rounded-md px-2.5 py-1.5 text-sm tracking-wide text-neutral-600 transition-colors"
                               >
                                 {w.label}
                               </Link>
                             ))}
                           </div>
                         </div>
-                      </div>
 
-                      {/* Shop All */}
-                      <div className="border-t border-neutral-100 px-10 py-3">
-                        <Link
-                          href="/category/all"
-                          onClick={() => setMegaMenuOpen(false)}
-                          className="font-display after:bg-brand-600 text-brand-600 hover:text-brand-700 relative text-xs font-semibold tracking-wider uppercase transition-colors after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:transition-transform hover:after:scale-x-100"
-                        >
-                          Shop All Sarees →
-                        </Link>
+                        {/* Featured Panel */}
+                        <div className="flex w-48 flex-col justify-between bg-neutral-50/80 px-6 py-6">
+                          <div>
+                            <h4 className="font-display text-gold-500 mb-4 text-[11px] font-semibold tracking-[0.15em] uppercase">
+                              Curated
+                            </h4>
+                            <Link
+                              href="/collections"
+                              onClick={() => setMegaMenuOpen(false)}
+                              className="font-display text-brand-600 hover:text-brand-700 block text-sm leading-relaxed font-medium tracking-wide transition-colors"
+                            >
+                              New Arrivals
+                            </Link>
+                            <Link
+                              href="/category/silk"
+                              onClick={() => setMegaMenuOpen(false)}
+                              className="font-display text-brand-600 hover:text-brand-700 mt-2 block text-sm leading-relaxed font-medium tracking-wide transition-colors"
+                            >
+                              Pure Silks
+                            </Link>
+                            <Link
+                              href="/category/banarasi"
+                              onClick={() => setMegaMenuOpen(false)}
+                              className="font-display text-brand-600 hover:text-brand-700 mt-2 block text-sm leading-relaxed font-medium tracking-wide transition-colors"
+                            >
+                              Banarasi Heritage
+                            </Link>
+                          </div>
+                          <Link
+                            href="/category/all"
+                            onClick={() => setMegaMenuOpen(false)}
+                            className="font-display text-brand-600 hover:text-brand-700 inline-flex items-center gap-1 text-xs font-semibold tracking-wider uppercase transition-colors"
+                          >
+                            Shop All
+                            <svg
+                              className="h-3 w-3"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2.5"
+                            >
+                              <path d="M5 12h14M12 5l7 7-7 7" />
+                            </svg>
+                          </Link>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -481,18 +516,18 @@ export function Header() {
             </button>
 
             {mobileSareesOpen && (
-              <div className="border-b border-neutral-100 pb-3">
+              <div className="border-b border-neutral-100 pt-1 pb-4">
                 {/* Fabric */}
-                <p className="text-brand-600 mt-3 text-[10px] font-semibold tracking-wider uppercase">
-                  Fabric
+                <p className="text-gold-500 font-display mt-2 mb-1 text-[11px] font-semibold tracking-[0.15em] uppercase">
+                  By Fabric
                 </p>
-                <div className="mt-2 grid grid-cols-2 gap-1">
+                <div className="grid grid-cols-2 gap-0.5">
                   {megaMenu.fabrics.map((f) => (
                     <Link
                       key={f.value}
                       href={`/category/${f.value}`}
                       onClick={() => setMobileMenuOpen(false)}
-                      className="font-body hover:text-brand-700 rounded px-2 py-1 text-sm text-neutral-600 transition-colors"
+                      className="font-body hover:text-brand-700 rounded-md px-3 py-1.5 text-sm tracking-wide text-neutral-600 transition-colors"
                     >
                       {f.label}
                     </Link>
@@ -500,16 +535,16 @@ export function Header() {
                 </div>
 
                 {/* Weave */}
-                <p className="text-brand-600 mt-3 text-[10px] font-semibold tracking-wider uppercase">
-                  Weave
+                <p className="text-gold-500 font-display mt-3 mb-1 text-[11px] font-semibold tracking-[0.15em] uppercase">
+                  By Weave
                 </p>
-                <div className="mt-2 grid grid-cols-2 gap-1">
+                <div className="grid grid-cols-2 gap-0.5">
                   {megaMenu.weaves.map((w) => (
                     <Link
                       key={w.value}
                       href={`/category/${w.value}`}
                       onClick={() => setMobileMenuOpen(false)}
-                      className="font-body hover:text-brand-700 rounded px-2 py-1 text-sm text-neutral-600 transition-colors"
+                      className="font-body hover:text-brand-700 rounded-md px-3 py-1.5 text-sm tracking-wide text-neutral-600 transition-colors"
                     >
                       {w.label}
                     </Link>
@@ -520,10 +555,18 @@ export function Header() {
                 <Link
                   href="/category/all"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="font-display text-brand-600 hover:text-brand-700 mt-3 inline-flex items-center gap-1 text-xs font-semibold"
+                  className="font-display text-brand-600 hover:text-brand-700 mt-3 inline-flex items-center gap-1.5 text-xs font-semibold tracking-wider uppercase transition-colors"
                 >
                   Shop All Sarees
-                  <span className="text-[10px]">→</span>
+                  <svg
+                    className="h-3 w-3"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                  >
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                  </svg>
                 </Link>
               </div>
             )}
