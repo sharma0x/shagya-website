@@ -967,16 +967,6 @@ export const products: SeedProduct[] = [
         imagePath: 'images/products/saree-13.jpg',
         stock: 8,
       },
-      {
-        colorName: 'Charcoal Black',
-        imagePath: 'images/products/saree-14.jpg',
-        stock: 7,
-      },
-      {
-        colorName: 'Deep Burgundy',
-        imagePath: 'images/products/saree-15.jpg',
-        stock: 7,
-      },
     ],
   },
   {
@@ -1005,16 +995,6 @@ export const products: SeedProduct[] = [
       {
         colorName: 'Mint Green',
         imagePath: 'images/products/saree-16.jpg',
-        stock: 6,
-      },
-      {
-        colorName: 'Ivory Cream',
-        imagePath: 'images/products/saree-17.jpg',
-        stock: 6,
-      },
-      {
-        colorName: 'Lavender Purple',
-        imagePath: 'images/products/saree-18.jpg',
         stock: 6,
       },
     ],
@@ -1047,17 +1027,6 @@ export const products: SeedProduct[] = [
         colorName: 'Royal Blue',
         imagePath: 'images/products/saree-19.jpg',
         stock: 5,
-      },
-      {
-        colorName: 'Navy Blue',
-        imagePath: 'images/products/saree-20.jpg',
-        stock: 5,
-      },
-      {
-        colorName: 'Deep Burgundy',
-        imagePath: 'images/products/saree-21.jpg',
-        stock: 4,
-        priceOverride: 8500,
       },
     ],
   },

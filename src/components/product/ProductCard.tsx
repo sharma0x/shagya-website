@@ -134,19 +134,10 @@ export function ProductCard({
             >
               {product.name}
             </Link>
-            {product.color && (
-              <div className="mt-0.5 flex items-center gap-1.5">
-                <span
-                  className="inline-block h-3 w-3 flex-shrink-0 rounded-full border border-neutral-300"
-                  style={{ backgroundColor: product.color.hex }}
-                />
-                <span className="font-body truncate text-[10px] text-neutral-500">
-                  {product.color.name}
-                </span>
-              </div>
-            )}
             <p className="font-body mt-0.5 text-xs text-neutral-400">
-              {product.weave} · {product.fabric}
+              {[product.weave, product.fabric, product.color?.name]
+                .filter(Boolean)
+                .join(' · ')}
             </p>
           </div>
           <div className="flex items-center justify-between">
@@ -266,20 +257,11 @@ export function ProductCard({
           <p className="font-display text-brand-950 group-hover:text-brand-700 text-sm font-semibold transition-colors">
             {product.name}
           </p>
-          {product.color && (
-            <div className="mt-1 flex items-center gap-1.5">
-              <span
-                className="inline-block h-3 w-3 flex-shrink-0 rounded-full border border-neutral-300"
-                style={{ backgroundColor: product.color.hex }}
-              />
-              <span className="font-body truncate text-[10px] text-neutral-500">
-                {product.color.name}
-              </span>
-            </div>
-          )}
-          {(product.weave || product.fabric) && (
+          {(product.weave || product.fabric || product.color) && (
             <p className="text-brand-700/60 mt-0.5 text-xs">
-              {[product.weave, product.fabric].filter(Boolean).join(' · ')}
+              {[product.weave, product.fabric, product.color?.name]
+                .filter(Boolean)
+                .join(' · ')}
             </p>
           )}
 
