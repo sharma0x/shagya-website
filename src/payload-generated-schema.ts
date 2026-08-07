@@ -437,6 +437,36 @@ export const users = pgTable(
   ],
 )
 
+export const colors = pgTable(
+  'colors',
+  {
+    id: serial('id').primaryKey(),
+    name: varchar('name').notNull(),
+    slug: varchar('slug'),
+    hex: varchar('hex').notNull(),
+    order: numeric('order', { mode: 'number' }),
+    updatedAt: timestamp('updated_at', {
+      mode: 'string',
+      withTimezone: true,
+      precision: 3,
+    })
+      .defaultNow()
+      .notNull(),
+    createdAt: timestamp('created_at', {
+      mode: 'string',
+      withTimezone: true,
+      precision: 3,
+    })
+      .defaultNow()
+      .notNull(),
+  },
+  (columns) => [
+    uniqueIndex('colors_slug_idx').on(columns.slug),
+    index('colors_updated_at_idx').on(columns.updatedAt),
+    index('colors_created_at_idx').on(columns.createdAt),
+  ],
+)
+
 export const email_templates = pgTable(
   'email_templates',
   {
@@ -3074,6 +3104,7 @@ export const payload_locked_documents_rels = pgTable(
     parent: integer('parent_id').notNull(),
     path: varchar('path').notNull(),
     usersID: integer('users_id'),
+    colorsID: integer('colors_id'),
     'email-templatesID': integer('email_templates_id'),
     productsID: integer('products_id'),
     categoriesID: integer('categories_id'),
@@ -3107,6 +3138,7 @@ export const payload_locked_documents_rels = pgTable(
     index('payload_locked_documents_rels_parent_idx').on(columns.parent),
     index('payload_locked_documents_rels_path_idx').on(columns.path),
     index('payload_locked_documents_rels_users_id_idx').on(columns.usersID),
+    index('payload_locked_documents_rels_colors_id_idx').on(columns.colorsID),
     index('payload_locked_documents_rels_email_templates_id_idx').on(
       columns['email-templatesID'],
     ),
@@ -3175,6 +3207,11 @@ export const payload_locked_documents_rels = pgTable(
       columns: [columns['usersID']],
       foreignColumns: [users.id],
       name: 'payload_locked_documents_rels_users_fk',
+    }).onDelete('cascade'),
+    foreignKey({
+      columns: [columns['colorsID']],
+      foreignColumns: [colors.id],
+      name: 'payload_locked_documents_rels_colors_fk',
     }).onDelete('cascade'),
     foreignKey({
       columns: [columns['email-templatesID']],
@@ -3635,6 +3672,7 @@ export const relations_users = relations(users, ({ many }) => ({
     relationName: 'sessions',
   }),
 }))
+export const relations_colors = relations(colors, () => ({}))
 export const relations_email_templates = relations(email_templates, () => ({}))
 export const relations_products_features = relations(
   products_features,
@@ -4608,6 +4646,11 @@ export const relations_payload_locked_documents_rels = relations(
       references: [users.id],
       relationName: 'users',
     }),
+    colorsID: one(colors, {
+      fields: [payload_locked_documents_rels.colorsID],
+      references: [colors.id],
+      relationName: 'colors',
+    }),
     'email-templatesID': one(email_templates, {
       fields: [payload_locked_documents_rels['email-templatesID']],
       references: [email_templates.id],
@@ -4927,6 +4970,7 @@ type DatabaseSchema = {
   enum__site_settings_v_published_locale: typeof enum__site_settings_v_published_locale
   users_sessions: typeof users_sessions
   users: typeof users
+  colors: typeof colors
   email_templates: typeof email_templates
   products_features: typeof products_features
   products_gallery: typeof products_gallery
@@ -5020,6 +5064,7 @@ type DatabaseSchema = {
   _site_settings_v_rels: typeof _site_settings_v_rels
   relations_users_sessions: typeof relations_users_sessions
   relations_users: typeof relations_users
+  relations_colors: typeof relations_colors
   relations_email_templates: typeof relations_email_templates
   relations_products_features: typeof relations_products_features
   relations_products_gallery: typeof relations_products_gallery

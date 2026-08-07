@@ -17,6 +17,7 @@ import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import nodemailer from 'nodemailer'
 import { payloadTotp } from '@clocklimited/payload-2fa'
 import { Users } from './collections/Users'
+import { Colors } from './collections/Colors'
 import { Products } from './collections/Products'
 import { Categories } from './collections/Categories'
 import { Collections } from './collections/Collections'
@@ -304,6 +305,7 @@ export default buildConfig({
   // ---------------------------------------------------------------------------
   collections: [
     Users,
+    Colors,
     EmailTemplates,
     Products,
     Categories,

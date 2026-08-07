@@ -8,6 +8,9 @@ import * as migration_20260705_155739 from './20260705_155739'
 import * as migration_20260707_174712_add_instagram_posts_collection from './20260707_174712_add_instagram_posts_collection'
 import * as migration_20260714_084351 from './20260714_084351'
 import * as migration_20260719_123300_add_coupons_fields_and_rels from './20260719_123300_add_coupons_fields_and_rels'
+import * as migration_20260726_162500_add_hero_images_array from './20260726_162500_add_hero_images_array'
+import * as migration_20260726_165100_announcement_bar_array from './20260726_165100_announcement_bar_array'
+import * as migration_20260807_150206 from './20260807_150206'
 
 export const migrations = [
   {
@@ -59,5 +62,20 @@ export const migrations = [
     up: migration_20260719_123300_add_coupons_fields_and_rels.up,
     down: migration_20260719_123300_add_coupons_fields_and_rels.down,
     name: '20260719_123300_add_coupons_fields_and_rels',
+  },
+  {
+    up: migration_20260726_162500_add_hero_images_array.up,
+    down: migration_20260726_162500_add_hero_images_array.down,
+    name: '20260726_162500_add_hero_images_array',
+  },
+  {
+    up: migration_20260726_165100_announcement_bar_array.up,
+    down: migration_20260726_165100_announcement_bar_array.down,
+    name: '20260726_165100_announcement_bar_array',
+  },
+  {
+    up: migration_20260807_150206.up,
+    down: migration_20260807_150206.down,
+    name: '20260807_150206',
   },
 ]
