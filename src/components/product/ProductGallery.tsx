@@ -35,7 +35,7 @@ export function ProductGallery({
   }
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="mx-auto flex w-full max-w-[460px] flex-col gap-3">
       {/* Main image with hover magnifier */}
       <div className="group relative overflow-hidden rounded-2xl bg-neutral-100">
         <ProductImageZoom

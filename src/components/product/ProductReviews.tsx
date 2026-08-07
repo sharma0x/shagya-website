@@ -15,6 +15,7 @@ import {
   ThumbsUp,
   ShieldCheck,
 } from 'lucide-react'
+import { getProductUrl } from '@/lib/product-url'
 
 export interface ReviewData {
   id: string
@@ -82,12 +83,14 @@ export function ProductReviews({
 
   const handleWriteReview = useCallback(() => {
     if (!session?.user) {
-      router.push(`/account/login?redirect=/products/${productSlug}`)
+      router.push(
+        `/account/login?redirect=${getProductUrl(productSlug, productId)}`,
+      )
       return
     }
     setShowForm(true)
     setSubmitted(false)
-  }, [session, router, productSlug])
+  }, [session, router, productSlug, productId])
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
@@ -163,8 +166,8 @@ export function ProductReviews({
       {/* ── Rating Summary ── */}
       <div className="mt-8">
         <div className="flex items-end gap-3">
-          <span className="font-display text-5xl leading-none font-bold text-neutral-900 sm:text-6xl">
-            {totalCount > 0 ? averageRating.toFixed(1) : '—'}
+          <span className="font-display text-3xl leading-none font-bold text-neutral-900 sm:text-4xl">
+            {averageRating.toFixed(1)}
           </span>
           <div className="pb-1">
             <span className="font-body text-sm text-neutral-500">out of 5</span>
