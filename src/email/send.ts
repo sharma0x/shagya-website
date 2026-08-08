@@ -95,12 +95,14 @@ async function fetchOrder(
   id: string,
 ): Promise<PopulatedOrder | null> {
   try {
+    payload.logger.info(`[Email] fetchOrder — querying orders collection id=${id}`)
     const doc = await payload.findByID({
       collection: 'orders',
       id,
-      depth: 2,
+      depth: 1,
       overrideAccess: true,
     })
+    payload.logger.info(`[Email] fetchOrder success — id=${id}`)
     return doc as unknown as PopulatedOrder
   } catch (err) {
     payload.logger.error(`[Email] Could not fetch order ${id}: ${err}`)
@@ -169,7 +171,9 @@ export async function sendOrderPlacedEmails(
   payload: Payload,
   orderId: string,
 ): Promise<void> {
+  payload.logger.info(`[Email] sendOrderPlacedEmails called — orderId=${orderId}`)
   const order = await fetchOrder(payload, orderId)
+  payload.logger.info(`[Email] fetchOrder result — orderId=${orderId} found=${!!order}`)
   if (!order) return
 
   const [storeUrl, adminEmail, customerName] = await Promise.all([

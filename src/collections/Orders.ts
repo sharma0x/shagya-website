@@ -190,6 +190,9 @@ export const Orders: CollectionConfig = {
     ],
     afterChange: [
       async ({ doc, previousDoc, operation, req }) => {
+        req.payload.logger.info(
+          `[Email] afterChange triggered — operation=${operation} docId=${(doc as any)?.id}`,
+        )
         if (operation === 'create') {
           const docId = (doc as Record<string, unknown>).id as string
           if (docId) {
