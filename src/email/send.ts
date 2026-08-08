@@ -170,10 +170,31 @@ function buildOrderVars(
 export async function sendOrderPlacedEmails(
   payload: Payload,
   orderId: string,
+  orderDoc?: Record<string, unknown>,
 ): Promise<void> {
   payload.logger.info(`[Email] sendOrderPlacedEmails called — orderId=${orderId}`)
-  const order = await fetchOrder(payload, orderId)
+  let order = await fetchOrder(payload, orderId)
   payload.logger.info(`[Email] fetchOrder result — orderId=${orderId} found=${!!order}`)
+
+  if (!order && orderDoc) {
+    payload.logger.info(`[Email] Using hook doc as fallback — orderId=${orderId}`)
+    order = {
+      id: String(orderDoc.id ?? orderId),
+      orderNumber: (orderDoc.orderNumber as string) || '',
+      customerEmail: (orderDoc.customerEmail as string) || '',
+      phone: (orderDoc.phone as string) || null,
+      paymentId: (orderDoc.paymentId as string) || null,
+      subtotal: (orderDoc.subtotal as number) || 0,
+      shipping: (orderDoc.shipping as number) || 0,
+      tax: (orderDoc.tax as number) || 0,
+      discount: (orderDoc.discount as number) || 0,
+      total: (orderDoc.total as number) || 0,
+      shippingAddress: orderDoc.shippingAddress as OrderAddress | undefined,
+      items: (orderDoc.items as OrderItem[]) || [],
+      createdAt: (orderDoc.createdAt as string) || new Date().toISOString(),
+    }
+  }
+
   if (!order) return
 
   const [storeUrl, adminEmail, customerName] = await Promise.all([

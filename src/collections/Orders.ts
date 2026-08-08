@@ -198,7 +198,11 @@ export const Orders: CollectionConfig = {
           if (docId) {
             // Await to guarantee execution in serverless environments (e.g. Vercel)
             try {
-              await sendOrderPlacedEmails(req.payload, docId)
+              await sendOrderPlacedEmails(
+                req.payload,
+                String(docId),
+                doc as Record<string, unknown>,
+              )
             } catch (err) {
               req.payload.logger.error(
                 `[Email] sendOrderPlacedEmails failed: ${err}`,
