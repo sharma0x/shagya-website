@@ -196,6 +196,7 @@ export default async function ProductDetailPage({
     title: r.title,
     body: r.body,
     rating: r.rating,
+    helpfulCount: r.helpfulCount,
     createdAt: r.createdAt,
     verifiedPurchase: r.verifiedPurchase,
     customer: {

@@ -908,6 +908,16 @@ export interface Review {
     | null;
   verifiedPurchase?: boolean | null;
   status: 'pending' | 'approved' | 'rejected';
+  helpfulCount?: number | null;
+  helpfulUserEmails?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1877,6 +1887,8 @@ export interface ReviewsSelect<T extends boolean = true> {
       };
   verifiedPurchase?: T;
   status?: T;
+  helpfulCount?: T;
+  helpfulUserEmails?: T;
   updatedAt?: T;
   createdAt?: T;
 }

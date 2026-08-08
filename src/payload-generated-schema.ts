@@ -322,10 +322,18 @@ export const enum_instagram_posts_media_type = pgEnum(
   'enum_instagram_posts_media_type',
   ['IMAGE', 'VIDEO', 'CAROUSEL_ALBUM'],
 )
+export const enum_site_settings_trust_signals_icon = pgEnum(
+  'enum_site_settings_trust_signals_icon',
+  ['shield', 'truck', 'refresh', 'badge', 'package', 'sparkles'],
+)
 export const enum_site_settings_status = pgEnum('enum_site_settings_status', [
   'draft',
   'published',
 ])
+export const enum__site_settings_v_version_trust_signals_icon = pgEnum(
+  'enum__site_settings_v_version_trust_signals_icon',
+  ['shield', 'truck', 'refresh', 'badge', 'package', 'sparkles'],
+)
 export const enum__site_settings_v_version_status = pgEnum(
   'enum__site_settings_v_version_status',
   ['draft', 'published'],
@@ -2280,6 +2288,8 @@ export const reviews = pgTable(
     body: varchar('body').notNull(),
     verifiedPurchase: boolean('verified_purchase').default(false),
     status: enum_reviews_status('status').notNull().default('pending'),
+    helpfulCount: numeric('helpful_count', { mode: 'number' }).default(0),
+    helpfulUserEmails: jsonb('helpful_user_emails'),
     updatedAt: timestamp('updated_at', {
       mode: 'string',
       withTimezone: true,
@@ -3469,6 +3479,27 @@ export const payload_migrations = pgTable(
   ],
 )
 
+export const site_settings_trust_signals = pgTable(
+  'site_settings_trust_signals',
+  {
+    _order: integer('_order').notNull(),
+    _parentID: integer('_parent_id').notNull(),
+    id: varchar('id').primaryKey(),
+    icon: enum_site_settings_trust_signals_icon('icon').default('shield'),
+    title: varchar('title'),
+    detail: varchar('detail'),
+  },
+  (columns) => [
+    index('site_settings_trust_signals_order_idx').on(columns._order),
+    index('site_settings_trust_signals_parent_id_idx').on(columns._parentID),
+    foreignKey({
+      columns: [columns['_parentID']],
+      foreignColumns: [site_settings.id],
+      name: 'site_settings_trust_signals_parent_id_fk',
+    }).onDelete('cascade'),
+  ],
+)
+
 export const site_settings_announcement_bar_announcements = pgTable(
   'site_settings_announcement_bar_announcements',
   {
@@ -3569,6 +3600,34 @@ export const site_settings_rels = pgTable(
       columns: [columns['couponsID']],
       foreignColumns: [coupons.id],
       name: 'site_settings_rels_coupons_fk',
+    }).onDelete('cascade'),
+  ],
+)
+
+export const _site_settings_v_version_trust_signals = pgTable(
+  '_site_settings_v_version_trust_signals',
+  {
+    _order: integer('_order').notNull(),
+    _parentID: integer('_parent_id').notNull(),
+    id: serial('id').primaryKey(),
+    icon: enum__site_settings_v_version_trust_signals_icon('icon').default(
+      'shield',
+    ),
+    title: varchar('title'),
+    detail: varchar('detail'),
+    _uuid: varchar('_uuid'),
+  },
+  (columns) => [
+    index('_site_settings_v_version_trust_signals_order_idx').on(
+      columns._order,
+    ),
+    index('_site_settings_v_version_trust_signals_parent_id_idx').on(
+      columns._parentID,
+    ),
+    foreignKey({
+      columns: [columns['_parentID']],
+      foreignColumns: [_site_settings_v.id],
+      name: '_site_settings_v_version_trust_signals_parent_id_fk',
     }).onDelete('cascade'),
   ],
 )
@@ -4918,6 +4977,16 @@ export const relations_payload_migrations = relations(
   payload_migrations,
   () => ({}),
 )
+export const relations_site_settings_trust_signals = relations(
+  site_settings_trust_signals,
+  ({ one }) => ({
+    _parentID: one(site_settings, {
+      fields: [site_settings_trust_signals._parentID],
+      references: [site_settings.id],
+      relationName: 'trustSignals',
+    }),
+  }),
+)
 export const relations_site_settings_announcement_bar_announcements = relations(
   site_settings_announcement_bar_announcements,
   ({ one }) => ({
@@ -4956,6 +5025,9 @@ export const relations_site_settings = relations(
       references: [media.id],
       relationName: 'favicon',
     }),
+    trustSignals: many(site_settings_trust_signals, {
+      relationName: 'trustSignals',
+    }),
     announcementBar_announcements: many(
       site_settings_announcement_bar_announcements,
       {
@@ -4964,6 +5036,16 @@ export const relations_site_settings = relations(
     ),
     _rels: many(site_settings_rels, {
       relationName: '_rels',
+    }),
+  }),
+)
+export const relations__site_settings_v_version_trust_signals = relations(
+  _site_settings_v_version_trust_signals,
+  ({ one }) => ({
+    _parentID: one(_site_settings_v, {
+      fields: [_site_settings_v_version_trust_signals._parentID],
+      references: [_site_settings_v.id],
+      relationName: 'version_trustSignals',
     }),
   }),
 )
@@ -5007,6 +5089,9 @@ export const relations__site_settings_v = relations(
       fields: [_site_settings_v.version_favicon],
       references: [media.id],
       relationName: 'version_favicon',
+    }),
+    version_trustSignals: many(_site_settings_v_version_trust_signals, {
+      relationName: 'version_trustSignals',
     }),
     version_announcementBar_announcements: many(
       _site_settings_v_version_announcement_bar_announcements,
@@ -5058,7 +5143,9 @@ type DatabaseSchema = {
   enum_newsletter_subscribers_status: typeof enum_newsletter_subscribers_status
   enum_instagram_posts_source: typeof enum_instagram_posts_source
   enum_instagram_posts_media_type: typeof enum_instagram_posts_media_type
+  enum_site_settings_trust_signals_icon: typeof enum_site_settings_trust_signals_icon
   enum_site_settings_status: typeof enum_site_settings_status
+  enum__site_settings_v_version_trust_signals_icon: typeof enum__site_settings_v_version_trust_signals_icon
   enum__site_settings_v_version_status: typeof enum__site_settings_v_version_status
   enum__site_settings_v_published_locale: typeof enum__site_settings_v_published_locale
   users_sessions: typeof users_sessions
@@ -5151,9 +5238,11 @@ type DatabaseSchema = {
   payload_preferences: typeof payload_preferences
   payload_preferences_rels: typeof payload_preferences_rels
   payload_migrations: typeof payload_migrations
+  site_settings_trust_signals: typeof site_settings_trust_signals
   site_settings_announcement_bar_announcements: typeof site_settings_announcement_bar_announcements
   site_settings: typeof site_settings
   site_settings_rels: typeof site_settings_rels
+  _site_settings_v_version_trust_signals: typeof _site_settings_v_version_trust_signals
   _site_settings_v_version_announcement_bar_announcements: typeof _site_settings_v_version_announcement_bar_announcements
   _site_settings_v: typeof _site_settings_v
   _site_settings_v_rels: typeof _site_settings_v_rels
@@ -5247,9 +5336,11 @@ type DatabaseSchema = {
   relations_payload_preferences_rels: typeof relations_payload_preferences_rels
   relations_payload_preferences: typeof relations_payload_preferences
   relations_payload_migrations: typeof relations_payload_migrations
+  relations_site_settings_trust_signals: typeof relations_site_settings_trust_signals
   relations_site_settings_announcement_bar_announcements: typeof relations_site_settings_announcement_bar_announcements
   relations_site_settings_rels: typeof relations_site_settings_rels
   relations_site_settings: typeof relations_site_settings
+  relations__site_settings_v_version_trust_signals: typeof relations__site_settings_v_version_trust_signals
   relations__site_settings_v_version_announcement_bar_announcements: typeof relations__site_settings_v_version_announcement_bar_announcements
   relations__site_settings_v_rels: typeof relations__site_settings_v_rels
   relations__site_settings_v: typeof relations__site_settings_v

@@ -165,7 +165,7 @@ export default function WishlistPage() {
         ) : (
           <div className="grid grid-cols-2 gap-x-3 gap-y-5 sm:gap-x-4 sm:gap-y-8 lg:grid-cols-3 xl:grid-cols-4">
             {items.map((item) => {
-              const product = item.product
+              const product = liftVariantGallery(item.product)
               const isThisLoading = actionLoading === String(product.id)
               const isOOS =
                 product.trackQuantity === true && (product.quantity ?? 0) <= 0
