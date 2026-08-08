@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useSession } from '@/lib/auth-client'
 import { useCart } from '@/lib/store/cart'
+import { useWishlistStore } from '@/lib/store/wishlist'
 import { liftVariantGallery } from '@/lib/product-utils'
 import { ArrowLeft, ShoppingBag, Heart, Loader2 } from 'lucide-react'
 import {
@@ -26,6 +27,7 @@ export default function WishlistPage() {
   const router = useRouter()
   const { data: sessionData, isPending } = useSession()
   const { addItem } = useCart()
+  const toggleWishlist = useWishlistStore((state) => state.toggleWishlist)
 
   const [items, setItems] = useState<WishlistItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -84,13 +86,7 @@ export default function WishlistPage() {
       variantColor ? { color: variantColor } : undefined,
     )
 
-    fetch('/api/wishlist', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ productId: String(product.id) }),
-    }).catch((err) => {
-      console.error('Failed to remove from wishlist', err)
-    })
+    toggleWishlist(product.id)
   }
 
   if (isPending || loading) {

@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils'
 import { useCart } from '@/lib/store/cart'
 import { useUI } from '@/lib/store/ui'
 import { useSession } from '@/lib/auth-client'
+import { useWishlistStore } from '@/lib/store/wishlist'
 
 const navItems = [
   { href: '/', label: 'Home', icon: Home },
@@ -32,17 +33,15 @@ export function MobileBottomNav() {
   const { items } = useCart()
   const { openSearch, openCart } = useUI()
   const { data: sessionData } = useSession()
-  const [wishlistCount, setWishlistCount] = useState(0)
+  const wishlistCount = useWishlistStore((state) => state.productIds.length)
+  const isWishlistInitialized = useWishlistStore((state) => state.isInitialized)
+  const fetchWishlist = useWishlistStore((state) => state.fetchWishlist)
 
   useEffect(() => {
-    if (!sessionData?.user) return
-    fetch('/api/wishlist')
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (data) setWishlistCount(data?.items?.length || 0)
-      })
-      .catch(() => {})
-  }, [sessionData])
+    if (sessionData?.user && !isWishlistInitialized) {
+      fetchWishlist()
+    }
+  }, [sessionData, isWishlistInitialized, fetchWishlist])
 
   const cartCount = items.reduce((acc, item) => acc + item.quantity, 0)
 

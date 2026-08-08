@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils'
 import { Logo } from '@/components/layout/Logo'
 import { useCart } from '@/lib/store/cart'
 import { useUI } from '@/lib/store/ui'
+import { useWishlistStore } from '@/lib/store/wishlist'
 import { CartDrawer } from '@/components/cart/CartDrawer'
 import { SearchCommand } from '@/components/search/SearchCommand'
 import {
@@ -70,11 +71,14 @@ export function Header() {
   } | null>(null)
   const [activeAnnouncement, setActiveAnnouncement] = useState(0)
   const announcementTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const [wishlistCount, setWishlistCount] = useState(0)
   const { items } = useCart()
   const { data: sessionData } = useSession()
   const { cartOpen, searchOpen, openCart, openSearch, closeCart, closeSearch } =
     useUI()
+  const wishlistCount = useWishlistStore((state) => state.productIds.length)
+  const isWishlistInitialized = useWishlistStore((state) => state.isInitialized)
+  const fetchWishlist = useWishlistStore((state) => state.fetchWishlist)
+  const clearWishlist = useWishlistStore((state) => state.clearWishlist)
 
   // Scroll listener for blur-on-scroll
   useEffect(() => {
@@ -87,14 +91,12 @@ export function Header() {
   }, [])
 
   useEffect(() => {
-    if (!sessionData?.user) return
-    fetch('/api/wishlist')
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (data) setWishlistCount(data?.items?.length || 0)
-      })
-      .catch(() => {})
-  }, [sessionData])
+    if (sessionData?.user) {
+      if (!isWishlistInitialized) fetchWishlist()
+    } else {
+      clearWishlist()
+    }
+  }, [sessionData, isWishlistInitialized, fetchWishlist, clearWishlist])
 
   useEffect(() => {
     document.body.dataset.hydrated = 'true'

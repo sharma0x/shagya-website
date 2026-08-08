@@ -5,6 +5,7 @@ import { useCart } from '@/lib/store/cart'
 import { ShoppingCart, Heart, AlertTriangle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useSession } from '@/lib/auth-client'
+import { useWishlistStore } from '@/lib/store/wishlist'
 
 interface ProductActionsProps {
   product: {
@@ -65,8 +66,6 @@ export function ProductActions({
   const [selectedVariantIndex, setSelectedVariantIndex] =
     useState(initialVariantIndex)
   const [addedState, setAddedState] = useState<'idle' | 'added'>('idle')
-  const [inWishlist, setInWishlist] = useState(false)
-  const [wishlistLoading, setWishlistLoading] = useState(false)
 
   const variants = product.colorVariants || []
   const selectedVariant = variants[selectedVariantIndex] ?? null
@@ -79,21 +78,18 @@ export function ProductActions({
   const isVariantOOS = selectedVariant ? selectedVariant.stock <= 0 : false
   const effectiveOOS = isOutOfStock || isVariantOOS
 
+  const productIds = useWishlistStore((state) => state.productIds)
+  const isWishlistInitialized = useWishlistStore((state) => state.isInitialized)
+  const fetchWishlist = useWishlistStore((state) => state.fetchWishlist)
+  const toggleWishlist = useWishlistStore((state) => state.toggleWishlist)
+
+  const inWishlist = productIds.includes(String(product.id))
+
   useEffect(() => {
-    if (!session?.user) return
-    fetch('/api/wishlist')
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        if (!data) return
-        setInWishlist(
-          (data.items ?? []).some(
-            (item: any) =>
-              String(item.product?.id ?? item.product) === String(product.id),
-          ),
-        )
-      })
-      .catch(() => {})
-  }, [session?.user, product.id])
+    if (session?.user && !isWishlistInitialized) {
+      fetchWishlist()
+    }
+  }, [session?.user, isWishlistInitialized, fetchWishlist])
 
   const handleToggleWishlist = useCallback(async () => {
     if (!session?.user) {
@@ -102,22 +98,8 @@ export function ProductActions({
       )
       return
     }
-    setWishlistLoading(true)
-    try {
-      const res = await fetch('/api/wishlist', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ productId: String(product.id) }),
-      })
-      if (res.ok) {
-        const data = await res.json()
-        setInWishlist(data.message === 'Product added to wishlist')
-      }
-    } catch {
-    } finally {
-      setWishlistLoading(false)
-    }
-  }, [session?.user, product.id, router])
+    await toggleWishlist(product.id)
+  }, [session?.user, product.id, router, toggleWishlist])
 
   const handleAddToCart = () => {
     if (!selectedVariant) return
@@ -255,8 +237,7 @@ export function ProductActions({
             </p>
             <button
               onClick={handleToggleWishlist}
-              disabled={wishlistLoading}
-              className={`font-display mt-3 inline-flex h-10 items-center gap-2 rounded-xl px-5 text-xs font-semibold transition-all active:scale-[0.97] disabled:opacity-50 ${
+              className={`font-display mt-3 inline-flex h-10 items-center gap-2 rounded-xl px-5 text-xs font-semibold transition-all active:scale-[0.97] ${
                 inWishlist
                   ? 'border border-red-200 bg-red-50 text-red-600'
                   : 'bg-brand-600 hover:bg-brand-700 text-white shadow-xs'
@@ -292,11 +273,10 @@ export function ProductActions({
 
           <button
             onClick={handleToggleWishlist}
-            disabled={wishlistLoading}
             aria-label={
               inWishlist ? 'Remove from wishlist' : 'Save to wishlist'
             }
-            className={`flex h-13 w-13 shrink-0 items-center justify-center rounded-xl border transition-all active:scale-[0.97] disabled:opacity-50 ${
+            className={`flex h-13 w-13 shrink-0 items-center justify-center rounded-xl border transition-all active:scale-[0.97] ${
               inWishlist
                 ? 'border-red-200 bg-red-50 text-red-500'
                 : 'border-neutral-200 bg-white text-neutral-500 hover:border-neutral-300 hover:text-neutral-700'

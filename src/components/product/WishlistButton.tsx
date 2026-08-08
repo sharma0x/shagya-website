@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { Heart, Loader2 } from 'lucide-react'
+import { useEffect, useCallback } from 'react'
+import { Heart } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useSession } from '@/lib/auth-client'
+import { useWishlistStore } from '@/lib/store/wishlist'
 import { cn } from '@/lib/utils'
 
 interface WishlistButtonProps {
@@ -19,84 +20,54 @@ export function WishlistButton({
 }: WishlistButtonProps) {
   const router = useRouter()
   const { data: session } = useSession()
-  const [inWishlist, setInWishlist] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [checked, setChecked] = useState(false)
+
+  const productIds = useWishlistStore((state) => state.productIds)
+  const isInitialized = useWishlistStore((state) => state.isInitialized)
+  const fetchWishlist = useWishlistStore((state) => state.fetchWishlist)
+  const toggleWishlist = useWishlistStore((state) => state.toggleWishlist)
+
+  const inWishlist = productIds.includes(String(productId))
 
   useEffect(() => {
-    if (!session?.user) return
-    let cancelled = false
-    fetch('/api/wishlist')
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (cancelled || !data) return
-        const items = data.items || []
-        const found = items.some((item: any) => {
-          const pid =
-            typeof item.product === 'object' ? item.product?.id : item.product
-          return String(pid) === String(productId)
-        })
-        setInWishlist(found)
-      })
-      .catch(() => {})
-      .finally(() => {
-        if (!cancelled) setChecked(true)
-      })
-    return () => {
-      cancelled = true
+    if (session?.user && !isInitialized) {
+      fetchWishlist()
     }
-  }, [session?.user, productId])
+  }, [session?.user, isInitialized, fetchWishlist])
 
-  const handleToggle = useCallback(async () => {
-    if (!session?.user) {
-      router.push(
-        `/account/login?redirect=${encodeURIComponent(window.location.pathname)}`,
-      )
-      return
-    }
-    setLoading(true)
-    try {
-      const res = await fetch('/api/wishlist', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ productId: String(productId) }),
-      })
-      if (res.ok) {
-        const data = await res.json()
-        setInWishlist(data.message === 'Product added to wishlist')
+  const handleToggle = useCallback(
+    async (e: React.MouseEvent) => {
+      e.preventDefault()
+      e.stopPropagation()
+
+      if (!session?.user) {
+        router.push(
+          `/account/login?redirect=${encodeURIComponent(window.location.pathname)}`,
+        )
+        return
       }
-    } catch {
-      // silent fail
-    } finally {
-      setLoading(false)
-    }
-  }, [session?.user, productId, router])
+
+      await toggleWishlist(productId)
+    },
+    [session?.user, productId, router, toggleWishlist],
+  )
 
   return (
     <button
-      onClick={(e) => {
-        e.preventDefault()
-        e.stopPropagation()
-        handleToggle()
-      }}
-      disabled={loading}
+      type="button"
+      onClick={handleToggle}
       className={cn(
-        'flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-neutral-200/50 bg-white/90 text-neutral-600 shadow-xs transition-colors hover:bg-white',
+        'flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-neutral-200/50 bg-white/90 text-neutral-600 shadow-xs transition-colors hover:bg-white active:scale-90',
         className,
       )}
       aria-label={inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'}
     >
-      {loading ? (
-        <Loader2 className="h-4 w-4 animate-spin" />
-      ) : (
-        <Heart
-          className={cn(
-            'h-4 w-4 transition-all',
-            inWishlist ? 'fill-red-500 text-red-500' : '',
-            iconClassName,
-          )}
-        />
-      )}
+      <Heart
+        className={cn(
+          'h-4 w-4 transition-all duration-200',
+          inWishlist ? 'scale-110 fill-red-500 text-red-500' : '',
+          iconClassName,
+        )}
+      />
     </button>
   )
 }

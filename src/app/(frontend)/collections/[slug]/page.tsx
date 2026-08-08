@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils'
 import { SortSelect } from '@/components/ui/sort-select'
 import { ProductFilters } from '@/components/product/ProductFilters'
 import { ProductCard } from '@/components/product/ProductCard'
+import { ProductCardSkeleton } from '@/components/ui/Skeleton'
 
 function getCommaParam(
   params: { [key: string]: string | string[] | undefined },
@@ -68,7 +69,6 @@ function buildWhere(
     where.cityOfOrigin = { equals: city }
   }
 
-  // Exclude out of stock
   if (sParams.excludeOOS === 'true') {
     where.trackQuantity = { equals: true }
     where.quantity = { greater_than: 0 }
@@ -77,36 +77,36 @@ function buildWhere(
   return where
 }
 
-export default async function CollectionDetailPage({
-  params,
-  searchParams,
+function CollectionProductGridSkeleton() {
+  return (
+    <div
+      className="mt-4 grid grid-cols-2 gap-x-3 gap-y-5 sm:gap-x-4 sm:gap-y-8 lg:grid-cols-3 xl:grid-cols-4"
+      aria-hidden="true"
+    >
+      {Array.from({ length: 8 }).map((_, i) => (
+        <ProductCardSkeleton key={i} />
+      ))}
+    </div>
+  )
+}
+
+async function CollectionProductsStream({
+  collectionId,
+  sParams,
+  sortParam,
 }: {
-  params: Promise<{ slug: string }>
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+  collectionId: number
+  sParams: { [key: string]: string | string[] | undefined }
+  sortParam: string
 }) {
-  const { slug } = await params
-  const sParams = await searchParams
-  const sortParam = (sParams.sort as string) || 'newest'
-
   const payload = await getPayload({ config })
-
-  const colRes = await payload.find({
-    collection: 'collections',
-    where: { slug: { equals: slug } },
-    limit: 1,
-  })
-
-  if (colRes.docs.length === 0) return notFound()
-
-  const collection = colRes.docs[0]
 
   let sort = '-createdAt'
   if (sortParam === 'price-asc') sort = 'basePrice'
   else if (sortParam === 'price-desc') sort = '-basePrice'
 
-  const where = buildWhere(sParams, collection.id)
+  const where = buildWhere(sParams, collectionId)
 
-  // Variant-based filters (color, size)
   const colorParam = getCommaParam(sParams, 'color')
   const sizeParam = (sParams.size as string) || ''
 
@@ -132,7 +132,6 @@ export default async function CollectionDetailPage({
     }
   }
 
-  // Pagination
   const page = Math.max(1, parseInt((sParams.page as string) || '1', 10))
   const prodLimit = Math.max(
     1,
@@ -152,6 +151,128 @@ export default async function CollectionDetailPage({
   const totalPages = productsRes.totalPages
 
   return (
+    <div className="flex-1">
+      <div className="border-b border-neutral-100 pb-6">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-4 text-sm text-neutral-500">
+            <span>
+              {totalDocs > 0
+                ? `Showing ${(page - 1) * prodLimit + 1}–${Math.min(page * prodLimit, totalDocs)} of ${totalDocs} sarees`
+                : '0 sarees in this collection'}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-neutral-400">Sort by:</span>
+            <SortSelect defaultValue={sortParam} />
+          </div>
+        </div>
+      </div>
+
+      {products.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <h3 className="font-display text-lg font-semibold text-neutral-800">
+            No products found
+          </h3>
+          <p className="font-body mt-2 text-sm text-neutral-500">
+            There are currently no products available in this collection.
+          </p>
+        </div>
+      ) : (
+        <div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-5 sm:gap-x-4 sm:gap-y-8 lg:grid-cols-3 xl:grid-cols-4">
+          {products.map((p) => (
+            <ProductCard key={p.id} product={p} variant="grid" showWishlist />
+          ))}
+        </div>
+      )}
+
+      {totalPages > 1 && (
+        <div className="mt-10 flex items-center justify-center gap-2">
+          {page > 1 && (
+            <Link
+              href={(() => {
+                const p = new URLSearchParams(sParams as Record<string, string>)
+                p.set('page', String(page - 1))
+                return `?${p.toString()}`
+              })()}
+              className="font-display flex h-8 items-center gap-1 rounded-lg border border-neutral-200 px-3 text-xs font-semibold text-neutral-600 transition-colors hover:bg-neutral-50"
+            >
+              <ChevronLeft className="h-3 w-3" />
+              Prev
+            </Link>
+          )}
+          {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+            const pageNum =
+              totalPages <= 7
+                ? i + 1
+                : page <= 4
+                  ? i + 1
+                  : page >= totalPages - 3
+                    ? totalPages - 6 + i
+                    : page - 3 + i
+            return (
+              <Link
+                key={pageNum}
+                href={(() => {
+                  const p = new URLSearchParams(
+                    sParams as Record<string, string>,
+                  )
+                  p.set('page', String(pageNum))
+                  return `?${p.toString()}`
+                })()}
+                className={cn(
+                  'font-body flex h-8 w-8 items-center justify-center rounded-lg text-xs font-medium transition-colors',
+                  pageNum === page
+                    ? 'bg-brand-600 text-white'
+                    : 'text-neutral-600 hover:bg-neutral-100',
+                )}
+              >
+                {pageNum}
+              </Link>
+            )
+          })}
+          {page < totalPages && (
+            <Link
+              href={(() => {
+                const p = new URLSearchParams(sParams as Record<string, string>)
+                p.set('page', String(page + 1))
+                return `?${p.toString()}`
+              })()}
+              className="font-display flex h-8 items-center gap-1 rounded-lg border border-neutral-200 px-3 text-xs font-semibold text-neutral-600 transition-colors hover:bg-neutral-50"
+            >
+              Next
+              <ChevronRight className="h-3 w-3" />
+            </Link>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+export default async function CollectionDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
+  const { slug } = await params
+  const sParams = await searchParams
+  const sortParam = (sParams.sort as string) || 'newest'
+
+  const payload = await getPayload({ config })
+
+  const colRes = await payload.find({
+    collection: 'collections',
+    where: { slug: { equals: slug } },
+    limit: 1,
+  })
+
+  if (colRes.docs.length === 0) return notFound()
+
+  const collection = colRes.docs[0]
+
+  return (
     <div className="bg-surface min-h-screen py-10">
       <div className="container-page">
         <Link
@@ -162,6 +283,7 @@ export default async function CollectionDetailPage({
           Back to Collections
         </Link>
 
+        {/* Collection header renders immediately */}
         <div className="mt-8 border-b border-neutral-200 pb-10">
           <h1 className="font-display text-4xl font-semibold tracking-tight text-neutral-900 md:text-5xl">
             {collection.name}
@@ -181,111 +303,13 @@ export default async function CollectionDetailPage({
             />
           </Suspense>
 
-          <div className="flex-1">
-            <div className="border-b border-neutral-100 pb-6">
-              <div className="flex flex-wrap items-center justify-between gap-4">
-                <div className="flex items-center gap-4 text-sm text-neutral-500">
-                  <span>
-                    {totalDocs > 0
-                      ? `Showing ${(page - 1) * prodLimit + 1}–${Math.min(page * prodLimit, totalDocs)} of ${totalDocs} sarees`
-                      : '0 sarees in this collection'}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-neutral-400">Sort by:</span>
-                  <SortSelect defaultValue={sortParam} />
-                </div>
-              </div>
-            </div>
-
-            {products.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 text-center">
-                <h3 className="font-display text-lg font-semibold text-neutral-800">
-                  No products found
-                </h3>
-                <p className="font-body mt-2 text-sm text-neutral-500">
-                  There are currently no products available in this collection.
-                </p>
-              </div>
-            ) : (
-              <div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-5 sm:gap-x-4 sm:gap-y-8 lg:grid-cols-3 xl:grid-cols-4">
-                {products.map((p) => (
-                  <ProductCard
-                    key={p.id}
-                    product={p}
-                    variant="grid"
-                    showWishlist
-                  />
-                ))}
-              </div>
-            )}
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="mt-10 flex items-center justify-center gap-2">
-                {page > 1 && (
-                  <Link
-                    href={(() => {
-                      const p = new URLSearchParams(
-                        sParams as Record<string, string>,
-                      )
-                      p.set('page', String(page - 1))
-                      return `?${p.toString()}`
-                    })()}
-                    className="font-display flex h-8 items-center gap-1 rounded-lg border border-neutral-200 px-3 text-xs font-semibold text-neutral-600 transition-colors hover:bg-neutral-50"
-                  >
-                    <ChevronLeft className="h-3 w-3" />
-                    Prev
-                  </Link>
-                )}
-                {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
-                  const pageNum =
-                    totalPages <= 7
-                      ? i + 1
-                      : page <= 4
-                        ? i + 1
-                        : page >= totalPages - 3
-                          ? totalPages - 6 + i
-                          : page - 3 + i
-                  return (
-                    <Link
-                      key={pageNum}
-                      href={(() => {
-                        const p = new URLSearchParams(
-                          sParams as Record<string, string>,
-                        )
-                        p.set('page', String(pageNum))
-                        return `?${p.toString()}`
-                      })()}
-                      className={cn(
-                        'font-body flex h-8 w-8 items-center justify-center rounded-lg text-xs font-medium transition-colors',
-                        pageNum === page
-                          ? 'bg-brand-600 text-white'
-                          : 'text-neutral-600 hover:bg-neutral-100',
-                      )}
-                    >
-                      {pageNum}
-                    </Link>
-                  )
-                })}
-                {page < totalPages && (
-                  <Link
-                    href={(() => {
-                      const p = new URLSearchParams(
-                        sParams as Record<string, string>,
-                      )
-                      p.set('page', String(page + 1))
-                      return `?${p.toString()}`
-                    })()}
-                    className="font-display flex h-8 items-center gap-1 rounded-lg border border-neutral-200 px-3 text-xs font-semibold text-neutral-600 transition-colors hover:bg-neutral-50"
-                  >
-                    Next
-                    <ChevronRight className="h-3 w-3" />
-                  </Link>
-                )}
-              </div>
-            )}
-          </div>
+          <Suspense fallback={<CollectionProductGridSkeleton />}>
+            <CollectionProductsStream
+              collectionId={collection.id}
+              sParams={sParams}
+              sortParam={sortParam}
+            />
+          </Suspense>
         </div>
       </div>
     </div>

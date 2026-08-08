@@ -275,3 +275,133 @@ export function CheckoutLayoutSkeleton() {
     </div>
   )
 }
+
+export function SectionHeaderSkeleton() {
+  return (
+    <div className="mb-10 text-center" aria-hidden="true">
+      <Skeleton className="mx-auto h-3 w-28 rounded-full" />
+      <Skeleton className="mx-auto mt-3 h-8 w-64 md:h-10 md:w-80" />
+      <Skeleton className="mx-auto mt-2 h-4 w-96 max-w-full" />
+    </div>
+  )
+}
+
+export function ProductSectionSkeleton({ count = 4 }: { count?: number }) {
+  return (
+    <section className="py-16 md:py-24" aria-hidden="true">
+      <div className="container-page">
+        <SectionHeaderSkeleton />
+        <div className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3 lg:grid-cols-4">
+          {Array.from({ length: count }).map((_, i) => (
+            <ProductCardSkeleton key={i} />
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+export function ReviewsSkeleton() {
+  return (
+    <div className="space-y-6 py-8" aria-hidden="true">
+      <Skeleton className="h-7 w-48" />
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        {[1, 2].map((i) => (
+          <div
+            key={i}
+            className="space-y-3 rounded-2xl border border-neutral-100 bg-neutral-50/50 p-6"
+          >
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-10 w-10 rounded-full" />
+              <div className="space-y-1">
+                <Skeleton className="h-4 w-28" />
+                <Skeleton className="h-3 w-20" />
+              </div>
+            </div>
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-3/4" />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+export function OffersSkeleton() {
+  return (
+    <div
+      className="space-y-3 rounded-2xl border border-amber-200/60 bg-amber-50/30 p-5"
+      aria-hidden="true"
+    >
+      <Skeleton className="h-5 w-40" />
+      <Skeleton className="h-4 w-full max-w-md" />
+    </div>
+  )
+}
+
+export function CategoriesGridSkeleton() {
+  return (
+    <div className="bg-white py-6 sm:py-8 md:py-10" aria-hidden="true">
+      <div className="container-page">
+        <div className="mb-6 space-y-2">
+          <Skeleton className="h-7 w-48" />
+          <Skeleton className="h-4 w-80 max-w-full" />
+        </div>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <CategoryCardSkeleton key={i} />
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export function SpotlightsGridSkeleton() {
+  return (
+    <div className="bg-white py-6 sm:py-8 md:py-10" aria-hidden="true">
+      <div className="container-page">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-3 md:gap-6 lg:gap-10">
+          {[1, 2, 3].map((col) => (
+            <div key={col} className="space-y-4">
+              <div className="space-y-1">
+                <Skeleton className="h-6 w-36" />
+                <Skeleton className="h-3 w-28" />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <ProductCardSkeleton />
+                <ProductCardSkeleton />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export function BlogGridSkeleton() {
+  return (
+    <div className="bg-white py-6 sm:py-8 md:py-10" aria-hidden="true">
+      <div className="container-page">
+        <div className="mb-6 space-y-2">
+          <Skeleton className="h-7 w-40" />
+          <Skeleton className="h-4 w-64" />
+        </div>
+        <div className="grid gap-6 md:grid-cols-3">
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="space-y-4 rounded-2xl border border-neutral-100 p-5"
+            >
+              <Skeleton className="aspect-[16/10] w-full rounded-xl" />
+              <Skeleton className="h-3 w-24" />
+              <Skeleton className="h-5 w-full" />
+              <Skeleton className="h-4 w-4/5" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}

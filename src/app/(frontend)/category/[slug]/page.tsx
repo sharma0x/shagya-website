@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 import { SortSelect } from '@/components/ui/sort-select'
 import { ProductFilters } from '@/components/product/ProductFilters'
 import { ProductCard } from '@/components/product/ProductCard'
+import { ProductCardSkeleton } from '@/components/ui/Skeleton'
 
 function getCommaParam(
   params: { [key: string]: string | string[] | undefined },
@@ -103,7 +104,6 @@ function buildWhere(sParams: FilterParams, slug: string) {
     status: { equals: 'published' },
   }
 
-  // Category-based filters from slug — URL params override, slug is initial default only
   const hasFabricParam = sParams.fabric !== undefined
   const hasWeaveParam = sParams.weave !== undefined
 
@@ -130,7 +130,6 @@ function buildWhere(sParams: FilterParams, slug: string) {
     where.pattern = { in: patternFilter }
   }
 
-  // Price range
   const minPrice = sParams.minPrice as string | undefined
   const maxPrice = sParams.maxPrice as string | undefined
   if (minPrice || maxPrice) {
@@ -140,12 +139,10 @@ function buildWhere(sParams: FilterParams, slug: string) {
     where.basePrice = basePrice
   }
 
-  // On sale
   if (sParams.onSale === 'true') {
     where.compareAtPrice = { greater_than: 0 }
   }
 
-  // Minimum discount
   const minDiscount = sParams.minDiscount as string | undefined
   if (minDiscount) {
     where.discountPercentage = {
@@ -153,13 +150,11 @@ function buildWhere(sParams: FilterParams, slug: string) {
     }
   }
 
-  // Delivery time
   const deliveryTime = sParams.deliveryTime as string | undefined
   if (deliveryTime) {
     where.deliveryTime = { equals: deliveryTime }
   }
 
-  // City of origin
   const city = sParams.city as string | undefined
   if (city === '__unknown__') {
     where.or = [
@@ -170,7 +165,6 @@ function buildWhere(sParams: FilterParams, slug: string) {
     where.cityOfOrigin = { equals: city }
   }
 
-  // Exclude out of stock
   if (sParams.excludeOOS === 'true') {
     where.trackQuantity = { equals: true }
     where.quantity = { greater_than: 0 }
@@ -179,58 +173,46 @@ function buildWhere(sParams: FilterParams, slug: string) {
   return where
 }
 
-export default async function CategoryPage({
-  params,
-  searchParams,
+function CategoryProductGridSkeleton() {
+  return (
+    <div
+      className="mt-4 grid grid-cols-2 gap-x-3 gap-y-5 sm:gap-x-4 sm:gap-y-8 lg:grid-cols-3 xl:grid-cols-4"
+      aria-hidden="true"
+    >
+      {Array.from({ length: 8 }).map((_, i) => (
+        <ProductCardSkeleton key={i} />
+      ))}
+    </div>
+  )
+}
+
+async function CategoryProductsStream({
+  slug,
+  sParams,
+  sortParam,
 }: {
-  params: Promise<{ slug: string }>
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+  slug: string
+  sParams: FilterParams
+  sortParam: string
 }) {
-  const { slug } = await params
-  const sParams = await searchParams
-  const sortParam = (sParams.sort as string) || 'newest'
-
   const payload = await getPayload({ config })
-
   const where = buildWhere(sParams, slug)
 
-  // Determine context filter for the facets API based on the slug type
-  const contextFilter: Record<string, string> = {}
-  if (FABRICS.includes(slug.toLowerCase())) {
-    contextFilter.fabric = slug.toLowerCase()
-  } else if (WEAVES.includes(slug.toLowerCase())) {
-    contextFilter.weave = slug.toLowerCase()
-  }
-
-  // Pagination
-  const page = Math.max(1, parseInt((sParams.page as string) || '1', 10))
-  const prodLimit = Math.max(
-    1,
-    Math.min(50, parseInt((sParams.limit as string) || '20', 10)),
-  )
-
-  // Get category title
-  let title = slug.charAt(0).toUpperCase() + slug.slice(1)
-  let description = `Discover our curated selection of ${slug} sarees.`
-
-  if (FABRICS.includes(slug.toLowerCase())) {
-    title = `${title} Sarees`
-    description = `Premium handwoven pure ${slug} sarees, sourced directly from weaver clusters across India.`
-  } else if (WEAVES.includes(slug.toLowerCase())) {
-    title = `${title} Weave`
-    description = `Authentic, heritage ${slug} sarees featuring signature regional patterns and pure zari borders.`
-  } else if (slug.toLowerCase() === 'all') {
-    title = 'All Sarees'
-    description = 'Browse our complete collection of handcrafted Indian sarees.'
-  } else {
+  if (slug.toLowerCase() === 'bridal') {
+    where.occasion = { like: 'Bridal' }
+  } else if (slug.toLowerCase() === 'festive') {
+    where.occasion = { like: 'Festive' }
+  } else if (
+    !FABRICS.includes(slug.toLowerCase()) &&
+    !WEAVES.includes(slug.toLowerCase()) &&
+    slug.toLowerCase() !== 'all'
+  ) {
     const catDoc = await payload.find({
       collection: 'categories',
       where: { slug: { equals: slug } },
       limit: 1,
     })
     if (catDoc.docs.length > 0) {
-      title = catDoc.docs[0].name
-      description = catDoc.docs[0].description || description
       if (slug.toLowerCase() === 'bridal') {
         where.occasion = { like: 'Bridal' }
       } else if (slug.toLowerCase() === 'festive') {
@@ -239,7 +221,12 @@ export default async function CategoryPage({
     }
   }
 
-  // Sort
+  const page = Math.max(1, parseInt((sParams.page as string) || '1', 10))
+  const prodLimit = Math.max(
+    1,
+    Math.min(50, parseInt((sParams.limit as string) || '20', 10)),
+  )
+
   let sort = '-createdAt'
   if (sortParam === 'price-asc') sort = 'basePrice'
   else if (sortParam === 'price-desc') sort = '-basePrice'
@@ -253,7 +240,6 @@ export default async function CategoryPage({
     depth: 2,
   })
   const products = result.docs
-  const totalDocs = result.totalDocs
   const totalPages = result.totalPages
 
   let explodedProducts = explodeProducts(products)
@@ -262,6 +248,203 @@ export default async function CategoryPage({
     explodedProducts = explodedProducts.filter((ep) =>
       colorParam.includes(ep.color.slug),
     )
+  }
+
+  return (
+    <div className="flex-1">
+      <div className="border-b border-neutral-100 pb-6">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-4 text-sm text-neutral-500">
+            <span>
+              {explodedProducts.length > 0
+                ? `Showing ${explodedProducts.length} products`
+                : '0 products found'}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-neutral-400">Sort by:</span>
+            <SortSelect defaultValue={sortParam} />
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-4 flex items-center gap-3">
+        <span className="shrink-0 text-xs text-neutral-400">Quick:</span>
+        <div className="scrollbar-hide flex gap-1.5 overflow-x-auto whitespace-nowrap">
+          {['All', 'Banarasi', 'Kanchipuram', 'Chanderi', 'On Sale'].map(
+            (label) => {
+              const params = new URLSearchParams(
+                sParams as Record<string, string>,
+              )
+              const isActive = (() => {
+                switch (label) {
+                  case 'All':
+                    return !params.get('weave') && !params.get('onSale')
+                  case 'Banarasi':
+                  case 'Kanchipuram':
+                  case 'Chanderi':
+                    return params.get('weave') === label.toLowerCase()
+                  case 'On Sale':
+                    return params.get('onSale') === 'true'
+                  default:
+                    return false
+                }
+              })()
+              if (label === 'All') {
+                params.delete('weave')
+                params.delete('onSale')
+              } else if (label === 'On Sale') {
+                params.set('onSale', isActive ? 'false' : 'true')
+              } else {
+                params.set('weave', isActive ? '' : label.toLowerCase())
+              }
+              const qs = params.toString()
+              return (
+                <Link
+                  key={label}
+                  href={qs ? `?${qs}` : '?'}
+                  className={`font-body rounded-lg px-3 py-1 text-xs font-medium transition-colors ${
+                    isActive
+                      ? 'bg-brand-600 text-white'
+                      : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+                  }`}
+                >
+                  {label}
+                </Link>
+              )
+            },
+          )}
+        </div>
+      </div>
+
+      {explodedProducts.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <h3 className="font-display text-lg font-semibold text-neutral-800">
+            No products found
+          </h3>
+          <p className="font-body mt-2 text-sm text-neutral-500">
+            We couldn&apos;t find any sarees matching these filters. Try
+            clearing some selections.
+          </p>
+          <Link
+            href={`/category/${slug}`}
+            className="bg-brand-600 hover:bg-brand-700 font-display mt-6 inline-flex h-10 items-center justify-center rounded-xl px-5 text-xs font-semibold text-white transition-colors"
+          >
+            Reset Filters
+          </Link>
+        </div>
+      ) : (
+        <div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-5 sm:gap-x-4 sm:gap-y-8 lg:grid-cols-3 xl:grid-cols-4">
+          {explodedProducts.map((ep) => (
+            <ProductCard
+              key={ep.key}
+              product={{
+                ...ep._product,
+                gallery: ep.gallery,
+                basePrice: ep.effectivePrice,
+                color: ep.color,
+              }}
+              variant="grid"
+              showWishlist
+            />
+          ))}
+        </div>
+      )}
+
+      {totalPages > 1 && (
+        <div className="mt-10 flex items-center justify-center gap-2">
+          {page > 1 && (
+            <Link
+              href={(() => {
+                const p = new URLSearchParams(sParams as Record<string, string>)
+                p.set('page', String(page - 1))
+                return `?${p.toString()}`
+              })()}
+              className="font-display flex h-8 items-center gap-1 rounded-lg border border-neutral-200 px-3 text-xs font-semibold text-neutral-600 transition-colors hover:bg-neutral-50"
+            >
+              <ChevronLeft className="h-3 w-3" />
+              Prev
+            </Link>
+          )}
+          {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+            const pageNum =
+              totalPages <= 7
+                ? i + 1
+                : page <= 4
+                  ? i + 1
+                  : page >= totalPages - 3
+                    ? totalPages - 6 + i
+                    : page - 3 + i
+            return (
+              <Link
+                key={pageNum}
+                href={(() => {
+                  const p = new URLSearchParams(
+                    sParams as Record<string, string>,
+                  )
+                  p.set('page', String(pageNum))
+                  return `?${p.toString()}`
+                })()}
+                className={cn(
+                  'font-body flex h-8 w-8 items-center justify-center rounded-lg text-xs font-medium transition-colors',
+                  pageNum === page
+                    ? 'bg-brand-600 text-white'
+                    : 'text-neutral-600 hover:bg-neutral-100',
+                )}
+              >
+                {pageNum}
+              </Link>
+            )
+          })}
+          {page < totalPages && (
+            <Link
+              href={(() => {
+                const p = new URLSearchParams(sParams as Record<string, string>)
+                p.set('page', String(page + 1))
+                return `?${p.toString()}`
+              })()}
+              className="font-display flex h-8 items-center gap-1 rounded-lg border border-neutral-200 px-3 text-xs font-semibold text-neutral-600 transition-colors hover:bg-neutral-50"
+            >
+              Next
+              <ChevronRight className="h-3 w-3" />
+            </Link>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+export default async function CategoryPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>
+  searchParams: Promise<FilterParams>
+}) {
+  const { slug } = await params
+  const sParams = await searchParams
+  const sortParam = (sParams.sort as string) || 'newest'
+
+  const contextFilter: { fabric?: string; weave?: string } = {}
+  if (FABRICS.includes(slug.toLowerCase())) {
+    contextFilter.fabric = slug.toLowerCase()
+  } else if (WEAVES.includes(slug.toLowerCase())) {
+    contextFilter.weave = slug.toLowerCase()
+  }
+
+  let title = slug.charAt(0).toUpperCase() + slug.slice(1)
+  let description = `Discover our curated selection of ${slug} sarees.`
+
+  if (FABRICS.includes(slug.toLowerCase())) {
+    title = `${title} Sarees`
+    description = `Premium handwoven pure ${slug} sarees, sourced directly from weaver clusters across India.`
+  } else if (WEAVES.includes(slug.toLowerCase())) {
+    title = `${title} Weave`
+    description = `Authentic, heritage ${slug} sarees featuring signature regional patterns and pure zari borders.`
+  } else if (slug.toLowerCase() === 'all') {
+    title = 'All Sarees'
+    description = 'Browse our complete collection of handcrafted Indian sarees.'
   }
 
   return (
@@ -275,6 +458,7 @@ export default async function CategoryPage({
           Back to Home
         </Link>
 
+        {/* Category Header renders instantly */}
         <div className="mt-8 border-b border-neutral-200 pb-10">
           <h1 className="font-display text-4xl font-semibold tracking-tight text-neutral-900 md:text-5xl">
             {title}
@@ -285,7 +469,6 @@ export default async function CategoryPage({
         </div>
 
         <div className="mt-8 flex flex-col gap-8 lg:flex-row">
-          {/* Sidebar Filters */}
           <Suspense
             fallback={<div className="hidden w-48 shrink-0 lg:block" />}
           >
@@ -296,176 +479,13 @@ export default async function CategoryPage({
             />
           </Suspense>
 
-          {/* Main Content */}
-          <div className="flex-1">
-            {/* Toolbar */}
-            <div className="border-b border-neutral-100 pb-6">
-              <div className="flex flex-wrap items-center justify-between gap-4">
-                <div className="flex items-center gap-4 text-sm text-neutral-500">
-                  <span>
-                    {explodedProducts.length > 0
-                      ? `Showing ${explodedProducts.length} products`
-                      : '0 products found'}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-neutral-400">Sort by:</span>
-                  <SortSelect defaultValue={sortParam} />
-                </div>
-              </div>
-            </div>
-
-            {/* Quick Filters */}
-            <div className="mt-4 flex items-center gap-3">
-              <span className="shrink-0 text-xs text-neutral-400">Quick:</span>
-              <div className="scrollbar-hide flex gap-1.5 overflow-x-auto whitespace-nowrap">
-                {['All', 'Banarasi', 'Kanchipuram', 'Chanderi', 'On Sale'].map(
-                  (label) => {
-                    const params = new URLSearchParams(
-                      sParams as Record<string, string>,
-                    )
-                    const isActive = (() => {
-                      switch (label) {
-                        case 'All':
-                          return !params.get('weave') && !params.get('onSale')
-                        case 'Banarasi':
-                        case 'Kanchipuram':
-                        case 'Chanderi':
-                          return params.get('weave') === label.toLowerCase()
-                        case 'On Sale':
-                          return params.get('onSale') === 'true'
-                        default:
-                          return false
-                      }
-                    })()
-                    if (label === 'All') {
-                      params.delete('weave')
-                      params.delete('onSale')
-                    } else if (label === 'On Sale') {
-                      params.set('onSale', isActive ? 'false' : 'true')
-                    } else {
-                      params.set('weave', isActive ? '' : label.toLowerCase())
-                    }
-                    const qs = params.toString()
-                    return (
-                      <Link
-                        key={label}
-                        href={qs ? `?${qs}` : '?'}
-                        className={`font-body rounded-lg px-3 py-1 text-xs font-medium transition-colors ${
-                          isActive
-                            ? 'bg-brand-600 text-white'
-                            : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
-                        }`}
-                      >
-                        {label}
-                      </Link>
-                    )
-                  },
-                )}
-              </div>
-            </div>
-
-            {/* Product Grid */}
-            {explodedProducts.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 text-center">
-                <h3 className="font-display text-lg font-semibold text-neutral-800">
-                  No products found
-                </h3>
-                <p className="font-body mt-2 text-sm text-neutral-500">
-                  We couldn&apos;t find any sarees matching these filters. Try
-                  clearing some selections.
-                </p>
-                <Link
-                  href={`/category/${slug}`}
-                  className="bg-brand-600 hover:bg-brand-700 font-display mt-6 inline-flex h-10 items-center justify-center rounded-xl px-5 text-xs font-semibold text-white transition-colors"
-                >
-                  Reset Filters
-                </Link>
-              </div>
-            ) : (
-              <div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-5 sm:gap-x-4 sm:gap-y-8 lg:grid-cols-3 xl:grid-cols-4">
-                {explodedProducts.map((ep) => (
-                  <ProductCard
-                    key={ep.key}
-                    product={{
-                      ...ep._product,
-                      gallery: ep.gallery,
-                      basePrice: ep.effectivePrice,
-                      color: ep.color,
-                    }}
-                    variant="grid"
-                    showWishlist
-                  />
-                ))}
-              </div>
-            )}
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="mt-10 flex items-center justify-center gap-2">
-                {page > 1 && (
-                  <Link
-                    href={(() => {
-                      const p = new URLSearchParams(
-                        sParams as Record<string, string>,
-                      )
-                      p.set('page', String(page - 1))
-                      return `?${p.toString()}`
-                    })()}
-                    className="font-display flex h-8 items-center gap-1 rounded-lg border border-neutral-200 px-3 text-xs font-semibold text-neutral-600 transition-colors hover:bg-neutral-50"
-                  >
-                    <ChevronLeft className="h-3 w-3" />
-                    Prev
-                  </Link>
-                )}
-                {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
-                  const pageNum =
-                    totalPages <= 7
-                      ? i + 1
-                      : page <= 4
-                        ? i + 1
-                        : page >= totalPages - 3
-                          ? totalPages - 6 + i
-                          : page - 3 + i
-                  return (
-                    <Link
-                      key={pageNum}
-                      href={(() => {
-                        const p = new URLSearchParams(
-                          sParams as Record<string, string>,
-                        )
-                        p.set('page', String(pageNum))
-                        return `?${p.toString()}`
-                      })()}
-                      className={cn(
-                        'font-body flex h-8 w-8 items-center justify-center rounded-lg text-xs font-medium transition-colors',
-                        pageNum === page
-                          ? 'bg-brand-600 text-white'
-                          : 'text-neutral-600 hover:bg-neutral-100',
-                      )}
-                    >
-                      {pageNum}
-                    </Link>
-                  )
-                })}
-                {page < totalPages && (
-                  <Link
-                    href={(() => {
-                      const p = new URLSearchParams(
-                        sParams as Record<string, string>,
-                      )
-                      p.set('page', String(page + 1))
-                      return `?${p.toString()}`
-                    })()}
-                    className="font-display flex h-8 items-center gap-1 rounded-lg border border-neutral-200 px-3 text-xs font-semibold text-neutral-600 transition-colors hover:bg-neutral-50"
-                  >
-                    Next
-                    <ChevronRight className="h-3 w-3" />
-                  </Link>
-                )}
-              </div>
-            )}
-          </div>
+          <Suspense fallback={<CategoryProductGridSkeleton />}>
+            <CategoryProductsStream
+              slug={slug}
+              sParams={sParams}
+              sortParam={sortParam}
+            />
+          </Suspense>
         </div>
       </div>
     </div>

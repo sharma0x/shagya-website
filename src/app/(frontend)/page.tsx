@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import {
   ArrowRight,
   Truck,
@@ -23,6 +24,12 @@ import type { Product } from '@/payload-types'
 import { liftVariantGallery } from '@/lib/product-utils'
 import { NewsletterForm } from '@/components/newsletter/NewsletterForm'
 import { SkeletonImage } from '@/components/ui/SkeletonImage'
+import {
+  CategoriesGridSkeleton,
+  SpotlightsGridSkeleton,
+  ProductSectionSkeleton,
+  BlogGridSkeleton,
+} from '@/components/ui/Skeleton'
 import { RefreshRouteOnSave } from '@/components/live-preview/RefreshRouteOnSave'
 import { SectionHeading } from '@/components/homepage/SectionHeading'
 import { ProductCard, ProductCarousel } from '@/components/homepage/ProductCard'
@@ -107,75 +114,180 @@ function ImagePanel({
   )
 }
 
-type Props = {
-  searchParams: Promise<{ preview?: string; id?: string }>
+function mapProductWithVariant(p: any) {
+  return liftVariantGallery(p)
 }
 
-export default async function HomePage({ searchParams }: Props) {
-  const { preview, id } = await searchParams
-  const isPreview = preview === 'true' && id === 'site-settings'
-  const payload = await getPayload({ config })
+const TRUST_FEATURES = [
+  {
+    icon: <Truck className="h-7 w-7" />,
+    title: 'Free Shipping',
+    description: 'On all orders above ₹1,999',
+  },
+  {
+    icon: <RotateCcw className="h-7 w-7" />,
+    title: 'Easy Returns',
+    description: '15-day hassle-free returns',
+  },
+  {
+    icon: <ShieldCheck className="h-7 w-7" />,
+    title: 'Authentic Handloom',
+    description: 'Verified by our craft team',
+  },
+  {
+    icon: <Sparkles className="h-7 w-7" />,
+    title: 'Premium Fabric',
+    description: 'Handpicked quality materials',
+  },
+]
 
-  // ─── Fetch products for curated sections ──────────────
+const OCCASIONS = [
+  {
+    label: 'Wedding',
+    icon: <IconHeart className="h-6 w-6" />,
+    href: '/category/all?occasion=wedding',
+  },
+  {
+    label: 'Festival',
+    icon: <IconSparkles className="h-6 w-6" />,
+    href: '/category/all?occasion=festive',
+  },
+  {
+    label: 'Daily Wear',
+    icon: <IconSun className="h-6 w-6" />,
+    href: '/category/cotton',
+  },
+  {
+    label: 'Gifting',
+    icon: <IconGift className="h-6 w-6" />,
+    href: '/collections/gift-guide',
+  },
+  {
+    label: 'Party',
+    icon: <IconGlassFull className="h-6 w-6" />,
+    href: '/category/designer',
+  },
+]
+
+const DEFAULT_TESTIMONIALS = [
+  {
+    quote:
+      "The Banarasi I ordered is absolutely stunning. You can feel the weight of real silk. Every time I wear it, I get compliments — and I love telling people it's directly from the weaver.",
+    name: 'Ananya S.',
+    role: 'Mumbai',
+    rating: 5,
+  },
+  {
+    quote:
+      'I was nervous buying a saree online without seeing it first, but the handloom certificate and detailed photos made it easy. The fabric is even more beautiful in person. Will definitely be back.',
+    name: 'Priya M.',
+    role: 'Bangalore',
+    rating: 5,
+  },
+  {
+    quote:
+      'What sets Shayga apart is knowing exactly which cluster my saree came from and who wove it. It transforms a piece of clothing into a story. My Chanderi is easily my most treasured possession now.',
+    name: 'Rohini K.',
+    role: 'Pune',
+    rating: 5,
+  },
+]
+
+// ─── Progressive Server Component Sections ──────────────────────────
+
+async function HomeCategoriesSection({
+  subtitle,
+}: {
+  subtitle?: string | null
+}) {
+  const payload = await getPayload({ config })
+  const categoriesRes = await payload.find({
+    collection: 'categories',
+    limit: 20,
+  })
+  const dbCategories = categoriesRes.docs
+
+  return (
+    <section className="bg-white">
+      <div className="container-page py-6 sm:py-8 md:py-10">
+        <SectionHeading
+          title="Our Collection"
+          subtitle={
+            subtitle ||
+            'Explore our collection of handloom sarees, each woven with tradition and care'
+          }
+          viewAllHref="/category/all"
+          viewAllLabel="Browse All"
+        />
+
+        {dbCategories.length > 0 ? (
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+            {dbCategories.slice(0, 6).map((cat) => {
+              const imgUrl =
+                cat.image && typeof cat.image === 'object'
+                  ? cat.image.sizes?.card?.url || cat.image.url
+                  : null
+              return (
+                <CategoryCard
+                  key={cat.id}
+                  name={cat.name}
+                  slug={cat.slug}
+                  imageUrl={imgUrl}
+                />
+              )
+            })}
+          </div>
+        ) : (
+          <p className="text-brand-700/50 py-16 text-center text-sm">
+            Categories coming soon.
+          </p>
+        )}
+      </div>
+    </section>
+  )
+}
+
+async function HomeProductSpotlightsSection() {
+  const payload = await getPayload({ config })
   const thirtyDaysAgo = new Date()
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
   const THIRTY_DAYS_AGO = thirtyDaysAgo.toISOString()
 
-  // Run independent queries in parallel
-  const [pageRes, initialNewArrivals, recentOrdersRes, allProductsRes] =
-    await Promise.all([
-      // Home page doc
-      payload.find({
-        collection: 'pages',
-        where: { slug: { equals: 'home' } },
-        limit: 1,
-        depth: 1,
-      }),
-      // New Arrivals: products created in the last 30 days
-      payload.find({
-        collection: 'products',
-        where: {
-          and: [
-            { status: { equals: 'published' } },
-            { createdAt: { greater_than: THIRTY_DAYS_AGO } },
-          ],
-        },
-        limit: 2,
-        sort: '-createdAt',
-        depth: 2,
-      }),
-      // Recent orders for trending calculation
-      payload.find({
-        collection: 'orders',
-        where: {
-          and: [
-            { createdAt: { greater_than: THIRTY_DAYS_AGO } },
-            {
-              or: [
-                { status: { equals: 'confirmed' } },
-                { status: { equals: 'processing' } },
-                { status: { equals: 'shipped' } },
-                { status: { equals: 'delivered' } },
-                { status: { equals: 'pending' } },
-              ],
-            },
-          ],
-        },
-        limit: 500,
-        depth: 0,
-      }),
-      // All products for carousel (Best Sellers section)
-      payload.find({
-        collection: 'products',
-        where: { status: { equals: 'published' } },
-        limit: 12,
-        sort: '-createdAt',
-        depth: 2,
-      }),
-    ])
-  const homeDoc = pageRes.docs[0]
+  // Run independent queries in parallel for this section
+  const [initialNewArrivals, recentOrdersRes] = await Promise.all([
+    payload.find({
+      collection: 'products',
+      where: {
+        and: [
+          { status: { equals: 'published' } },
+          { createdAt: { greater_than: THIRTY_DAYS_AGO } },
+        ],
+      },
+      limit: 2,
+      sort: '-createdAt',
+      depth: 2,
+    }),
+    payload.find({
+      collection: 'orders',
+      where: {
+        and: [
+          { createdAt: { greater_than: THIRTY_DAYS_AGO } },
+          {
+            or: [
+              { status: { equals: 'confirmed' } },
+              { status: { equals: 'processing' } },
+              { status: { equals: 'shipped' } },
+              { status: { equals: 'delivered' } },
+              { status: { equals: 'pending' } },
+            ],
+          },
+        ],
+      },
+      limit: 500,
+      depth: 0,
+    }),
+  ])
 
-  // New Arrivals fallback: if no products created in last 30 days, show most recent
   let newArrivalsRes = initialNewArrivals
   if (newArrivalsRes.totalDocs === 0) {
     newArrivalsRes = await payload.find({
@@ -187,8 +299,6 @@ export default async function HomePage({ searchParams }: Props) {
     })
   }
   const newArrivals = newArrivalsRes.docs as Product[]
-
-  // Trending Now: most ordered products in last 30 days
   const newArrivalIds = new Set(newArrivals.map((p) => p.id))
 
   const productQuantities = new Map<number, number>()
@@ -235,12 +345,8 @@ export default async function HomePage({ searchParams }: Props) {
     trendingNowDocs = fallbackRes.docs as Product[]
   }
   const trendingNow = trendingNowDocs
-
   const trendingIds = new Set(trendingNow.map((p) => p.id))
 
-  // Best Offers: products with compareAtPrice > basePrice
-  // Fetch more than needed (limit 10) then JS-filter to top 2 with real discounts,
-  // because Payload's where clause cannot compare two fields (a > b)
   const bestOffersWhere: any[] = [
     { status: { equals: 'published' } },
     { compareAtPrice: { exists: true } },
@@ -260,18 +366,136 @@ export default async function HomePage({ searchParams }: Props) {
     .filter((p) => (p as any).compareAtPrice > (p as any).basePrice)
     .slice(0, 2)
 
-  function mapProductWithVariant(p: any) {
-    return liftVariantGallery(p)
+  if (
+    newArrivals.length === 0 &&
+    trendingNow.length === 0 &&
+    bestOffers.length === 0
+  ) {
+    return null
   }
 
-  // ─── Fetch categories ────────────────────────────────
-  const categoriesRes = await payload.find({
-    collection: 'categories',
-    limit: 20,
-  })
-  const dbCategories = categoriesRes.docs
+  return (
+    <section className="bg-white">
+      <div className="container-page py-6 sm:py-8 md:py-10">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-3 md:gap-6 lg:gap-10">
+          {/* New Arrivals */}
+          {newArrivals.length > 0 && (
+            <div>
+              <SectionHeading
+                title="New Arrivals"
+                subtitle="Fresh off the loom"
+                viewAllHref="/category/all?sort=-createdAt"
+                viewAllLabel="View All"
+                size="sm"
+              />
+              <div className="grid grid-cols-2 gap-2">
+                {newArrivals.map((p) => (
+                  <ProductCard
+                    key={p.id}
+                    product={mapProductWithVariant(p)}
+                    badge="new"
+                  />
+                ))}
+              </div>
+            </div>
+          )}
 
-  // ─── Fetch posts ─────────────────────────────────────
+          {/* Trending Now */}
+          {trendingNow.length > 0 && (
+            <div>
+              <SectionHeading
+                title="Trending Now"
+                subtitle="What everyone is loving"
+                viewAllHref="/category/all"
+                viewAllLabel="View more"
+                size="sm"
+              />
+              <div className="grid grid-cols-2 gap-2">
+                {trendingNow.map((p) => (
+                  <ProductCard key={p.id} product={mapProductWithVariant(p)} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Best Offers */}
+          {bestOffers.length > 0 && (
+            <div>
+              <SectionHeading
+                title="Best Offers"
+                subtitle="Handpicked deals just for you"
+                viewAllHref="/category/all?sale=true"
+                viewAllLabel="View all deals"
+                size="sm"
+              />
+              <div className="grid grid-cols-2 gap-2">
+                {bestOffers.map((p) => (
+                  <ProductCard
+                    key={p.id}
+                    product={mapProductWithVariant(p)}
+                    badge="sale"
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+async function HomeBestSellersSection({
+  productBlock,
+}: {
+  productBlock?: {
+    heading?: string | null
+    ctaText?: string | null
+    ctaLink?: string | null
+    limit?: number | null
+  }
+}) {
+  const payload = await getPayload({ config })
+  const allProductsRes = await payload.find({
+    collection: 'products',
+    where: { status: { equals: 'published' } },
+    limit: 12,
+    sort: '-createdAt',
+    depth: 2,
+  })
+
+  if (allProductsRes.docs.length === 0) return null
+  const limit = productBlock?.limit || 4
+
+  return (
+    <section className="bg-brand-50/20">
+      <div className="container-page py-6 sm:py-8 md:py-10">
+        <SectionHeading
+          title={productBlock?.heading || 'Best Sellers'}
+          subtitle="Our community's most-loved weaves — for good reason"
+          viewAllHref={productBlock?.ctaLink || '/category/all'}
+          viewAllLabel={productBlock?.ctaText || 'Shop All'}
+        />
+        <ProductCarousel
+          products={(allProductsRes.docs as Product[])
+            .slice(0, limit)
+            .map(mapProductWithVariant)}
+        />
+      </div>
+    </section>
+  )
+}
+
+async function HomeBlogSection({
+  postBlock,
+}: {
+  postBlock?: {
+    heading?: string | null
+    ctaText?: string | null
+    ctaLink?: string | null
+  }
+}) {
+  const payload = await getPayload({ config })
   const postsRes = await payload.find({
     collection: 'posts',
     where: { status: { equals: 'published' } },
@@ -280,8 +504,97 @@ export default async function HomePage({ searchParams }: Props) {
     depth: 1,
   })
   const dbPosts = postsRes.docs
+  if (dbPosts.length === 0) return null
 
-  // ─── Extract CMS block headings ──────────────────────
+  return (
+    <section className="bg-white">
+      <div className="container-page py-6 sm:py-8 md:py-10">
+        <SectionHeading
+          title={postBlock?.heading || 'From the Loom'}
+          subtitle="Stories from India's weaving clusters"
+          viewAllHref={postBlock?.ctaLink || '/blog'}
+          viewAllLabel={postBlock?.ctaText || 'Read Journal'}
+        />
+        <div className="grid gap-6 md:grid-cols-3">
+          {dbPosts.slice(0, 3).map((post) => {
+            const thumbSrc =
+              post.featuredImage && typeof post.featuredImage === 'object'
+                ? (post.featuredImage as any).sizes?.thumbnail?.url ||
+                  (post.featuredImage as any).url
+                : null
+            const postDate = post.publishedAt
+              ? new Date(post.publishedAt).toLocaleDateString('en-IN', {
+                  year: 'numeric',
+                  month: 'short',
+                  day: 'numeric',
+                })
+              : ''
+            return (
+              <Link
+                key={post.id}
+                href={`/blog/${post.slug}`}
+                className="group border-brand-100/50 flex flex-col overflow-hidden rounded-2xl border bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
+              >
+                {thumbSrc && (
+                  <div className="relative aspect-[16/10] overflow-hidden bg-neutral-100">
+                    <SkeletonImage
+                      src={thumbSrc}
+                      alt={post.title}
+                      fill
+                      sizes="(max-width: 768px) 100vw, 33vw"
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  </div>
+                )}
+                <div className="flex flex-1 flex-col p-5">
+                  {postDate && (
+                    <time className="text-brand-700/50 text-xs">
+                      {postDate}
+                    </time>
+                  )}
+                  <h3 className="font-display text-brand-950 group-hover:text-brand-700 mt-1.5 text-base font-semibold transition-colors">
+                    {post.title}
+                  </h3>
+                  {post.excerpt && (
+                    <p className="text-brand-700/70 mt-2 line-clamp-2 text-sm leading-relaxed">
+                      {post.excerpt}
+                    </p>
+                  )}
+                  <div className="mt-auto pt-4">
+                    <span className="text-brand-600 inline-flex items-center gap-1 text-xs font-medium">
+                      Read more
+                      <ArrowRight className="h-3 w-3" />
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            )
+          })}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+type Props = {
+  searchParams: Promise<{ preview?: string; id?: string }>
+}
+
+export default async function HomePage({ searchParams }: Props) {
+  const { preview, id } = await searchParams
+  const isPreview = preview === 'true' && id === 'site-settings'
+  const payload = await getPayload({ config })
+
+  // Fast fetch for page doc shell settings
+  const pageRes = await payload.find({
+    collection: 'pages',
+    where: { slug: { equals: 'home' } },
+    limit: 1,
+    depth: 1,
+  })
+  const homeDoc = pageRes.docs[0]
+
+  // Extract CMS block headings
   const contentBlocks = homeDoc?.content ?? []
   const heroBlock = contentBlocks.find((b: any) => b.blockType === 'hero') as
     | {
@@ -343,87 +656,8 @@ export default async function HomePage({ searchParams }: Props) {
     | undefined
 
   const testimonialItems = testimonialBlock?.items || []
-
-  const DEFAULT_TESTIMONIALS = [
-    {
-      quote:
-        "The Banarasi I ordered is absolutely stunning. You can feel the weight of real silk. Every time I wear it, I get compliments — and I love telling people it's directly from the weaver.",
-      name: 'Ananya S.',
-      role: 'Mumbai',
-      rating: 5,
-    },
-    {
-      quote:
-        'I was nervous buying a saree online without seeing it first, but the handloom certificate and detailed photos made it easy. The fabric is even more beautiful in person. Will definitely be back.',
-      name: 'Priya M.',
-      role: 'Bangalore',
-      rating: 5,
-    },
-    {
-      quote:
-        'What sets Shayga apart is knowing exactly which cluster my saree came from and who wove it. It transforms a piece of clothing into a story. My Chanderi is easily my most treasured possession now.',
-      name: 'Rohini K.',
-      role: 'Pune',
-      rating: 5,
-    },
-  ]
-
   const displayTestimonials =
     testimonialItems.length > 0 ? testimonialItems : DEFAULT_TESTIMONIALS
-
-  const TRUST_FEATURES = [
-    {
-      icon: <Truck className="h-7 w-7" />,
-      title: 'Free Shipping',
-      description: 'On all orders above ₹1,999',
-    },
-    {
-      icon: <RotateCcw className="h-7 w-7" />,
-      title: 'Easy Returns',
-      description: '15-day hassle-free returns',
-    },
-    {
-      icon: <ShieldCheck className="h-7 w-7" />,
-      title: 'Authentic Handloom',
-      description: 'Verified by our craft team',
-    },
-    {
-      icon: <Sparkles className="h-7 w-7" />,
-      title: 'Premium Fabric',
-      description: 'Handpicked quality materials',
-    },
-  ]
-
-  // ─── Determine which product block is which ──────────
-  const productBlockLimit = (block: any) => block?.limit || 4
-
-  const OCCASIONS = [
-    {
-      label: 'Wedding',
-      icon: <IconHeart className="h-6 w-6" />,
-      href: '/category/all?occasion=wedding',
-    },
-    {
-      label: 'Festival',
-      icon: <IconSparkles className="h-6 w-6" />,
-      href: '/category/all?occasion=festive',
-    },
-    {
-      label: 'Daily Wear',
-      icon: <IconSun className="h-6 w-6" />,
-      href: '/category/cotton',
-    },
-    {
-      label: 'Gifting',
-      icon: <IconGift className="h-6 w-6" />,
-      href: '/collections/gift-guide',
-    },
-    {
-      label: 'Party',
-      icon: <IconGlassFull className="h-6 w-6" />,
-      href: '/category/designer',
-    },
-  ]
 
   const fallbackHeroUrl =
     typeof heroBlock?.backgroundImage === 'object' &&
@@ -459,7 +693,6 @@ export default async function HomePage({ searchParams }: Props) {
         }
       })
     }
-    // Fallback: single slide from backgroundImage
     return [
       {
         imageUrl: fallbackHeroUrl,
@@ -486,14 +719,10 @@ export default async function HomePage({ searchParams }: Props) {
     <div className="overflow-hidden">
       {isPreview && <RefreshRouteOnSave />}
 
-      {/* ═══════════════════════════════════════════════════
-          SECTION 1: HERO — Full-bleed background image(s)
-          ═══════════════════════════════════════════════════ */}
+      {/* ─── SECTION 1: HERO (Renders instantly) ─── */}
       <HeroCarousel slides={heroSlides} />
 
-      {/* ═══════════════════════════════════════════════════
-          SECTION 2: TRUST FEATURES
-          ═══════════════════════════════════════════════════ */}
+      {/* ─── SECTION 2: TRUST FEATURES (Renders instantly) ─── */}
       <section className="border-brand-100/40 bg-brand-50/30 border-y">
         <div className="grid grid-cols-2 items-baseline justify-start gap-x-6 gap-y-3 px-4 py-4 sm:flex sm:flex-wrap sm:justify-center sm:gap-x-10 sm:py-5 md:gap-x-14 lg:gap-x-18">
           {TRUST_FEATURES.map((feature) => (
@@ -514,131 +743,21 @@ export default async function HomePage({ searchParams }: Props) {
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════════════
-          SECTION 3: SHOP BY CATEGORY
-          ═══════════════════════════════════════════════════ */}
-      <section className="bg-white">
-        <div className="container-page py-6 sm:py-8 md:py-10">
-          <SectionHeading
-            title="Our Collection"
-            subtitle={
-              categoriesBlock?.subheading ||
-              'Explore our collection of handloom sarees, each woven with tradition and care'
-            }
-            viewAllHref="/category/all"
-            viewAllLabel="Browse All"
-          />
+      {/* ─── SECTION 3: SHOP BY CATEGORY (Progressive Stream) ─── */}
+      <Suspense fallback={<CategoriesGridSkeleton />}>
+        <HomeCategoriesSection subtitle={categoriesBlock?.subheading} />
+      </Suspense>
 
-          {dbCategories.length > 0 ? (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-              {dbCategories.slice(0, 6).map((cat) => {
-                const imgUrl =
-                  cat.image && typeof cat.image === 'object'
-                    ? cat.image.sizes?.card?.url || cat.image.url
-                    : null
-                return (
-                  <CategoryCard
-                    key={cat.id}
-                    name={cat.name}
-                    slug={cat.slug}
-                    imageUrl={imgUrl}
-                  />
-                )
-              })}
-            </div>
-          ) : (
-            <p className="text-brand-700/50 py-16 text-center text-sm">
-              Categories coming soon.
-            </p>
-          )}
-        </div>
-      </section>
+      {/* ─── SECTION 4: PRODUCT SPOTLIGHTS (Progressive Stream) ─── */}
+      <Suspense fallback={<SpotlightsGridSkeleton />}>
+        <HomeProductSpotlightsSection />
+      </Suspense>
 
-      {/* ═══════════════════════════════════════════════════
-          SECTION 4: COMBINED — New Arrivals + Trending Now + Best Offers
-          ═══════════════════════════════════════════════════ */}
-      {(newArrivals.length > 0 ||
-        trendingNow.length > 0 ||
-        bestOffers.length > 0) && (
-        <section className="bg-white">
-          <div className="container-page py-6 sm:py-8 md:py-10">
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-3 md:gap-6 lg:gap-10">
-              {/* ── New Arrivals ── */}
-              {newArrivals.length > 0 && (
-                <div>
-                  <SectionHeading
-                    title="New Arrivals"
-                    subtitle="Fresh off the loom"
-                    viewAllHref="/category/all?sort=-createdAt"
-                    viewAllLabel="View All"
-                    size="sm"
-                  />
-                  <div className="grid grid-cols-2 gap-2">
-                    {newArrivals.map((p) => (
-                      <ProductCard
-                        key={p.id}
-                        product={mapProductWithVariant(p)}
-                        badge="new"
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* ── Trending Now ── */}
-              {trendingNow.length > 0 && (
-                <div>
-                  <SectionHeading
-                    title="Trending Now"
-                    subtitle="What everyone is loving"
-                    viewAllHref="/category/all"
-                    viewAllLabel="View more"
-                    size="sm"
-                  />
-                  <div className="grid grid-cols-2 gap-2">
-                    {trendingNow.map((p) => (
-                      <ProductCard
-                        key={p.id}
-                        product={mapProductWithVariant(p)}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* ── Best Offers ── */}
-              {bestOffers.length > 0 && (
-                <div>
-                  <SectionHeading
-                    title="Best Offers"
-                    subtitle="Handpicked deals just for you"
-                    viewAllHref="/category/all?sale=true"
-                    viewAllLabel="View all deals"
-                    size="sm"
-                  />
-                  <div className="grid grid-cols-2 gap-2">
-                    {bestOffers.map((p) => (
-                      <ProductCard
-                        key={p.id}
-                        product={mapProductWithVariant(p)}
-                        badge="sale"
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* ═══════════════════════════════════════════════════
-          SECTION 5: SHOP BY OCCASION + TRENDING COLORS + SOCIAL
-          ═══════════════════════════════════════════════════ */}
+      {/* ─── SECTION 5: SHOP BY OCCASION + TRENDING COLORS + SOCIAL (Renders instantly) ─── */}
       <section className="bg-brand-50/20">
         <div className="container-page py-6 sm:py-8 md:py-10">
           <div className="grid grid-cols-1 gap-8 md:grid-cols-3 md:gap-6 lg:gap-10">
-            {/* ── Shop by Occasion ── */}
+            {/* Shop by Occasion */}
             <div>
               <SectionHeading
                 title="Shop by Occasion"
@@ -659,7 +778,7 @@ export default async function HomePage({ searchParams }: Props) {
               </div>
             </div>
 
-            {/* ── Trending Colors ── */}
+            {/* Trending Colors */}
             <div>
               <SectionHeading
                 title="Trending Colors"
@@ -672,7 +791,7 @@ export default async function HomePage({ searchParams }: Props) {
               </div>
             </div>
 
-            {/* ── Social ── */}
+            {/* Social */}
             <div>
               <SectionHeading
                 title="Follow the Loom"
@@ -723,102 +842,17 @@ export default async function HomePage({ searchParams }: Props) {
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════════════
-          SECTION 6: BEST SELLERS
-          ═══════════════════════════════════════════════════ */}
-      {productBlocks[1] && allProductsRes.docs.length > 0 && (
-        <section className="bg-brand-50/20">
-          <div className="container-page py-6 sm:py-8 md:py-10">
-            <SectionHeading
-              title={productBlocks[1].heading || 'Best Sellers'}
-              subtitle="Our community's most-loved weaves — for good reason"
-              viewAllHref={productBlocks[1].ctaLink || '/category/all'}
-              viewAllLabel={productBlocks[1].ctaText || 'Shop All'}
-            />
-            <ProductCarousel
-              products={(allProductsRes.docs as Product[])
-                .slice(0, productBlockLimit(productBlocks[1]))
-                .map(mapProductWithVariant)}
-            />
-          </div>
-        </section>
-      )}
+      {/* ─── SECTION 6: BEST SELLERS (Progressive Stream) ─── */}
+      <Suspense fallback={<ProductSectionSkeleton count={4} />}>
+        <HomeBestSellersSection productBlock={productBlocks[1]} />
+      </Suspense>
 
-      {/* ═══════════════════════════════════════════════════
-          SECTION 7: BLOG POSTS (was 9)
-          ═══════════════════════════════════════════════════ */}
-      {dbPosts.length > 0 && (
-        <section className="bg-white">
-          <div className="container-page py-6 sm:py-8 md:py-10">
-            <SectionHeading
-              title={postBlock?.heading || 'From the Loom'}
-              subtitle="Stories from India's weaving clusters"
-              viewAllHref={postBlock?.ctaLink || '/blog'}
-              viewAllLabel={postBlock?.ctaText || 'Read Journal'}
-            />
-            <div className="grid gap-6 md:grid-cols-3">
-              {dbPosts.slice(0, 3).map((post) => {
-                const thumbSrc =
-                  post.featuredImage && typeof post.featuredImage === 'object'
-                    ? (post.featuredImage as any).sizes?.thumbnail?.url ||
-                      (post.featuredImage as any).url
-                    : null
-                const postDate = post.publishedAt
-                  ? new Date(post.publishedAt).toLocaleDateString('en-IN', {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric',
-                    })
-                  : ''
-                return (
-                  <Link
-                    key={post.id}
-                    href={`/blog/${post.slug}`}
-                    className="group border-brand-100/50 flex flex-col overflow-hidden rounded-2xl border bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
-                  >
-                    {thumbSrc && (
-                      <div className="relative aspect-[16/10] overflow-hidden bg-neutral-100">
-                        <SkeletonImage
-                          src={thumbSrc}
-                          alt={post.title}
-                          fill
-                          sizes="(max-width: 768px) 100vw, 33vw"
-                          className="object-cover transition-transform duration-500 group-hover:scale-105"
-                        />
-                      </div>
-                    )}
-                    <div className="flex flex-1 flex-col p-5">
-                      {postDate && (
-                        <time className="text-brand-700/50 text-xs">
-                          {postDate}
-                        </time>
-                      )}
-                      <h3 className="font-display text-brand-950 group-hover:text-brand-700 mt-1.5 text-base font-semibold transition-colors">
-                        {post.title}
-                      </h3>
-                      {post.excerpt && (
-                        <p className="text-brand-700/70 mt-2 line-clamp-2 text-sm leading-relaxed">
-                          {post.excerpt}
-                        </p>
-                      )}
-                      <div className="mt-auto pt-4">
-                        <span className="text-brand-600 inline-flex items-center gap-1 text-xs font-medium">
-                          Read more
-                          <ArrowRight className="h-3 w-3" />
-                        </span>
-                      </div>
-                    </div>
-                  </Link>
-                )
-              })}
-            </div>
-          </div>
-        </section>
-      )}
+      {/* ─── SECTION 7: BLOG POSTS (Progressive Stream) ─── */}
+      <Suspense fallback={<BlogGridSkeleton />}>
+        <HomeBlogSection postBlock={postBlock} />
+      </Suspense>
 
-      {/* ═══════════════════════════════════════════════════
-          SECTION 8: INSTAGRAM GALLERY
-          ═══════════════════════════════════════════════════ */}
+      {/* ─── SECTION 8: INSTAGRAM GALLERY (Renders instantly) ─── */}
       <section className="bg-brand-50/20">
         <div className="container-page py-6 sm:py-8 md:py-10">
           <SectionHeading
@@ -831,9 +865,7 @@ export default async function HomePage({ searchParams }: Props) {
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════════════
-          SECTION 9: TESTIMONIALS (admin-managed or fallback)
-          ═══════════════════════════════════════════════════ */}
+      {/* ─── SECTION 9: TESTIMONIALS (Renders instantly) ─── */}
       <section className="bg-white">
         <div className="container-page py-6 sm:py-8 md:py-10">
           <SectionHeading
@@ -862,10 +894,7 @@ export default async function HomePage({ searchParams }: Props) {
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════════════
-          CMS CONTENT BLOCKS — Admin-configurable sections
-          from the Home page layout in Payload
-          ═══════════════════════════════════════════════════ */}
+      {/* ─── CMS CONTENT BLOCKS (Renders instantly) ─── */}
       {homeDoc?.content?.map((block: any, idx: number) => {
         if (block.blockType === 'textImage') {
           const imgSrc =
@@ -911,11 +940,8 @@ export default async function HomePage({ searchParams }: Props) {
         return null
       })}
 
-      {/* ═══════════════════════════════════════════════════
-          SECTION 10: NEWSLETTER + PROMISE (side by side)
-          ═══════════════════════════════════════════════════ */}
+      {/* ─── SECTION 10: NEWSLETTER + PROMISE (Renders instantly) ─── */}
       <section className="bg-brand-950 relative overflow-hidden">
-        {/* Decorative pattern */}
         <div
           className="pointer-events-none absolute inset-0 opacity-[0.04]"
           aria-hidden="true"
@@ -933,7 +959,6 @@ export default async function HomePage({ searchParams }: Props) {
 
         <div className="container-page relative py-6 sm:py-8 md:py-10">
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2 md:gap-8">
-            {/* ── Promise ── */}
             <div>
               <h2 className="font-display text-2xl font-semibold tracking-tight text-white sm:text-4xl">
                 Every saree is signed by its maker
@@ -961,7 +986,6 @@ export default async function HomePage({ searchParams }: Props) {
               </div>
             </div>
 
-            {/* ── Newsletter ── */}
             <div className="self-start rounded-2xl bg-white p-5 shadow-lg sm:p-6">
               <h2 className="font-display text-brand-950 text-lg font-semibold tracking-tight sm:text-xl">
                 A weekly note from the loom
