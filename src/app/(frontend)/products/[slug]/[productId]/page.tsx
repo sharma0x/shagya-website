@@ -23,6 +23,7 @@ import {
 import { RecommendationRow } from '@/components/product/RecommendationRow'
 import { getRelatedProducts, getProductsByIds } from '@/lib/recommendations'
 import { getRecentlyViewedIds } from '@/lib/recently-viewed'
+import { getApplicableCoupons } from '@/lib/coupons'
 import { TrackRecentlyViewed } from '@/components/product/TrackRecentlyViewed'
 import { Rating } from '@/components/ui/Rating'
 import { OffersSection } from '@/components/coupons/OffersSection'
@@ -135,7 +136,8 @@ export default async function ProductDetailPage({
   const { preview, id } = await searchParams
   const isPreview = preview === 'true' && Boolean(id)
   const payload = await getPayload({ config })
-  const { user } = await payload.auth({ headers: await nextHeaders() })
+  const reqHeaders = await nextHeaders()
+  const { user } = await payload.auth({ headers: reqHeaders })
 
   const product: any = isPreview
     ? await payload.findByID({
@@ -229,13 +231,14 @@ export default async function ProductDetailPage({
       ? await getProductsByIds(filteredRecentIds)
       : []
 
-  // Fetch applicable coupons for this product
-  const couponsRes = await fetch(
-    `${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'}/api/coupons/available?productId=${product.id}`,
-    { cache: 'no-store' },
-  )
-  const couponsData = couponsRes.ok ? await couponsRes.json() : { coupons: [] }
-  const productCoupons = couponsData.coupons || []
+  // Fetch applicable coupons for this product via the Local API — no HTTP
+  // round-trip to the public server URL (which SSO protection would intercept).
+  let productCoupons: Awaited<ReturnType<typeof getApplicableCoupons>> = []
+  try {
+    productCoupons = await getApplicableCoupons(String(product.id), reqHeaders)
+  } catch (error) {
+    console.error('[PDP] Failed to load coupons:', error)
+  }
 
   const serializableProduct = {
     id: product.id,
