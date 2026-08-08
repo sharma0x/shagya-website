@@ -314,17 +314,45 @@ export function ProductCard({
             </div>
           )}
 
-          {/* Color Indicator Badge (when product has multiple colors) */}
-          {availableColorVariants.length > 1 && (
-            <div className="absolute top-2 left-2 z-10">
-              <span className="rounded-full border border-neutral-200/40 bg-neutral-900/75 px-2 py-0.5 text-[9px] font-medium text-white backdrop-blur-xs">
-                {availableColorVariants.length} Colors
-              </span>
+          {/* Color Swatches Overlay — Visible ONLY on card hover (Myntra style) */}
+          {availableColorVariants.length > 1 ? (
+            <div className="absolute bottom-2 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1.5 rounded-md bg-neutral-950/60 px-2 py-1 opacity-0 backdrop-blur-xs transition-opacity duration-200 group-hover:opacity-100">
+              {availableColorVariants.map((v: any) => {
+                const isSelected = activeColorSlug === v.color.slug
+                const targetIdx = galleryItems.findIndex(
+                  (g) => g.colorSlug === v.color.slug,
+                )
+                return (
+                  <button
+                    key={v.color.slug}
+                    type="button"
+                    title={v.color.name}
+                    onMouseEnter={() => {
+                      dotHoveredRef.current = true
+                      if (targetIdx !== -1) setActiveImage(targetIdx)
+                    }}
+                    onMouseLeave={() => {
+                      dotHoveredRef.current = false
+                    }}
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      if (targetIdx !== -1) setActiveImage(targetIdx)
+                    }}
+                    className={cn(
+                      'h-3.5 w-3.5 cursor-pointer rounded-xs border-0 transition-transform duration-200 outline-none',
+                      isSelected
+                        ? 'scale-125 opacity-100 shadow-xs ring-1 ring-white'
+                        : 'opacity-75 hover:scale-125 hover:opacity-100',
+                    )}
+                    style={{ backgroundColor: v.color.hex || '#69254e' }}
+                    aria-label={`Select color ${v.color.name}`}
+                  />
+                )
+              })}
             </div>
-          )}
-
-          {/* Dot indicators — visible on card hover */}
-          {galleryItems.length > 1 && (
+          ) : galleryItems.length > 1 ? (
+            /* Dot indicators for single-color products with multiple images */
             <div className="absolute bottom-2 left-1/2 z-10 flex -translate-x-1/2 gap-1.5 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
               {galleryItems.map((_, i) => (
                 <button
@@ -352,7 +380,7 @@ export function ProductCard({
                 />
               ))}
             </div>
-          )}
+          ) : null}
         </div>
 
         {/* Info */}
@@ -368,45 +396,6 @@ export function ProductCard({
                 .map((s) => (s ?? '').toLowerCase())
                 .join(' · ')}
             </p>
-          )}
-
-          {/* Color Swatches */}
-          {availableColorVariants.length > 1 && (
-            <div className="mt-1.5 flex items-center gap-1.5">
-              {availableColorVariants.map((v: any) => {
-                const isSelected = activeColorSlug === v.color.slug
-                const targetIdx = galleryItems.findIndex(
-                  (g) => g.colorSlug === v.color.slug,
-                )
-                return (
-                  <button
-                    key={v.color.slug}
-                    type="button"
-                    title={v.color.name}
-                    onMouseEnter={() => {
-                      dotHoveredRef.current = true
-                      if (targetIdx !== -1) setActiveImage(targetIdx)
-                    }}
-                    onMouseLeave={() => {
-                      dotHoveredRef.current = false
-                    }}
-                    onClick={(e) => {
-                      e.preventDefault()
-                      e.stopPropagation()
-                      if (targetIdx !== -1) setActiveImage(targetIdx)
-                    }}
-                    className={cn(
-                      'h-3.5 w-3.5 rounded-full border transition-all',
-                      isSelected
-                        ? 'border-brand-700 ring-brand-700/30 scale-125 ring-1'
-                        : 'border-neutral-200 hover:scale-110',
-                    )}
-                    style={{ backgroundColor: v.color.hex || '#69254e' }}
-                    aria-label={`Select color ${v.color.name}`}
-                  />
-                )
-              })}
-            </div>
           )}
 
           {/* Price */}
