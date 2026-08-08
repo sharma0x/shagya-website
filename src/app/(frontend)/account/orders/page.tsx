@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useSession } from '@/lib/auth-client'
 import { getProductUrl } from '@/lib/product-url'
+import { liftVariantGallery } from '@/lib/product-utils'
 import {
   ArrowLeft,
   ShoppingBag,
@@ -244,7 +245,10 @@ export default function OrdersPage() {
                         </h4>
                         <div className="space-y-4">
                           {order.items?.map((item) => {
-                            const firstImage = item.product?.gallery?.[0]?.image
+                            const adaptedProduct = item.product
+                              ? liftVariantGallery(item.product)
+                              : null
+                            const firstImage = adaptedProduct?.gallery?.[0]?.image
                             const imageUrl =
                               typeof firstImage === 'object' &&
                               firstImage !== null

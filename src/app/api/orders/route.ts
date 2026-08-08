@@ -34,6 +34,7 @@ export async function GET(request: Request) {
     // Find orders for this customer by email
     const orders = await payload.find({
       collection: 'orders',
+      depth: 2,
       where: {
         customerEmail: { equals: customer.email },
       },
