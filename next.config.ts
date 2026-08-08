@@ -6,6 +6,13 @@ const nextConfig: NextConfig = {
     root: __dirname,
   },
 
+  experimental: {
+    staleTimes: {
+      dynamic: 30,
+      static: 300,
+    },
+  },
+
   images: {
     unoptimized: true,
     remotePatterns: [
