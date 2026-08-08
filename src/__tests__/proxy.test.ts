@@ -12,7 +12,7 @@ describe('Next.js 16 Proxy', () => {
     ])
   })
 
-  it('attaches origin + x-pathname request header for admin requests', async () => {
+  it('attaches relative x-pathname request header for admin requests', async () => {
     const req = new NextRequest('http://localhost:3000/admin/setup-totp', {
       headers: {
         cookie: 'payload-token=mock-token',
@@ -22,7 +22,7 @@ describe('Next.js 16 Proxy', () => {
     const headerVal =
       res.headers.get('x-middleware-request-x-pathname') ||
       res.headers.get('x-pathname')
-    expect(headerVal).toBe('http://localhost:3000/admin/setup-totp')
+    expect(headerVal).toBe('/admin/setup-totp')
   })
 
   it('redirects unauthenticated users attempting to access protected admin pages', async () => {
@@ -38,6 +38,6 @@ describe('Next.js 16 Proxy', () => {
     const headerVal =
       res.headers.get('x-middleware-request-x-pathname') ||
       res.headers.get('x-pathname')
-    expect(headerVal).toBe('http://localhost:3000/admin/login')
+    expect(headerVal).toBe('/admin/login')
   })
 })

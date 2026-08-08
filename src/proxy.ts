@@ -40,11 +40,8 @@ export async function proxy(request: NextRequest) {
   }
 
   const requestHeaders = new Headers(request.headers)
-  // @clocklimited/payload-2fa formats admin URLs with serverURL (e.g. https://shayga.in/admin/setup-totp).
-  // Setting full origin+pathname on x-pathname satisfies strict equality check in TOTPProvider,
-  // preventing infinite 308/307 redirect loops on /admin/setup-totp.
-  const fullUrl = `${origin}${pathname}`
-  requestHeaders.set('x-pathname', fullUrl)
+  // Set x-pathname header to clean relative pathname for Payload 2FA plugin URL matching
+  requestHeaders.set('x-pathname', pathname)
 
   return NextResponse.next({
     request: {
