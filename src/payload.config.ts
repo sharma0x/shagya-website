@@ -207,6 +207,7 @@ const emailAdapter =
     ? nodemailerAdapter({
         defaultFromName: FROM_NAME,
         defaultFromAddress: FROM_ADDRESS,
+        skipVerify: true,
         transport: nodemailer.createTransport({
           host: process.env.MAILPIT_SMTP_HOST,
           port: Number(process.env.MAILPIT_SMTP_PORT || 1025),

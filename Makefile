@@ -151,19 +151,19 @@ infra-reset: ## Reset infrastructure (delete all data)
 
 db-migrate: ## Run pending database migrations
 	pnpm payload migrate
-	pnpm dlx @better-auth/cli migrate --config src/lib/auth.ts -y
+	pnpm exec better-auth migrate --config src/lib/auth.ts -y
 
 db-migrate-preview: ## Run pending database migrations against preview environment
 	@if [ ! -f infra/.env.preview ]; then echo "❌ infra/.env.preview not found."; exit 1; fi
-	pnpm dlx @dotenvx/dotenvx run -f infra/.env.preview -o -- pnpm payload migrate
-	pnpm dlx @dotenvx/dotenvx run -f infra/.env.preview -o -- pnpm dlx @better-auth/cli migrate --config src/lib/auth.ts -y
+	pnpm exec dotenvx run -f infra/.env.preview -o -- pnpm payload migrate
+	pnpm exec dotenvx run -f infra/.env.preview -o -- pnpm exec better-auth migrate --config src/lib/auth.ts -y
 
 db-migrate-prod: ## Run pending database migrations against production environment
 	@if [ ! -f infra/.env.production ]; then echo "❌ infra/.env.production not found."; exit 1; fi
 	@echo "⚠️  WARNING: You are about to migrate PRODUCTION."
 	@read -p "Are you sure? [y/N] " ans && [ $${ans:-N} = y ]
-	pnpm dlx @dotenvx/dotenvx run -f infra/.env.production -o -- pnpm payload migrate
-	pnpm dlx @dotenvx/dotenvx run -f infra/.env.production -o -- pnpm dlx @better-auth/cli migrate --config src/lib/auth.ts -y
+	pnpm exec dotenvx run -f infra/.env.production -o -- pnpm payload migrate
+	pnpm exec dotenvx run -f infra/.env.production -o -- pnpm exec better-auth migrate --config src/lib/auth.ts -y
 
 db-migrate-create: ## Create a new migration (MSG='description')
 	@if [ -z "$(MSG)" ]; then \
@@ -195,7 +195,7 @@ seed-preview: ## Seed preview database: download images → seed data
 	@bash scripts/download-images.sh
 	@echo ""
 	@echo "Step 2/2  Seeding database with dummy data..."
-	@pnpm dlx @dotenvx/dotenvx run -f infra/.env.preview -o -- node --import tsx/esm scripts/seed.ts
+	@pnpm exec dotenvx run -f infra/.env.preview -o -- node --import tsx/esm scripts/seed.ts
 
 seed-production: ## Seed production database: download images → seed data
 	@if [ ! -f infra/.env.production ]; then echo "❌ infra/.env.production not found."; exit 1; fi
@@ -210,17 +210,17 @@ seed-production: ## Seed production database: download images → seed data
 	@bash scripts/download-images.sh
 	@echo ""
 	@echo "Step 2/2  Seeding database with dummy data..."
-	@pnpm dlx @dotenvx/dotenvx run -f infra/.env.production -o -- node --import tsx/esm scripts/seed.ts
+	@pnpm exec dotenvx run -f infra/.env.production -o -- node --import tsx/esm scripts/seed.ts
 
 db-sync-media-preview: ## Re-upload local images to preview R2 (sources infra/.env.preview)
 	@if [ ! -f infra/.env.preview ]; then echo "❌ infra/.env.preview not found."; exit 1; fi
-	pnpm dlx @dotenvx/dotenvx run -f infra/.env.preview -o -- node --import tsx/esm scripts/sync-media-to-r2.ts
+	pnpm exec dotenvx run -f infra/.env.preview -o -- node --import tsx/esm scripts/sync-media-to-r2.ts
 
 db-sync-media-prod: ## Re-upload local images to production R2 (sources infra/.env.production)
 	@if [ ! -f infra/.env.production ]; then echo "❌ infra/.env.production not found."; exit 1; fi
 	@echo "⚠️  WARNING: You are about to sync media to PRODUCTION R2."
 	@read -p "Are you sure? [y/N] " ans && [ $${ans:-N} = y ]
-	pnpm dlx @dotenvx/dotenvx run -f infra/.env.production -o -- node --import tsx/esm scripts/sync-media-to-r2.ts
+	pnpm exec dotenvx run -f infra/.env.production -o -- node --import tsx/esm scripts/sync-media-to-r2.ts
 
 db-generate-types: ## Generate Payload TypeScript types from schema
 	pnpm generate:types
@@ -242,7 +242,7 @@ reset-preview-dangerous: ## Reset preview infrastructure (nuke preview DB + prev
 	@echo "  Shayga — Reset Preview Infrastructure"
 	@echo "========================================"
 	@echo ""
-	pnpm dlx @dotenvx/dotenvx run -f infra/.env.preview -o -- node --import tsx/esm scripts/reset-infra.ts
+	pnpm exec dotenvx run -f infra/.env.preview -o -- node --import tsx/esm scripts/reset-infra.ts
 
 reset-production-dangerous: ## Reset production infrastructure (nuke production DB + prod R2 bucket)
 	@if [ ! -f infra/.env.production ]; then echo "❌ infra/.env.production not found."; exit 1; fi
@@ -253,7 +253,7 @@ reset-production-dangerous: ## Reset production infrastructure (nuke production 
 	@echo "  Shayga — Reset Production Infrastructure"
 	@echo "========================================"
 	@echo ""
-	pnpm dlx @dotenvx/dotenvx run -f infra/.env.production -o -- node --import tsx/esm scripts/reset-infra.ts
+	pnpm exec dotenvx run -f infra/.env.production -o -- node --import tsx/esm scripts/reset-infra.ts
 
 # ============================================================================
 # Release (semantic-release)
