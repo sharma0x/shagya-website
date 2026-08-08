@@ -90,6 +90,23 @@ export const Reviews: CollectionConfig = {
         { label: 'Rejected', value: 'rejected' },
       ],
     },
+    {
+      name: 'helpfulCount',
+      type: 'number',
+      defaultValue: 0,
+      min: 0,
+      admin: {
+        readOnly: true,
+      },
+    },
+    {
+      name: 'helpfulUserEmails',
+      type: 'json',
+      admin: {
+        readOnly: true,
+        hidden: true,
+      },
+    },
   ],
   timestamps: true,
 }

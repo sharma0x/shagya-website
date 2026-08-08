@@ -22,6 +22,7 @@ export interface ReviewData {
   title: string
   body: string
   rating: number
+  helpfulCount?: number | null
   createdAt: string
   verifiedPurchase: boolean
   customer: {
@@ -74,6 +75,9 @@ export function ProductReviews({
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [formError, setFormError] = useState('')
+  const [helpfulCounts, setHelpfulCounts] = useState<Record<string, number>>({})
+  const [votedReviewIds, setVotedReviewIds] = useState<Set<string>>(new Set())
+  const [helpfulLoading, setHelpfulLoading] = useState<string | null>(null)
 
   const reviews = useMemo(() => {
     const sorted = [...allReviews]
@@ -143,10 +147,53 @@ export function ProductReviews({
       setFormBody('')
       setFormImages([])
       setFormPreviews([])
+      router.refresh()
     } catch (err: any) {
       setFormError(err.message || 'Something went wrong')
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  const handleHelpful = async (reviewId: string) => {
+    if (helpfulLoading === reviewId) return
+    setHelpfulLoading(reviewId)
+
+    const wasVoted = votedReviewIds.has(reviewId)
+    const currentCount = helpfulCounts[reviewId] ?? 0
+
+    setVotedReviewIds((prev) => {
+      const next = new Set(prev)
+      if (wasVoted) next.delete(reviewId)
+      else next.add(reviewId)
+      return next
+    })
+    setHelpfulCounts((prev) => ({
+      ...prev,
+      [reviewId]: wasVoted ? Math.max(0, currentCount - 1) : currentCount + 1,
+    }))
+
+    try {
+      const res = await fetch(`/api/reviews/${reviewId}/helpful`, {
+        method: 'POST',
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setHelpfulCounts((prev) => ({ ...prev, [reviewId]: data.helpfulCount }))
+      }
+    } catch {
+      setVotedReviewIds((prev) => {
+        const next = new Set(prev)
+        if (wasVoted) next.add(reviewId)
+        else next.delete(reviewId)
+        return next
+      })
+      setHelpfulCounts((prev) => ({
+        ...prev,
+        [reviewId]: currentCount,
+      }))
+    } finally {
+      setHelpfulLoading(null)
     }
   }
 
@@ -479,10 +526,20 @@ export function ProductReviews({
 
                   <button
                     type="button"
-                    className="font-body mt-5 inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 px-4 py-2 text-[11px] text-neutral-500 transition-colors hover:bg-neutral-50"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleHelpful(review.id)
+                    }}
+                    className={`font-body mt-5 inline-flex items-center gap-1.5 rounded-lg border px-4 py-2 text-[11px] transition-colors ${
+                      votedReviewIds.has(review.id)
+                        ? 'border-brand-200 bg-brand-50 text-brand-700'
+                        : 'border-neutral-200 text-neutral-500 hover:bg-neutral-50'
+                    }`}
                   >
                     <ThumbsUp className="h-3 w-3" />
                     Helpful
+                    {(helpfulCounts[review.id] ?? review.helpfulCount ?? 0) > 0 &&
+                      ` (${helpfulCounts[review.id] ?? review.helpfulCount})`}
                   </button>
                 </div>
               ))}
