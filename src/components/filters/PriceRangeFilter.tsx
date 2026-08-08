@@ -24,7 +24,10 @@ export function PriceRangeFilter() {
   const [max, setMax] = useState(isNaN(initialMax) ? MAX_PRICE : initialMax)
   const [isDragging, setIsDragging] = useState<'min' | 'max' | null>(null)
 
-  // Sync from URL on external changes
+  // Sync from URL on external changes (back/forward navigation, external
+  // link clicks). The setState is necessary because the URL is the
+  // external source of truth.
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     const urlMin = parseInt(
       searchParams.get('priceRange_min') ?? String(MIN_PRICE),
@@ -37,6 +40,7 @@ export function PriceRangeFilter() {
     setMin(isNaN(urlMin) ? MIN_PRICE : urlMin)
     setMax(isNaN(urlMax) ? MAX_PRICE : urlMax)
   }, [searchParams])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const pushToUrl = useCallback(
     (nextMin: number, nextMax: number) => {

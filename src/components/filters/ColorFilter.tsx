@@ -35,9 +35,14 @@ export function ColorFilter() {
   const activeValues =
     searchParams.get('color')?.split(',').filter(Boolean) ?? []
 
+  // Extract the search string so useCallback has a stable primitive dep
+  // (searchParams object reference changes on every render, which prevents
+  // React Compiler from preserving memoization).
+  const searchString = searchParams.toString()
+
   const toggle = useCallback(
     (value: string) => {
-      const params = new URLSearchParams(searchParams.toString())
+      const params = new URLSearchParams(searchString)
       const current = params.get('color')?.split(',').filter(Boolean) ?? []
       const next = current.includes(value)
         ? current.filter((v) => v !== value)
@@ -51,7 +56,7 @@ export function ColorFilter() {
 
       router.replace(`${pathname}?${params.toString()}`, { scroll: false })
     },
-    [searchParams, pathname, router],
+    [searchString, pathname, router],
   )
 
   if (COLORS.length === 0) return null

@@ -9,6 +9,7 @@ export default [
       'coverage/**',
       'tests/e2e/**',
       'src/payload-types.ts',
+      'src/payload-generated-schema.ts',
       'src/app/(payload)/admin/importMap.js',
       'release.config.cjs',
       'commitlint.config.cjs',

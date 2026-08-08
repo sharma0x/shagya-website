@@ -201,7 +201,7 @@ export function ProductFilters({
   const isMountedRef = useRef(true)
   const initialRender = useRef(true)
   const navigateRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const sliderResetKey = useRef(0)
+  const [sliderResetKey, setSliderResetKey] = useState(0)
 
   // --- Facet fetching ---
   const fetchFacets = useCallback(async () => {
@@ -226,25 +226,34 @@ export function ProductFilters({
     } catch (err) {
       console.error('[ProductFilters] fetchFacets failed:', err)
     }
-  }, [searchParams, contextFilter])
+  }, [searchParams])
 
   useEffect(() => {
+    // One-time async fetch on mount; the re-render is necessary because
+    // we have no initial value.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchFacets()
   }, [fetchFacets])
 
   useEffect(() => {
+    let cancelled = false
     fetch('/api/colors?limit=100')
       .then((r) => r.json())
       .then((data) => {
-        setDbColors(
-          (data.docs || []).map((c: any) => ({
-            slug: c.slug,
-            name: c.name,
-            hex: c.hex,
-          })),
-        )
+        if (!cancelled) {
+          setDbColors(
+            (data.docs || []).map((c: any) => ({
+              slug: c.slug,
+              name: c.name,
+              hex: c.hex,
+            })),
+          )
+        }
       })
       .catch(() => {})
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   // Prevent stale async state updates after unmount
@@ -275,33 +284,6 @@ export function ProductFilters({
       document.removeEventListener('keydown', handleEscape)
     }
   }, [cityDropdownOpen])
-
-  // Auto-apply filters with debounce — navigates on any filter change
-  useEffect(() => {
-    if (initialRender.current) {
-      initialRender.current = false
-      return
-    }
-    if (navigateRef.current) clearTimeout(navigateRef.current)
-    navigateRef.current = setTimeout(() => {
-      const query = buildQuery()
-      router.push(query ? `${pathname}?${query}` : pathname)
-    }, 300)
-    return () => {
-      if (navigateRef.current) clearTimeout(navigateRef.current)
-    }
-  }, [
-    fabric,
-    weave,
-    pattern,
-    onSale,
-    excludeOOS,
-    minDiscount,
-    minPrice,
-    maxPrice,
-    city,
-    color,
-  ])
 
   // --- Handlers ---
   const toggleSection = (section: string) => {
@@ -360,6 +342,36 @@ export function ProductFilters({
     /* size, */ searchParams,
   ])
 
+  // Auto-apply filters with debounce — navigates on any filter change
+  useEffect(() => {
+    if (initialRender.current) {
+      initialRender.current = false
+      return
+    }
+    if (navigateRef.current) clearTimeout(navigateRef.current)
+    navigateRef.current = setTimeout(() => {
+      const query = buildQuery()
+      router.push(query ? `${pathname}?${query}` : pathname)
+    }, 300)
+    return () => {
+      if (navigateRef.current) clearTimeout(navigateRef.current)
+    }
+  }, [
+    buildQuery,
+    fabric,
+    weave,
+    pattern,
+    onSale,
+    excludeOOS,
+    minDiscount,
+    minPrice,
+    maxPrice,
+    city,
+    color,
+    pathname,
+    router,
+  ])
+
   const handleClearAll = () => {
     setFabric([])
     setWeave([])
@@ -371,7 +383,7 @@ export function ProductFilters({
     setMinDiscount('')
     setCity('')
     setColor([])
-    sliderResetKey.current++
+    setSliderResetKey((k) => k + 1)
     setMobileOpen(false)
     router.push(pathname)
   }
@@ -428,7 +440,7 @@ export function ProductFilters({
         onToggle={() => toggleSection('price')}
       >
         <RangeSlider
-          key={sliderResetKey.current}
+          key={sliderResetKey}
           min={0}
           max={100000}
           step={500}
@@ -444,7 +456,7 @@ export function ProductFilters({
         />
         <div
           className="mt-2 flex items-center gap-2"
-          key={`price-${sliderResetKey.current}`}
+          key={`price-${sliderResetKey}`}
         >
           <input
             type="number"

@@ -72,7 +72,7 @@ export default function LoginPage() {
     } finally {
       setLoading(false)
     }
-  }, [email, otp, router])
+  }, [email, otp])
 
   const handleGoogleSignIn = async () => {
     try {
