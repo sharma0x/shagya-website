@@ -12,6 +12,7 @@ import {
 } from '@/components/address/AddressForm'
 import { GuestCheckout } from '@/components/checkout/GuestCheckout'
 import { OffersSection } from '@/components/coupons/OffersSection'
+import { liftVariantGallery } from '@/lib/product-utils'
 import {
   ArrowLeft,
   Check,
@@ -92,7 +93,7 @@ export default function CheckoutPage() {
         weave: i.product.weave,
         fabric: i.product.fabric,
         basePrice: i.unitPrice,
-        gallery: i.product.gallery,
+        gallery: liftVariantGallery(i.product).gallery,
       },
       variant: i.variant,
       quantity: i.quantity,
@@ -1013,7 +1014,8 @@ export default function CheckoutPage() {
               {/* Items List */}
               <div className="mb-6 max-h-[320px] space-y-4 overflow-y-auto pr-2">
                 {effectiveCart?.items.map((item) => {
-                  const firstImage = item.product.gallery?.[0]?.image
+                  const adapted = liftVariantGallery(item.product)
+                  const firstImage = adapted.gallery?.[0]?.image
                   const imageUrl =
                     typeof firstImage === 'object' && firstImage !== null
                       ? firstImage.url || firstImage.sizes?.thumbnail?.url
