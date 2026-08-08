@@ -11,10 +11,7 @@ export async function POST(
     const { id } = await params
     const session = await auth.api.getSession({ headers: request.headers })
 
-    const voterEmail =
-      session?.user?.email ||
-      request.headers.get('x-guest-email') ||
-      null
+    const voterEmail = session?.user?.email ?? null
 
     if (!voterEmail) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -28,10 +25,9 @@ export async function POST(
       overrideAccess: true,
     })
 
-    const helpfulUserEmails: string[] =
-      Array.isArray(review.helpfulUserEmails)
-        ? (review.helpfulUserEmails as unknown[]).map(String)
-        : []
+    const helpfulUserEmails: string[] = Array.isArray(review.helpfulUserEmails)
+      ? (review.helpfulUserEmails as unknown[]).map(String)
+      : []
     const alreadyVoted = helpfulUserEmails.includes(voterEmail)
 
     let helpfulCount = (review.helpfulCount as number) || 0

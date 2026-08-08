@@ -177,10 +177,9 @@ export function ProductReviews({
       const res = await fetch(`/api/reviews/${reviewId}/helpful`, {
         method: 'POST',
       })
-      if (res.ok) {
-        const data = await res.json()
-        setHelpfulCounts((prev) => ({ ...prev, [reviewId]: data.helpfulCount }))
-      }
+      if (!res.ok) throw new Error('Helpful request failed')
+      const data = await res.json()
+      setHelpfulCounts((prev) => ({ ...prev, [reviewId]: data.helpfulCount }))
     } catch {
       setVotedReviewIds((prev) => {
         const next = new Set(prev)
@@ -198,7 +197,9 @@ export function ProductReviews({
   }
 
   const ratingBars = [5, 4, 3, 2, 1].map((star) => {
-    const count = (allReviews || []).filter((r) => Math.round(r.rating) === star).length
+    const count = (allReviews || []).filter(
+      (r) => Math.round(r.rating) === star,
+    ).length
     const pct = totalCount > 0 ? (count / totalCount) * 100 : 0
     return { star, count, pct }
   })
@@ -538,7 +539,8 @@ export function ProductReviews({
                   >
                     <ThumbsUp className="h-3 w-3" />
                     Helpful
-                    {(helpfulCounts[review.id] ?? review.helpfulCount ?? 0) > 0 &&
+                    {(helpfulCounts[review.id] ?? review.helpfulCount ?? 0) >
+                      0 &&
                       ` (${helpfulCounts[review.id] ?? review.helpfulCount})`}
                   </button>
                 </div>
