@@ -145,6 +145,7 @@ export default async function CollectionDetailPage({
     sort,
     page,
     limit: prodLimit,
+    depth: 2,
   })
   const products = productsRes.docs
   const totalDocs = productsRes.totalDocs

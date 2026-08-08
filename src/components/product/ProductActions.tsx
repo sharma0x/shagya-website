@@ -31,6 +31,8 @@ interface ProductActionsProps {
     weave: string
   }
   isOutOfStock?: boolean
+  /** Preselected color variant (from `?color=` deep link). Defaults to 0. */
+  initialVariantIndex?: number
   onVariantChange?: (imageUrls: string[]) => void
 }
 
@@ -49,6 +51,7 @@ const BLOUSE_SIZES = [
 export function ProductActions({
   product,
   isOutOfStock,
+  initialVariantIndex = 0,
   onVariantChange,
 }: ProductActionsProps) {
   const { addItem } = useCart()
@@ -59,7 +62,8 @@ export function ProductActions({
   const [size, setSize] = useState(SAREE_SIZES[0])
   const [blouseSize, setBlouseSize] = useState(BLOUSE_SIZES[0])
   */
-  const [selectedVariantIndex, setSelectedVariantIndex] = useState(0)
+  const [selectedVariantIndex, setSelectedVariantIndex] =
+    useState(initialVariantIndex)
   const [addedState, setAddedState] = useState<'idle' | 'added'>('idle')
   const [inWishlist, setInWishlist] = useState(false)
   const [wishlistLoading, setWishlistLoading] = useState(false)
@@ -154,6 +158,13 @@ export function ProductActions({
                 type="button"
                 onClick={() => {
                   setSelectedVariantIndex(idx)
+                  // Keep the URL shareable for this exact color (shallow —
+                  // no server refetch).
+                  window.history.replaceState(
+                    null,
+                    '',
+                    `${window.location.pathname}?color=${encodeURIComponent(v.color.slug)}`,
+                  )
                   if (onVariantChange && v.gallery.length > 0) {
                     const urls = v.gallery.map((g: any) =>
                       typeof g.image === 'object' && g.image !== null

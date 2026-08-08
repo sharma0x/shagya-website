@@ -23,6 +23,7 @@ import {
 import { RecommendationRow } from '@/components/product/RecommendationRow'
 import { getRelatedProducts, getProductsByIds } from '@/lib/recommendations'
 import { getRecentlyViewedIds } from '@/lib/recently-viewed'
+import { getProductUrl } from '@/lib/product-url'
 import { getApplicableCoupons } from '@/lib/coupons'
 import { TrackRecentlyViewed } from '@/components/product/TrackRecentlyViewed'
 import { Rating } from '@/components/ui/Rating'
@@ -31,7 +32,7 @@ import type { SiteSetting } from '@/payload-types'
 
 type Props = {
   params: Promise<{ slug: string; productId: string }>
-  searchParams: Promise<{ preview?: string; id?: string }>
+  searchParams: Promise<{ preview?: string; id?: string; color?: string }>
 }
 
 function LexicalRenderer({ content }: { content: any }) {
@@ -133,7 +134,7 @@ export default async function ProductDetailPage({
   searchParams,
 }: Props) {
   const { slug, productId } = await params
-  const { preview, id } = await searchParams
+  const { preview, id, color } = await searchParams
   const isPreview = preview === 'true' && Boolean(id)
   const payload = await getPayload({ config })
   const reqHeaders = await nextHeaders()
@@ -169,7 +170,7 @@ export default async function ProductDetailPage({
   // The product ID is the sole identity; a stale/wrong slug in the URL must
   // redirect to the canonical slug + ID so the page URL stays correct.
   if (product.slug && product.slug !== slug) {
-    permanentRedirect(`/products/${product.slug}/${product.id}`)
+    permanentRedirect(getProductUrl(product.slug, product.id, color))
   }
 
   const settings = (await payload.findGlobal({
@@ -340,6 +341,7 @@ export default async function ProductDetailPage({
           <div className="mt-8 grid gap-10 lg:grid-cols-12 lg:gap-14">
             <PDPClientSection
               product={serializableProduct}
+              initialColorSlug={color ?? null}
               isOutOfStock={
                 product.trackQuantity === true && (product.quantity ?? 0) <= 0
               }

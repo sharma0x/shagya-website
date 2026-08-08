@@ -68,7 +68,7 @@ export function ProductCard({
 
   return (
     <Link
-      href={getProductUrl(product.slug, product.id)}
+      href={getProductUrl(product.slug, product.id, product.color?.slug)}
       className={cn('group block', className)}
     >
       {/* Image Container */}

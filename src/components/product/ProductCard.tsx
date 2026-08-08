@@ -13,8 +13,7 @@ const ph = (w: number, h: number, _bg: string, _fg: string, text: string) =>
   `https://images.placeholders.dev/?width=${w}&height=${h}&text=${encodeURIComponent(text.substring(0, 20))}&bgColor=%2369254e&textColor=%23f5e8ee&fontFamily=lora&fontWeight=600`
 
 function getGalleryUrls(product: any): string[] {
-  const adapted = liftVariantGallery(product)
-  const gallery = adapted.gallery
+  const gallery = product.gallery
   if (!gallery || !Array.isArray(gallery) || gallery.length === 0) {
     return [ph(600, 800, '69254e', 'f5e8ee', product.name || 'Saree')]
   }
@@ -71,7 +70,11 @@ export function ProductCard({
   showWishlist = true,
   className,
 }: ProductCardProps) {
-  const galleryUrls = getGalleryUrls(product)
+  // A top-level `color` means the caller already resolved a specific color
+  // variant (e.g. exploded category cards) — trust its gallery as-is.
+  // Otherwise lift the first enabled variant so image + color label match.
+  const adapted = product.color ? product : liftVariantGallery(product)
+  const galleryUrls = getGalleryUrls(adapted)
   const [activeImage, setActiveImage] = useState(0)
   const [isCardHovered, setIsCardHovered] = useState(false)
   const dotHoveredRef = useRef(false)
@@ -116,7 +119,7 @@ export function ProductCard({
     return (
       <div className={cn('flex gap-4', className)}>
         <Link
-          href={getProductUrl(product.slug, product.id)}
+          href={getProductUrl(product.slug, product.id, adapted.color?.slug)}
           className="relative h-32 w-24 shrink-0 overflow-hidden rounded-lg bg-neutral-100"
         >
           <Image
@@ -131,13 +134,17 @@ export function ProductCard({
         <div className="flex flex-1 flex-col justify-between py-1">
           <div>
             <Link
-              href={getProductUrl(product.slug, product.id)}
+              href={getProductUrl(
+                product.slug,
+                product.id,
+                adapted.color?.slug,
+              )}
               className="font-display hover:text-brand-700 block text-sm font-semibold text-neutral-900 transition-colors"
             >
               {product.name}
             </Link>
             <p className="font-body mt-0.5 text-xs text-neutral-400">
-              {[product.weave, product.fabric, product.color?.name]
+              {[product.weave, product.fabric, adapted.color?.name]
                 .filter(Boolean)
                 .map((s) => (s ?? '').toLowerCase())
                 .join(' · ')}
@@ -163,7 +170,7 @@ export function ProductCard({
       }}
     >
       <Link
-        href={getProductUrl(product.slug, product.id)}
+        href={getProductUrl(product.slug, product.id, adapted.color?.slug)}
         className={cn(
           'block transition-all duration-300 ease-out',
           'hover:-translate-y-1 hover:[transform:rotateY(-2deg)_translateZ(8px)]',
@@ -260,9 +267,9 @@ export function ProductCard({
           <p className="font-display text-brand-950 group-hover:text-brand-700 text-sm font-semibold transition-colors">
             {product.name}
           </p>
-          {(product.weave || product.fabric || product.color) && (
+          {(product.weave || product.fabric || adapted.color) && (
             <p className="text-brand-700/60 mt-0.5 text-xs">
-              {[product.weave, product.fabric, product.color?.name]
+              {[product.weave, product.fabric, adapted.color?.name]
                 .filter(Boolean)
                 .map((s) => (s ?? '').toLowerCase())
                 .join(' · ')}

@@ -250,6 +250,7 @@ export default async function CategoryPage({
     sort,
     page,
     limit: prodLimit,
+    depth: 2,
   })
   const products = result.docs
   const totalDocs = result.totalDocs
@@ -390,6 +391,7 @@ export default async function CategoryPage({
                       ...ep._product,
                       gallery: ep.gallery,
                       basePrice: ep.effectivePrice,
+                      color: ep.color,
                     }}
                     variant="grid"
                     showWishlist
