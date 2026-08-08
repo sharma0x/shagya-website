@@ -83,7 +83,9 @@ export default function WishlistPage() {
     try {
       const adapted = liftVariantGallery(product)
       const variantColor =
-        item.variant && typeof item.variant === 'object' && 'color' in item.variant
+        item.variant &&
+        typeof item.variant === 'object' &&
+        'color' in item.variant
           ? (item.variant as any).color
           : undefined
       addItem(
