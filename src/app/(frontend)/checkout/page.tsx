@@ -12,6 +12,7 @@ import {
 } from '@/components/address/AddressForm'
 import { GuestCheckout } from '@/components/checkout/GuestCheckout'
 import { OffersSection } from '@/components/coupons/OffersSection'
+import { liftVariantGallery } from '@/lib/product-utils'
 import {
   ArrowLeft,
   Check,
@@ -92,7 +93,7 @@ export default function CheckoutPage() {
         weave: i.product.weave,
         fabric: i.product.fabric,
         basePrice: i.unitPrice,
-        gallery: i.product.gallery,
+        gallery: liftVariantGallery(i.product).gallery,
       },
       variant: i.variant,
       quantity: i.quantity,
@@ -989,6 +990,7 @@ export default function CheckoutPage() {
                   <button
                     disabled={actionLoading}
                     onClick={handlePlaceOrder}
+                    suppressHydrationWarning
                     className="font-display bg-brand-600 hover:bg-brand-700 inline-flex h-11 items-center gap-1.5 rounded-xl px-6 text-xs font-semibold text-white transition-all active:scale-95 disabled:opacity-50"
                   >
                     {actionLoading && (
@@ -1029,7 +1031,8 @@ export default function CheckoutPage() {
                   ))
                 ) : (
                   effectiveCart?.items.map((item) => {
-                  const firstImage = item.product.gallery?.[0]?.image
+                  const adapted = liftVariantGallery(item.product)
+                  const firstImage = adapted.gallery?.[0]?.image
                   const imageUrl =
                     typeof firstImage === 'object' && firstImage !== null
                       ? firstImage.url || firstImage.sizes?.thumbnail?.url
@@ -1174,13 +1177,13 @@ export default function CheckoutPage() {
               <div className="font-body space-y-2 border-t border-neutral-100 pt-4 text-xs text-neutral-500">
                 <div className="flex justify-between">
                   <span>Bag Subtotal</span>
-                  <span className="font-semibold text-neutral-900">
+                  <span className="font-semibold text-neutral-900" suppressHydrationWarning>
                     ₹{subtotal.toLocaleString('en-IN')}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span>Shipping & Verification</span>
-                  <span className="font-semibold text-neutral-900">
+                  <span className="font-semibold text-neutral-900" suppressHydrationWarning>
                     {shipping === 0 ? 'FREE' : `₹${shipping}`}
                   </span>
                 </div>
@@ -1190,12 +1193,12 @@ export default function CheckoutPage() {
                       <Ticket className="h-3 w-3" />
                       Coupon Discount
                     </span>
-                    <span>-₹{discount.toLocaleString('en-IN')}</span>
+                    <span suppressHydrationWarning>-₹{discount.toLocaleString('en-IN')}</span>
                   </div>
                 )}
                 <div className="font-display flex justify-between border-t border-neutral-100 pt-3 text-sm font-semibold text-neutral-900">
                   <span>Order Total</span>
-                  <span>₹{total.toLocaleString('en-IN')}</span>
+                  <span suppressHydrationWarning>₹{total.toLocaleString('en-IN')}</span>
                 </div>
                 <p className="mt-1 text-right text-[10px] font-medium text-red-500">
                   * Excluding delivery charges
