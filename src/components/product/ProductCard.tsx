@@ -162,7 +162,7 @@ export function ProductCard({
 
   return (
     <div
-      className={cn('group [perspective:800px]', className)}
+      className={cn('group flex flex-col [perspective:800px]', className)}
       onMouseEnter={() => setIsCardHovered(true)}
       onMouseLeave={() => {
         setIsCardHovered(false)
@@ -172,7 +172,7 @@ export function ProductCard({
       <Link
         href={getProductUrl(product.slug, product.id, adapted.color?.slug)}
         className={cn(
-          'block transition-all duration-300 ease-out',
+          'flex flex-1 flex-col transition-all duration-300 ease-out',
           'hover:-translate-y-1 hover:[transform:rotateY(-2deg)_translateZ(8px)]',
           'hover:shadow-xl hover:shadow-neutral-200/60',
           'rounded-lg',
@@ -263,7 +263,7 @@ export function ProductCard({
         </div>
 
         {/* Info */}
-        <div className="rounded-b-lg bg-white px-2.5 pt-2 pb-3">
+        <div className="flex flex-1 flex-col rounded-b-lg bg-white px-2.5 pt-2 pb-3">
           <p className="font-display text-brand-950 group-hover:text-brand-700 text-sm font-semibold transition-colors">
             {product.name}
           </p>
@@ -277,7 +277,7 @@ export function ProductCard({
           )}
 
           {/* Price */}
-          <div className="mt-1.5 min-h-[28px]">
+          <div className="mt-auto min-h-[28px] pt-1.5">
             <div className="flex flex-wrap items-baseline gap-1.5">
               <span className="font-display text-brand-700 text-sm font-semibold">
                 ₹{(product.basePrice ?? 0).toLocaleString('en-IN')}

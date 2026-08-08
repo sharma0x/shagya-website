@@ -29,7 +29,6 @@ export default function WishlistPage() {
 
   const [items, setItems] = useState<WishlistItem[]>([])
   const [loading, setLoading] = useState(true)
-  const [actionLoading, setActionLoading] = useState<string | null>(null)
 
   useEffect(() => {
     if (isPending) return
@@ -55,66 +54,43 @@ export default function WishlistPage() {
     loadWishlist()
   }, [sessionData, isPending, router])
 
-  const handleRemove = async (productId: number) => {
-    setActionLoading(String(productId))
-    try {
-      const res = await fetch('/api/wishlist', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ productId: String(productId) }),
-      })
-
-      if (res.ok) {
-        setItems(items.filter((item) => item.product.id !== productId))
-      }
-    } catch (err) {
-      console.error('Failed to remove from wishlist', err)
-    } finally {
-      setActionLoading(null)
-    }
-  }
-
-  const handleMoveToCart = async (item: WishlistItem) => {
+  const handleMoveToCart = (item: WishlistItem) => {
     const product = item.product
     if (product.trackQuantity && (product.quantity ?? 0) <= 0) {
       return
     }
-    setActionLoading(String(product.id))
-    try {
-      const adapted = liftVariantGallery(product)
-      const variantColor =
-        item.variant &&
-        typeof item.variant === 'object' &&
-        'color' in item.variant
-          ? (item.variant as any).color
-          : undefined
-      addItem(
-        {
-          id: Number(product.id),
-          name: product.name,
-          slug: product.slug || '',
-          basePrice: adapted.basePrice || 0,
-          compareAtPrice: product.compareAtPrice ?? undefined,
-          gallery: adapted.gallery as any,
-          fabric: product.fabric || '',
-          weave: product.weave || '',
-        },
-        1,
-        variantColor ? { color: variantColor } : undefined,
-      )
+    const adapted = liftVariantGallery(product)
+    const variantColor =
+      item.variant &&
+      typeof item.variant === 'object' &&
+      'color' in item.variant
+        ? (item.variant as any).color
+        : undefined
 
-      await fetch('/api/wishlist', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ productId: String(product.id) }),
-      })
+    setItems((prev) => prev.filter((i) => i.product.id !== product.id))
 
-      setItems(items.filter((item) => item.product.id !== product.id))
-    } catch (err) {
-      console.error(err)
-    } finally {
-      setActionLoading(null)
-    }
+    addItem(
+      {
+        id: Number(product.id),
+        name: product.name,
+        slug: product.slug || '',
+        basePrice: adapted.basePrice || 0,
+        compareAtPrice: product.compareAtPrice ?? undefined,
+        gallery: adapted.gallery as any,
+        fabric: product.fabric || '',
+        weave: product.weave || '',
+      },
+      1,
+      variantColor ? { color: variantColor } : undefined,
+    )
+
+    fetch('/api/wishlist', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ productId: String(product.id) }),
+    }).catch((err) => {
+      console.error('Failed to remove from wishlist', err)
+    })
   }
 
   if (isPending || loading) {
@@ -174,7 +150,6 @@ export default function WishlistPage() {
           <div className="grid grid-cols-2 gap-x-3 gap-y-5 sm:gap-x-4 sm:gap-y-8 lg:grid-cols-3 xl:grid-cols-4">
             {items.map((item) => {
               const product = liftVariantGallery(item.product)
-              const isThisLoading = actionLoading === String(product.id)
               const isOOS =
                 product.trackQuantity === true && (product.quantity ?? 0) <= 0
               return (
@@ -183,34 +158,22 @@ export default function WishlistPage() {
                     product={product}
                     variant="grid"
                     showWishlist={false}
+                    className="h-full"
                   />
-                  <div className="mt-2 flex gap-2">
+                  <div className="mt-2">
                     {isOOS ? (
-                      <span className="font-display flex h-9 flex-1 items-center justify-center rounded-lg border border-neutral-200 bg-neutral-50 text-[11px] font-semibold text-neutral-400">
+                      <span className="font-display flex h-9 w-full items-center justify-center rounded-lg border border-neutral-200 bg-neutral-50 text-[11px] font-semibold text-neutral-400">
                         Out of Stock
                       </span>
                     ) : (
                       <button
-                        disabled={isThisLoading}
                         onClick={() => handleMoveToCart(item)}
-                        className="bg-brand-600 hover:bg-brand-700 font-display flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg text-[11px] font-semibold text-white transition-all active:scale-95 disabled:opacity-50"
+                        className="bg-brand-600 hover:bg-brand-700 font-display flex h-9 w-full items-center justify-center gap-1.5 rounded-lg text-[11px] font-semibold text-white transition-all active:scale-95"
                       >
-                        {isThisLoading ? (
-                          <Loader2 className="h-3 w-3 animate-spin" />
-                        ) : (
-                          <ShoppingBag className="h-3 w-3" />
-                        )}
+                        <ShoppingBag className="h-3 w-3" />
                         Move to Bag
                       </button>
                     )}
-                    <button
-                      disabled={!!actionLoading}
-                      onClick={() => handleRemove(product.id as number)}
-                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-neutral-200 bg-white text-neutral-400 transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-500"
-                      title="Remove from Wishlist"
-                    >
-                      <Heart className="h-3.5 w-3.5 fill-current" />
-                    </button>
                   </div>
                 </div>
               )
