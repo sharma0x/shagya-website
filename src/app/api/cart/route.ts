@@ -41,6 +41,7 @@ export async function GET(request: Request): Promise<NextResponse> {
       },
       limit: 1,
       overrideAccess: true,
+      depth: 2,
     })
 
     if (carts.docs.length === 0) {
@@ -108,6 +109,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       },
       limit: 1,
       overrideAccess: true,
+      depth: 2,
     })
 
     let cart
@@ -148,6 +150,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         id: carts.docs[0].id,
         data,
         overrideAccess: true,
+        depth: 2,
       })
     } else {
       // Create new cart
@@ -155,6 +158,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         collection: 'carts',
         data,
         overrideAccess: true,
+        depth: 2,
       })
     }
 
