@@ -19,8 +19,8 @@ describe('Coupons collection', () => {
       expect(Coupons.timestamps).toBe(true)
     })
 
-    it('has exactly 13 fields', () => {
-      expect(Coupons.fields).toHaveLength(13)
+    it('has exactly 16 fields', () => {
+      expect(Coupons.fields).toHaveLength(16)
     })
   })
 

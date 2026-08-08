@@ -23,11 +23,11 @@ describe('Customers collection', () => {
   })
 
   describe('fields', () => {
-    it('has a required name text field', () => {
+    it('has an optional name text field', () => {
       const field = Customers.fields?.find((f: any) => f.name === 'name') as any
       expect(field).toBeDefined()
       expect(field.type).toBe('text')
-      expect(field.required).toBe(true)
+      expect(field.required).toBeUndefined()
     })
 
     it('has a required email field that is unique', () => {

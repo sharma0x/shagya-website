@@ -41,7 +41,9 @@ describe('syncCustomer', () => {
   }
 
   it('creates a new customer when none exists', async () => {
-    mockFind.mockResolvedValueOnce({ docs: [] })
+    // syncCustomer performs up to 3 lookups: by betterAuthUserId, by phone,
+    // by email — all must return empty docs to fall through to create.
+    mockFind.mockResolvedValue({ docs: [] })
     mockCreate.mockResolvedValueOnce({ id: 'cust-1' })
 
     await syncCustomer(testUser)
@@ -74,7 +76,8 @@ describe('syncCustomer', () => {
   })
 
   it('uses empty string for phone when phoneNumber is undefined', async () => {
-    mockFind.mockResolvedValueOnce({ docs: [] })
+    // No phone lookup happens; byAuthId and byEmail return empty.
+    mockFind.mockResolvedValue({ docs: [] })
     mockCreate.mockResolvedValueOnce({ id: 'cust-2' })
 
     await syncCustomer({

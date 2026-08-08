@@ -386,7 +386,7 @@ describe('Orders collection', () => {
         operation: 'create',
         req: {
           payload: {
-            logger: { error: () => {} },
+            logger: { error: () => {}, info: () => {} },
           },
         },
       } as any)
@@ -406,7 +406,7 @@ describe('Orders collection', () => {
         req: {
           payload: {
             create: async () => ({}),
-            logger: { error: () => {} },
+            logger: { error: () => {}, info: () => {} },
           },
         },
       } as any)
@@ -416,6 +416,7 @@ describe('Orders collection', () => {
 
     it('does not block the hook return on email send (fire-and-forget)', async () => {
       const neverResolving = new Promise<void>(() => {})
+      ;(sendOrderPlacedEmails as ReturnType<typeof vi.fn>).mockClear()
       ;(sendOrderPlacedEmails as ReturnType<typeof vi.fn>).mockReturnValue(
         neverResolving,
       )
@@ -451,8 +452,8 @@ describe('Orders collection', () => {
   })
 
   describe('Total field count', () => {
-    it('has exactly 13 top-level fields', () => {
-      expect(Orders.fields).toHaveLength(13)
+    it('has exactly 21 top-level fields', () => {
+      expect(Orders.fields).toHaveLength(21)
     })
   })
 })

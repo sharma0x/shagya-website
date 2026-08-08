@@ -46,11 +46,12 @@ describe('Variants collection', () => {
       ])
     })
 
-    it('has color text field (required)', () => {
+    it('has color select field (required)', () => {
       const field = Variants.fields?.find((f: any) => f.name === 'color') as any
       expect(field).toBeDefined()
-      expect(field?.type).toBe('text')
+      expect(field?.type).toBe('select')
       expect(field?.required).toBe(true)
+      expect(field?.options?.length).toBeGreaterThan(0)
     })
 
     it('has blouseSize text field', () => {

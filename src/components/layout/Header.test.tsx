@@ -51,14 +51,17 @@ describe('Header', () => {
 
   it('renders the brand logo', () => {
     render(<Header />)
-    const homeLink = screen.getByRole('link', { name: /shayga/i })
-    expect(homeLink).toBeInTheDocument()
+    // The Logo component appears in the main header and in the mobile menu
+    // overlay, so use getAllByRole and assert at least one is present.
+    const homeLinks = screen.getAllByRole('link', { name: /shayga/i })
+    expect(homeLinks.length).toBeGreaterThan(0)
   })
 
   it('renders all desktop nav links', () => {
     render(<Header />)
+    // "Sarees" is a NavigationMenuTrigger (button), not a link.
+    // Desktop nav links are Collections and Journal.
     const expected = [
-      { name: 'Sarees', href: '/category/all' },
       { name: 'Collections', href: '/collections' },
       { name: 'Journal', href: '/blog' },
     ]
@@ -68,6 +71,9 @@ describe('Header', () => {
         true,
       )
     }
+    // Sarees trigger appears in both desktop and mobile nav, so use
+    // getAllByText and assert at least one is present.
+    expect(screen.getAllByText('Sarees').length).toBeGreaterThan(0)
   })
 
   it('renders action buttons (search, account, wishlist, cart)', () => {

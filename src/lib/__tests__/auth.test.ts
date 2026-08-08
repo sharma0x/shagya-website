@@ -1,6 +1,16 @@
 import { describe, it, expect } from 'vitest'
 import { auth } from '../auth'
 
+const hasGoogle = !!(
+  process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+)
+const hasFacebook = !!(
+  process.env.FACEBOOK_CLIENT_ID && process.env.FACEBOOK_CLIENT_SECRET
+)
+const hasApple = !!(
+  process.env.APPLE_CLIENT_ID && process.env.APPLE_CLIENT_SECRET
+)
+
 describe('auth', () => {
   it('creates an auth instance', () => {
     expect(auth).toBeDefined()
@@ -10,11 +20,21 @@ describe('auth', () => {
     expect(auth.options.emailAndPassword?.enabled).toBe(true)
   })
 
-  it('has social providers configured', () => {
+  it('has social providers configured when env vars are set', () => {
     expect(auth.options.socialProviders).toBeDefined()
-    expect(auth.options.socialProviders?.google).toBeDefined()
-    expect(auth.options.socialProviders?.facebook).toBeDefined()
-    expect(auth.options.socialProviders?.apple).toBeDefined()
+    if (hasGoogle) {
+      expect(auth.options.socialProviders?.google).toBeDefined()
+    }
+    if (hasFacebook) {
+      expect(auth.options.socialProviders?.facebook).toBeDefined()
+    }
+    if (hasApple) {
+      expect(auth.options.socialProviders?.apple).toBeDefined()
+    }
+    // When no provider env vars are set, the object should be empty
+    if (!hasGoogle && !hasFacebook && !hasApple) {
+      expect(Object.keys(auth.options.socialProviders ?? {})).toHaveLength(0)
+    }
   })
 
   it('has a secret set', () => {

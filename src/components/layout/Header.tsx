@@ -413,6 +413,8 @@ export function Header() {
               <button
                 className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg p-2 text-neutral-600 transition-colors hover:bg-neutral-100 lg:hidden"
                 onClick={() => setMobileMenuOpen(true)}
+                aria-label="Open menu"
+                aria-expanded={mobileMenuOpen}
               >
                 <Menu className="h-5 w-5" />
               </button>

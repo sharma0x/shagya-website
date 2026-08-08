@@ -122,8 +122,8 @@ describe('Pages collection', () => {
       expect(contentField?.type).toBe('blocks')
     })
 
-    it('has exactly 6 block types', () => {
-      expect(contentField?.blocks).toHaveLength(6)
+    it('has exactly 9 block types', () => {
+      expect(contentField?.blocks).toHaveLength(9)
     })
 
     const blockSlugs = contentField?.blocks?.map((b: any) => b.slug) || []
@@ -150,6 +150,18 @@ describe('Pages collection', () => {
 
     it('includes cta block', () => {
       expect(blockSlugs).toContain('cta')
+    })
+
+    it('includes categoriesGrid block', () => {
+      expect(blockSlugs).toContain('categoriesGrid')
+    })
+
+    it('includes productGrid block', () => {
+      expect(blockSlugs).toContain('productGrid')
+    })
+
+    it('includes postGrid block', () => {
+      expect(blockSlugs).toContain('postGrid')
     })
   })
 
@@ -193,8 +205,14 @@ describe('Pages collection', () => {
       expect(f?.type).toBe('text')
     })
 
-    it('has exactly 5 fields', () => {
-      expect(heroBlock?.fields).toHaveLength(5)
+    it('has exactly 6 fields', () => {
+      expect(heroBlock?.fields).toHaveLength(6)
+    })
+
+    it('has images array field', () => {
+      const f = heroBlock?.fields?.find((x: any) => x.name === 'images')
+      expect(f?.type).toBe('array')
+      expect(f?.maxRows).toBe(5)
     })
   })
 

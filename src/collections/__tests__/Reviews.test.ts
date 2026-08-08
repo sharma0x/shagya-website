@@ -19,8 +19,8 @@ describe('Reviews collection', () => {
       expect(Reviews.timestamps).toBe(true)
     })
 
-    it('has exactly 9 fields', () => {
-      expect(Reviews.fields).toHaveLength(9)
+    it('has exactly 11 fields', () => {
+      expect(Reviews.fields).toHaveLength(11)
     })
   })
 
