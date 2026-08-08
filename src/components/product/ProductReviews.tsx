@@ -78,12 +78,24 @@ export function ProductReviews({
   const [helpfulCounts, setHelpfulCounts] = useState<Record<string, number>>({})
   const [votedReviewIds, setVotedReviewIds] = useState<Set<string>>(new Set())
   const [helpfulLoading, setHelpfulLoading] = useState<string | null>(null)
+  const [pendingReview, setPendingReview] = useState<ReviewData | null>(null)
+
+  const isPendingInServerList =
+    pendingReview && (allReviews || []).some((r) => r.id === pendingReview.id)
 
   const reviews = useMemo(() => {
-    const sorted = [...(allReviews || [])]
-    if (sortMode === 'recent') return sorted
-    return sorted.sort((a, b) => b.rating - a.rating)
-  }, [allReviews, sortMode])
+    const merged = [...(allReviews || [])]
+    if (pendingReview && !isPendingInServerList) {
+      merged.unshift(pendingReview)
+    }
+    if (sortMode !== 'recent') {
+      merged.sort((a, b) => b.rating - a.rating)
+    }
+    return merged
+  }, [allReviews, pendingReview, isPendingInServerList, sortMode])
+
+  const displayTotalCount =
+    totalCount + (pendingReview && !isPendingInServerList ? 1 : 0)
 
   const handleWriteReview = useCallback(() => {
     if (!session?.user) {
@@ -140,6 +152,10 @@ export function ProductReviews({
         const data = await res.json()
         throw new Error(data.error || 'Failed')
       }
+      const data = await res.json()
+      const rating = formRating
+      const title = formTitle.trim()
+      const body = formBody.trim()
       setSubmitted(true)
       setShowForm(false)
       setFormRating(0)
@@ -147,6 +163,21 @@ export function ProductReviews({
       setFormBody('')
       setFormImages([])
       setFormPreviews([])
+      if (data?.reviewId) {
+        setPendingReview({
+          id: String(data.reviewId),
+          title,
+          body,
+          rating,
+          helpfulCount: 0,
+          createdAt: new Date().toISOString(),
+          verifiedPurchase: Boolean(data.verifiedPurchase),
+          customer: {
+            name: session?.user?.name || 'Verified Customer',
+            image: session?.user?.image || null,
+          },
+        })
+      }
       router.refresh()
     } catch (err: any) {
       setFormError(err.message || 'Something went wrong')
@@ -197,10 +228,8 @@ export function ProductReviews({
   }
 
   const ratingBars = [5, 4, 3, 2, 1].map((star) => {
-    const count = (allReviews || []).filter(
-      (r) => Math.round(r.rating) === star,
-    ).length
-    const pct = totalCount > 0 ? (count / totalCount) * 100 : 0
+    const count = reviews.filter((r) => Math.round(r.rating) === star).length
+    const pct = displayTotalCount > 0 ? (count / displayTotalCount) * 100 : 0
     return { star, count, pct }
   })
 
@@ -226,11 +255,12 @@ export function ProductReviews({
         </div>
 
         <p className="font-body mt-2 text-sm text-neutral-500">
-          {totalCount} global {totalCount === 1 ? 'rating' : 'ratings'}
+          {displayTotalCount} global{' '}
+          {displayTotalCount === 1 ? 'rating' : 'ratings'}
         </p>
 
         {/* Rating breakdown bars */}
-        {totalCount > 0 && (
+        {displayTotalCount > 0 && (
           <div className="mt-6 max-w-md space-y-3">
             {ratingBars.map(({ star, pct, count }) => (
               <button
@@ -258,7 +288,7 @@ export function ProductReviews({
       </div>
 
       {/* ── Write Review (shown only when reviews exist) ── */}
-      {allReviews.length > 0 && (
+      {reviews.length > 0 && (
         <button
           type="button"
           onClick={handleWriteReview}
@@ -406,7 +436,7 @@ export function ProductReviews({
         )}
 
         {/* Sort + Reviews */}
-        {allReviews.length > 0 && (
+        {reviews.length > 0 && (
           <>
             <div className="mb-8 flex items-center justify-between border-b border-neutral-200 pb-4">
               <p className="font-display text-sm font-semibold text-neutral-900">
@@ -550,7 +580,7 @@ export function ProductReviews({
         )}
 
         {/* Empty state */}
-        {allReviews.length === 0 && (
+        {reviews.length === 0 && (
           <div className="rounded-2xl border-2 border-dashed border-neutral-100 py-16 text-center">
             <Star className="mx-auto h-12 w-12 text-neutral-200" />
             <p className="font-display mt-5 text-lg font-semibold text-neutral-500">
