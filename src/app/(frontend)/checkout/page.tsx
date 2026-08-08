@@ -106,7 +106,7 @@ export default function CheckoutPage() {
   const [cart, setCart] = useState<Cart | null>(null)
   const [addresses, setAddresses] = useState<Address[]>([])
   const [selectedAddressId, setSelectedAddressId] = useState<string>('')
-  const [loading, setLoading] = useState(true)
+  const [dataReady, setDataReady] = useState(false)
   const [actionLoading, setActionLoading] = useState(false)
   const [error, setError] = useState('')
   const [orderNotes, setOrderNotes] = useState('')
@@ -163,32 +163,34 @@ export default function CheckoutPage() {
       .catch(() => {})
   }, [])
 
-  // Load cart and addresses — run only once on mount
+  // Load cart, addresses, and coupons — shows skeleton while session hydrates
   const didLoad = useRef(false)
 
   useEffect(() => {
     if (didLoad.current) return
-    if (isPending) return
 
-    didLoad.current = true
-
-    if (!isLoggedIn) {
-      setLoading(false)
+    if (!isLoggedIn && !isPending) {
+      didLoad.current = true
+      setDataReady(true)
       setShowNewAddressForm(true)
       return
     }
 
+    if (isPending) return
+
+    didLoad.current = true
+
     async function loadData() {
       try {
-        const [cartRes, addrRes] = await Promise.all([
+        const [cartRes, addrRes, couponRes] = await Promise.all([
           fetch('/api/cart'),
           fetch('/api/addresses'),
+          fetch('/api/coupons/available'),
         ])
 
         if (cartRes.ok) {
           let cartData = await cartRes.json()
 
-          // If DB cart is empty but local cart has items (e.g. they added items while logged out or sync failed earlier)
           const localItems = zCart.items
           if (
             (!cartData.items || cartData.items.length === 0) &&
@@ -218,7 +220,6 @@ export default function CheckoutPage() {
           const addrData = await addrRes.json()
           setAddresses(addrData.addresses || [])
 
-          // Select default address or first address
           const defaultAddr = addrData.addresses?.find(
             (a: Address) => a.isDefault,
           )
@@ -228,26 +229,22 @@ export default function CheckoutPage() {
             setSelectedAddressId(addrData.addresses[0].id)
           }
         }
+
+        if (couponRes.ok) {
+          const couponData = await couponRes.json()
+          setActiveCoupons(couponData.coupons || [])
+        }
       } catch (err) {
         console.error('Failed to load checkout data', err)
       } finally {
-        setLoading(false)
+        setDataReady(true)
       }
     }
 
     loadData()
-  }, [sessionData, isPending]) // didLoad ref prevents re-runs after first mount
+  }, [sessionData, isPending, isLoggedIn, router, zCart.items, zCart.coupon?.id])
 
-  // Fetch pre-populated coupons
-  useEffect(() => {
-    if (!isLoggedIn) return
-    fetch('/api/coupons/available')
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => {
-        if (d) setActiveCoupons(d.coupons || [])
-      })
-      .catch(() => {})
-  }, [isLoggedIn])
+  // Coupon prefetch now handled in loadData() above
 
   const handleApplyCouponWithCode = async (code: string): Promise<boolean> => {
     setCouponError('')
@@ -603,17 +600,8 @@ export default function CheckoutPage() {
     }
   }
 
-  // Only show loading on first render — never on session re-checks (window focus)
-  if (loading && !didLoad.current) {
-    return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
-        <Loader2 className="text-brand-600 h-8 w-8 animate-spin" />
-        <p className="font-body text-sm text-neutral-500">
-          Preparing checkout window...
-        </p>
-      </div>
-    )
-  }
+  // Show skeleton pulse while data loads (logged-in users only — guests render instantly)
+  const showSkeleton = !dataReady && isLoggedIn
 
   const selectedAddress = addresses.find((a) => a.id === selectedAddressId)
 
@@ -721,6 +709,19 @@ export default function CheckoutPage() {
                     onCancel={() => setShowNewAddressForm(false)}
                     error={error}
                   />
+                ) : showSkeleton ? (
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    {[0, 1].map((i) => (
+                      <div
+                        key={i}
+                        className="animate-pulse rounded-xl border border-neutral-100 bg-neutral-50 p-4"
+                      >
+                        <div className="mb-2 h-4 w-24 rounded bg-neutral-200" />
+                        <div className="mb-2 h-3 w-32 rounded bg-neutral-100" />
+                        <div className="h-3 w-48 rounded bg-neutral-100" />
+                      </div>
+                    ))}
+                  </div>
                 ) : (
                   <div className="space-y-4">
                     {addresses.length === 0 ? (
@@ -1012,7 +1013,22 @@ export default function CheckoutPage() {
 
               {/* Items List */}
               <div className="mb-6 max-h-[320px] space-y-4 overflow-y-auto pr-2">
-                {effectiveCart?.items.map((item) => {
+                {showSkeleton ? (
+                  [0, 1].map((i) => (
+                    <div key={i} className="flex animate-pulse gap-4">
+                      <div className="h-20 w-16 shrink-0 rounded-lg bg-neutral-100" />
+                      <div className="flex min-w-0 flex-1 flex-col justify-center gap-2 py-1">
+                        <div className="h-4 w-28 rounded bg-neutral-200" />
+                        <div className="h-3 w-20 rounded bg-neutral-100" />
+                        <div className="flex justify-between">
+                          <div className="h-3 w-16 rounded bg-neutral-100" />
+                          <div className="h-3 w-8 rounded bg-neutral-100" />
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  effectiveCart?.items.map((item) => {
                   const firstImage = item.product.gallery?.[0]?.image
                   const imageUrl =
                     typeof firstImage === 'object' && firstImage !== null
@@ -1076,7 +1092,7 @@ export default function CheckoutPage() {
                       </div>
                     </div>
                   )
-                })}
+                }))}
               </div>
 
               {/* Coupon Code Section */}
