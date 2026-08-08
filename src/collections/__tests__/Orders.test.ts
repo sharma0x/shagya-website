@@ -1,5 +1,15 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { Orders } from '../Orders'
+
+vi.mock('@/email/send', () => ({
+  sendOrderPlacedEmails: vi.fn().mockResolvedValue(undefined),
+  sendOrderStatusEmails: vi.fn().mockResolvedValue(undefined),
+}))
+vi.mock('@/lib/webhooks', () => ({
+  sendWebhook: vi.fn().mockResolvedValue(undefined),
+}))
+
+import { sendOrderPlacedEmails } from '@/email/send'
 
 describe('Orders collection', () => {
   describe('Collection structure', () => {
@@ -402,6 +412,41 @@ describe('Orders collection', () => {
       } as any)
 
       expect(doc).toBeDefined()
+    })
+
+    it('does not block the hook return on email send (fire-and-forget)', async () => {
+      const neverResolving = new Promise<void>(() => {})
+      ;(sendOrderPlacedEmails as ReturnType<typeof vi.fn>).mockReturnValue(
+        neverResolving,
+      )
+
+      const hook = Orders.hooks?.afterChange?.[0]
+      if (!hook) return
+
+      const start = Date.now()
+      const doc = await hook({
+        doc: {
+          id: '1',
+          status: 'pending',
+          orderNumber: 'ORD-00001',
+          customerEmail: 'a@b.c',
+        },
+        previousDoc: {},
+        operation: 'create',
+        req: {
+          payload: {
+            logger: { error: () => {}, info: () => {} },
+            sendEmail: async () => ({ success: true }),
+            create: async () => ({}),
+          },
+        },
+      } as any)
+      const elapsed = Date.now() - start
+
+      expect(doc).toBeDefined()
+      // Hook must return BEFORE the email send resolves (fire-and-forget).
+      expect(elapsed).toBeLessThan(50)
+      expect(sendOrderPlacedEmails).toHaveBeenCalledTimes(1)
     })
   })
 

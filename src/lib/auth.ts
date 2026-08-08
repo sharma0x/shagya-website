@@ -3,23 +3,16 @@ import { passkey } from '@better-auth/passkey'
 import { twoFactor } from 'better-auth/plugins'
 import { emailOTP } from 'better-auth/plugins/email-otp'
 import { Pool } from 'pg'
-import { sendOTPEmail } from '@/email/send'
 import { getServerURL, getAllowedOrigins } from './env'
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 })
 
-async function sendVerificationEmail(
-  to: string,
-  name: string,
-  verificationUrl: string,
-): Promise<void> {
-  const { getPayload } = await import('payload')
-  const config = (await import('@payload-config')).default
-  const { sendVerificationEmail: send } = await import('@/email/send')
-  const payload = await getPayload({ config })
-  await send(payload, to, name, verificationUrl)
+function runEmailInBackground(label: string, work: () => Promise<void>): void {
+  void work().catch((err) => {
+    console.error(`[Email] ${label} failed: ${err}`)
+  })
 }
 
 export const auth = betterAuth({
@@ -31,11 +24,13 @@ export const auth = betterAuth({
     enabled: true,
     requireEmailVerification: true,
     sendResetPassword: async ({ user, url }) => {
-      const { getPayload } = await import('payload')
-      const config = (await import('@payload-config')).default
-      const { sendResetPasswordEmail: send } = await import('@/email/send')
-      const payload = await getPayload({ config })
-      await send(payload, user.email, user.name || '', url)
+      runEmailInBackground('sendResetPasswordEmail', async () => {
+        const { getPayload } = await import('payload')
+        const config = (await import('@payload-config')).default
+        const { sendResetPasswordEmail: send } = await import('@/email/send')
+        const payload = await getPayload({ config })
+        await send(payload, user.email, user.name || '', url)
+      })
     },
   },
   emailVerification: {
@@ -44,7 +39,13 @@ export const auth = betterAuth({
     autoSignInAfterVerification: true,
     expiresIn: 3600,
     sendVerificationEmail: async ({ user, url }) => {
-      await sendVerificationEmail(user.email, user.name || '', url)
+      runEmailInBackground('sendVerificationEmail', async () => {
+        const { getPayload } = await import('payload')
+        const config = (await import('@payload-config')).default
+        const { sendVerificationEmail: send } = await import('@/email/send')
+        const payload = await getPayload({ config })
+        await send(payload, user.email, user.name || '', url)
+      })
     },
   },
   socialProviders: {
@@ -86,7 +87,10 @@ export const auth = betterAuth({
   plugins: [
     emailOTP({
       sendVerificationOTP: async ({ email, otp }) => {
-        await sendOTPEmail(email, otp)
+        runEmailInBackground('sendOTPEmail', async () => {
+          const { sendOTPEmail: send } = await import('@/email/send')
+          await send(email, otp)
+        })
       },
     }),
     twoFactor({

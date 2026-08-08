@@ -71,16 +71,16 @@ export const Products: CollectionConfig = {
                 continue
               notifiedCustomers.add(customerEmail)
 
-              try {
-                const { sendBackInStockEmail } = await import('@/email/send')
-                await sendBackInStockEmail(
-                  req.payload,
-                  customerEmail,
-                  doc as any,
-                )
-              } catch {
+              // Fire-and-forget: do not await per-recipient sends.
+              // The product save must not block on SMTP.
+              const { sendBackInStockEmail } = await import('@/email/send')
+              void sendBackInStockEmail(
+                req.payload,
+                customerEmail,
+                doc as any,
+              ).catch(() => {
                 // Skip failed notifications
-              }
+              })
             }
           } catch {
             // Hook failure must not block product save

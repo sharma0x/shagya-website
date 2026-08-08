@@ -196,18 +196,18 @@ export const Orders: CollectionConfig = {
         if (operation === 'create') {
           const docId = (doc as Record<string, unknown>).id as string
           if (docId) {
-            // Await to guarantee execution in serverless environments (e.g. Vercel)
-            try {
-              await sendOrderPlacedEmails(
-                req.payload,
-                String(docId),
-                doc as Record<string, unknown>,
-              )
-            } catch (err) {
+            // Fire-and-forget: do not await. The hook must not block the
+            // order create response on SMTP. Errors are logged via the
+            // email-logs collection by safeSend.
+            void sendOrderPlacedEmails(
+              req.payload,
+              String(docId),
+              doc as Record<string, unknown>,
+            ).catch((err) =>
               req.payload.logger.error(
                 `[Email] sendOrderPlacedEmails failed: ${err}`,
-              )
-            }
+              ),
+            )
 
             const initialStatus = (doc as Record<string, unknown>).status as
               | string
