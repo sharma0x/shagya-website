@@ -271,16 +271,6 @@ export default async function HomePage({ searchParams }: Props) {
   })
   const dbCategories = categoriesRes.docs
 
-  // ─── Fetch reviews ──────────────────────────────────
-  const reviewsRes = await payload.find({
-    collection: 'reviews',
-    where: { status: { equals: 'approved' } },
-    limit: 6,
-    sort: '-createdAt',
-    depth: 2,
-  })
-  const dbReviews = reviewsRes.docs
-
   // ─── Fetch posts ─────────────────────────────────────
   const postsRes = await payload.find({
     collection: 'posts',
@@ -340,9 +330,46 @@ export default async function HomePage({ searchParams }: Props) {
   ) as
     | {
         heading?: string | null
+        items?: {
+          id?: string | null
+          name?: string | null
+          role?: string | null
+          quote?: string | null
+          rating?: number | null
+          avatar?: { url?: string | null; sizes?: any } | number | null
+        }[]
         blockType: 'testimonials'
       }
     | undefined
+
+  const testimonialItems = testimonialBlock?.items || []
+
+  const DEFAULT_TESTIMONIALS = [
+    {
+      quote:
+        "The Banarasi I ordered is absolutely stunning. You can feel the weight of real silk. Every time I wear it, I get compliments — and I love telling people it's directly from the weaver.",
+      name: 'Ananya S.',
+      role: 'Mumbai',
+      rating: 5,
+    },
+    {
+      quote:
+        'I was nervous buying a saree online without seeing it first, but the handloom certificate and detailed photos made it easy. The fabric is even more beautiful in person. Will definitely be back.',
+      name: 'Priya M.',
+      role: 'Bangalore',
+      rating: 5,
+    },
+    {
+      quote:
+        'What sets Shayga apart is knowing exactly which cluster my saree came from and who wove it. It transforms a piece of clothing into a story. My Chanderi is easily my most treasured possession now.',
+      name: 'Rohini K.',
+      role: 'Pune',
+      rating: 5,
+    },
+  ]
+
+  const displayTestimonials =
+    testimonialItems.length > 0 ? testimonialItems : DEFAULT_TESTIMONIALS
 
   const TRUST_FEATURES = [
     {
@@ -805,7 +832,7 @@ export default async function HomePage({ searchParams }: Props) {
       </section>
 
       {/* ═══════════════════════════════════════════════════
-          SECTION 9: TESTIMONIALS
+          SECTION 9: TESTIMONIALS (admin-managed or fallback)
           ═══════════════════════════════════════════════════ */}
       <section className="bg-white">
         <div className="container-page py-6 sm:py-8 md:py-10">
@@ -815,44 +842,22 @@ export default async function HomePage({ searchParams }: Props) {
           />
 
           <div className="grid gap-6 md:grid-cols-3">
-            {dbReviews.length > 0 ? (
-              dbReviews
-                .slice(0, 3)
-                .map((review: any) => (
-                  <TestimonialCard
-                    key={review.id}
-                    quote={review.body}
-                    name={
-                      review.customer?.name ||
-                      review.customer?.email?.split('@')[0] ||
-                      'Customer'
-                    }
-                    rating={review.rating}
-                    avatarUrl={review.customer?.image || null}
-                  />
-                ))
-            ) : (
-              <>
-                <TestimonialCard
-                  quote="The Banarasi I ordered is absolutely stunning. You can feel the weight of real silk. Every time I wear it, I get compliments — and I love telling people it's directly from the weaver."
-                  name="Ananya S."
-                  location="Mumbai"
-                  rating={5}
-                />
-                <TestimonialCard
-                  quote="I was nervous buying a saree online without seeing it first, but the handloom certificate and detailed photos made it easy. The fabric is even more beautiful in person. Will definitely be back."
-                  name="Priya M."
-                  location="Bangalore"
-                  rating={5}
-                />
-                <TestimonialCard
-                  quote="What sets Shayga apart is knowing exactly which cluster my saree came from and who wove it. It transforms a piece of clothing into a story. My Chanderi is easily my most treasured possession now."
-                  name="Rohini K."
-                  location="Pune"
-                  rating={5}
-                />
-              </>
-            )}
+            {displayTestimonials.slice(0, 3).map((item: any) => (
+              <TestimonialCard
+                key={item.id || item.name}
+                quote={item.quote || ''}
+                name={item.name || 'Customer'}
+                location={item.role || undefined}
+                rating={item.rating || 5}
+                avatarUrl={
+                  item.avatar && typeof item.avatar === 'object'
+                    ? item.avatar.sizes?.thumbnail?.url ||
+                      item.avatar.url ||
+                      null
+                    : null
+                }
+              />
+            ))}
           </div>
         </div>
       </section>

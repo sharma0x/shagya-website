@@ -1,21 +1,22 @@
-import * as migration_20260630_180128_initial from './20260630_180128_initial';
-import * as migration_20260701_163431_initial_payload from './20260701_163431_initial_payload';
-import * as migration_20260702_120116_add_discount_delivery_time_and_city_of_origin_filters from './20260702_120116_add_discount_delivery_time_and_city_of_origin_filters';
-import * as migration_20260702_202856_add_purchaseCount_backInStockRequests_and_trending from './20260702_202856_add_purchaseCount_backInStockRequests_and_trending';
-import * as migration_20260703_184203_add_order_notes_and_support_guest_checkout from './20260703_184203_add_order_notes_and_support_guest_checkout';
-import * as migration_20260704_064359_add_order_status_timestamps_for_timeline from './20260704_064359_add_order_status_timestamps_for_timeline';
-import * as migration_20260705_155739 from './20260705_155739';
-import * as migration_20260707_174712_add_instagram_posts_collection from './20260707_174712_add_instagram_posts_collection';
-import * as migration_20260714_084351 from './20260714_084351';
-import * as migration_20260719_123300_add_coupons_fields_and_rels from './20260719_123300_add_coupons_fields_and_rels';
-import * as migration_20260726_162500_add_hero_images_array from './20260726_162500_add_hero_images_array';
-import * as migration_20260726_165100_announcement_bar_array from './20260726_165100_announcement_bar_array';
-import * as migration_20260807_150206 from './20260807_150206';
-import * as migration_20260807_204000_color_variants from './20260807_204000_color_variants';
-import * as migration_20260807_204835 from './20260807_204835';
-import * as migration_20260807_221534_trust_signals from './20260807_221534_trust_signals';
-import * as migration_20260808_000000_coupon_enhancements from './20260808_000000_coupon_enhancements';
-import * as migration_20260808_104707 from './20260808_104707';
+import * as migration_20260630_180128_initial from './20260630_180128_initial'
+import * as migration_20260701_163431_initial_payload from './20260701_163431_initial_payload'
+import * as migration_20260702_120116_add_discount_delivery_time_and_city_of_origin_filters from './20260702_120116_add_discount_delivery_time_and_city_of_origin_filters'
+import * as migration_20260702_202856_add_purchaseCount_backInStockRequests_and_trending from './20260702_202856_add_purchaseCount_backInStockRequests_and_trending'
+import * as migration_20260703_184203_add_order_notes_and_support_guest_checkout from './20260703_184203_add_order_notes_and_support_guest_checkout'
+import * as migration_20260704_064359_add_order_status_timestamps_for_timeline from './20260704_064359_add_order_status_timestamps_for_timeline'
+import * as migration_20260705_155739 from './20260705_155739'
+import * as migration_20260707_174712_add_instagram_posts_collection from './20260707_174712_add_instagram_posts_collection'
+import * as migration_20260714_084351 from './20260714_084351'
+import * as migration_20260719_123300_add_coupons_fields_and_rels from './20260719_123300_add_coupons_fields_and_rels'
+import * as migration_20260726_162500_add_hero_images_array from './20260726_162500_add_hero_images_array'
+import * as migration_20260726_165100_announcement_bar_array from './20260726_165100_announcement_bar_array'
+import * as migration_20260807_150206 from './20260807_150206'
+import * as migration_20260807_204000_color_variants from './20260807_204000_color_variants'
+import * as migration_20260807_204835 from './20260807_204835'
+import * as migration_20260807_221534_trust_signals from './20260807_221534_trust_signals'
+import * as migration_20260808_000000_coupon_enhancements from './20260808_000000_coupon_enhancements'
+import * as migration_20260808_104707 from './20260808_104707'
+import * as migration_20260808_164034_add_testimonial_rating from './20260808_164034_add_testimonial_rating'
 
 export const migrations = [
   {
@@ -106,6 +107,11 @@ export const migrations = [
   {
     up: migration_20260808_104707.up,
     down: migration_20260808_104707.down,
-    name: '20260808_104707'
+    name: '20260808_104707',
   },
-];
+  {
+    up: migration_20260808_164034_add_testimonial_rating.up,
+    down: migration_20260808_164034_add_testimonial_rating.down,
+    name: '20260808_164034_add_testimonial_rating',
+  },
+]

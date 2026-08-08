@@ -1574,6 +1574,7 @@ export const pages_blocks_testimonials_items = pgTable(
     name: varchar('name'),
     role: varchar('role'),
     quote: varchar('quote'),
+    rating: numeric('rating', { mode: 'number' }).default(5),
     avatar: integer('avatar_id').references(() => media.id, {
       onDelete: 'set null',
     }),
@@ -1957,6 +1958,7 @@ export const _pages_v_blocks_testimonials_items = pgTable(
     name: varchar('name'),
     role: varchar('role'),
     quote: varchar('quote'),
+    rating: numeric('rating', { mode: 'number' }).default(5),
     avatar: integer('avatar_id').references(() => media.id, {
       onDelete: 'set null',
     }),

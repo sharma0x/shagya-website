@@ -196,6 +196,13 @@ export const Pages: CollectionConfig = {
                   type: 'textarea',
                 },
                 {
+                  name: 'rating',
+                  type: 'number',
+                  min: 1,
+                  max: 5,
+                  defaultValue: 5,
+                },
+                {
                   name: 'avatar',
                   type: 'upload',
                   relationTo: 'media',

@@ -306,7 +306,17 @@ describe('Pages collection', () => {
     it('has items array field', () => {
       const f = block?.fields?.find((x: any) => x.name === 'items')
       expect(f?.type).toBe('array')
-      expect(f?.fields).toHaveLength(4)
+      expect(f?.fields).toHaveLength(5)
+    })
+
+    it('items have a rating number field (1-5)', () => {
+      const itemsField = block?.fields?.find(
+        (x: any) => x.name === 'items',
+      ) as any
+      const rating = itemsField?.fields?.find((x: any) => x.name === 'rating')
+      expect(rating?.type).toBe('number')
+      expect(rating?.min).toBe(1)
+      expect(rating?.max).toBe(5)
     })
 
     it('items array has avatar upload field pointing to media', () => {

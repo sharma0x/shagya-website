@@ -817,6 +817,7 @@ export interface Page {
                   name?: string | null;
                   role?: string | null;
                   quote?: string | null;
+                  rating?: number | null;
                   avatar?: (number | null) | Media;
                   id?: string | null;
                 }[]
@@ -1796,6 +1797,7 @@ export interface PagesSelect<T extends boolean = true> {
                     name?: T;
                     role?: T;
                     quote?: T;
+                    rating?: T;
                     avatar?: T;
                     id?: T;
                   };
