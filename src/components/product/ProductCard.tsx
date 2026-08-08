@@ -7,12 +7,14 @@ import { WishlistButton } from '@/components/product/WishlistButton'
 import { ProductBadge } from '@/components/ui/ProductBadge'
 import { cn } from '@/lib/utils'
 import { getProductUrl } from '@/lib/product-url'
+import { liftVariantGallery } from '@/lib/product-utils'
 
 const ph = (w: number, h: number, _bg: string, _fg: string, text: string) =>
   `https://images.placeholders.dev/?width=${w}&height=${h}&text=${encodeURIComponent(text.substring(0, 20))}&bgColor=%2369254e&textColor=%23f5e8ee&fontFamily=lora&fontWeight=600`
 
 function getGalleryUrls(product: any): string[] {
-  const gallery = product.gallery
+  const adapted = liftVariantGallery(product)
+  const gallery = adapted.gallery
   if (!gallery || !Array.isArray(gallery) || gallery.length === 0) {
     return [ph(600, 800, '69254e', 'f5e8ee', product.name || 'Saree')]
   }
