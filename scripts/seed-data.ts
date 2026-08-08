@@ -1856,7 +1856,7 @@ export const pages: SeedPage[] = [
           {
             question: 'How do I track my order?',
             answer:
-              'Once your order is dispatched, you will receive an SMS and email with the tracking number and courier partner details. We use BlueDart and Delhivery for domestic orders, and DHL or FedEx for international orders. If you have not received tracking details within 2 business days of ordering, write to care@shayga.com.',
+              'Once your order is dispatched, you will receive an email with the tracking number and courier partner details. We use BlueDart and Delhivery for domestic orders, and DHL or FedEx for international orders. If you have not received tracking details within 2 business days of ordering, write to care@shayga.com.',
           },
           {
             question: 'What if my delivery is delayed?',
@@ -1941,7 +1941,7 @@ export const pages: SeedPage[] = [
       {
         blockType: 'textImage',
         heading: 'Free shipping above ₹5,000',
-        body: 'We offer free standard shipping on all orders above Rs 5,000 within India. For orders below Rs 5,000, a flat shipping fee of Rs 150 applies.\n\nOrders placed before 1:00 PM IST (Monday to Saturday) are dispatched the same day. Orders placed after 1:00 PM, or on Sundays and public holidays, are dispatched the next working day. You will receive an SMS and email with your tracking details once the order is on its way.',
+        body: 'We offer free standard shipping on all orders above Rs 5,000 within India. For orders below Rs 5,000, a flat shipping fee of Rs 150 applies.\n\nOrders placed before 1:00 PM IST (Monday to Saturday) are dispatched the same day. Orders placed after 1:00 PM, or on Sundays and public holidays, are dispatched the next working day. You will receive an email with your tracking details once the order is on its way.',
         imagePosition: 'left',
       } as SeedTextImageBlock,
       {
@@ -1973,7 +1973,7 @@ export const pages: SeedPage[] = [
       {
         blockType: 'textImage',
         heading: 'Tracking your order',
-        body: "As soon as your saree is dispatched, we will send you an SMS and email containing your tracking number, the courier partner's name, a direct link to track your package, and an estimated delivery date.\n\nFor domestic orders we use BlueDart and Delhivery — both have real-time tracking apps. For international orders we ship via DHL or FedEx.\n\nIf you have not received tracking details within 2 business days of placing your order, please contact us at care@shayga.com with your order number.",
+        body: "As soon as your saree is dispatched, we will send you an email containing your tracking number, the courier partner's name, a direct link to track your package, and an estimated delivery date.\n\nFor domestic orders we use BlueDart and Delhivery — both have real-time tracking apps. For international orders we ship via DHL or FedEx.\n\nIf you have not received tracking details within 2 business days of placing your order, please contact us at care@shayga.com with your order number.",
         imagePosition: 'right',
       } as SeedTextImageBlock,
       {
@@ -2006,7 +2006,7 @@ export const pages: SeedPage[] = [
       {
         blockType: 'textImage',
         heading: 'How to initiate a return',
-        body: 'Step 1: Email care@shayga.com with your order number, the reason for return, and photographs if the issue is damage or a wrong item.\n\nStep 2: Our team will review your request and confirm eligibility within 24 hours.\n\nStep 3: We will schedule a free pickup from your address (metro and most tier-2 cities). You will receive an SMS with the pickup date.\n\nStep 4: Once the saree reaches our warehouse and passes quality inspection (3–5 business days), your refund will be initiated to the original payment method.\n\nFor faster resolution, WhatsApp us at +91 98765 43210 with your order number and photographs.',
+        body: 'Step 1: Email care@shayga.com with your order number, the reason for return, and photographs if the issue is damage or a wrong item.\n\nStep 2: Our team will review your request and confirm eligibility within 24 hours.\n\nStep 3: We will schedule a free pickup from your address (metro and most tier-2 cities). You will receive an email confirming the pickup date.\n\nStep 4: Once the saree reaches our warehouse and passes quality inspection (3–5 business days), your refund will be initiated to the original payment method.\n\nFor faster resolution, WhatsApp us at +91 98765 43210 with your order number and photographs.',
         imagePosition: 'right',
       } as SeedTextImageBlock,
       {

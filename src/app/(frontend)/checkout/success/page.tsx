@@ -52,8 +52,8 @@ function CheckoutSuccessContent() {
         </div>
 
         <p className="font-body mb-4 text-xs leading-relaxed text-neutral-400">
-          A confirmation email and SMS containing shipping details and tracking
-          link has been sent to your registered address.
+          A confirmation email containing your shipping details and tracking
+          link has been sent to your registered email address.
         </p>
 
         <div className="border-brand-100 bg-brand-50/50 mb-6 rounded-xl border p-4">
@@ -61,14 +61,14 @@ function CheckoutSuccessContent() {
             Track your order anytime
           </p>
           <p className="font-body mt-1 text-[11px] text-neutral-500">
-            Log in with your phone number + OTP to view order status, timeline,
-            and delivery updates.
+            Log in with your email + OTP to view order status, timeline, and
+            delivery updates.
           </p>
           <Link
             href="/account/login"
             className="text-brand-700 hover:text-brand-800 font-display mt-2 inline-flex items-center gap-1 text-xs font-semibold"
           >
-            Login with phone
+            Login with email
             <ArrowRight className="h-3 w-3" />
           </Link>
         </div>
