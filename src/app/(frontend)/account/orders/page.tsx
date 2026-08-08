@@ -248,7 +248,8 @@ export default function OrdersPage() {
                             const adaptedProduct = item.product
                               ? liftVariantGallery(item.product)
                               : null
-                            const firstImage = adaptedProduct?.gallery?.[0]?.image
+                            const firstImage =
+                              adaptedProduct?.gallery?.[0]?.image
                             const imageUrl =
                               typeof firstImage === 'object' &&
                               firstImage !== null
