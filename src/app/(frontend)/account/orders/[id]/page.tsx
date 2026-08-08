@@ -5,6 +5,7 @@ import configPromise from '@payload-config'
 import { ArrowLeft, Calendar, CreditCard, Truck, Package } from 'lucide-react'
 import { OrderTimeline } from '@/components/order/OrderTimeline'
 import { getProductUrl } from '@/lib/product-url'
+import { liftVariantGallery } from '@/lib/product-utils'
 
 // Page props in Next.js 15+ App Router are promises
 export default async function OrderDetailsPage({
@@ -97,7 +98,10 @@ export default async function OrderDetailsPage({
               </h4>
               <div className="space-y-4">
                 {items?.map((item, idx) => {
-                  const firstImage = item.product?.gallery?.[0]?.image
+                  const adaptedProduct = item.product
+                    ? liftVariantGallery(item.product)
+                    : null
+                  const firstImage = adaptedProduct?.gallery?.[0]?.image
                   const imageUrl =
                     typeof firstImage === 'object' && firstImage !== null
                       ? firstImage.url || firstImage.sizes?.thumbnail?.url

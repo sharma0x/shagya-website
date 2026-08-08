@@ -5,6 +5,7 @@ import { X, Plus, Minus, Trash2, ShoppingBag } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
+import { liftVariantGallery } from '@/lib/product-utils'
 
 interface CartDrawerProps {
   isOpen: boolean
@@ -77,11 +78,12 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
           ) : (
             <div className="space-y-6">
               {items.map((item, index) => {
+                const adapted = liftVariantGallery(item.product)
                 const imageUrl =
-                  item.product.gallery?.[0]?.image &&
-                  typeof item.product.gallery[0].image === 'object'
-                    ? item.product.gallery[0].image.sizes?.thumbnail?.url ||
-                      item.product.gallery[0].image.url
+                  adapted.gallery?.[0]?.image &&
+                  typeof adapted.gallery[0].image === 'object'
+                    ? adapted.gallery[0].image.sizes?.thumbnail?.url ||
+                      adapted.gallery[0].image.url
                     : '/images/placeholder.jpg'
 
                 return (
