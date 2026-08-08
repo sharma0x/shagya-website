@@ -692,7 +692,7 @@ export default function CheckoutPage() {
                     <MapPin className="text-brand-600 h-5 w-5" />
                     Delivery Address
                   </h3>
-                  {!showNewAddressForm && (
+                  {!showNewAddressForm && dataReady && (
                     <button
                       onClick={() => setShowNewAddressForm(true)}
                       className="text-brand-700 hover:text-brand-800 font-display text-xs font-semibold underline"
@@ -710,7 +710,7 @@ export default function CheckoutPage() {
                     onCancel={() => setShowNewAddressForm(false)}
                     error={error}
                   />
-                ) : showSkeleton ? (
+                ) : !dataReady ? (
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     {[0, 1].map((i) => (
                       <div
