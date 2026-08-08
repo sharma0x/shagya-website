@@ -74,13 +74,18 @@ export default function WishlistPage() {
     }
   }
 
-  const handleMoveToCart = async (product: WishlistItem['product']) => {
+  const handleMoveToCart = async (item: WishlistItem) => {
+    const product = item.product
     if (product.trackQuantity && (product.quantity ?? 0) <= 0) {
       return
     }
     setActionLoading(String(product.id))
     try {
       const adapted = liftVariantGallery(product)
+      const variantColor =
+        item.variant && typeof item.variant === 'object' && 'color' in item.variant
+          ? (item.variant as any).color
+          : undefined
       addItem(
         {
           id: Number(product.id),
@@ -93,6 +98,7 @@ export default function WishlistPage() {
           weave: product.weave || '',
         },
         1,
+        variantColor ? { color: variantColor } : undefined,
       )
 
       await fetch('/api/wishlist', {
@@ -184,7 +190,7 @@ export default function WishlistPage() {
                     ) : (
                       <button
                         disabled={isThisLoading}
-                        onClick={() => handleMoveToCart(product)}
+                        onClick={() => handleMoveToCart(item)}
                         className="bg-brand-600 hover:bg-brand-700 font-display flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg text-[11px] font-semibold text-white transition-all active:scale-95 disabled:opacity-50"
                       >
                         {isThisLoading ? (
