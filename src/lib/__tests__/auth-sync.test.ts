@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest'
 
 // Mock the Payload module — only mock `getPayload`, keep everything else
 const mockFind = vi.fn()
@@ -26,10 +26,13 @@ let syncCustomer: (user: {
   phoneNumber?: string
 }) => Promise<void>
 
-beforeEach(async () => {
-  vi.clearAllMocks()
+beforeAll(async () => {
   const mod = await import('../auth-sync')
   syncCustomer = mod.syncCustomer
+}, 30000)
+
+beforeEach(() => {
+  vi.clearAllMocks()
 })
 
 describe('syncCustomer', () => {
