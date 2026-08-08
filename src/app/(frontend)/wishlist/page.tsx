@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { useSession } from '@/lib/auth-client'
 import { useCart } from '@/lib/store/cart'
 import { liftVariantGallery } from '@/lib/product-utils'
-import { ArrowLeft, ShoppingBag, Heart, Loader2 } from 'lucide-react'
+import { ArrowLeft, ShoppingBag, Heart, Loader2, Trash2 } from 'lucide-react'
 import {
   ProductCard,
   type ProductCardProduct,
@@ -59,13 +59,15 @@ export default function WishlistPage() {
     setActionLoading(String(productId))
     try {
       const res = await fetch('/api/wishlist', {
-        method: 'POST',
+        method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ productId: String(productId) }),
       })
 
       if (res.ok) {
-        setItems(items.filter((item) => item.product.id !== productId))
+        setItems((prev) =>
+          prev.filter((item) => Number(item.product.id) !== Number(productId)),
+        )
       }
     } catch (err) {
       console.error('Failed to remove from wishlist', err)
@@ -104,12 +106,14 @@ export default function WishlistPage() {
       )
 
       await fetch('/api/wishlist', {
-        method: 'POST',
+        method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ productId: String(product.id) }),
       })
 
-      setItems(items.filter((item) => item.product.id !== product.id))
+      setItems((prev) =>
+        prev.filter((i) => Number(i.product.id) !== Number(product.id)),
+      )
     } catch (err) {
       console.error(err)
     } finally {
@@ -204,12 +208,18 @@ export default function WishlistPage() {
                       </button>
                     )}
                     <button
-                      disabled={!!actionLoading}
-                      onClick={() => handleRemove(product.id as number)}
-                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-neutral-200 bg-white text-neutral-400 transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-500"
+                      disabled={isThisLoading}
+                      onClick={() => handleRemove(Number(product.id))}
+                      className="flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-500 transition-all hover:border-red-200 hover:bg-red-50 hover:text-red-600 active:scale-95 disabled:opacity-50"
                       title="Remove from Wishlist"
+                      aria-label="Remove from Wishlist"
                     >
-                      <Heart className="h-3.5 w-3.5 fill-current" />
+                      {isThisLoading ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Trash2 className="h-3.5 w-3.5" />
+                      )}
+                      <span className="hidden sm:inline">Remove</span>
                     </button>
                   </div>
                 </div>
