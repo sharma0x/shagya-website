@@ -17,7 +17,7 @@ export function liftVariantGallery(product: any) {
   )
   return {
     ...product,
-    gallery: firstVariant?.gallery || [],
+    gallery: firstVariant?.gallery || product.gallery || [],
     color: firstVariant?.color
       ? {
           slug: firstVariant.color.slug,
@@ -26,5 +26,6 @@ export function liftVariantGallery(product: any) {
         }
       : null,
     basePrice: firstVariant?.priceOverride ?? product.basePrice,
+    colorVariants: product.colorVariants || [],
   }
 }

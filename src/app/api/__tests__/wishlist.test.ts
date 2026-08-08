@@ -185,4 +185,53 @@ describe('DELETE /api/wishlist', () => {
     expect(body.productId).toBe(42)
     expect(body.message).toBeDefined()
   })
+
+  it('correctly cleans populated product objects when removing an item', async () => {
+    mockGetSession.mockResolvedValueOnce({
+      user: { id: 'user-1', email: 'test@example.com' },
+      session: { id: 'session-1' },
+    })
+
+    mockFind.mockResolvedValueOnce({
+      docs: [{ id: 'customer-1', email: 'test@example.com' }],
+    })
+    mockFind.mockResolvedValueOnce({
+      docs: [
+        {
+          id: 'wishlist-1',
+          customer: 'customer-1',
+          items: [
+            { id: 'item-1', product: { id: 42, name: 'Saree' } },
+            { id: 'item-2', product: { id: 99, name: 'Dupatta' } },
+          ],
+        },
+      ],
+    })
+    mockUpdate.mockResolvedValueOnce({
+      id: 'wishlist-1',
+      customer: 'customer-1',
+      items: [{ product: 99 }],
+    })
+
+    const request = new Request('http://localhost/api/wishlist', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ productId: '42' }),
+    })
+
+    const response = await DELETE_wishlist(request)
+    const body = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(mockUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        collection: 'wishlist',
+        id: 'wishlist-1',
+        data: {
+          items: [{ product: 99 }],
+        },
+      }),
+    )
+    expect(body.message).toBe('Product removed from wishlist')
+  })
 })

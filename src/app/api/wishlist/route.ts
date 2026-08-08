@@ -61,6 +61,26 @@ export async function GET(request: Request) {
   }
 }
 
+function cleanWishlistItems(items: any[]) {
+  return items.map((item: any) => {
+    const pId =
+      typeof item.product === 'object' && item.product !== null
+        ? item.product.id
+        : item.product
+    const vId =
+      item.variant && typeof item.variant === 'object'
+        ? item.variant.id
+        : item.variant
+    const cleanedItem: { product: number; variant?: number } = {
+      product: Number(pId),
+    }
+    if (vId !== undefined && vId !== null) {
+      cleanedItem.variant = Number(vId)
+    }
+    return cleanedItem
+  })
+}
+
 /**
  * POST /api/wishlist
  * Toggles a product in the customer's wishlist (adds if absent, removes if present).
@@ -138,12 +158,14 @@ export async function POST(request: Request) {
       message = 'Product added to wishlist'
     }
 
+    const cleanedItems = cleanWishlistItems(items)
+
     if (wishlistDoc) {
       wishlistDoc = await payload.update({
         collection: 'wishlist',
         id: wishlistDoc.id,
         data: {
-          items,
+          items: cleanedItems,
         },
         overrideAccess: true,
       })
@@ -152,7 +174,7 @@ export async function POST(request: Request) {
         collection: 'wishlist',
         data: {
           customer: customer.id,
-          items,
+          items: cleanedItems,
         },
         overrideAccess: true,
       })
@@ -220,7 +242,7 @@ export async function DELETE(request: Request) {
       overrideAccess: true,
     })
 
-    const wishlistDoc = wishlists.docs[0]
+    let wishlistDoc = wishlists.docs[0]
     if (!wishlistDoc) {
       return NextResponse.json({
         success: true,
@@ -246,11 +268,12 @@ export async function DELETE(request: Request) {
     })
 
     if (items.length !== originalLength) {
-      await payload.update({
+      const cleanedItems = cleanWishlistItems(items)
+      wishlistDoc = await payload.update({
         collection: 'wishlist',
         id: wishlistDoc.id,
         data: {
-          items,
+          items: cleanedItems,
         },
         overrideAccess: true,
       })
@@ -260,6 +283,7 @@ export async function DELETE(request: Request) {
       success: true,
       productId,
       message: 'Product removed from wishlist',
+      wishlist: wishlistDoc,
     })
   } catch (error: any) {
     console.error('[API] DELETE /api/wishlist error:', error)

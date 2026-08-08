@@ -48,56 +48,7 @@ const WEAVES = [
   'baluchari',
 ]
 
-interface ExplodedProduct {
-  key: string
-  id: string | number
-  name: string
-  slug: string
-  basePrice: number
-  compareAtPrice?: number
-  weave?: string
-  fabric?: string
-  gallery: any[]
-  quantity?: number
-  trackQuantity?: boolean
-  lowStockThreshold?: number
-  effectivePrice: number
-  color: { slug: string; name: string; hex: string }
-  _product: any
-}
-
-function explodeProducts(products: any[]): ExplodedProduct[] {
-  const exploded: ExplodedProduct[] = []
-  for (const p of products) {
-    const variants = p.colorVariants || []
-    if (variants.length === 0) continue
-    for (const v of variants) {
-      if (v.enabled === false || !v.color) continue
-      exploded.push({
-        key: `${p.id}::${v.color.slug}`,
-        id: p.id,
-        name: p.name,
-        slug: p.slug,
-        basePrice: p.basePrice,
-        compareAtPrice: p.compareAtPrice,
-        weave: p.weave,
-        fabric: p.fabric,
-        gallery: v.gallery || [],
-        quantity: v.stock ?? 0,
-        trackQuantity: true,
-        lowStockThreshold: p.lowStockThreshold ?? 5,
-        effectivePrice: v.priceOverride ?? p.basePrice,
-        color: {
-          slug: v.color.slug,
-          name: v.color.name,
-          hex: v.color.hex,
-        },
-        _product: p,
-      })
-    }
-  }
-  return exploded
-}
+// Products are rendered as 1 card per product with hover image flips across all color variants
 
 function buildWhere(sParams: FilterParams, slug: string) {
   const where: Record<string, any> = {
@@ -242,13 +193,18 @@ async function CategoryProductsStream({
   const products = result.docs
   const totalPages = result.totalPages
 
-  let explodedProducts = explodeProducts(products)
   const colorParam = getCommaParam(sParams, 'color')
-  if (colorParam.length > 0) {
-    explodedProducts = explodedProducts.filter((ep) =>
-      colorParam.includes(ep.color.slug),
-    )
-  }
+  const filteredProducts =
+    colorParam.length > 0
+      ? products.filter((p: any) =>
+          (p.colorVariants || []).some(
+            (v: any) =>
+              v.enabled !== false &&
+              v.color &&
+              colorParam.includes(v.color.slug),
+          ),
+        )
+      : products
 
   return (
     <div className="flex-1">
@@ -256,8 +212,8 @@ async function CategoryProductsStream({
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-4 text-sm text-neutral-500">
             <span>
-              {explodedProducts.length > 0
-                ? `Showing ${explodedProducts.length} products`
+              {filteredProducts.length > 0
+                ? `Showing ${filteredProducts.length} products`
                 : '0 products found'}
             </span>
           </div>
@@ -317,7 +273,7 @@ async function CategoryProductsStream({
         </div>
       </div>
 
-      {explodedProducts.length === 0 ? (
+      {filteredProducts.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <h3 className="font-display text-lg font-semibold text-neutral-800">
             No products found
@@ -335,18 +291,8 @@ async function CategoryProductsStream({
         </div>
       ) : (
         <div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-5 sm:gap-x-4 sm:gap-y-8 lg:grid-cols-3 xl:grid-cols-4">
-          {explodedProducts.map((ep) => (
-            <ProductCard
-              key={ep.key}
-              product={{
-                ...ep._product,
-                gallery: ep.gallery,
-                basePrice: ep.effectivePrice,
-                color: ep.color,
-              }}
-              variant="grid"
-              showWishlist
-            />
+          {filteredProducts.map((p: any) => (
+            <ProductCard key={p.id} product={p} variant="grid" showWishlist />
           ))}
         </div>
       )}
