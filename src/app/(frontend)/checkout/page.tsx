@@ -12,6 +12,7 @@ import {
 } from '@/components/address/AddressForm'
 import { GuestCheckout } from '@/components/checkout/GuestCheckout'
 import { OffersSection } from '@/components/coupons/OffersSection'
+import { liftVariantGallery } from '@/lib/product-utils'
 import {
   ArrowLeft,
   Check,
@@ -92,7 +93,7 @@ export default function CheckoutPage() {
         weave: i.product.weave,
         fabric: i.product.fabric,
         basePrice: i.unitPrice,
-        gallery: i.product.gallery,
+        gallery: liftVariantGallery(i.product).gallery,
       },
       variant: i.variant,
       quantity: i.quantity,
@@ -106,7 +107,7 @@ export default function CheckoutPage() {
   const [cart, setCart] = useState<Cart | null>(null)
   const [addresses, setAddresses] = useState<Address[]>([])
   const [selectedAddressId, setSelectedAddressId] = useState<string>('')
-  const [loading, setLoading] = useState(true)
+  const [dataReady, setDataReady] = useState(false)
   const [actionLoading, setActionLoading] = useState(false)
   const [error, setError] = useState('')
   const [orderNotes, setOrderNotes] = useState('')
@@ -163,32 +164,39 @@ export default function CheckoutPage() {
       .catch(() => {})
   }, [])
 
-  // Load cart and addresses — run only once on mount
+  // Load cart, addresses, and coupons — shows skeleton while session hydrates
   const didLoad = useRef(false)
 
   useEffect(() => {
     if (didLoad.current) return
+
+    if (!isLoggedIn && !isPending) {
+      didLoad.current = true
+
+      // Guest checkout: render instantly with the new-address form open.
+      async function applyGuestDefaults() {
+        setDataReady(true)
+        setShowNewAddressForm(true)
+      }
+      void applyGuestDefaults()
+      return
+    }
+
     if (isPending) return
 
     didLoad.current = true
 
-    if (!isLoggedIn) {
-      setLoading(false)
-      setShowNewAddressForm(true)
-      return
-    }
-
     async function loadData() {
       try {
-        const [cartRes, addrRes] = await Promise.all([
+        const [cartRes, addrRes, couponRes] = await Promise.all([
           fetch('/api/cart'),
           fetch('/api/addresses'),
+          fetch('/api/coupons/available'),
         ])
 
         if (cartRes.ok) {
           let cartData = await cartRes.json()
 
-          // If DB cart is empty but local cart has items (e.g. they added items while logged out or sync failed earlier)
           const localItems = zCart.items
           if (
             (!cartData.items || cartData.items.length === 0) &&
@@ -218,7 +226,6 @@ export default function CheckoutPage() {
           const addrData = await addrRes.json()
           setAddresses(addrData.addresses || [])
 
-          // Select default address or first address
           const defaultAddr = addrData.addresses?.find(
             (a: Address) => a.isDefault,
           )
@@ -228,26 +235,27 @@ export default function CheckoutPage() {
             setSelectedAddressId(addrData.addresses[0].id)
           }
         }
+
+        if (couponRes.ok) {
+          const couponData = await couponRes.json()
+          setActiveCoupons(couponData.coupons || [])
+        }
       } catch (err) {
         console.error('Failed to load checkout data', err)
       } finally {
-        setLoading(false)
+        setDataReady(true)
       }
     }
 
     loadData()
-  }, [sessionData, isPending]) // didLoad ref prevents re-runs after first mount
-
-  // Fetch pre-populated coupons
-  useEffect(() => {
-    if (!isLoggedIn) return
-    fetch('/api/coupons/available')
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => {
-        if (d) setActiveCoupons(d.coupons || [])
-      })
-      .catch(() => {})
-  }, [isLoggedIn])
+  }, [
+    sessionData,
+    isPending,
+    isLoggedIn,
+    router,
+    zCart.items,
+    zCart.coupon?.id,
+  ])
 
   const handleApplyCouponWithCode = async (code: string): Promise<boolean> => {
     setCouponError('')
@@ -603,17 +611,8 @@ export default function CheckoutPage() {
     }
   }
 
-  // Only show loading on first render — never on session re-checks (window focus)
-  if (loading && !didLoad.current) {
-    return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
-        <Loader2 className="text-brand-600 h-8 w-8 animate-spin" />
-        <p className="font-body text-sm text-neutral-500">
-          Preparing checkout window...
-        </p>
-      </div>
-    )
-  }
+  // Show skeleton pulse while data loads (logged-in users only — guests render instantly)
+  const showSkeleton = !dataReady && isLoggedIn
 
   const selectedAddress = addresses.find((a) => a.id === selectedAddressId)
 
@@ -703,7 +702,7 @@ export default function CheckoutPage() {
                     <MapPin className="text-brand-600 h-5 w-5" />
                     Delivery Address
                   </h3>
-                  {!showNewAddressForm && (
+                  {!showNewAddressForm && dataReady && (
                     <button
                       onClick={() => setShowNewAddressForm(true)}
                       className="text-brand-700 hover:text-brand-800 font-display text-xs font-semibold underline"
@@ -721,6 +720,19 @@ export default function CheckoutPage() {
                     onCancel={() => setShowNewAddressForm(false)}
                     error={error}
                   />
+                ) : !dataReady ? (
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    {[0, 1].map((i) => (
+                      <div
+                        key={i}
+                        className="animate-pulse rounded-xl border border-neutral-100 bg-neutral-50 p-4"
+                      >
+                        <div className="mb-2 h-4 w-24 rounded bg-neutral-200" />
+                        <div className="mb-2 h-3 w-32 rounded bg-neutral-100" />
+                        <div className="h-3 w-48 rounded bg-neutral-100" />
+                      </div>
+                    ))}
+                  </div>
                 ) : (
                   <div className="space-y-4">
                     {addresses.length === 0 ? (
@@ -988,6 +1000,7 @@ export default function CheckoutPage() {
                   <button
                     disabled={actionLoading}
                     onClick={handlePlaceOrder}
+                    suppressHydrationWarning
                     className="font-display bg-brand-600 hover:bg-brand-700 inline-flex h-11 items-center gap-1.5 rounded-xl px-6 text-xs font-semibold text-white transition-all active:scale-95 disabled:opacity-50"
                   >
                     {actionLoading && (
@@ -1012,71 +1025,86 @@ export default function CheckoutPage() {
 
               {/* Items List */}
               <div className="mb-6 max-h-[320px] space-y-4 overflow-y-auto pr-2">
-                {effectiveCart?.items.map((item) => {
-                  const firstImage = item.product.gallery?.[0]?.image
-                  const imageUrl =
-                    typeof firstImage === 'object' && firstImage !== null
-                      ? firstImage.url || firstImage.sizes?.thumbnail?.url
-                      : typeof firstImage === 'string'
-                        ? firstImage
-                        : undefined
-
-                  return (
-                    <div key={item.id} className="flex gap-4">
-                      <div className="relative h-20 w-16 shrink-0">
-                        <div className="h-full w-full overflow-hidden rounded-lg border border-neutral-100 bg-neutral-100">
-                          {imageUrl ? (
-                            <img
-                              src={imageUrl}
-                              alt={item.product.name}
-                              loading="lazy"
-                              className="h-full w-full object-cover"
-                            />
-                          ) : (
-                            <div className="font-display flex h-full w-full items-center justify-center p-1 text-center text-[10px] font-semibold text-neutral-400 uppercase">
-                              No Image
-                            </div>
-                          )}
+                {showSkeleton
+                  ? [0, 1].map((i) => (
+                      <div key={i} className="flex animate-pulse gap-4">
+                        <div className="h-20 w-16 shrink-0 rounded-lg bg-neutral-100" />
+                        <div className="flex min-w-0 flex-1 flex-col justify-center gap-2 py-1">
+                          <div className="h-4 w-28 rounded bg-neutral-200" />
+                          <div className="h-3 w-20 rounded bg-neutral-100" />
+                          <div className="flex justify-between">
+                            <div className="h-3 w-16 rounded bg-neutral-100" />
+                            <div className="h-3 w-8 rounded bg-neutral-100" />
+                          </div>
                         </div>
-                        <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-neutral-900 text-[10px] font-bold text-white shadow-xs">
-                          {item.quantity}
-                        </span>
                       </div>
+                    ))
+                  : effectiveCart?.items.map((item) => {
+                      const adapted = liftVariantGallery(item.product)
+                      const firstImage = adapted.gallery?.[0]?.image
+                      const imageUrl =
+                        typeof firstImage === 'object' && firstImage !== null
+                          ? firstImage.url || firstImage.sizes?.thumbnail?.url
+                          : typeof firstImage === 'string'
+                            ? firstImage
+                            : undefined
 
-                      <div className="flex min-w-0 flex-1 flex-col justify-center py-1">
-                        <h4 className="font-display truncate text-sm font-semibold text-neutral-900">
-                          {item.product.name}
-                        </h4>
+                      return (
+                        <div key={item.id} className="flex gap-4">
+                          <div className="relative h-20 w-16 shrink-0">
+                            <div className="h-full w-full overflow-hidden rounded-lg border border-neutral-100 bg-neutral-100">
+                              {imageUrl ? (
+                                <img
+                                  src={imageUrl}
+                                  alt={item.product.name}
+                                  loading="lazy"
+                                  className="h-full w-full object-cover"
+                                />
+                              ) : (
+                                <div className="font-display flex h-full w-full items-center justify-center p-1 text-center text-[10px] font-semibold text-neutral-400 uppercase">
+                                  No Image
+                                </div>
+                              )}
+                            </div>
+                            <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-neutral-900 text-[10px] font-bold text-white shadow-xs">
+                              {item.quantity}
+                            </span>
+                          </div>
 
-                        {[
-                          item.product.weave,
-                          item.product.fabric,
-                          item.variant?.color?.name,
-                        ].filter(Boolean).length > 0 && (
-                          <p className="font-body mt-0.5 text-xs text-neutral-500">
+                          <div className="flex min-w-0 flex-1 flex-col justify-center py-1">
+                            <h4 className="font-display truncate text-sm font-semibold text-neutral-900">
+                              {item.product.name}
+                            </h4>
+
                             {[
                               item.product.weave,
                               item.product.fabric,
                               item.variant?.color?.name,
-                            ]
-                              .filter(Boolean)
-                              .map((s) => (s ?? '').toLowerCase())
-                              .join(' · ')}
-                          </p>
-                        )}
+                            ].filter(Boolean).length > 0 && (
+                              <p className="font-body mt-0.5 text-xs text-neutral-500">
+                                {[
+                                  item.product.weave,
+                                  item.product.fabric,
+                                  item.variant?.color?.name,
+                                ]
+                                  .filter(Boolean)
+                                  .map((s) => (s ?? '').toLowerCase())
+                                  .join(' · ')}
+                              </p>
+                            )}
 
-                        <div className="mt-1.5 flex items-center justify-between">
-                          <p className="font-body text-xs font-semibold text-neutral-900">
-                            ₹{item.unitPrice.toLocaleString('en-IN')}
-                          </p>
-                          <p className="font-body text-[10px] font-medium tracking-wider text-neutral-400 uppercase">
-                            Qty: {item.quantity}
-                          </p>
+                            <div className="mt-1.5 flex items-center justify-between">
+                              <p className="font-body text-xs font-semibold text-neutral-900">
+                                ₹{item.unitPrice.toLocaleString('en-IN')}
+                              </p>
+                              <p className="font-body text-[10px] font-medium tracking-wider text-neutral-400 uppercase">
+                                Qty: {item.quantity}
+                              </p>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </div>
-                  )
-                })}
+                      )
+                    })}
               </div>
 
               {/* Coupon Code Section */}
@@ -1156,34 +1184,61 @@ export default function CheckoutPage() {
 
               {/* Pricing Breakdown */}
               <div className="font-body space-y-2 border-t border-neutral-100 pt-4 text-xs text-neutral-500">
-                <div className="flex justify-between">
-                  <span>Bag Subtotal</span>
-                  <span className="font-semibold text-neutral-900">
-                    ₹{subtotal.toLocaleString('en-IN')}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Shipping & Verification</span>
-                  <span className="font-semibold text-neutral-900">
-                    {shipping === 0 ? 'FREE' : `₹${shipping}`}
-                  </span>
-                </div>
-                {discount > 0 && (
-                  <div className="text-success flex justify-between">
-                    <span className="flex items-center gap-1">
-                      <Ticket className="h-3 w-3" />
-                      Coupon Discount
-                    </span>
-                    <span>-₹{discount.toLocaleString('en-IN')}</span>
-                  </div>
+                {showSkeleton ? (
+                  <>
+                    {[0, 1, 2].map((i) => (
+                      <div key={i} className="flex justify-between">
+                        <div className="h-3 w-20 rounded bg-neutral-200" />
+                        <div className="h-3 w-14 rounded bg-neutral-200" />
+                      </div>
+                    ))}
+                    <div className="flex justify-between border-t border-neutral-100 pt-3">
+                      <div className="h-4 w-24 rounded bg-neutral-200" />
+                      <div className="h-4 w-16 rounded bg-neutral-200" />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex justify-between">
+                      <span>Bag Subtotal</span>
+                      <span
+                        className="font-semibold text-neutral-900"
+                        suppressHydrationWarning
+                      >
+                        ₹{subtotal.toLocaleString('en-IN')}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Shipping & Verification</span>
+                      <span
+                        className="font-semibold text-neutral-900"
+                        suppressHydrationWarning
+                      >
+                        {shipping === 0 ? 'FREE' : `₹${shipping}`}
+                      </span>
+                    </div>
+                    {discount > 0 && (
+                      <div className="text-success flex justify-between">
+                        <span className="flex items-center gap-1">
+                          <Ticket className="h-3 w-3" />
+                          Coupon Discount
+                        </span>
+                        <span suppressHydrationWarning>
+                          -₹{discount.toLocaleString('en-IN')}
+                        </span>
+                      </div>
+                    )}
+                    <div className="font-display flex justify-between border-t border-neutral-100 pt-3 text-sm font-semibold text-neutral-900">
+                      <span>Order Total</span>
+                      <span suppressHydrationWarning>
+                        ₹{total.toLocaleString('en-IN')}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-right text-[10px] font-medium text-red-500">
+                      * Excluding delivery charges
+                    </p>
+                  </>
                 )}
-                <div className="font-display flex justify-between border-t border-neutral-100 pt-3 text-sm font-semibold text-neutral-900">
-                  <span>Order Total</span>
-                  <span>₹{total.toLocaleString('en-IN')}</span>
-                </div>
-                <p className="mt-1 text-right text-[10px] font-medium text-red-500">
-                  * Excluding delivery charges
-                </p>
               </div>
             </div>
           </div>

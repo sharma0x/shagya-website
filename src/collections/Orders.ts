@@ -190,12 +190,19 @@ export const Orders: CollectionConfig = {
     ],
     afterChange: [
       async ({ doc, previousDoc, operation, req }) => {
+        req.payload.logger.info(
+          `[Email] afterChange triggered — operation=${operation} docId=${(doc as any)?.id}`,
+        )
         if (operation === 'create') {
           const docId = (doc as Record<string, unknown>).id as string
           if (docId) {
             // Await to guarantee execution in serverless environments (e.g. Vercel)
             try {
-              await sendOrderPlacedEmails(req.payload, docId)
+              await sendOrderPlacedEmails(
+                req.payload,
+                String(docId),
+                doc as Record<string, unknown>,
+              )
             } catch (err) {
               req.payload.logger.error(
                 `[Email] sendOrderPlacedEmails failed: ${err}`,

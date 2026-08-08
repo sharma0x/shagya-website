@@ -130,12 +130,12 @@ ${btn('{{adminOrderUrl}}', 'View in Admin')}
 `),
   },
 
-  // ── Customer: payment confirmed ────────────────────────────────────────────
+  // ── Customer: order confirmed ──────────────────────────────────────────────
   'order-confirmed-customer': {
-    subject: 'Payment confirmed — Order {{orderNumber}}',
+    subject: 'Order confirmed — {{orderNumber}}',
     body: wrap(`
-<h2 style="margin:0 0 6px;font-family:Georgia,serif;font-size:22px;font-weight:400;color:#6B2448;">Payment Received</h2>
-<p style="margin:0 0 24px;font-size:14px;color:#6B5E63;padding-bottom:20px;border-bottom:1px solid #E8DDE2;">Your payment for order <strong>{{orderNumber}}</strong> has been confirmed. We're getting your sarees ready.</p>
+<h2 style="margin:0 0 6px;font-family:Georgia,serif;font-size:22px;font-weight:400;color:#6B2448;">Order Confirmed</h2>
+<p style="margin:0 0 24px;font-size:14px;color:#6B5E63;padding-bottom:20px;border-bottom:1px solid #E8DDE2;">Your order <strong>{{orderNumber}}</strong> has been confirmed. We're getting your sarees ready.</p>
 
 <table cellpadding="0" cellspacing="0">
   ${kv('Order', '<strong>{{orderNumber}}</strong>')}

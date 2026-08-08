@@ -98,6 +98,15 @@ export const useCart = create<CartState>()(
             variant: normalizedVariant ?? existing.variant,
           }
         } else {
+          if (colorSlug) {
+            newItems = newItems.filter(
+              (item) =>
+                !(
+                  item.product.id === product.id &&
+                  !item.variant?.color?.slug
+                ),
+            )
+          }
           newItems.push({
             product,
             variant: normalizedVariant,
