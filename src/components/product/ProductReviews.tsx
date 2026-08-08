@@ -80,7 +80,7 @@ export function ProductReviews({
   const [helpfulLoading, setHelpfulLoading] = useState<string | null>(null)
 
   const reviews = useMemo(() => {
-    const sorted = [...allReviews]
+    const sorted = [...(allReviews || [])]
     if (sortMode === 'recent') return sorted
     return sorted.sort((a, b) => b.rating - a.rating)
   }, [allReviews, sortMode])
@@ -198,7 +198,7 @@ export function ProductReviews({
   }
 
   const ratingBars = [5, 4, 3, 2, 1].map((star) => {
-    const count = allReviews.filter((r) => Math.round(r.rating) === star).length
+    const count = (allReviews || []).filter((r) => Math.round(r.rating) === star).length
     const pct = totalCount > 0 ? (count / totalCount) * 100 : 0
     return { star, count, pct }
   })
@@ -425,7 +425,7 @@ export function ProductReviews({
             </div>
 
             <div className="space-y-10">
-              {reviews.map((review) => (
+              {(reviews || []).map((review) => (
                 <div
                   key={review.id}
                   className="border-b border-neutral-100 pb-10 last:border-0 last:pb-0"
