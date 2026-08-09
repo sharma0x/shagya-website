@@ -3,6 +3,7 @@ import { getPayload } from 'payload'
 import config from '@payload-config'
 import { auth } from '@/lib/auth'
 import crypto from 'crypto'
+import { isSameAddress } from '@/lib/address-utils'
 
 export async function POST(request: Request) {
   try {
@@ -288,24 +289,38 @@ export async function POST(request: Request) {
       } as any)
     }
 
-    // Save shipping address to customer's saved addresses
+    // Save shipping address to customer's saved addresses if not already saved
     if (customerId && shippingAddress) {
       try {
-        await payload.create({
+        const existingAddresses = await payload.find({
           collection: 'addresses',
-          data: {
-            customer: customerId as number,
-            fullName: shippingAddress.fullName || '',
-            phone: shippingAddress.phone || '',
-            line1: shippingAddress.line1 || '',
-            line2: shippingAddress.line2 || '',
-            city: shippingAddress.city || '',
-            state: shippingAddress.state || '',
-            pincode: shippingAddress.pincode || '',
-            country: shippingAddress.country || 'India',
-            isDefault: false,
+          where: {
+            customer: { equals: customerId },
           },
+          limit: 100,
         })
+
+        const alreadyExists = existingAddresses.docs.some((addr: any) =>
+          isSameAddress(addr, shippingAddress),
+        )
+
+        if (!alreadyExists) {
+          await payload.create({
+            collection: 'addresses',
+            data: {
+              customer: customerId as number,
+              fullName: shippingAddress.fullName || '',
+              phone: shippingAddress.phone || '',
+              line1: shippingAddress.line1 || '',
+              line2: shippingAddress.line2 || '',
+              city: shippingAddress.city || '',
+              state: shippingAddress.state || '',
+              pincode: shippingAddress.pincode || '',
+              country: shippingAddress.country || 'India',
+              isDefault: false,
+            },
+          })
+        }
       } catch {
         // Non-critical — don't fail the order if address save fails
       }

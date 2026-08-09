@@ -13,6 +13,7 @@ import {
 import { GuestCheckout } from '@/components/checkout/GuestCheckout'
 import { OffersSection } from '@/components/coupons/OffersSection'
 import { liftVariantGallery } from '@/lib/product-utils'
+import { deduplicateAddresses } from '@/lib/address-utils'
 import {
   ArrowLeft,
   Check,
@@ -380,7 +381,7 @@ export default function CheckoutPage() {
       }
 
       const { address } = await res.json()
-      setAddresses([address, ...addresses])
+      setAddresses(deduplicateAddresses([address, ...addresses]))
       setSelectedAddressId(address.id)
       setShowNewAddressForm(false)
     } catch (err: any) {

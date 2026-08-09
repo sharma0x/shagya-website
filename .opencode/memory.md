@@ -38,3 +38,11 @@
 2. `make infra-up`
 3. `make db-migrate` (applies all migrations)
 4. `make seed-local` (seeds data)
+
+## Address Deduplication Logic (2026-08-09)
+
+- `src/lib/address-utils.ts` provides `isSameAddress(a, b)` and `deduplicateAddresses(addresses)`.
+- Normalizes case and whitespace for `fullName`, `phone`, `line1`, `line2`, `city`, `state`, `pincode`, and `country`.
+- `/api/razorpay/verify`: Checks existing customer addresses before calling `payload.create` to save order's shipping address.
+- `POST /api/addresses`: Checks if customer already has matching address doc. If match found, updates `isDefault` if requested and returns existing address doc instead of creating duplicate database row.
+- `GET /api/addresses`: Filters customer addresses using `deduplicateAddresses` to prevent returning legacy duplicate rows.
