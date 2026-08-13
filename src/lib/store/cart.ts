@@ -101,10 +101,7 @@ export const useCart = create<CartState>()(
           if (colorSlug) {
             newItems = newItems.filter(
               (item) =>
-                !(
-                  item.product.id === product.id &&
-                  !item.variant?.color?.slug
-                ),
+                !(item.product.id === product.id && !item.variant?.color?.slug),
             )
           }
           newItems.push({

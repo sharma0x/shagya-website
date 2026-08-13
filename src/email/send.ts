@@ -95,7 +95,9 @@ async function fetchOrder(
   id: string,
 ): Promise<PopulatedOrder | null> {
   try {
-    payload.logger.info(`[Email] fetchOrder — querying orders collection id=${id}`)
+    payload.logger.info(
+      `[Email] fetchOrder — querying orders collection id=${id}`,
+    )
     const doc = await payload.findByID({
       collection: 'orders',
       id,
@@ -172,12 +174,18 @@ export async function sendOrderPlacedEmails(
   orderId: string,
   orderDoc?: Record<string, unknown>,
 ): Promise<void> {
-  payload.logger.info(`[Email] sendOrderPlacedEmails called — orderId=${orderId}`)
+  payload.logger.info(
+    `[Email] sendOrderPlacedEmails called — orderId=${orderId}`,
+  )
   let order = await fetchOrder(payload, orderId)
-  payload.logger.info(`[Email] fetchOrder result — orderId=${orderId} found=${!!order}`)
+  payload.logger.info(
+    `[Email] fetchOrder result — orderId=${orderId} found=${!!order}`,
+  )
 
   if (!order && orderDoc) {
-    payload.logger.info(`[Email] Using hook doc as fallback — orderId=${orderId}`)
+    payload.logger.info(
+      `[Email] Using hook doc as fallback — orderId=${orderId}`,
+    )
     order = {
       id: String(orderDoc.id ?? orderId),
       orderNumber: (orderDoc.orderNumber as string) || '',
