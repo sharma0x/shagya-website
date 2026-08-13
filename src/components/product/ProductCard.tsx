@@ -137,6 +137,7 @@ interface ProductCardProps {
   product: ProductCardProduct
   variant?: 'grid' | 'compact' | 'row'
   showWishlist?: boolean
+  badge?: 'new' | 'sale' | 'bestseller'
   className?: string
 }
 
@@ -144,6 +145,7 @@ export function ProductCard({
   product,
   variant = 'grid',
   showWishlist = true,
+  badge: badgeOverride,
   className,
 }: ProductCardProps) {
   const adapted = product.color ? product : liftVariantGallery(product)
@@ -188,12 +190,13 @@ export function ProductCard({
     }
   }, [])
 
-  // Auto-detect badge
-  const badge = discountPct
+  // Auto-detect badge unless explicitly overridden
+  const autoBadge = discountPct
     ? ('sale' as const)
     : (product as any).purchaseCount > 5
       ? ('bestseller' as const)
       : undefined
+  const badge = badgeOverride ?? autoBadge
 
   const isCompact = variant === 'compact'
 
