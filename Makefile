@@ -9,7 +9,8 @@
         reset-local reset-preview-dangerous reset-production-dangerous \
         db-migrate db-migrate-create db-generate-types \
         release \
-        setup clean clean-all
+	setup clean clean-all \
+	docker-build docker-up docker-down docker-reset docker-logs
 
 # ============================================================================
 # Help
@@ -293,3 +294,22 @@ clean-all: clean ## Full clean including node_modules + Docker volumes
 	@sleep 5
 	rm -rf node_modules
 	docker compose -f infra/dev-services.yml down -v 2>/dev/null || true
+
+# ============================================================================
+# Docker — Production deployment
+# ============================================================================
+
+docker-build: ## Build the production Docker image
+	docker compose build
+
+docker-up: ## Start all services (app + postgres + minio + mailpit)
+	docker compose up -d
+
+docker-down: ## Stop all services
+	docker compose down
+
+docker-reset: ## Stop all services and delete volumes (fresh start)
+	docker compose down -v
+
+docker-logs: ## Tail logs from all services
+	docker compose logs -f
