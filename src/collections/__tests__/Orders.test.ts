@@ -414,17 +414,15 @@ describe('Orders collection', () => {
       expect(doc).toBeDefined()
     })
 
-    it('does not block the hook return on email send (fire-and-forget)', async () => {
-      const neverResolving = new Promise<void>(() => {})
+    it('awaits email send on create and handles failures gracefully', async () => {
       ;(sendOrderPlacedEmails as ReturnType<typeof vi.fn>).mockClear()
-      ;(sendOrderPlacedEmails as ReturnType<typeof vi.fn>).mockReturnValue(
-        neverResolving,
+      ;(sendOrderPlacedEmails as ReturnType<typeof vi.fn>).mockResolvedValue(
+        undefined,
       )
 
       const hook = Orders.hooks?.afterChange?.[0]
       if (!hook) return
 
-      const start = Date.now()
       const doc = await hook({
         doc: {
           id: '1',
@@ -442,11 +440,39 @@ describe('Orders collection', () => {
           },
         },
       } as any)
-      const elapsed = Date.now() - start
 
       expect(doc).toBeDefined()
-      // Hook must return BEFORE the email send resolves (fire-and-forget).
-      expect(elapsed).toBeLessThan(50)
+      expect(sendOrderPlacedEmails).toHaveBeenCalledTimes(1)
+    })
+
+    it('does not throw when email send rejects', async () => {
+      ;(sendOrderPlacedEmails as ReturnType<typeof vi.fn>).mockClear()
+      ;(sendOrderPlacedEmails as ReturnType<typeof vi.fn>).mockRejectedValue(
+        new Error('SMTP connection failure'),
+      )
+
+      const hook = Orders.hooks?.afterChange?.[0]
+      if (!hook) return
+
+      const doc = await hook({
+        doc: {
+          id: '1',
+          status: 'pending',
+          orderNumber: 'ORD-00001',
+          customerEmail: 'a@b.c',
+        },
+        previousDoc: {},
+        operation: 'create',
+        req: {
+          payload: {
+            logger: { error: () => {}, info: () => {} },
+            sendEmail: async () => ({ success: true }),
+            create: async () => ({}),
+          },
+        },
+      } as any)
+
+      expect(doc).toBeDefined()
       expect(sendOrderPlacedEmails).toHaveBeenCalledTimes(1)
     })
   })

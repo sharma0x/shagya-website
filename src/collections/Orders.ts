@@ -3,88 +3,86 @@ import { sendWebhook } from '@/lib/webhooks'
 import { sendOrderPlacedEmails, sendOrderStatusEmails } from '@/email/send'
 
 /**
- * Runs email, webhook, event-log, and purchaseCount side-effects detached
- * from the request transaction. This prevents Neon's idle-in-transaction
- * timeout from killing the connection and rolling back the order save.
+ * Runs email, webhook, event-log, and purchaseCount side-effects.
+ * Awaited inside afterChange to ensure serverless execution environments
+ * (Vercel/Lambda) complete all network requests before freezing the container.
  */
-function scheduleSideEffects(
+async function runSideEffects(
   payload: any,
   docId: string,
   orderId: string,
   prevStatus: string | null,
   newStatus: string,
   items?: Array<{ product?: string | number; quantity?: number }>,
-) {
-  Promise.resolve().then(async () => {
-    try {
-      sendOrderStatusEmails(payload, docId, newStatus).catch(() => {})
-    } catch {}
+): Promise<void> {
+  try {
+    await sendOrderStatusEmails(payload, docId, newStatus).catch((err) => {
+      payload.logger.error(`[Email] sendOrderStatusEmails failed: ${err}`)
+    })
+  } catch {}
 
-    try {
-      const webhookUrl = process.env.WEBHOOK_URL
-      if (webhookUrl) {
-        await sendWebhook(webhookUrl, {
-          event: 'order.status_changed',
-          orderId,
-          previousStatus: prevStatus ?? null,
-          newStatus,
-        })
-      }
-    } catch {}
-
-    try {
-      await payload.create({
-        collection: 'event-logs',
-        data: {
-          event: 'order.status_changed',
-          orderId,
-          status: newStatus,
-          payload: { orderId, previousStatus: prevStatus, newStatus },
-          response: { note: 'WEBHOOK_URL not configured — skipped' },
-        },
-        overrideAccess: true,
+  try {
+    const webhookUrl = process.env.WEBHOOK_URL
+    if (webhookUrl) {
+      await sendWebhook(webhookUrl, {
+        event: 'order.status_changed',
+        orderId,
+        previousStatus: prevStatus ?? null,
+        newStatus,
       })
-    } catch {}
+    }
+  } catch {}
 
-    if (
-      newStatus === 'confirmed' &&
-      prevStatus !== 'confirmed' &&
-      items?.length
-    ) {
-      for (const item of items) {
-        if (!item.product) continue
-        try {
-          const pid =
-            typeof item.product === 'string'
-              ? item.product
-              : String(item.product)
-          const product = await payload.findByID({
+  try {
+    await payload.create({
+      collection: 'event-logs',
+      data: {
+        event: 'order.status_changed',
+        orderId,
+        status: newStatus,
+        payload: { orderId, previousStatus: prevStatus, newStatus },
+        response: { note: 'WEBHOOK_URL not configured — skipped' },
+      },
+      overrideAccess: true,
+    })
+  } catch {}
+
+  if (
+    newStatus === 'confirmed' &&
+    prevStatus !== 'confirmed' &&
+    items?.length
+  ) {
+    for (const item of items) {
+      if (!item.product) continue
+      try {
+        const pid =
+          typeof item.product === 'string' ? item.product : String(item.product)
+        const product = await payload.findByID({
+          collection: 'products',
+          id: pid,
+          overrideAccess: true,
+        })
+        if (product) {
+          const currentPurchase = (product as any).purchaseCount || 0
+          const currentQty = (product as any).quantity ?? 0
+          const trackQty = (product as any).trackQuantity === true
+          const orderQty = item.quantity || 1
+
+          await payload.update({
             collection: 'products',
-            id: pid,
+            id: product.id,
+            data: {
+              purchaseCount: currentPurchase + orderQty,
+              quantity: trackQty
+                ? Math.max(0, currentQty - orderQty)
+                : currentQty,
+            },
             overrideAccess: true,
           })
-          if (product) {
-            const currentPurchase = (product as any).purchaseCount || 0
-            const currentQty = (product as any).quantity ?? 0
-            const trackQty = (product as any).trackQuantity === true
-            const orderQty = item.quantity || 1
-
-            await payload.update({
-              collection: 'products',
-              id: product.id,
-              data: {
-                purchaseCount: currentPurchase + orderQty,
-                quantity: trackQty
-                  ? Math.max(0, currentQty - orderQty)
-                  : currentQty,
-              },
-              overrideAccess: true,
-            })
-          }
-        } catch {}
-      }
+        }
+      } catch {}
     }
-  })
+  }
 }
 
 const addressGroup = {
@@ -196,10 +194,7 @@ export const Orders: CollectionConfig = {
         if (operation === 'create') {
           const docId = (doc as Record<string, unknown>).id as string
           if (docId) {
-            // Fire-and-forget: do not await. The hook must not block the
-            // order create response on SMTP. Errors are logged via the
-            // email-logs collection by safeSend.
-            void sendOrderPlacedEmails(
+            await sendOrderPlacedEmails(
               req.payload,
               String(docId),
               doc as Record<string, unknown>,
@@ -218,7 +213,7 @@ export const Orders: CollectionConfig = {
               const items = (doc as Record<string, unknown>).items as
                 | Array<{ product?: string | number; quantity?: number }>
                 | undefined
-              scheduleSideEffects(
+              await runSideEffects(
                 req.payload,
                 docId,
                 orderId,
@@ -247,7 +242,7 @@ export const Orders: CollectionConfig = {
           | Array<{ product?: string | number; quantity?: number }>
           | undefined
 
-        scheduleSideEffects(
+        await runSideEffects(
           req.payload,
           docId,
           orderId,

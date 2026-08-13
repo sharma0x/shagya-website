@@ -16,7 +16,7 @@ export const Customers: CollectionConfig = {
           | undefined
         const name = (doc as Record<string, unknown>).name as string | undefined
         if (!email) return doc
-        sendWelcomeEmail(req.payload, email, name || '').catch((err) =>
+        await sendWelcomeEmail(req.payload, email, name || '').catch((err) =>
           req.payload.logger.error(`[Email] sendWelcomeEmail failed: ${err}`),
         )
         return doc
