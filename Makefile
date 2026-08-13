@@ -3,7 +3,7 @@
         dev \
         build start \
         lint format typecheck \
-        test test-watch test-coverage test-e2e test-all \
+        test test-watch test-coverage test-e2e test-all ci-local \
         infra-up infra-down infra-logs infra-reset \
         seed-local seed-preview seed-production \
         reset-local reset-preview-dangerous reset-production-dangerous \
@@ -12,7 +12,8 @@
         setup clean clean-all \
         docker-build docker-up docker-down docker-reset docker-logs \
         prod-login prod-pull prod-migrate prod-up prod-down prod-restart prod-logs prod-deploy \
-        docker-build-ghcr docker-push-ghcr
+        ghcr-build ghcr-push ghcr-build-push docker-build-ghcr docker-push-ghcr \
+        docker-test-pull docker-test-image docker-test-logs docker-test-stop
 
 # ============================================================================
 # Help
@@ -24,12 +25,26 @@ help: ## Show this help message
 	@echo ""
 	@echo "Production VPS Deployment (GHCR + Docker Compose):"
 	@echo "  make prod-deploy      Deploy full stack (pull image → migrate DB → start app)"
-	@echo "  make prod-pull        Pull GHCR image (optionally pass IMAGE_TAG=v1.0.0)"
+	@echo "  make prod-pull        Pull GHCR image (Usage: make prod-pull [TAG=latest])"
 	@echo "  make prod-migrate     Run Payload & Better Auth migrations on prod DB"
 	@echo "  make prod-up          Start production containers (Caddy + App)"
 	@echo "  make prod-down        Stop production containers"
 	@echo "  make prod-logs        Stream production container logs"
 	@echo "  make prod-login       Login to GitHub Container Registry"
+	@echo ""
+	@echo "Local Image Build & Push (GHCR):"
+	@echo "  make ghcr-build       Build production Docker image locally (Usage: make ghcr-build [TAG=testing])"
+	@echo "  make ghcr-push        Push locally built image to GHCR (Usage: make ghcr-push [TAG=testing])"
+	@echo "  make ghcr-build-push  Build and push custom-tagged image in one step"
+	@echo ""
+	@echo "Local Container Image Testing:"
+	@echo "  make docker-test-pull Pull image locally for testing (Usage: make docker-test-pull [TAG=testing])"
+	@echo "  make docker-test-image Run image locally with env file (Usage: make docker-test-image [TAG=testing] [ENV_FILE=.env] [PORT=3000])"
+	@echo "  make docker-test-logs View logs of local test container"
+	@echo "  make docker-test-stop Stop and remove local test container"
+	@echo ""
+	@echo "Local CI Pipeline Simulation:"
+	@echo "  make ci-local         Run full CI validation locally (format, lint, typecheck, test, build)"
 	@echo ""
 	@echo "Quick start:"
 	@echo "  make seed-local       Seed local database (download images + seed data)"
@@ -136,6 +151,28 @@ test-e2e-install: ## Install Playwright browsers
 
 test-all: ## Run all tests (unit + e2e)
 	pnpm test:all
+
+ci-local: ## Run full CI pipeline validation locally (format check, lint, typecheck, tests, build)
+	@echo "================================================="
+	@echo "  Running Full CI Pipeline Locally"
+	@echo "================================================="
+	@echo ""
+	@echo ">>> [1/5] Checking Formatting (Prettier)..."
+	pnpm format:check
+	@echo ""
+	@echo ">>> [2/5] Running ESLint..."
+	pnpm lint
+	@echo ""
+	@echo ">>> [3/5] Checking Types (TypeScript)..."
+	pnpm typecheck
+	@echo ""
+	@echo ">>> [4/5] Running Unit & Component Tests..."
+	pnpm test
+	@echo ""
+	@echo ">>> [5/5] Building Next.js & Payload..."
+	PAYLOAD_SECRET=ci-secret-placeholder-32-chars-minimum-length BETTER_AUTH_SECRET=ci-secret-placeholder-32-chars-minimum-length NEXT_PUBLIC_SERVER_URL=http://localhost:3000 pnpm build
+	@echo ""
+	@echo "✓ All CI pipeline checks passed successfully!"
 
 # ============================================================================
 # Infrastructure (Dev Services)
@@ -330,8 +367,11 @@ docker-logs: ## Tail logs from all local services
 # ============================================================================
 
 PROD_COMPOSE = docker compose -f docker-compose.prod.yml
-IMAGE_TAG ?= latest
+TAG ?= testing
+IMAGE_TAG ?= $(TAG)
 DOCKER_IMAGE ?= ghcr.io/sharma0x/shagya-website
+ENV_FILE ?= .env
+PORT ?= 3000
 
 prod-login: ## Log in to GitHub Container Registry (requires GH_TOKEN / GITHUB_TOKEN)
 	@echo "Logging into GitHub Container Registry..."
@@ -341,7 +381,7 @@ prod-login: ## Log in to GitHub Container Registry (requires GH_TOKEN / GITHUB_T
 	fi
 	@echo "$${GH_TOKEN:-$$GITHUB_TOKEN}" | docker login ghcr.io -u "$${GH_USER:-sharma0x}" --password-stdin
 
-prod-pull: ## Pull production Docker image (Usage: make prod-pull [IMAGE_TAG=v1.0.0])
+prod-pull: ## Pull production Docker image (Usage: make prod-pull [TAG=latest])
 	@if [ ! -f .env.production ]; then echo "❌ .env.production file not found. Copy from .env.production.example first."; exit 1; fi
 	IMAGE_TAG=$(IMAGE_TAG) DOCKER_IMAGE=$(DOCKER_IMAGE) $(PROD_COMPOSE) pull app
 
@@ -374,10 +414,49 @@ prod-deploy: ## One-stop deployment: Pull image -> Run migrations -> Start conta
 	@echo "✓ Deployment complete! Container status:"
 	@$(PROD_COMPOSE) ps
 
-docker-build-ghcr: ## Build and tag production Docker image locally for GHCR
-	docker build -t $(DOCKER_IMAGE):$(IMAGE_TAG) -t $(DOCKER_IMAGE):latest .
+# ============================================================================
+# Local Image Build & GHCR Operations
+# ============================================================================
 
-docker-push-ghcr: ## Push locally built Docker image to GHCR
-	docker push $(DOCKER_IMAGE):$(IMAGE_TAG)
-	docker push $(DOCKER_IMAGE):latest
+ghcr-build: ## Build production Docker image locally with a custom tag (Usage: make ghcr-build [TAG=testing])
+	@echo "Building Docker image $(DOCKER_IMAGE):$(TAG)..."
+	docker build -t $(DOCKER_IMAGE):$(TAG) .
+
+ghcr-push: ## Push locally built Docker image to GHCR (Usage: make ghcr-push [TAG=testing])
+	@echo "Pushing $(DOCKER_IMAGE):$(TAG) to GHCR..."
+	docker push $(DOCKER_IMAGE):$(TAG)
+
+ghcr-build-push: ghcr-build ghcr-push ## Build and push custom-tagged Docker image in one command (Usage: make ghcr-build-push [TAG=testing])
+
+# Aliases for backwards compatibility
+docker-build-ghcr: ghcr-build
+docker-push-ghcr: ghcr-push
+
+# ============================================================================
+# Local Container Image Testing
+# ============================================================================
+
+docker-test-pull: ## Pull a specific image from GHCR to test locally (Usage: make docker-test-pull [TAG=testing])
+	docker pull $(DOCKER_IMAGE):$(TAG)
+
+docker-test-image: ## Run container locally for testing (Usage: make docker-test-image [TAG=testing] [ENV_FILE=.env] [PORT=3000])
+	@if [ ! -f $(ENV_FILE) ]; then echo "❌ Environment file '$(ENV_FILE)' not found."; exit 1; fi
+	@echo "Stopping any existing test container..."
+	-docker rm -f shayga-test-app 2>/dev/null || true
+	@echo "Starting $(DOCKER_IMAGE):$(TAG) with $(ENV_FILE) on port $(PORT)..."
+	docker run -d \
+		--name shayga-test-app \
+		--env-file $(ENV_FILE) \
+		-p $(PORT):3000 \
+		$(DOCKER_IMAGE):$(TAG)
+	@echo "✓ Test container is running at http://localhost:$(PORT)"
+	@echo "  View logs: make docker-test-logs"
+	@echo "  Stop container: make docker-test-stop"
+
+docker-test-logs: ## View logs from the local test container
+	docker logs -f shayga-test-app
+
+docker-test-stop: ## Stop and remove the local test container
+	-docker rm -f shayga-test-app 2>/dev/null || true
+	@echo "✓ Test container stopped."
 
