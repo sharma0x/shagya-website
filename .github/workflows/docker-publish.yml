@@ -7,15 +7,12 @@ on:
       - develop
     tags:
       - 'v*.*.*'
-  release:
-    types:
-      - published
   workflow_dispatch:
     inputs:
       custom_tag:
-        description: 'Custom tag name (optional, e.g., v1.0.0 or staging-test)'
+        description: 'Custom tag name (optional, e.g., testing or staging-test)'
         required: false
-        default: ''
+        default: 'testing'
 
 concurrency:
   group: docker-${{ github.ref }}
