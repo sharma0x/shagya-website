@@ -1,0 +1,70 @@
+services:
+  app:
+    image: ${DOCKER_IMAGE:-ghcr.io/sharma0x/shagya-website}:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    deploy:
+      replicas: 2
+    expose:
+      - '3000'
+    depends_on:
+      redis:
+        condition: service_healthy
+    env_file:
+      - ${ENV_FILE:-.env.production}
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -f http://localhost:3000/api/users || exit 0']
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '10m'
+        max-file: '3'
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    expose:
+      - '6379'
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '10m'
+        max-file: '3'
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: shayga-proxy
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+    environment:
+      - DOMAIN_NAME=${DOMAIN_NAME:-shayga.in}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+      - caddy_logs:/var/log/caddy
+    depends_on:
+      - app
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '10m'
+        max-file: '3'
+
+volumes:
+  caddy_data:
+    name: shayga-prod-caddy-data
+  caddy_config:
+    name: shayga-prod-caddy-config
+  caddy_logs:
+    name: shayga-prod-caddy-logs

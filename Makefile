@@ -9,8 +9,10 @@
         reset-local reset-preview-dangerous reset-production-dangerous \
         db-migrate db-migrate-create db-generate-types \
         release \
-	setup clean clean-all \
-	docker-build docker-up docker-down docker-reset docker-logs
+        setup clean clean-all \
+        docker-build docker-up docker-down docker-reset docker-logs \
+        prod-login prod-pull prod-migrate prod-up prod-down prod-restart prod-logs prod-deploy \
+        docker-build-ghcr docker-push-ghcr
 
 # ============================================================================
 # Help
@@ -19,6 +21,15 @@
 help: ## Show this help message
 	@echo "Shayga — Available Commands"
 	@echo "============================"
+	@echo ""
+	@echo "Production VPS Deployment (GHCR + Docker Compose):"
+	@echo "  make prod-deploy      Deploy full stack (pull image → migrate DB → start app)"
+	@echo "  make prod-pull        Pull GHCR image (optionally pass IMAGE_TAG=v1.0.0)"
+	@echo "  make prod-migrate     Run Payload & Better Auth migrations on prod DB"
+	@echo "  make prod-up          Start production containers (Caddy + App)"
+	@echo "  make prod-down        Stop production containers"
+	@echo "  make prod-logs        Stream production container logs"
+	@echo "  make prod-login       Login to GitHub Container Registry"
 	@echo ""
 	@echo "Quick start:"
 	@echo "  make seed-local       Seed local database (download images + seed data)"
@@ -296,20 +307,77 @@ clean-all: clean ## Full clean including node_modules + Docker volumes
 	docker compose -f infra/dev-services.yml down -v 2>/dev/null || true
 
 # ============================================================================
-# Docker — Production deployment
+# Docker — Local Container Stack
 # ============================================================================
 
-docker-build: ## Build the production Docker image
+docker-build: ## Build the local Docker image
 	docker compose build
 
-docker-up: ## Start all services (app + postgres + minio + mailpit)
+docker-up: ## Start all local services (app + postgres + minio + mailpit)
 	docker compose up -d
 
-docker-down: ## Stop all services
+docker-down: ## Stop all local services
 	docker compose down
 
-docker-reset: ## Stop all services and delete volumes (fresh start)
+docker-reset: ## Stop all local services and delete volumes (fresh start)
 	docker compose down -v
 
-docker-logs: ## Tail logs from all services
+docker-logs: ## Tail logs from all local services
 	docker compose logs -f
+
+# ============================================================================
+# Production VPS Operations (GHCR + Docker Compose + Caddy)
+# ============================================================================
+
+PROD_COMPOSE = docker compose -f docker-compose.prod.yml
+IMAGE_TAG ?= latest
+DOCKER_IMAGE ?= ghcr.io/sharma0x/shagya-website
+
+prod-login: ## Log in to GitHub Container Registry (requires GH_TOKEN / GITHUB_TOKEN)
+	@echo "Logging into GitHub Container Registry..."
+	@if [ -z "$$GH_TOKEN" ] && [ -z "$$GITHUB_TOKEN" ]; then \
+		echo "Error: GH_TOKEN or GITHUB_TOKEN environment variable required."; \
+		exit 1; \
+	fi
+	@echo "$${GH_TOKEN:-$$GITHUB_TOKEN}" | docker login ghcr.io -u "$${GH_USER:-sharma0x}" --password-stdin
+
+prod-pull: ## Pull production Docker image (Usage: make prod-pull [IMAGE_TAG=v1.0.0])
+	@if [ ! -f .env.production ]; then echo "❌ .env.production file not found. Copy from .env.production.example first."; exit 1; fi
+	IMAGE_TAG=$(IMAGE_TAG) DOCKER_IMAGE=$(DOCKER_IMAGE) $(PROD_COMPOSE) pull app
+
+prod-migrate: ## Run migrations safely against production DB in a one-off container
+	@if [ ! -f .env.production ]; then echo "❌ .env.production file not found."; exit 1; fi
+	@echo "Running Payload & Better Auth migrations on production database..."
+	IMAGE_TAG=$(IMAGE_TAG) DOCKER_IMAGE=$(DOCKER_IMAGE) $(PROD_COMPOSE) run --rm --no-deps app sh -c "npx payload migrate && npx better-auth migrate --config src/lib/auth.ts -y"
+
+prod-up: ## Start production stack (Caddy + App replicas)
+	@if [ ! -f .env.production ]; then echo "❌ .env.production file not found."; exit 1; fi
+	IMAGE_TAG=$(IMAGE_TAG) DOCKER_IMAGE=$(DOCKER_IMAGE) $(PROD_COMPOSE) up -d --remove-orphans
+
+prod-down: ## Stop production stack
+	$(PROD_COMPOSE) down
+
+prod-restart: ## Restart production services
+	$(PROD_COMPOSE) restart
+
+prod-logs: ## View live logs from production services
+	$(PROD_COMPOSE) logs -f
+
+prod-deploy: ## One-stop deployment: Pull image -> Run migrations -> Start containers
+	@echo "================================================="
+	@echo "  Deploying Shayga Production (Tag: $(IMAGE_TAG))"
+	@echo "================================================="
+	@$(MAKE) prod-pull IMAGE_TAG=$(IMAGE_TAG)
+	@$(MAKE) prod-migrate IMAGE_TAG=$(IMAGE_TAG)
+	@$(MAKE) prod-up IMAGE_TAG=$(IMAGE_TAG)
+	@echo ""
+	@echo "✓ Deployment complete! Container status:"
+	@$(PROD_COMPOSE) ps
+
+docker-build-ghcr: ## Build and tag production Docker image locally for GHCR
+	docker build -t $(DOCKER_IMAGE):$(IMAGE_TAG) -t $(DOCKER_IMAGE):latest .
+
+docker-push-ghcr: ## Push locally built Docker image to GHCR
+	docker push $(DOCKER_IMAGE):$(IMAGE_TAG)
+	docker push $(DOCKER_IMAGE):latest
+

@@ -5,6 +5,11 @@ WORKDIR /app
 FROM base AS builder
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
+# Dummy secrets for build-time compilation
+ENV PAYLOAD_SECRET=build-placeholder-secret-32-chars-long
+ENV BETTER_AUTH_SECRET=build-placeholder-secret-32-chars-long
+ENV NEXT_PUBLIC_SERVER_URL=http://localhost:3000
+
 RUN apk add --no-cache python3 make g++
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
@@ -12,7 +17,7 @@ COPY . .
 RUN (pnpm exec payload generate:types || true) && pnpm exec next build
 
 FROM base AS runner
-RUN apk add --no-cache vips-cpp
+RUN apk add --no-cache vips-cpp curl
 COPY --from=builder /app/package.json /app/pnpm-lock.yaml ./
 RUN pnpm install --prod --frozen-lockfile --ignore-scripts && \
     pnpm rebuild sharp && \
@@ -32,4 +37,4 @@ ENV PATH=/app/node_modules/.bin:$PATH
 
 EXPOSE 3000
 
-CMD ["sh", "-c", "npx payload migrate && npx better-auth migrate && next start"]
+CMD ["pnpm", "start"]
