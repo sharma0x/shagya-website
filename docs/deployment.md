@@ -1,244 +1,264 @@
-# High-Scale E-Commerce Deployment Plan
+# High-Scale Production Deployment Guide
 
-**Stack:** Payload CMS (Node.js), Managed PostgreSQL, Redis, Caddy, Cloudflare R2
+**Stack:** Next.js 16 + Payload CMS 3.x (Node.js 22), Managed PostgreSQL, Caddy Reverse Proxy, Cloudflare R2 (Media), GitHub Container Registry (`ghcr.io`).
 
-This architecture isolates the database from the application layer to prevent resource starvation during high-traffic events (like festive sales). Application traffic is load-balanced across multiple Node.js containers, while static media is served entirely from the edge via Cloudflare.
+This architecture decouples the database, persistent object storage, and compute runtime. The Next.js / Payload application runs inside containerized environments pulled directly from **GitHub Container Registry (GHCR)**, fronted by **Caddy** for automated TLS, Brotli/Gzip compression, and Cloudflare proxy support.
+
+---
 
 ## 1. Architecture Overview
 
 ```mermaid
 flowchart TD
     %% Clients
-    subgraph Clients["🌐 End Users & Traffic Source"]
-        Customer["📱 Real Customers (Browsers / Mobile)"]
-        Admin["💻 Business Owner (Payload Admin Panel)"]
+    subgraph Clients["🌐 Traffic Sources"]
+        Customer["📱 Real Customers (Storefront)"]
+        Admin["💻 Store Admins (Payload Admin Panel)"]
     end
 
     %% Edge Layer
-    subgraph EdgeLayer["🛡️ Edge Network & CDN Layer (Cloudflare)"]
-        CF_DNS["Cloudflare DNS & WAF"]
-        CF_CDN["Cloudflare CDN & Edge Cache<br/>(Static Assets & Saree Images)"]
+    subgraph EdgeLayer["🛡️ Edge Network & CDN (Cloudflare)"]
+        CF_DNS["Cloudflare DNS & WAF (Proxy Enabled)"]
+        CF_CDN["Cloudflare Edge Cache<br/>(Static Assets & Images)"]
     end
 
     %% VPS Infrastructure
-    subgraph Server["🖥️ Primary Production Server (App VPS)"]
+    subgraph VPS["🖥️ Production VPS (Hetzner / DO / AWS EC2)"]
         subgraph ReverseProxy["Reverse Proxy Layer"]
-            Caddy["Caddy Proxy<br/>(Automatic SSL & Brotli Compression)"]
+            Caddy["Caddy Proxy<br/>(Auto SSL, Brotli/Gzip, CF Real IP Passthrough)"]
         end
 
-        subgraph ContainerRuntime["Docker Host Engine"]
-            Node1["App Container 1<br/>(Payload CMS)"]
-            Node2["App Container 2<br/>(Payload CMS)"]
-            Redis["Redis Container<br/>(Session Store)"]
+        subgraph Containers["Docker Container Runtime"]
+            App1["Next.js + Payload CMS Container (Port 3000)"]
+            App2["Next.js + Payload CMS Replicas (Optional Scale)"]
         end
     end
 
-    %% Managed Cloud Services
-    subgraph ManagedServices["☁️ Managed Third-Party Services"]
-        RDS[("Managed PostgreSQL Database<br/>(Point-in-Time Recovery Enabled)")]
-        R2[("Cloudflare R2 Bucket<br/>(Media Storage)") ]
-        SMTP["Transactional Email API<br/>(Resend / SendGrid)"]
+    %% External Managed Services & Registry
+    subgraph CloudServices["☁️ External Managed Services & Registries"]
+        GHCR["📦 GitHub Container Registry<br/>(ghcr.io/sharma0x/shagya-website)"]
+        DB[("🐘 Managed PostgreSQL<br/>(Neon / AWS RDS / DO Managed PG)")]
+        R2[("🪣 Cloudflare R2<br/>(Product & Media Storage)")]
+        Resend["📧 Resend API<br/>(Transactional Emails)"]
+        Razorpay["💳 Razorpay Gateway<br/>(Payments & Webhooks)"]
     end
 
-    %% Connections
+    %% Flows
     Customer -->|HTTPS| CF_DNS
     Admin -->|HTTPS| CF_DNS
     CF_DNS --> CF_CDN
 
-    CF_CDN -->|Cached Media Request| R2
-    CF_CDN -->|Dynamic API & Admin Requests| Caddy
+    CF_CDN -->|Direct Cached Media| R2
+    CF_CDN -->|Dynamic Web & API Traffic| Caddy
 
-    Caddy -->|Load Balances Traffic| Node1
-    Caddy -->|Load Balances Traffic| Node2
+    Caddy -->|Load Balance / Reverse Proxy| App1
+    Caddy -.->|Load Balance| App2
 
-    Node1 <-->|Read / Write Sessions| Redis
-    Node2 <-->|Read / Write Sessions| Redis
+    GHCR -->|docker compose pull| VPS
 
-    Node1 -->|Search Plugin & DB Queries| RDS
-    Node2 -->|Search Plugin & DB Queries| RDS
-
-    Node1 -->|Uploads via @payloadcms/storage-s3| R2
-    Node2 -->|Uploads via @payloadcms/storage-s3| R2
-
-    Node1 -->|Trigger Order Receipts| SMTP
-    Node2 -->|Trigger Order Receipts| SMTP
-
+    App1 -->|Queries & Auth Data| DB
+    App1 -->|Media Uploads / S3 API| R2
+    App1 -->|Email Triggers| Resend
+    App1 -->|Orders & Verification| Razorpay
 ```
 
 ---
 
 ## 2. Infrastructure Requirements
 
-To support a high-volume saree business, provision the following resources:
-
-| Component            | Minimum Spec                | Recommended Service                                 |
-| -------------------- | --------------------------- | --------------------------------------------------- |
-| **App Server (VPS)** | 4 to 8 GB RAM, 2 to 4 vCPU  | Hetzner Cloud, DigitalOcean Droplet, AWS EC2        |
-| **Managed DB**       | 2 GB RAM, 20 GB SSD Storage | AWS RDS (`db.t4g.small`) or DigitalOcean Managed PG |
-| **Media Storage**    | N/A (Object Storage)        | Cloudflare R2                                       |
-| **Email Delivery**   | SMTP / API Access           | Resend, AWS SES, or SendGrid                        |
-| **DNS & CDN**        | Free Tier                   | Cloudflare                                          |
+| Component               | Minimum Specification                                                   | Recommended Providers                                                                 |
+| :---------------------- | :---------------------------------------------------------------------- | :------------------------------------------------------------------------------------ |
+| **Production VPS**      | 2 to 4 vCPUs, 4GB to 8GB RAM, 40GB+ SSD, Ubuntu 22.04 / 24.04 LTS       | Hetzner Cloud (CX32/CPX31), DigitalOcean Droplet, AWS EC2 (`t4g.medium`/`c7g.medium`) |
+| **Managed Database**    | PostgreSQL 18-compatible, Connection Pooling enabled, automated backups | Neon, AWS RDS (`db.t4g.small`), DigitalOcean Managed PostgreSQL                       |
+| **Object Storage**      | S3-compatible, zero egress fees                                         | Cloudflare R2                                                                         |
+| **Container Registry**  | OCI Container Registry                                                  | GitHub Packages (`ghcr.io`)                                                           |
+| **DNS & Edge WAF**      | Free / Pro tier with SSL mode **Full (Strict)**                         | Cloudflare                                                                            |
+| **Transactional Email** | Dedicated SMTP/REST API                                                 | Resend                                                                                |
 
 ---
 
-## 3. Environment Variables (`.env.production`)
+## 3. Automated CI/CD & Image Versioning Pipeline
 
-Create a `.env.production` file on your App Server. Do not commit this to version control.
+Every commit to `main` executes an automated GitHub Actions pipeline:
+
+1. **Lint, Test & Build ([`.github/workflows/ci.yml`](file:///Users/princesharma74/Documents/Freelancing/Shagya/shagya-website/.github/workflows/ci.yml))**: Ensures all tests, TypeScript types, and Next.js builds pass.
+2. **Semantic Release ([`.github/workflows/release.yml`](file:///Users/princesharma74/Documents/Freelancing/Shagya/shagya-website/.github/workflows/release.yml))**: Analyzes conventional commit messages (`feat:`, `fix:`, etc.), bumps version in `package.json`, generates `CHANGELOG.md`, and creates git release tags (e.g. `v1.0.0`).
+3. **Docker Build & Push to GHCR ([`.github/workflows/docker-publish.yml`](file:///Users/princesharma74/Documents/Freelancing/Shagya/shagya-website/.github/workflows/docker-publish.yml))**: Compiles optimized production container images and publishes them to `ghcr.io/sharma0x/shagya-website` tagged with:
+   - Specific release versions (`v1.0.0`, `1.0.0`, `1.0`)
+   - `latest`
+   - Short commit hashes (`sha-abcdef1`)
+
+---
+
+## 4. First-Time VPS Setup (10 Minutes)
+
+### Step 1: Install Docker & Docker Compose on VPS
+
+Run on your clean Ubuntu VPS:
+
+```bash
+# Update packages
+sudo apt update && sudo apt upgrade -y
+
+# Install Docker, Compose & Make
+sudo apt install -y ca-certificates curl gnupg make
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+sudo apt update
+sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+# Allow current user to run docker without sudo
+sudo usermod -aG docker $USER
+newgrp docker
+```
+
+### Step 2: Clone or Copy Deployment Files to VPS
+
+Create an application directory on the VPS (e.g. `/opt/shayga`):
+
+```bash
+mkdir -p /opt/shayga && cd /opt/shayga
+
+# Clone repository
+git clone https://github.com/sharma0x/shagya-website.git .
+```
+
+_(Alternatively, you only need `docker-compose.prod.yml`, `Caddyfile`, `Makefile`, and `.env.production` on the VPS)._
+
+### Step 3: Authenticate with GitHub Container Registry
+
+If the GHCR package is private, generate a GitHub Personal Access Token (Classic) with `read:packages` scope, then log in:
+
+```bash
+echo "<YOUR_GITHUB_PAT>" | docker login ghcr.io -u "<YOUR_GITHUB_USERNAME>" --password-stdin
+```
+
+_(Or run `make prod-login` with `GH_TOKEN` set in your terminal environment)._
+
+### Step 4: Configure Production Environment Variables
+
+Copy `.env.production.example` to `.env.production`:
+
+```bash
+cp .env.production.example .env.production
+nano .env.production
+```
+
+Fill in your actual production credentials:
 
 ```env
-# Payload CMS Configuration
+# =============================================================================
+# Shayga Production Environment Configuration
+# =============================================================================
 NODE_ENV=production
-PAYLOAD_SECRET=generate_a_secure_random_string_here
 PORT=3000
+DOMAIN_NAME=shayga.in
+NEXT_PUBLIC_SERVER_URL=https://shayga.in
 
-# Managed Database Connection
-DATABASE_URI=postgres://<username>:<password>@<managed-db-host>:5432/shayga?sslmode=require
+# Image Tag to Deploy (e.g. latest, v1.0.0, sha-xxxx)
+IMAGE_TAG=latest
+DOCKER_IMAGE=ghcr.io/sharma0x/shagya-website
 
-# Redis Connection for Sessions/Caching
-REDIS_URL=redis://redis:6379
+# Managed Database Connection (Neon / RDS PostgreSQL 18)
+DATABASE_URL=postgresql://neondb_owner:<password>@ep-xxxx.aws.neon.tech/neondb?sslmode=require
 
-# Cloudflare R2 Storage (@payloadcms/storage-s3)
-S3_BUCKET=shayga-saree-media
-S3_ACCESS_KEY_ID=<your_r2_access_key>
-S3_SECRET_ACCESS_KEY=<your_r2_secret_key>
-S3_ENDPOINT=https://<your_account_id>.r2.cloudflarestorage.com
-S3_REGION=auto
+# Encryption Secrets (Generate via: openssl rand -base64 32)
+PAYLOAD_SECRET=your_32_char_payload_secret_key_here
+BETTER_AUTH_SECRET=your_32_char_better_auth_secret_key_here
 
-# Transactional Emails
-SMTP_HOST=smtp.resend.com
-SMTP_PORT=465
-SMTP_USER=resend
-SMTP_PASS=<your_api_key>
+# Cloudflare R2 Media Storage
+R2_BUCKET=shayga-media
+R2_ENDPOINT=https://<account_id>.r2.cloudflarestorage.com
+R2_ACCESS_KEY_ID=<your_r2_access_key>
+R2_SECRET_ACCESS_KEY=<your_r2_secret_key>
+R2_REGION=auto
 
+# Transactional Email (Resend)
+RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxx
+EMAIL_FROM_NAME=Shayga
+EMAIL_FROM_ADDRESS=orders@shayga.in
+
+# Payments (Razorpay)
+RAZORPAY_KEY_ID=rzp_live_xxxxxxxxxxxx
+RAZORPAY_KEY_SECRET=your_live_razorpay_secret
 ```
 
 ---
 
-## 4. Reverse Proxy Setup (`Caddyfile`)
+## 5. Deployment Commands (Make Targets)
 
-Caddy handles automatic SSL generation and HTTP/2 multiplexing. Create a file named `Caddyfile` in the same directory as your Docker Compose file.
-
-```caddy
-yourstore.com, www.yourstore.com {
-    # Compress text-based responses (HTML, JSON, JS, CSS)
-    encode zstd gzip
-
-    # Reverse proxy traffic to the Payload CMS containers
-    reverse_proxy app:3000 {
-        # Pass real client IP to the Payload backend
-        header_up X-Real-IP {remote_host}
-        header_up X-Forwarded-For {remote_host}
-    }
-
-    # Log format for production
-    log {
-        output file /var/log/caddy/access.log
-        format json
-    }
-}
-
-```
-
----
-
-## 5. Docker Compose Configuration (`docker-compose.prod.yml`)
-
-This file configures the Application and Redis containers on the primary VPS. The database and storage are handled externally by managed services.
-
-```yaml
-version: '3.8'
-
-services:
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: shayga-app
-    restart: always
-    # Automatically deploy 2 instances to utilize multiple CPU cores
-    deploy:
-      replicas: 2
-    expose:
-      - '3000'
-    env_file:
-      - .env.production
-    depends_on:
-      redis:
-        condition: service_healthy
-    logging:
-      driver: 'json-file'
-      options:
-        max-size: '10m'
-        max-file: '3'
-
-  redis:
-    image: redis:7-alpine
-    container_name: shayga-redis
-    restart: always
-    expose:
-      - '6379'
-    volumes:
-      - redis_data:/data
-    healthcheck:
-      test: ['CMD', 'redis-cli', 'ping']
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    logging:
-      driver: 'json-file'
-      options:
-        max-size: '10m'
-        max-file: '3'
-
-  caddy:
-    image: caddy:2-alpine
-    container_name: shayga-proxy
-    restart: always
-    ports:
-      - '80:80'
-      - '443:443'
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
-      - caddy_data:/data
-      - caddy_config:/config
-      - caddy_logs:/var/log/caddy
-    depends_on:
-      - app
-
-volumes:
-  redis_data:
-    name: shayga-prod-redis
-  caddy_data:
-    name: shayga-prod-caddy-data
-  caddy_config:
-    name: shayga-prod-caddy-config
-  caddy_logs:
-    name: shayga-prod-caddy-logs
-```
-
----
-
-## 6. Deployment Steps
-
-Execute the following commands on your production server to bring the application online:
-
-1. **Clone your repository** and navigate to the project root.
-2. **Create the production environment file:**
-   Populate `.env.production` with your Managed DB and R2 credentials.
-3. **Build and start the containers:**
+The deployment workflow is fully automated via `make`:
 
 ```bash
-docker compose -f docker-compose.prod.yml up -d --build
+# 🚀 1-Click Deployment (Pulls latest image, runs database migrations, starts containers)
+make prod-deploy
 
+# Or deploy a specific released version:
+make prod-deploy IMAGE_TAG=v1.0.0
+
+# 📊 Check live logs
+make prod-logs
+
+# 🛑 Stop all production services
+make prod-down
+
+# 🔄 Restart all production services
+make prod-restart
+
+# 📦 Pull only the Docker image
+make prod-pull IMAGE_TAG=v1.0.0
+
+# 🗄️ Run migrations only
+make prod-migrate
 ```
 
-4. **Verify the services:**
-   Ensure all containers (App replicas, Redis, Caddy) are running without errors.
+---
+
+## 6. Cloudflare & Domain Configuration
+
+1. **DNS Records**:
+   - In your Cloudflare DNS dashboard, create:
+     - `A` record for `shayga.in` pointing to your VPS Public IPv4 address (`Proxied` / 🟧 Orange Cloud enabled).
+     - `CNAME` record for `www.shayga.in` pointing to `shayga.in` (`Proxied` enabled).
+2. **Cloudflare SSL / TLS Mode**:
+   - Go to **SSL/TLS** in Cloudflare.
+   - Set encryption mode to **Full (Strict)** or **Full**.
+   - Caddy will automatically negotiate SSL with Let's Encrypt / Cloudflare Edge and restore real client IPs via `CF-Connecting-IP`.
+
+---
+
+## 7. Zero-Downtime Rollback & Maintenance
+
+### Rollback to a Previous Version
+
+If a bug occurs in production, roll back to any historical image version in seconds:
 
 ```bash
-docker compose -f docker-compose.prod.yml logs -f
-
+make prod-deploy IMAGE_TAG=v0.9.8
 ```
 
-5. **Update DNS:**
-   Point your domain's A-record in Cloudflare to the IP address of your App VPS. Make sure Cloudflare is set to "Proxied" (orange cloud) for the domain. Caddy will automatically generate and bind the SSL certificates.
+### Database Seeding on Production (One-Time / Optional)
+
+To download seed assets and populate initial collections on a fresh production database:
+
+```bash
+make seed-production
+```
+
+_(Requires `infra/.env.production` present locally or run directly on the VPS)._
+
+### Monitoring & Health Checks
+
+- Docker health check runs automatically every 15 seconds against `/api/users`.
+- View live container status:
+
+```bash
+docker compose -f docker-compose.prod.yml ps
+```
