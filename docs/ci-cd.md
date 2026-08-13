@@ -31,7 +31,7 @@ All Vercel project env vars are configured per-environment. No manual setup need
 | `R2_SECRET_ACCESS_KEY`   | Prod R2 secret (encrypted)                | Dev R2 secret (encrypted)             |
 | `R2_BUCKET`              | `shayga-media`                            | `shayga-dev`                          |
 | `R2_REGION`              | `auto`                                    | `auto`                                |
-| `NEXT_PUBLIC_SERVER_URL` | `https://shayga.com`                      | (Vercel auto-assigns at deploy time)  |
+| `NEXT_PUBLIC_SERVER_URL` | `https://shayga.in`                       | (Vercel auto-assigns at deploy time)  |
 | `RESEND_API_KEY`         | Set (encrypted)                           | Set (encrypted)                       |
 
 ## GitHub Secrets (all set)
@@ -50,7 +50,7 @@ All Vercel project env vars are configured per-environment. No manual setup need
 | Variable                | Value                                             |
 | ----------------------- | ------------------------------------------------- |
 | `VERCEL_PREVIEW_DOMAIN` | `shayga-website-git-develop-clow-work.vercel.app` |
-| `VERCEL_PROD_DOMAIN`    | `shayga.com`                                      |
+| `VERCEL_PROD_DOMAIN`    | `shayga.in`                                       |
 
 ## Semantic Versioning
 

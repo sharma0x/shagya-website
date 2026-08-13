@@ -1793,12 +1793,12 @@ export const pages: SeedPage[] = [
           {
             question: 'Can I modify or cancel my order after placing it?',
             answer:
-              'Orders can be modified or cancelled within 2 hours of placement by contacting us at care@shayga.com or WhatsApp +91 98765 43210. After 2 hours, the order enters processing and cannot be modified. Once dispatched, cancellations are not possible — you would need to initiate a return after delivery.',
+              'Orders can be modified or cancelled within 2 hours of placement by contacting us at care@shayga.in or WhatsApp +91 98765 43210. After 2 hours, the order enters processing and cannot be modified. Once dispatched, cancellations are not possible — you would need to initiate a return after delivery.',
           },
           {
             question: 'Do you offer blouse stitching?',
             answer:
-              'Yes. Blouse stitching is complimentary on all sarees priced above Rs 15,000. For sarees below that, stitching is available for Rs 600. Please send your measurements (chest, waist, and sleeve preference) to care@shayga.com within 24 hours of ordering. Stitched blouses are custom-made and cannot be returned.',
+              'Yes. Blouse stitching is complimentary on all sarees priced above Rs 15,000. For sarees below that, stitching is available for Rs 600. Please send your measurements (chest, waist, and sleeve preference) to care@shayga.in within 24 hours of ordering. Stitched blouses are custom-made and cannot be returned.',
           },
           {
             question: 'How do I know if a saree is truly handloom?',
@@ -1856,12 +1856,12 @@ export const pages: SeedPage[] = [
           {
             question: 'How do I track my order?',
             answer:
-              'Once your order is dispatched, you will receive an email with the tracking number and courier partner details. We use BlueDart and Delhivery for domestic orders, and DHL or FedEx for international orders. If you have not received tracking details within 2 business days of ordering, write to care@shayga.com.',
+              'Once your order is dispatched, you will receive an email with the tracking number and courier partner details. We use BlueDart and Delhivery for domestic orders, and DHL or FedEx for international orders. If you have not received tracking details within 2 business days of ordering, write to care@shayga.in.',
           },
           {
             question: 'What if my delivery is delayed?',
             answer:
-              'Occasional delays can occur due to courier logistics, especially in remote areas or during festive seasons. If your order has not arrived within the expected window, first check the tracking link. If tracking shows no movement for more than 48 hours, write to care@shayga.com with your order number — we will investigate and resolve within 24 hours.',
+              'Occasional delays can occur due to courier logistics, especially in remote areas or during festive seasons. If your order has not arrived within the expected window, first check the tracking link. If tracking shows no movement for more than 48 hours, write to care@shayga.in with your order number — we will investigate and resolve within 24 hours.',
           },
         ],
       } as SeedFaqBlock,
@@ -1872,7 +1872,7 @@ export const pages: SeedPage[] = [
           {
             question: 'What is your return policy?',
             answer:
-              'We accept returns within 15 days of delivery. The saree must be unworn, undamaged, and have original tags and packaging intact. Custom-stitched blouses are non-returnable. To initiate a return, email care@shayga.com with your order number and reason. We arrange free pickup from most metro and tier-2 cities.',
+              'We accept returns within 15 days of delivery. The saree must be unworn, undamaged, and have original tags and packaging intact. Custom-stitched blouses are non-returnable. To initiate a return, email care@shayga.in with your order number and reason. We arrange free pickup from most metro and tier-2 cities.',
           },
           {
             question: 'Can I exchange for a different colour or size?',
@@ -1887,7 +1887,7 @@ export const pages: SeedPage[] = [
           {
             question: 'What if I receive a damaged or wrong saree?',
             answer:
-              'We inspect every saree before dispatch, but if a damaged or incorrect item arrives, we will resolve it immediately — full refund or replacement at no cost to you. Photograph the issue and email care@shayga.com within 48 hours of delivery.',
+              'We inspect every saree before dispatch, but if a damaged or incorrect item arrives, we will resolve it immediately — full refund or replacement at no cost to you. Photograph the issue and email care@shayga.in within 48 hours of delivery.',
           },
         ],
       } as SeedFaqBlock,
@@ -1973,7 +1973,7 @@ export const pages: SeedPage[] = [
       {
         blockType: 'textImage',
         heading: 'Tracking your order',
-        body: "As soon as your saree is dispatched, we will send you an email containing your tracking number, the courier partner's name, a direct link to track your package, and an estimated delivery date.\n\nFor domestic orders we use BlueDart and Delhivery — both have real-time tracking apps. For international orders we ship via DHL or FedEx.\n\nIf you have not received tracking details within 2 business days of placing your order, please contact us at care@shayga.com with your order number.",
+        body: "As soon as your saree is dispatched, we will send you an email containing your tracking number, the courier partner's name, a direct link to track your package, and an estimated delivery date.\n\nFor domestic orders we use BlueDart and Delhivery — both have real-time tracking apps. For international orders we ship via DHL or FedEx.\n\nIf you have not received tracking details within 2 business days of placing your order, please contact us at care@shayga.in with your order number.",
         imagePosition: 'right',
       } as SeedTextImageBlock,
       {
@@ -2006,7 +2006,7 @@ export const pages: SeedPage[] = [
       {
         blockType: 'textImage',
         heading: 'How to initiate a return',
-        body: 'Step 1: Email care@shayga.com with your order number, the reason for return, and photographs if the issue is damage or a wrong item.\n\nStep 2: Our team will review your request and confirm eligibility within 24 hours.\n\nStep 3: We will schedule a free pickup from your address (metro and most tier-2 cities). You will receive an email confirming the pickup date.\n\nStep 4: Once the saree reaches our warehouse and passes quality inspection (3–5 business days), your refund will be initiated to the original payment method.\n\nFor faster resolution, WhatsApp us at +91 98765 43210 with your order number and photographs.',
+        body: 'Step 1: Email care@shayga.in with your order number, the reason for return, and photographs if the issue is damage or a wrong item.\n\nStep 2: Our team will review your request and confirm eligibility within 24 hours.\n\nStep 3: We will schedule a free pickup from your address (metro and most tier-2 cities). You will receive an email confirming the pickup date.\n\nStep 4: Once the saree reaches our warehouse and passes quality inspection (3–5 business days), your refund will be initiated to the original payment method.\n\nFor faster resolution, WhatsApp us at +91 98765 43210 with your order number and photographs.',
         imagePosition: 'right',
       } as SeedTextImageBlock,
       {
@@ -2045,7 +2045,7 @@ export const pages: SeedPage[] = [
       {
         blockType: 'textImage',
         heading: 'What we never do with your data',
-        body: 'We want to be direct about this:\n\nWe do not sell your data to any third party — ever. We do not rent or share your contact information with marketing agencies or data brokers. We do not run retargeting ads using your browsing history from our site. We do not use your purchase data to show you personalised ads on other platforms. We do not share your information with social media platforms for advertising purposes.\n\nIf you receive an email or call claiming to be from Shayga and asking for payment details, do not respond — contact us immediately at privacy@shayga.com.',
+        body: 'We want to be direct about this:\n\nWe do not sell your data to any third party — ever. We do not rent or share your contact information with marketing agencies or data brokers. We do not run retargeting ads using your browsing history from our site. We do not use your purchase data to show you personalised ads on other platforms. We do not share your information with social media platforms for advertising purposes.\n\nIf you receive an email or call claiming to be from Shayga and asking for payment details, do not respond — contact us immediately at privacy@shayga.in.',
         imagePosition: 'left',
       } as SeedTextImageBlock,
       {
@@ -2057,7 +2057,7 @@ export const pages: SeedPage[] = [
       {
         blockType: 'textImage',
         heading: 'Your rights',
-        body: "Access: you can request a complete copy of the data we hold about you at any time.\n\nCorrection: update or correct your name, address, email, and other details directly from your account settings.\n\nDeletion: you can request that we permanently delete your account and all associated data. Write to privacy@shayga.com and we will process the deletion within 30 days.\n\nUnsubscribe: click 'unsubscribe' in any newsletter email to stop receiving marketing communications immediately. This does not affect transactional emails (order confirmations, shipping updates).\n\nFor any privacy-related requests or concerns, email privacy@shayga.com. We respond to all privacy queries within 5 business days.",
+        body: "Access: you can request a complete copy of the data we hold about you at any time.\n\nCorrection: update or correct your name, address, email, and other details directly from your account settings.\n\nDeletion: you can request that we permanently delete your account and all associated data. Write to privacy@shayga.in and we will process the deletion within 30 days.\n\nUnsubscribe: click 'unsubscribe' in any newsletter email to stop receiving marketing communications immediately. This does not affect transactional emails (order confirmations, shipping updates).\n\nFor any privacy-related requests or concerns, email privacy@shayga.in. We respond to all privacy queries within 5 business days.",
         imagePosition: 'left',
       } as SeedTextImageBlock,
       {
@@ -2069,8 +2069,8 @@ export const pages: SeedPage[] = [
       {
         blockType: 'cta',
         heading: 'Questions about privacy?',
-        body: 'We take privacy questions seriously. Reach us at privacy@shayga.com for any data-related queries or requests.',
-        buttonText: 'Write to privacy@shayga.com',
+        body: 'We take privacy questions seriously. Reach us at privacy@shayga.in for any data-related queries or requests.',
+        buttonText: 'Write to privacy@shayga.in',
         buttonLink: '/contact',
       } as SeedCtaBlock,
     ],
@@ -2090,13 +2090,13 @@ export const pages: SeedPage[] = [
       {
         blockType: 'textImage',
         heading: 'Placing an order',
-        body: 'When you place an order on shayga.com, you are making an offer to purchase. An order confirmation email does not constitute our acceptance — your order is accepted when we dispatch it. We reserve the right to cancel any order before dispatch, in which case you will receive a full refund.\n\nOrders may be cancelled by us if the product becomes unavailable after your order was placed, if we detect a pricing error (we will notify you and you may confirm at the correct price or cancel), if there are concerns about fraudulent activity on the account, or if your delivery address cannot be serviced by our logistics partners.',
+        body: 'When you place an order on shayga.in, you are making an offer to purchase. An order confirmation email does not constitute our acceptance — your order is accepted when we dispatch it. We reserve the right to cancel any order before dispatch, in which case you will receive a full refund.\n\nOrders may be cancelled by us if the product becomes unavailable after your order was placed, if we detect a pricing error (we will notify you and you may confirm at the correct price or cancel), if there are concerns about fraudulent activity on the account, or if your delivery address cannot be serviced by our logistics partners.',
         imagePosition: 'left',
       } as SeedTextImageBlock,
       {
         blockType: 'textImage',
         heading: 'Pricing and payment',
-        body: "All prices displayed on shayga.com are in Indian Rupees (INR) and are inclusive of applicable GST (currently 5% on textile products). Prices do not include shipping charges, which are calculated at checkout.\n\nWe reserve the right to change prices without prior notice. The price applicable to your order is the price confirmed at checkout. In the event of a pricing error, we will notify you at your registered email address before processing the order. Payments are processed by Razorpay and are subject to Razorpay's terms of service.",
+        body: "All prices displayed on shayga.in are in Indian Rupees (INR) and are inclusive of applicable GST (currently 5% on textile products). Prices do not include shipping charges, which are calculated at checkout.\n\nWe reserve the right to change prices without prior notice. The price applicable to your order is the price confirmed at checkout. In the event of a pricing error, we will notify you at your registered email address before processing the order. Payments are processed by Razorpay and are subject to Razorpay's terms of service.",
         imagePosition: 'right',
       } as SeedTextImageBlock,
       {
@@ -2108,7 +2108,7 @@ export const pages: SeedPage[] = [
       {
         blockType: 'textImage',
         heading: 'Intellectual property',
-        body: 'All content on shayga.com — including product photographs, weave descriptions, blog articles, the Shayga brand name, logo, and design system — is the exclusive intellectual property of Shayga or the individual artisans who have licensed their stories and images to us.\n\nYou may not reproduce, copy, distribute, or commercially exploit any content from this site without prior written permission from Shayga. Linking to our product pages is permitted for non-commercial purposes. For press, editorial, or wholesale inquiries, contact hello@shayga.com.',
+        body: 'All content on shayga.in — including product photographs, weave descriptions, blog articles, the Shayga brand name, logo, and design system — is the exclusive intellectual property of Shayga or the individual artisans who have licensed their stories and images to us.\n\nYou may not reproduce, copy, distribute, or commercially exploit any content from this site without prior written permission from Shayga. Linking to our product pages is permitted for non-commercial purposes. For press, editorial, or wholesale inquiries, contact hello@shayga.in.',
         imagePosition: 'right',
       } as SeedTextImageBlock,
       {
@@ -2120,14 +2120,14 @@ export const pages: SeedPage[] = [
       {
         blockType: 'textImage',
         heading: 'Governing law',
-        body: 'These Terms of Service are governed by the laws of Uttar Pradesh, India. Any dispute arising from your use of shayga.com or from a transaction on the platform shall be subject to the exclusive jurisdiction of the courts in Varanasi, Uttar Pradesh, India.\n\nIf you are a consumer based outside India, applicable mandatory consumer protection laws in your country may also apply. We will always attempt to resolve disputes amicably before either party initiates legal proceedings. Contact legal@shayga.com to raise any legal or compliance concern.',
+        body: 'These Terms of Service are governed by the laws of Uttar Pradesh, India. Any dispute arising from your use of shayga.in or from a transaction on the platform shall be subject to the exclusive jurisdiction of the courts in Varanasi, Uttar Pradesh, India.\n\nIf you are a consumer based outside India, applicable mandatory consumer protection laws in your country may also apply. We will always attempt to resolve disputes amicably before either party initiates legal proceedings. Contact legal@shayga.in to raise any legal or compliance concern.',
         imagePosition: 'right',
       } as SeedTextImageBlock,
       {
         blockType: 'cta',
         heading: 'Questions about these terms?',
         body: 'We try to write legal documents in plain English. If something is unclear, ask us.',
-        buttonText: 'Write to legal@shayga.com',
+        buttonText: 'Write to legal@shayga.in',
         buttonLink: '/contact',
       } as SeedCtaBlock,
     ],
@@ -2206,7 +2206,7 @@ export const pages: SeedPage[] = [
       {
         blockType: 'cta',
         heading: 'Not seeing the right role?',
-        body: 'We keep every application on file. Send a short note — three sentences about why you care about handloom and what you are good at — to careers@shayga.com.',
+        body: 'We keep every application on file. Send a short note — three sentences about why you care about handloom and what you are good at — to careers@shayga.in.',
         buttonText: 'Send an open application',
         buttonLink: '/contact',
       } as SeedCtaBlock,
@@ -2320,7 +2320,7 @@ export const navigations: SeedNavigation[] = [
 export const siteSettingsData = {
   siteName: 'Shayga',
   tagline: 'Timeless Indian Sarees, Crafted with Love',
-  contactEmail: 'hello@shayga.com',
+  contactEmail: 'hello@shayga.in',
   contactPhone: '+91 9876543210',
   address: "123 Weaver's Lane\nVaranasi, Uttar Pradesh 221001\nIndia",
   instagramUrl: 'https://instagram.com/shayga',

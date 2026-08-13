@@ -186,10 +186,10 @@ export default async function CatchAllPage({ params, searchParams }: Props) {
                     Email Address
                   </p>
                   <a
-                    href="mailto:care@shayga.com"
+                    href="mailto:care@shayga.in"
                     className="hover:text-brand-700 transition-colors"
                   >
-                    care@shayga.com
+                    care@shayga.in
                   </a>
                 </div>
               </div>

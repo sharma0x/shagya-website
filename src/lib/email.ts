@@ -23,10 +23,14 @@ export async function sendEmail({
   subject: string
   html: string
 }) {
+  const fromName = process.env.EMAIL_FROM_NAME || 'Shayga'
+  const fromAddress = process.env.EMAIL_FROM_ADDRESS || 'noreply@shayga.in'
+  const from = `${fromName} <${fromAddress}>`
+
   if (!isProduction && process.env.MAILPIT_SMTP_HOST) {
     const transport = createMailpitTransport()
     const info = await transport.sendMail({
-      from: 'Shayga <noreply@shayga.com>',
+      from,
       to,
       subject,
       html,
@@ -46,7 +50,7 @@ export async function sendEmail({
   }
 
   const { data, error } = await resend.emails.send({
-    from: 'Shayga <noreply@shayga.com>',
+    from,
     to,
     subject,
     html,

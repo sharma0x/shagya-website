@@ -115,7 +115,7 @@ Workaround: create the first admin user via API:
 ```bash
 curl -X POST http://localhost:3000/api/users/first-register \
   -H "Content-Type: application/json" \
-  -d '{"email":"admin@shayga.com","password":"...","name":"Admin"}'
+  -d '{"email":"admin@shayga.in","password":"...","name":"Admin"}'
 ```
 
 ## Package Manager
