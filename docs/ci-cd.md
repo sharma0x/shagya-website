@@ -11,18 +11,60 @@ Both Neon branches live in the same project (`shayga`, region `aws-us-east-1`).
 
 ## Workflows
 
-| File                 | Trigger                            | Purpose                                                                  |
-| -------------------- | ---------------------------------- | ------------------------------------------------------------------------ |
-| `ci.yml`             | push/PR to main/develop            | Format, lint, typecheck, unit tests, Next.js build                       |
-| `release.yml`        | push to main                       | semantic-release: bumps version, updates CHANGELOG, creates git tag `v*` |
-| `docker-publish.yml` | push to main/develop, release tags | Builds multi-layer Docker image & publishes to `ghcr.io`                 |
+| File                 | Trigger                                             | Purpose                                                                        |
+| -------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `ci.yml`             | Push / PR on `main` or `develop`                    | Format, lint, typecheck, unit tests, Next.js build                             |
+| `release.yml`        | Push on `main`                                      | Semantic-release: bumps version, updates CHANGELOG, creates git tag `vX.Y.Z`   |
+| `docker-publish.yml` | Push on `main`, `develop`, tags `v*.*.*`, or manual | Builds multi-stage Docker image & publishes to `ghcr.io` with appropriate tags |
 
-## GitHub Container Registry (GHCR)
+## Image Tagging Matrix
 
-Container image repository: `ghcr.io/sharma0x/shagya-website`
+| Trigger Event                         | Git Ref         | Published Docker Tags                                            |
+| ------------------------------------- | --------------- | ---------------------------------------------------------------- |
+| Push to `develop`                     | `develop`       | `:develop`, `:sha-<short-sha>`                                   |
+| Push to `main` (Release tag)          | `v1.2.3`        | `:v1.2.3`, `:1.2.3`, `:1.2`, `:1`, `:latest`, `:sha-<short-sha>` |
+| Manual Dispatch (`workflow_dispatch`) | Any branch      | `:<custom_tag>` (defaults to `:testing`), `:sha-<short-sha>`     |
+| Local developer build                 | Local workspace | `:<custom_tag>` (defaults to `:testing`)                         |
 
-- Automatically tagged with the semantic version (e.g. `v1.0.0`, `1.0.0`, `1.0`), commit SHA (`sha-xxxxxxx`), and `latest`.
-- Can be manually triggered on any branch/tag via GitHub Actions `workflow_dispatch`.
+## Developer Workflow & Commands
+
+### 1. Simulate Full CI Pipeline Locally
+
+Run the entire CI validation suite locally before committing:
+
+```bash
+make ci-local
+```
+
+### 2. Build & Push Custom Images to GHCR
+
+Build and push images locally with a custom tag (e.g. for testing a feature branch or VPS deployment):
+
+```bash
+# Build locally with tag 'testing' (default)
+make ghcr-build
+
+# Build and push with a custom tag
+make ghcr-build-push TAG=feature-checkout
+```
+
+### 3. Pull & Test Container Images Locally
+
+Test any production container image locally with custom environment variables before deploying:
+
+```bash
+# Pull and test 'testing' tag with local .env file on port 3000
+make docker-test-image
+
+# Test a specific tag with custom env file on port 8080
+make docker-test-image TAG=v1.0.0 ENV_FILE=.env.production PORT=8080
+
+# View test container logs
+make docker-test-logs
+
+# Stop test container
+make docker-test-stop
+```
 
 ## Semantic Versioning
 
@@ -35,23 +77,12 @@ Container image repository: `ghcr.io/sharma0x/shagya-website`
 
 Husky + commitlint enforces Conventional Commits on every commit.
 
-## Deployment Targets
-
-### 1. Self-Hosted VPS (Hetzner / DO / EC2)
+## Production Deployment (VPS)
 
 Follow the [Production Deployment Guide](deployment.md) to deploy containerized replicas with Caddy:
 
 ```bash
-make prod-deploy                      # Deploy latest image
-make prod-deploy IMAGE_TAG=v1.0.0     # Deploy specific release
-```
-
-### 2. Local Development
-
-```bash
-make setup                 # install deps
-make infra-up              # local Postgres + MinIO
-make db-migrate            # run migrations
-make dev                   # start dev server
-make test / make test-all  # run tests
+make prod-deploy                  # Deploy latest image
+make prod-deploy TAG=v1.0.0       # Deploy specific release
+make prod-deploy TAG=develop      # Deploy develop preview image
 ```

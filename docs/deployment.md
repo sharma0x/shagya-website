@@ -79,14 +79,15 @@ flowchart TD
 
 ## 3. Automated CI/CD & Image Versioning Pipeline
 
-Every commit to `main` executes an automated GitHub Actions pipeline:
+Every commit to `develop` or `main` executes an automated GitHub Actions pipeline:
 
-1. **Lint, Test & Build ([`.github/workflows/ci.yml`](file:///Users/princesharma74/Documents/Freelancing/Shagya/shagya-website/.github/workflows/ci.yml))**: Ensures all tests, TypeScript types, and Next.js builds pass.
-2. **Semantic Release ([`.github/workflows/release.yml`](file:///Users/princesharma74/Documents/Freelancing/Shagya/shagya-website/.github/workflows/release.yml))**: Analyzes conventional commit messages (`feat:`, `fix:`, etc.), bumps version in `package.json`, generates `CHANGELOG.md`, and creates git release tags (e.g. `v1.0.0`).
-3. **Docker Build & Push to GHCR ([`.github/workflows/docker-publish.yml`](file:///Users/princesharma74/Documents/Freelancing/Shagya/shagya-website/.github/workflows/docker-publish.yml))**: Compiles optimized production container images and publishes them to `ghcr.io/sharma0x/shagya-website` tagged with:
-   - Specific release versions (`v1.0.0`, `1.0.0`, `1.0`)
-   - `latest`
-   - Short commit hashes (`sha-abcdef1`)
+1. **Lint, Test & Build ([`.github/workflows/ci.yml`](file:///Users/princesharma74/Documents/Freelancing/Shagya/shagya-website/.github/workflows/ci.yml))**: Validates code formatting, ESLint, TypeScript types, unit tests, and production build on pull requests and branch pushes.
+2. **Semantic Release ([`.github/workflows/release.yml`](file:///Users/princesharma74/Documents/Freelancing/Shagya/shagya-website/.github/workflows/release.yml))**: On `main` branch pushes, analyzes conventional commits (`feat:`, `fix:`, etc.), bumps version in `package.json`, generates `CHANGELOG.md`, and creates git release tags (e.g. `v1.0.0`).
+3. **Docker Build & Push to GHCR ([`.github/workflows/docker-publish.yml`](file:///Users/princesharma74/Documents/Freelancing/Shagya/shagya-website/.github/workflows/docker-publish.yml))**: Compiles optimized production container images and publishes them to `ghcr.io/sharma0x/shagya-website` with appropriate tags:
+   - **`develop` branch push**: tagged `:develop`, `:sha-<short-sha>`
+   - **`main` release tag (`v*.*.*`)**: tagged `:v1.0.0`, `:1.0.0`, `:1.0`, `:1`, `:latest`, `:sha-<short-sha>`
+   - **Manual dispatch**: tagged `:<custom_tag>` (defaults to `:testing`)
+   - **Local build/push**: via `make ghcr-build-push TAG=testing`
 
 ---
 
