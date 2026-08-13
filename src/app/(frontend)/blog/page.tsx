@@ -3,7 +3,7 @@ import config from '@payload-config'
 import Link from 'next/link'
 import { Calendar, User, ArrowRight } from 'lucide-react'
 
-export const revalidate = 3600 // cache for 1 hour
+export const dynamic = 'force-dynamic'
 
 export default async function BlogIndexPage() {
   let posts: any[] = []
@@ -13,9 +13,6 @@ export default async function BlogIndexPage() {
 
     const result = await payload.find({
       collection: 'posts',
-      where: {
-        status: { equals: 'published' },
-      },
       sort: '-publishedAt',
       depth: 2,
     })

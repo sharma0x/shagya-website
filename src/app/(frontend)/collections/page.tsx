@@ -42,6 +42,8 @@ function ImagePanel({
   )
 }
 
+export const dynamic = 'force-dynamic'
+
 export default async function CollectionsPage() {
   let collectionsWithCovers: any[] = []
 
