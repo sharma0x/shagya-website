@@ -1,11 +1,5 @@
 import { Suspense } from 'react'
-import {
-  ArrowRight,
-  Truck,
-  RotateCcw,
-  ShieldCheck,
-  Sparkles,
-} from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import {
   IconBrandInstagram,
   IconBrandFacebook,
@@ -118,29 +112,6 @@ function ImagePanel({
 function mapProductWithVariant(p: any) {
   return liftVariantGallery(p)
 }
-
-const TRUST_FEATURES = [
-  {
-    icon: <Truck className="h-7 w-7" />,
-    title: 'Free Shipping',
-    description: 'On all orders above ₹1,999',
-  },
-  {
-    icon: <RotateCcw className="h-7 w-7" />,
-    title: 'Easy Returns',
-    description: '15-day hassle-free returns',
-  },
-  {
-    icon: <ShieldCheck className="h-7 w-7" />,
-    title: 'Authentic Handloom',
-    description: 'Verified by our craft team',
-  },
-  {
-    icon: <Sparkles className="h-7 w-7" />,
-    title: 'Premium Fabric',
-    description: 'Handpicked quality materials',
-  },
-]
 
 const OCCASIONS = [
   {
@@ -723,38 +694,17 @@ export default async function HomePage({ searchParams }: Props) {
       {/* ─── SECTION 1: HERO (Renders instantly) ─── */}
       <HeroCarousel slides={heroSlides} />
 
-      {/* ─── SECTION 2: TRUST FEATURES (Renders instantly) ─── */}
-      <section className="border-brand-100/40 bg-brand-50/30 border-y">
-        <div className="grid grid-cols-2 items-baseline justify-start gap-x-6 gap-y-3 px-4 py-4 sm:flex sm:flex-wrap sm:justify-center sm:gap-x-10 sm:py-5 md:gap-x-14 lg:gap-x-18">
-          {TRUST_FEATURES.map((feature) => (
-            <div key={feature.title} className="flex items-start gap-2">
-              <div className="text-brand-600 flex h-8 w-8 shrink-0 items-center justify-center sm:h-9 sm:w-9">
-                {feature.icon}
-              </div>
-              <div className="flex flex-col">
-                <span className="font-display text-brand-950 text-xs font-medium whitespace-nowrap sm:text-sm">
-                  {feature.title}
-                </span>
-                <span className="text-brand-700/50 text-[10px] sm:text-xs">
-                  {feature.description}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ─── SECTION 3: SHOP BY CATEGORY (Progressive Stream) ─── */}
+      {/* ─── SECTION 2: SHOP BY CATEGORY (Progressive Stream) ─── */}
       <Suspense fallback={<CategoriesGridSkeleton />}>
         <HomeCategoriesSection subtitle={categoriesBlock?.subheading} />
       </Suspense>
 
-      {/* ─── SECTION 4: PRODUCT SPOTLIGHTS (Progressive Stream) ─── */}
+      {/* ─── SECTION 3: PRODUCT SPOTLIGHTS (Progressive Stream) ─── */}
       <Suspense fallback={<SpotlightsGridSkeleton />}>
         <HomeProductSpotlightsSection />
       </Suspense>
 
-      {/* ─── SECTION 5: SHOP BY OCCASION + TRENDING COLORS + SOCIAL (Renders instantly) ─── */}
+      {/* ─── SECTION 4: SHOP BY OCCASION + TRENDING COLORS + SOCIAL (Renders instantly) ─── */}
       <section className="bg-brand-50/20">
         <div className="container-page py-6 sm:py-8 md:py-10">
           <div className="grid grid-cols-1 gap-8 md:grid-cols-3 md:gap-6 lg:gap-10">
