@@ -7,6 +7,12 @@ import { getServerURL, getAllowedOrigins } from './env'
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
+  ssl:
+    process.env.DATABASE_URL?.includes('sslmode=require') ||
+    process.env.DATABASE_URL?.includes('neon.tech') ||
+    process.env.DATABASE_URL?.includes('rds.amazonaws.com')
+      ? { rejectUnauthorized: false }
+      : undefined,
 })
 
 function runEmailInBackground(label: string, work: () => Promise<void>): void {

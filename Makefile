@@ -5,6 +5,7 @@
         lint format typecheck \
         test test-watch test-coverage test-e2e test-all ci-local \
         infra-up infra-down infra-logs infra-reset \
+        rds-init rds-plan rds-apply rds-output rds-destroy \
         seed-local seed-preview seed-production \
         reset-local reset-preview-dangerous reset-production-dangerous \
         db-migrate db-migrate-create db-generate-types \
@@ -66,6 +67,13 @@ help: ## Show this help message
 	@echo "  make infra-down       Stop PostgreSQL"
 	@echo "  make infra-logs       View PostgreSQL logs"
 	@echo "  make infra-reset      Reset PostgreSQL (delete all data)"
+	@echo ""
+	@echo "RDS (Terraform):"
+	@echo "  make rds-init         Initialize Terraform for RDS config (downloads providers)"
+	@echo "  make rds-plan         Show Terraform plan (DB_PASSWORD='...', VPS_IP optional)"
+	@echo "  make rds-apply        Provision/update the RDS PostgreSQL instance (DB_PASSWORD='...', VPS_IP optional)"
+	@echo "  make rds-output       Show the RDS connection string"
+	@echo "  make rds-destroy      DESTROY the RDS instance, subnet group and SG (DANGEROUS)"
 	@echo ""
 	@echo "Build:"
 	@echo "  make build            Production build"
@@ -189,6 +197,51 @@ infra-logs: ## View infrastructure logs
 
 infra-reset: ## Reset infrastructure (delete all data)
 	docker compose -f infra/dev-services.yml down -v
+
+# ============================================================================
+# RDS Infrastructure (Terraform)
+# ============================================================================
+
+TF_DIR ?= infra/terraform
+VPS_IP ?=   # optional — auto-detected from your current public IP when unset
+DB_PASSWORD ?=
+
+# Shared guard: DB_PASSWORD is a secret, so require it explicitly on every invocation
+define rds_check_password
+	@if [ -z "$(DB_PASSWORD)" ]; then \
+		echo "Error: DB_PASSWORD is required. Usage: make $(1) DB_PASSWORD='...'"; \
+		exit 1; \
+	fi
+endef
+
+rds-init: ## Initialize Terraform for the RDS config (downloads providers)
+	cd $(TF_DIR) && terraform init
+
+rds-plan: ## Show the Terraform plan for RDS PostgreSQL (Usage: make rds-plan DB_PASSWORD='...')
+	$(call rds_check_password,rds-plan)
+	@cd $(TF_DIR) && \
+		terraform plan \
+		-var="db_password=$(DB_PASSWORD)" \
+		-var="vps_ip=$(if $(VPS_IP),$(VPS_IP),$$(curl -s --max-time 10 https://checkip.amazonaws.com))"
+
+rds-apply: ## Provision/update the RDS PostgreSQL instance (Usage: make rds-apply DB_PASSWORD='...')
+	$(call rds_check_password,rds-apply)
+	@cd $(TF_DIR) && \
+		terraform apply \
+		-var="db_password=$(DB_PASSWORD)" \
+		-var="vps_ip=$(if $(VPS_IP),$(VPS_IP),$$(curl -s --max-time 10 https://checkip.amazonaws.com))"
+
+rds-output: ## Show the RDS connection string
+	cd $(TF_DIR) && terraform output database_connection_string
+
+rds-destroy: ## DESTROY the RDS instance, subnet group and SG (Usage: make rds-destroy DB_PASSWORD='...')
+	$(call rds_check_password,rds-destroy)
+	@echo "⚠️  WARNING: This will DESTROY the RDS PostgreSQL instance and ALL its data."
+	@read -p "Type 'DANGEROUS' to confirm: " ans && [ "$$ans" = "DANGEROUS" ]
+	@cd $(TF_DIR) && \
+		terraform destroy \
+		-var="db_password=$(DB_PASSWORD)" \
+		-var="vps_ip=$(if $(VPS_IP),$(VPS_IP),$$(curl -s --max-time 10 https://checkip.amazonaws.com))"
 
 # ============================================================================
 # Seed (one-stop command — works on a completely fresh database)
@@ -370,7 +423,7 @@ PROD_COMPOSE = docker compose -f docker-compose.prod.yml
 TAG ?= testing
 IMAGE_TAG ?= $(TAG)
 DOCKER_IMAGE ?= ghcr.io/sharma0x/shagya-website
-ENV_FILE ?= .env
+ENV_FILE ?= $(if $(wildcard .env.production),.env.production,.env)
 PORT ?= 3000
 
 prod-login: ## Log in to GitHub Container Registry (requires GH_TOKEN / GITHUB_TOKEN)
@@ -381,18 +434,18 @@ prod-login: ## Log in to GitHub Container Registry (requires GH_TOKEN / GITHUB_T
 	fi
 	@echo "$${GH_TOKEN:-$$GITHUB_TOKEN}" | docker login ghcr.io -u "$${GH_USER:-sharma0x}" --password-stdin
 
-prod-pull: ## Pull production Docker image (Usage: make prod-pull [TAG=latest])
-	@if [ ! -f .env.production ]; then echo "❌ .env.production file not found. Copy from .env.production.example first."; exit 1; fi
-	IMAGE_TAG=$(IMAGE_TAG) DOCKER_IMAGE=$(DOCKER_IMAGE) $(PROD_COMPOSE) pull app
+prod-pull: ## Pull production Docker image (Usage: make prod-pull [TAG=latest] [ENV_FILE=.env])
+	@if [ ! -f $(ENV_FILE) ]; then echo "❌ Environment file '$(ENV_FILE)' not found."; exit 1; fi
+	ENV_FILE=$(ENV_FILE) IMAGE_TAG=$(IMAGE_TAG) DOCKER_IMAGE=$(DOCKER_IMAGE) $(PROD_COMPOSE) pull app
 
-prod-migrate: ## Run migrations safely against production DB in a one-off container
-	@if [ ! -f .env.production ]; then echo "❌ .env.production file not found."; exit 1; fi
-	@echo "Running Payload & Better Auth migrations on production database..."
-	IMAGE_TAG=$(IMAGE_TAG) DOCKER_IMAGE=$(DOCKER_IMAGE) $(PROD_COMPOSE) run --rm --no-deps app sh -c "npx payload migrate && npx better-auth migrate --config src/lib/auth.ts -y"
+prod-migrate: ## Run migrations safely against database in a one-off container (Usage: make prod-migrate [ENV_FILE=.env])
+	@if [ ! -f $(ENV_FILE) ]; then echo "❌ Environment file '$(ENV_FILE)' not found."; exit 1; fi
+	@echo "Running Payload & Better Auth migrations on database using $(ENV_FILE)..."
+	ENV_FILE=$(ENV_FILE) IMAGE_TAG=$(IMAGE_TAG) DOCKER_IMAGE=$(DOCKER_IMAGE) $(PROD_COMPOSE) run --rm --no-deps app sh -c "npx payload migrate && npx better-auth migrate --config src/lib/auth.ts -y"
 
-prod-up: ## Start production stack (Caddy + App replicas)
-	@if [ ! -f .env.production ]; then echo "❌ .env.production file not found."; exit 1; fi
-	IMAGE_TAG=$(IMAGE_TAG) DOCKER_IMAGE=$(DOCKER_IMAGE) $(PROD_COMPOSE) up -d --remove-orphans
+prod-up: ## Start production stack (Caddy + App replicas + Redis) (Usage: make prod-up [ENV_FILE=.env])
+	@if [ ! -f $(ENV_FILE) ]; then echo "❌ Environment file '$(ENV_FILE)' not found."; exit 1; fi
+	ENV_FILE=$(ENV_FILE) IMAGE_TAG=$(IMAGE_TAG) DOCKER_IMAGE=$(DOCKER_IMAGE) $(PROD_COMPOSE) up -d --remove-orphans
 
 prod-down: ## Stop production stack
 	$(PROD_COMPOSE) down
@@ -405,11 +458,11 @@ prod-logs: ## View live logs from production services
 
 prod-deploy: ## One-stop deployment: Pull image -> Run migrations -> Start containers
 	@echo "================================================="
-	@echo "  Deploying Shayga Production (Tag: $(IMAGE_TAG))"
+	@echo "  Deploying Shayga Production (Tag: $(IMAGE_TAG), Env: $(ENV_FILE))"
 	@echo "================================================="
-	@$(MAKE) prod-pull IMAGE_TAG=$(IMAGE_TAG)
-	@$(MAKE) prod-migrate IMAGE_TAG=$(IMAGE_TAG)
-	@$(MAKE) prod-up IMAGE_TAG=$(IMAGE_TAG)
+	@$(MAKE) prod-pull IMAGE_TAG=$(IMAGE_TAG) ENV_FILE=$(ENV_FILE)
+	@$(MAKE) prod-migrate IMAGE_TAG=$(IMAGE_TAG) ENV_FILE=$(ENV_FILE)
+	@$(MAKE) prod-up IMAGE_TAG=$(IMAGE_TAG) ENV_FILE=$(ENV_FILE)
 	@echo ""
 	@echo "✓ Deployment complete! Container status:"
 	@$(PROD_COMPOSE) ps

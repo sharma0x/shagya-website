@@ -340,6 +340,12 @@ export default buildConfig({
   db: postgresAdapter({
     pool: {
       connectionString: process.env.DATABASE_URL || '',
+      ssl:
+        process.env.DATABASE_URL?.includes('sslmode=require') ||
+        process.env.DATABASE_URL?.includes('neon.tech') ||
+        process.env.DATABASE_URL?.includes('rds.amazonaws.com')
+          ? { rejectUnauthorized: false }
+          : undefined,
     },
     // Disabled automatic schema push to prevent conflict/deletion of Better Auth tables in development
     push: false,
