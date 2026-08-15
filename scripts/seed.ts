@@ -682,6 +682,7 @@ export async function seedBlogPosts(payload: Payload): Promise<void> {
         data: {
           title: post.title,
           status: post.status,
+          _status: post.status === 'published' ? 'published' : 'draft',
           excerpt: post.excerpt,
           author: authorId,
           content: lexicalRichText(post.body),
