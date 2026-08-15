@@ -12,12 +12,24 @@ import {
   ChevronDown,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import dynamic from 'next/dynamic'
 import { Logo } from '@/components/layout/Logo'
 import { useCart } from '@/lib/store/cart'
 import { useUI } from '@/lib/store/ui'
 import { useWishlistStore } from '@/lib/store/wishlist'
-import { CartDrawer } from '@/components/cart/CartDrawer'
-import { SearchCommand } from '@/components/search/SearchCommand'
+
+const CartDrawer = dynamic(
+  () => import('@/components/cart/CartDrawer').then((mod) => mod.CartDrawer),
+  { ssr: false },
+)
+const SearchCommand = dynamic(
+  () =>
+    import('@/components/search/SearchCommand').then(
+      (mod) => mod.SearchCommand,
+    ),
+  { ssr: false },
+)
+
 import {
   NavigationMenu,
   NavigationMenuContent,
