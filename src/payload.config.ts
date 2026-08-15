@@ -335,7 +335,7 @@ export default buildConfig({
   globals: [SiteSettings],
 
   // ---------------------------------------------------------------------------
-  // Database — PostgreSQL 18 via Neon
+  // Database — PostgreSQL (AWS RDS / Neon / Local Docker)
   // ---------------------------------------------------------------------------
   db: postgresAdapter({
     pool: {
@@ -346,6 +346,9 @@ export default buildConfig({
         process.env.DATABASE_URL?.includes('rds.amazonaws.com')
           ? { rejectUnauthorized: false }
           : undefined,
+      max: Number(process.env.DB_POOL_MAX || 15),
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 5000,
     },
     // Disabled automatic schema push to prevent conflict/deletion of Better Auth tables in development
     push: false,
