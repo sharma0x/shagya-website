@@ -29,7 +29,8 @@ export function SkeletonImage({
   unoptimized,
   loading,
 }: SkeletonImageProps) {
-  const [loaded, setLoaded] = useState(false)
+  const isEager = priority || loading === 'eager'
+  const [loaded, setLoaded] = useState(isEager)
   const imgRef = useRef<HTMLImageElement>(null)
 
   // Handle already-cached images: img.complete is true before onLoad fires
@@ -41,13 +42,15 @@ export function SkeletonImage({
 
   return (
     <>
-      <div
-        className={cn(
-          'absolute inset-0 transition-opacity duration-300',
-          loaded ? 'pointer-events-none opacity-0' : 'skeleton',
-        )}
-        aria-hidden="true"
-      />
+      {!isEager && (
+        <div
+          className={cn(
+            'absolute inset-0 transition-opacity duration-300',
+            loaded ? 'pointer-events-none opacity-0' : 'skeleton',
+          )}
+          aria-hidden="true"
+        />
+      )}
       <Image
         ref={imgRef}
         src={src}
@@ -59,9 +62,14 @@ export function SkeletonImage({
         priority={priority}
         unoptimized={unoptimized}
         loading={loading}
+        fetchPriority={priority ? 'high' : 'auto'}
         className={cn(
-          'transition-opacity duration-500',
-          loaded ? 'opacity-100' : 'opacity-0',
+          isEager
+            ? 'opacity-100'
+            : cn(
+                'transition-opacity duration-500',
+                loaded ? 'opacity-100' : 'opacity-0',
+              ),
           className,
         )}
         onLoad={() => setLoaded(true)}

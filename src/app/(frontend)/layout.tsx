@@ -9,14 +9,12 @@ const sora = Sora({
   subsets: ['latin'],
   display: 'swap',
   variable: '--font-display',
-  weight: ['400', '500', '600', '700'],
 })
 
 const publicSans = Public_Sans({
   subsets: ['latin'],
   display: 'swap',
   variable: '--font-body',
-  weight: ['300', '400', '500', '600', '700'],
 })
 
 const notoSansDevanagari = Noto_Sans_Devanagari({
