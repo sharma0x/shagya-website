@@ -3,7 +3,7 @@ import config from '@payload-config'
 import Link from 'next/link'
 import { Calendar, User, ArrowRight } from 'lucide-react'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 300
 
 export default async function BlogIndexPage() {
   let posts: any[] = []
@@ -14,7 +14,7 @@ export default async function BlogIndexPage() {
     const result = await payload.find({
       collection: 'posts',
       sort: '-publishedAt',
-      depth: 2,
+      depth: 1,
     })
     posts = result.docs as any[]
   } catch {

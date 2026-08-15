@@ -9,6 +9,8 @@ import { ProductFilters } from '@/components/product/ProductFilters'
 import { ProductCard } from '@/components/product/ProductCard'
 import { ProductCardSkeleton } from '@/components/ui/Skeleton'
 
+export const revalidate = 120
+
 function getCommaParam(
   params: { [key: string]: string | string[] | undefined },
   key: string,

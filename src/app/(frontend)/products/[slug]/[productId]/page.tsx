@@ -35,6 +35,8 @@ import {
 } from '@/components/ui/Skeleton'
 import type { SiteSetting } from '@/payload-types'
 
+export const revalidate = 300
+
 type Props = {
   params: Promise<{ slug: string; productId: string }>
   searchParams: Promise<{ preview?: string; id?: string; color?: string }>

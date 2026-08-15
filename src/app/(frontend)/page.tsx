@@ -1,5 +1,8 @@
 import { Suspense } from 'react'
 import { ArrowRight } from 'lucide-react'
+
+export const revalidate = 300
+
 import {
   IconBrandInstagram,
   IconBrandFacebook,
@@ -255,7 +258,7 @@ async function HomeProductSpotlightsSection() {
           },
         ],
       },
-      limit: 500,
+      limit: 50,
       depth: 0,
     }),
   ])

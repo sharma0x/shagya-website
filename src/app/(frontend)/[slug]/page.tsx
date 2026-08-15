@@ -17,6 +17,8 @@ import type { FormDoc } from '@/components/page/ContactForm'
 import { ContactForm } from '@/components/page/ContactForm'
 import { RefreshRouteOnSave } from '@/components/live-preview/RefreshRouteOnSave'
 
+export const revalidate = 300
+
 type Props = {
   params: Promise<{ slug: string }>
   searchParams: Promise<{ preview?: string; id?: string }>
