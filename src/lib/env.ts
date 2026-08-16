@@ -15,6 +15,11 @@ export const getServerURL = (): string => {
 }
 
 export const getAllowedOrigins = (): string[] => {
+  const extraOrigins = (process.env.EXTRA_ALLOWED_ORIGINS ?? '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean)
+
   return [
     getServerURL(),
     process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '',
@@ -24,5 +29,6 @@ export const getAllowedOrigins = (): string[] => {
     process.env.VERCEL_PROJECT_PRODUCTION_URL
       ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
       : '',
+    ...extraOrigins,
   ].filter(Boolean)
 }
