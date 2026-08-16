@@ -3,6 +3,11 @@ import { ArrowRight } from 'lucide-react'
 
 export const revalidate = 300
 
+// Rendered per-request. The page can't be statically prerendered at build time
+// (the build environment has no DB access), and the DB is now colocated (RDS in
+// the same region as the VPS) so per-request SSR is fast.
+export const dynamic = 'force-dynamic'
+
 import {
   IconBrandInstagram,
   IconBrandFacebook,
@@ -551,13 +556,7 @@ async function HomeBlogSection({
   )
 }
 
-type Props = {
-  searchParams: Promise<{ preview?: string; id?: string }>
-}
-
-export default async function HomePage({ searchParams }: Props) {
-  const { preview, id } = await searchParams
-  const isPreview = preview === 'true' && id === 'site-settings'
+export default async function HomePage() {
   const payload = await getPayload({ config })
 
   // Fast fetch for page doc shell settings
@@ -692,7 +691,7 @@ export default async function HomePage({ searchParams }: Props) {
 
   return (
     <div className="overflow-hidden">
-      {isPreview && <RefreshRouteOnSave />}
+      <RefreshRouteOnSave />
 
       {/* ─── SECTION 1: HERO (Renders instantly) ─── */}
       <HeroCarousel slides={heroSlides} />
