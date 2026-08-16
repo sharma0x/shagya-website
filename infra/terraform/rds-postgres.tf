@@ -27,9 +27,10 @@ variable "db_password" {
   sensitive   = true
 }
 
-variable "vps_ip" {
-  description = "The public IP address of your App VPS"
-  type        = string
+variable "vps_ips" {
+  description = "The public IP addresses of your App VPS(es)"
+  type        = list(string)
+  default     = ["49.36.137.176", "13.206.184.166"] # old VPS + new EIP
 }
 
 # 2.5 Look up the project VPC and its public subnets (ap-south-1a + ap-south-1b).
@@ -61,11 +62,22 @@ resource "aws_security_group" "rds_sg" {
   vpc_id      = data.aws_vpc.project.id
 
   ingress {
-    description = "PostgreSQL from VPS"
+    description = "PostgreSQL from VPS (public IPs, legacy/external VPS + admin tooling)"
     from_port   = 5432
     to_port     = 5432
     protocol    = "tcp"
-    cidr_blocks = ["${var.vps_ip}/32"]
+    cidr_blocks = [for ip in var.vps_ips : "${ip}/32"]
+  }
+
+  # The App VPS lives in this same VPC, so it reaches RDS over its PRIVATE IP
+  # (same-VPC DNS resolves the endpoint to a private address). The public-IP
+  # rule above never matches that traffic, hence this explicit private rule.
+  ingress {
+    description = "PostgreSQL from App VPS (private, same VPC)"
+    from_port   = 5432
+    to_port     = 5432
+    protocol    = "tcp"
+    cidr_blocks = ["${aws_instance.shayga_vps.private_ip}/32"]
   }
 
   egress {
