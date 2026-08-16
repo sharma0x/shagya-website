@@ -78,3 +78,14 @@ ENV_FILE=.env IMAGE_TAG=testing DOCKER_IMAGE=ghcr.io/sharma0x/shagya-website doc
 - Anonymous read access filters on `_status: { equals: 'published' }` (see `src/collections/Posts.ts`). Drafts are invisible on the frontend.
 - **Seed bug fixed**: `scripts/seed.ts` created posts without `_status` → all seeded posts stayed drafts → blog showed "No journal entries published yet". Fix: pass `_status: post.status === 'published' ? 'published' : 'draft'` in the create data.
 - One-off publish utility: `scripts/publish-posts.ts` → run `node --env-file=.env --import tsx/esm scripts/publish-posts.ts` (targets whatever `DATABASE_URL` is in `.env` = RDS).
+
+## VPS Deploy — Caddy HTTPS on a bare Elastic IP (2026-08-16)
+
+- **Browsers send NO SNI for IP-literal URLs**, so Caddy falls back to the default (first) site block. If that block is the domain (no cert yet) the IP request fails with `000`. Fix: set a global `default_sni {$PUBLIC_IP}` so no-SNI connections get the IP site's cert.
+- Public CAs (Let's Encrypt) **will not issue certs for bare IPs** — use Caddy `tls internal` (self-signed) on the IP site. Browser shows "Not secure"; only a domain gives a trusted lock.
+- `/opt/shayga` is created by root in user_data → `sudo chown -R ubuntu:ubuntu /opt/shayga` before `scp`-ing files, and `sudo usermod -aG docker ubuntu` (docker group applies on next SSH login).
+- App port `3000` is `expose:`d only (internal); verify reachability through Caddy (port 80/443), not `localhost:3000`.
+- Deploy files on VPS: `docker-compose.prod.yml`, `Caddyfile`, `Makefile`, `.env.production` (from `infra/.env.production`). `make prod-deploy IMAGE_TAG=testing ENV_FILE=.env.production`.
+- `NEXT_PUBLIC_SERVER_URL` is read **at runtime, server-side** (`src/lib/env.ts` `getServerURL`) for Payload `serverURL` + CORS/CSRF + Better Auth `trustedOrigins`/`rpID`. It's NOT inlined client-side except via `ProductShareButton` (build-time, effectively undefined in CI image).
+- **Dual-origin (domain + IP)**: set `NEXT_PUBLIC_SERVER_URL` to the canonical domain and add `EXTRA_ALLOWED_ORIGINS=https://<IP>`; `getAllowedOrigins()` (env.ts) appends it. Otherwise admin/CSRF/checkout via the non-serverURL origin 403s.
+- Caddy env vars come from the container env; caddy service uses `env_file: ${ENV_FILE:-.env.production}` so `{$PUBLIC_IP}` / `{$DOMAIN_NAME}` resolve. Don't put `environment:` overrides on caddy — they take precedence over env_file.
