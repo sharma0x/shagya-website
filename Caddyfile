@@ -1,4 +1,13 @@
-{$DOMAIN_NAME:shayga.in}, www.{$DOMAIN_NAME:shayga.in} {
+# Global options
+{
+    # Browsers do not send SNI for IP-literal URLs, so serve the IP site
+    # (self-signed via tls internal) when no SNI is provided.
+    # PUBLIC_IP is injected from the environment (see docker-compose.prod.yml / .env).
+    default_sni {$PUBLIC_IP}
+}
+
+# Shared upstream config for the Next.js / Payload containers
+(shayga_app) {
     # Fast modern compression (zstd, gzip)
     encode zstd gzip
 
@@ -24,4 +33,17 @@
         }
         format json
     }
+}
+
+# Public domain (Let's Encrypt via Cloudflare)
+{$DOMAIN_NAME:shayga.in}, www.{$DOMAIN_NAME:shayga.in} {
+    import shayga_app
+}
+
+# Direct access via the Elastic IP (PUBLIC_IP env var).
+# Public CAs (Let's Encrypt) do not issue certs for bare IPs, so Caddy serves
+# a self-signed cert here. Expect a browser certificate warning and proceed.
+https://{$PUBLIC_IP} {
+    tls internal
+    import shayga_app
 }

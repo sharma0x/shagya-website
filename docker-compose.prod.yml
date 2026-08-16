@@ -46,8 +46,8 @@ services:
     ports:
       - '80:80'
       - '443:443'
-    environment:
-      - DOMAIN_NAME=${DOMAIN_NAME:-shayga.in}
+    env_file:
+      - ${ENV_FILE:-.env.production}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
