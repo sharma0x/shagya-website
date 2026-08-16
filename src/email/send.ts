@@ -1,6 +1,5 @@
 import type { Payload } from 'payload'
 import { renderEmail } from './render'
-import { getServerURL } from '@/lib/env'
 import { getProductUrl } from '@/lib/product-url'
 import {
   buildItemsTable,
@@ -16,7 +15,12 @@ import {
 // ─── Internal helpers ─────────────────────────────────────────────────────────
 
 async function getBaseURL(): Promise<string> {
-  return getServerURL()
+  // Emails must never point at localhost — the recipient's client can't reach
+  // it. Prefer NEXT_PUBLIC_SERVER_URL; otherwise fall back to the production
+  // domain (NOT getServerURL()'s localhost default).
+  const url = process.env.NEXT_PUBLIC_SERVER_URL?.trim()
+  if (url) return url.replace(/\/+$/, '')
+  return 'https://shayga.in'
 }
 
 async function getAdminEmail(payload: Payload): Promise<string> {
