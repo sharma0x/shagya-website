@@ -1,5 +1,29 @@
 # Shayga — Agent Memory
 
+## RDS SG must match current public IP (recurring) (2026-08-16)
+
+**Symptom:** After PC/network change, app containers log `cannot connect to Postgres ... Connection terminated due to connection timeout` (NOT refused — AWS SG drops packets silently) and `/api/media/*` returns 500 `"There was an error initializing Payload"` on affected replicas. Homepage may still serve cached content.
+**Root cause:** `infra/terraform/rds-postgres.tf` SG rule `aws_security_group.rds_sg` only allows the current `vps_ip` (`${var.vps_ip}/32`). Home/ISP public IPs change unpredictably (verified twice: `152.57.37.243` → `49.36.137.176`).
+**Fix:**
+```bash
+IP=$(curl -s https://api.ipify.org)
+DBPASS=$(jq -r '.resources[] | select(.instances[0].attributes.password? != null) | .instances[0].attributes.password' infra/terraform/terraform.tfstate | grep -v null | head -1)
+terraform -chdir=infra/terraform apply -auto-approve -var="db_password=$DBPASS" -var="vps_ip=$IP"
+ENV_FILE=.env IMAGE_TAG=testing DOCKER_IMAGE=ghcr.io/sharma0x/shagya-website docker compose -f docker-compose.prod.yml restart app
+```
+- Containers egress via the Docker Desktop host NAT, so the host's public IP is what the SG must allow.
+- `nc -vz -w 5 <rds-endpoint> 5432` is the fast reachability check; a timeout (not `refused`) = SG blocked.
+
+## Docker Stack Media 500 — `localhost` endpoints in env (2026-08-14)
+
+**Symptom:** Seeded data, but `<img>` shows only alt text. `/api/media/file/*` returns **500**.
+**Root cause:** `R2_ENDPOINT=http://localhost:9000` in the env file used by the prod-compose stack (`ENV_FILE=.env`). Inside a container `localhost` = the container itself → s3Storage `ECONNREFUSED ::1:9000 / 127.0.0.1:9000` → media route 500. Objects were fine in MinIO (452 jpgs) and docs fine in RDS.
+**Fix:** env values must be reachable from INSIDE the container: `R2_ENDPOINT=http://host.docker.internal:9000`, `MAILPIT_SMTP_HOST=host.docker.internal`, `MAILPIT_API_URL=http://host.docker.internal:8025/api/v1`. Then recreate: `ENV_FILE=.env docker compose -f docker-compose.prod.yml up -d`.
+**Gotchas:**
+- `host.docker.internal` resolves inside Docker Desktop containers but NOT on the macOS host itself — a single `.env` value can't serve both `make dev` (host) and the compose stack (container). If both are used, need separate env files.
+- Compose recreates app containers automatically when `.env` content changes (config hash).
+- `.env.production` doesn't exist at repo root; stack must be launched with `ENV_FILE=.env` (make's `prod-up` defaults to `.env` only when `.env.production` is absent — passed explicitly to be safe).
+
 ## Payload Local API Relationship Population (2026-08-06)
 
 **`payload.find`/`findByID` populate relationship fields by default (depth >= 1) unless `depth: 0`.**
@@ -46,3 +70,11 @@
 - `/api/razorpay/verify`: Checks existing customer addresses before calling `payload.create` to save order's shipping address.
 - `POST /api/addresses`: Checks if customer already has matching address doc. If match found, updates `isDefault` if requested and returns existing address doc instead of creating duplicate database row.
 - `GET /api/addresses`: Filters customer addresses using `deduplicateAddresses` to prevent returning legacy duplicate rows.
+
+## Payload Drafts: Publishing Gotcha (2026-08-16)
+
+- **`payload.update({ collection, id, data, draft: false })` does NOT publish.** The `draft` param only controls validation + where data is written (versions table vs main table). To publish, you MUST pass `_status: 'published'` in `data`.
+- `_status` (Payload's injected draft status) is separate from any custom `status` select field. Setting the custom field does nothing to visibility.
+- Anonymous read access filters on `_status: { equals: 'published' }` (see `src/collections/Posts.ts`). Drafts are invisible on the frontend.
+- **Seed bug fixed**: `scripts/seed.ts` created posts without `_status` → all seeded posts stayed drafts → blog showed "No journal entries published yet". Fix: pass `_status: post.status === 'published' ? 'published' : 'draft'` in the create data.
+- One-off publish utility: `scripts/publish-posts.ts` → run `node --env-file=.env --import tsx/esm scripts/publish-posts.ts` (targets whatever `DATABASE_URL` is in `.env` = RDS).
