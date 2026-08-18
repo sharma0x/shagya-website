@@ -45,15 +45,10 @@ const nextConfig: NextConfig = {
           { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
         ],
       },
-      {
-        source: '/_next/static/:path*',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
-          },
-        ],
-      },
+      // NOTE: no Cache-Control override for /_next/static/* — Next already
+      // emits immutable caching for hashed prod assets and no-store in dev.
+      // Forcing immutable here poisons dev chunks (stable URLs) in the
+      // browser cache for a year, serving stale code after rebuilds.
       {
         source: '/(fonts|images)/:path*',
         headers: [
