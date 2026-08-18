@@ -64,15 +64,15 @@ export function HeroCarousel({
   return (
     <section className="motion-safe:select-none" aria-label="Featured weaves">
       {/* Brand heading — centered wordmark with hairline underline */}
-      <div className="container-page pt-10 pb-6 text-center sm:pt-14 sm:pb-8">
-        <h1 className="font-display text-hero text-brand-950 font-bold tracking-tight">
+      <div className="container-page pt-8 pb-5 text-center sm:pt-10 sm:pb-6">
+        <h1 className="font-display text-3xl font-bold tracking-tight text-brand-950 sm:text-4xl md:text-5xl">
           {heading}
         </h1>
         <div
-          className="bg-gold-400 mx-auto mt-4 h-px w-24 sm:mt-5 sm:w-28"
+          className="bg-gold-400 mx-auto mt-3 h-px w-20 sm:w-24"
           aria-hidden="true"
         />
-        <p className="text-brand-700/60 font-body mt-4 text-sm tracking-wide sm:text-base">
+        <p className="text-brand-700/60 font-body mt-2 text-sm tracking-wide sm:text-base">
           {tagline}
         </p>
       </div>
