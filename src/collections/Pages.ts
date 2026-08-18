@@ -97,6 +97,14 @@ export const Pages: CollectionConfig = {
                   relationTo: 'media',
                   required: true,
                 },
+                {
+                  name: 'link',
+                  type: 'text',
+                  admin: {
+                    description:
+                      'Where this slide navigates when clicked (e.g. /category/banarasi)',
+                  },
+                },
               ],
             },
             {

@@ -760,6 +760,10 @@ export interface Page {
             images?:
               | {
                   image: number | Media;
+                  /**
+                   * Where this slide navigates when clicked (e.g. /category/banarasi)
+                   */
+                  link?: string | null;
                   id?: string | null;
                 }[]
               | null;
@@ -1754,6 +1758,7 @@ export interface PagesSelect<T extends boolean = true> {
                 | T
                 | {
                     image?: T;
+                    link?: T;
                     id?: T;
                   };
               backgroundImage?: T;

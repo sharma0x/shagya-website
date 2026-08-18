@@ -40,7 +40,10 @@ import { InstagramGallery } from '@/components/homepage/InstagramGallery'
 import { OccasionButton } from '@/components/homepage/OccasionButton'
 import { TestimonialCard } from '@/components/homepage/TestimonialCard'
 import { TrendingColors } from '@/components/homepage/TrendingColors'
-import { HeroCarousel } from '@/components/homepage/HeroCarousel'
+import {
+  HeroCarousel,
+  type HeroSlide,
+} from '@/components/homepage/HeroCarousel'
 
 const ph = (w: number, h: number, bg: string, fg: string, text: string) =>
   `https://placehold.co/${w}x${h}/${bg}/${fg}?text=${encodeURIComponent(text)}&font=lora`
@@ -576,7 +579,11 @@ export default async function HomePage() {
         ctaText?: string | null
         ctaLink?: string | null
         images?:
-          | { image: { url?: string | null } | number; id?: string }[]
+          | {
+              image: { url?: string | null } | number
+              link?: string | null
+              id?: string
+            }[]
           | null
         backgroundImage?: { url?: string | null } | number | null
         blockType: 'hero'
@@ -638,54 +645,24 @@ export default async function HomePage() {
       ? heroBlock.backgroundImage.url
       : '/images/hero/hero-main.png'
 
-  const heroSlides = (() => {
+  // Hero v2 (CLO-103): text-free linked slides — image + CMS-managed link
+  const heroSlides: HeroSlide[] = (() => {
     const imgs = heroBlock?.images
     if (imgs && imgs.length > 0) {
-      return imgs.map((entry) => {
-        const url =
-          typeof entry.image === 'object' && entry.image?.url
-            ? entry.image.url
-            : fallbackHeroUrl
-        return {
-          imageUrl: url,
-          heading: heroBlock?.heading || (
-            <>
-              <span className="text-white">Timeless</span>{' '}
-              <span className="text-white">Elegance</span>
-              <br />
-              <span className="text-brand-300">in every drape</span>
-            </>
-          ),
-          subheading:
-            heroBlock?.subheading ||
-            "Every saree carries the story of the hands that wove it. Direct from India's weaving clusters — no middlemen, no markup.",
-          ctaText: heroBlock?.ctaText || 'Shop the collection',
-          ctaLink: heroBlock?.ctaLink || '/category/all',
-          secondaryCtaText: 'Our craft story',
-          secondaryCtaLink: '/about',
-        }
-      })
+      const slides = imgs
+        .map((entry) => {
+          const url =
+            typeof entry.image === 'object' && entry.image?.url
+              ? entry.image.url
+              : null
+          return url
+            ? { imageUrl: url, link: entry.link || '/category/all' }
+            : null
+        })
+        .filter((s): s is HeroSlide => s !== null)
+      if (slides.length > 0) return slides
     }
-    return [
-      {
-        imageUrl: fallbackHeroUrl,
-        heading: heroBlock?.heading || (
-          <>
-            <span className="text-white">Timeless</span>{' '}
-            <span className="text-white">Elegance</span>
-            <br />
-            <span className="text-brand-300">in every drape</span>
-          </>
-        ),
-        subheading:
-          heroBlock?.subheading ||
-          "Every saree carries the story of the hands that wove it. Direct from India's weaving clusters — no middlemen, no markup.",
-        ctaText: heroBlock?.ctaText || 'Shop the collection',
-        ctaLink: heroBlock?.ctaLink || '/category/all',
-        secondaryCtaText: 'Our craft story',
-        secondaryCtaLink: '/about',
-      },
-    ]
+    return [{ imageUrl: fallbackHeroUrl, link: '/category/all' }]
   })()
 
   return (
