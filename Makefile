@@ -5,7 +5,7 @@
         lint format typecheck \
         test test-watch test-coverage test-e2e test-all ci-local \
         infra-up infra-down infra-logs infra-reset \
-        rds-init rds-plan rds-apply rds-output rds-destroy \
+        provision-init provision-plan provision-apply provision-deploy provision-destroy \
         seed-local seed-preview seed-production \
         reset-local reset-preview-dangerous reset-production-dangerous \
         db-migrate db-migrate-create db-generate-types \
@@ -68,12 +68,12 @@ help: ## Show this help message
 	@echo "  make infra-logs       View PostgreSQL logs"
 	@echo "  make infra-reset      Reset PostgreSQL (delete all data)"
 	@echo ""
-	@echo "RDS (Terraform):"
-	@echo "  make rds-init         Initialize Terraform for RDS config (downloads providers)"
-	@echo "  make rds-plan         Show Terraform plan (DB_PASSWORD='...', VPS_IP optional)"
-	@echo "  make rds-apply        Provision/update the RDS PostgreSQL instance (DB_PASSWORD='...', VPS_IP optional)"
-	@echo "  make rds-output       Show the RDS connection string"
-	@echo "  make rds-destroy      DESTROY the RDS instance, subnet group and SG (DANGEROUS)"
+	@echo "Provision + Deploy (Terraform, infra/provision):"
+	@echo "  make provision-init   Initialize Terraform for infra/provision"
+	@echo "  make provision-plan   Plan RDS + VPS + deploy (DB_PASSWORD='...')"
+	@echo "  make provision-apply  Provision RDS + VPS and deploy (DB_PASSWORD='...')"
+	@echo "  make provision-deploy Redeploy a tag to the existing VPS (EXISTING_VPS_ID=..., DOCKER_TAG=...)"
+	@echo "  make provision-destroy DESTROY RDS + VPS (DANGEROUS)"
 	@echo ""
 	@echo "Build:"
 	@echo "  make build            Production build"
@@ -199,49 +199,69 @@ infra-reset: ## Reset infrastructure (delete all data)
 	docker compose -f infra/dev-services.yml down -v
 
 # ============================================================================
-# RDS Infrastructure (Terraform)
+# Provisioning + Deploy (Terraform — infra/provision, the canonical config)
 # ============================================================================
 
-TF_DIR ?= infra/terraform
-VPS_IP ?=   # optional — auto-detected from your current public IP when unset
+TF_DIR ?= infra/provision
 DB_PASSWORD ?=
+SSH_PUBLIC_KEY ?= $(shell cat ~/.ssh/id_ed25519.pub 2>/dev/null)
+SSH_ALLOWED_CIDRS ?=
+DOCKER_TAG ?= testing
+EXISTING_VPS_ID ?=
 
 # Shared guard: DB_PASSWORD is a secret, so require it explicitly on every invocation
-define rds_check_password
+define check_db_password
 	@if [ -z "$(DB_PASSWORD)" ]; then \
 		echo "Error: DB_PASSWORD is required. Usage: make $(1) DB_PASSWORD='...'"; \
 		exit 1; \
 	fi
 endef
 
-rds-init: ## Initialize Terraform for the RDS config (downloads providers)
+# SSH_ALLOWED_CIDRS is a HCL list, e.g. SSH_ALLOWED_CIDRS='["1.2.3.4/32"]'
+define check_ssh_cidrs
+	@if [ -z "$(SSH_ALLOWED_CIDRS)" ]; then \
+		echo "Error: SSH_ALLOWED_CIDRS is required, e.g. SSH_ALLOWED_CIDRS='[\"1.2.3.4/32\"]'"; \
+		exit 1; \
+	fi
+endef
+
+provision-init: ## Initialize Terraform for infra/provision
 	cd $(TF_DIR) && terraform init
 
-rds-plan: ## Show the Terraform plan for RDS PostgreSQL (Usage: make rds-plan DB_PASSWORD='...')
-	$(call rds_check_password,rds-plan)
-	@cd $(TF_DIR) && \
-		terraform plan \
+provision-plan: ## Plan provisioning + deploy (Usage: make provision-plan DB_PASSWORD='...' SSH_ALLOWED_CIDRS='["1.2.3.4/32"]')
+	$(call check_db_password,provision-plan)
+	$(call check_ssh_cidrs)
+	cd $(TF_DIR) && terraform plan \
 		-var="db_password=$(DB_PASSWORD)" \
-		-var="vps_ip=$(if $(VPS_IP),$(VPS_IP),$$(curl -s --max-time 10 https://checkip.amazonaws.com))"
+		-var="ssh_public_key=$(SSH_PUBLIC_KEY)" \
+		-var='ssh_allowed_cidrs=$(SSH_ALLOWED_CIDRS)'
 
-rds-apply: ## Provision/update the RDS PostgreSQL instance (Usage: make rds-apply DB_PASSWORD='...')
-	$(call rds_check_password,rds-apply)
-	@cd $(TF_DIR) && \
-		terraform apply \
+provision-apply: ## Provision RDS + VPS and deploy (Usage: make provision-apply DB_PASSWORD='...' SSH_ALLOWED_CIDRS='["1.2.3.4/32"]')
+	$(call check_db_password,provision-apply)
+	$(call check_ssh_cidrs)
+	cd $(TF_DIR) && terraform apply \
 		-var="db_password=$(DB_PASSWORD)" \
-		-var="vps_ip=$(if $(VPS_IP),$(VPS_IP),$$(curl -s --max-time 10 https://checkip.amazonaws.com))"
+		-var="ssh_public_key=$(SSH_PUBLIC_KEY)" \
+		-var='ssh_allowed_cidrs=$(SSH_ALLOWED_CIDRS)'
 
-rds-output: ## Show the RDS connection string
-	cd $(TF_DIR) && terraform output database_connection_string
+provision-deploy: ## Redeploy a tag to the existing VPS (Usage: make provision-deploy EXISTING_VPS_ID=i-xxxx DOCKER_TAG=testing)
+	@if [ -z "$(EXISTING_VPS_ID)" ]; then \
+		echo "Error: EXISTING_VPS_ID is required (the EC2 instance ID)."; exit 1; \
+	fi
+	cd $(TF_DIR) && terraform apply -auto-approve \
+		-var="create_rds=false" \
+		-var="create_vps=false" \
+		-var="existing_vps_instance_id=$(EXISTING_VPS_ID)" \
+		-var="docker_tag=$(DOCKER_TAG)" \
+		-replace=terraform_data.deploy
 
-rds-destroy: ## DESTROY the RDS instance, subnet group and SG (Usage: make rds-destroy DB_PASSWORD='...')
-	$(call rds_check_password,rds-destroy)
-	@echo "⚠️  WARNING: This will DESTROY the RDS PostgreSQL instance and ALL its data."
+provision-destroy: ## DESTROY RDS + VPS (Usage: make provision-destroy DB_PASSWORD='...')
+	$(call check_db_password,provision-destroy)
+	@echo "⚠️  WARNING: This will DESTROY the RDS and VPS."
 	@read -p "Type 'DANGEROUS' to confirm: " ans && [ "$$ans" = "DANGEROUS" ]
-	@cd $(TF_DIR) && \
-		terraform destroy \
+	cd $(TF_DIR) && terraform destroy -auto-approve \
 		-var="db_password=$(DB_PASSWORD)" \
-		-var="vps_ip=$(if $(VPS_IP),$(VPS_IP),$$(curl -s --max-time 10 https://checkip.amazonaws.com))"
+		-var="ssh_public_key=$(SSH_PUBLIC_KEY)"
 
 # ============================================================================
 # Seed (one-stop command — works on a completely fresh database)
