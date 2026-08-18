@@ -46,8 +46,10 @@ services:
     ports:
       - '80:80'
       - '443:443'
+    # Least-privilege: caddy only needs the domain and the public IP, not the
+    # app's secrets. deploy.sh writes a minimal caddy.env with just these two.
     env_file:
-      - ${ENV_FILE:-.env.production}
+      - caddy.env
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
