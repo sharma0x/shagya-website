@@ -81,14 +81,13 @@ scripts/create-linear-tickets.cjs
 
 # Terraform
 # .terraform.lock.hcl is intentionally NOT ignored — commit it for reproducibility
-infra/terraform/.terraform/
-infra/terraform/*.tfstate
-infra/terraform/*.tfstate.*
-infra/terraform/*.tfvars
-infra/terraform/*.tfvars.json
-infra/terraform/*.tfplan
-infra/terraform/*.crash.log
-infra/terraform/override.tf
-infra/terraform/override.tf.json
+infra/provision/.terraform/
+infra/provision/*.tfstate
+infra/provision/*.tfstate.*
+infra/provision/*.tfvars
+infra/provision/*.tfvars.json
+infra/provision/*.tfplan
+infra/provision/*.crash.log
+infra/provision/.database_url
 
 # Environment files
