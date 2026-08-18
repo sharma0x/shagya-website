@@ -1,11 +1,10 @@
 import { Suspense } from 'react'
 import { ArrowRight } from 'lucide-react'
 
-export const revalidate = 300
-
 // Rendered per-request. The page can't be statically prerendered at build time
 // (the build environment has no DB access), and the DB is now colocated (RDS in
-// the same region as the VPS) so per-request SSR is fast.
+// the same region as the VPS) so per-request SSR is fast. A CDN/edge cache
+// should sit in front for production.
 export const dynamic = 'force-dynamic'
 
 import {
