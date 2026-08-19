@@ -71,6 +71,7 @@ const megaMenu = {
 const topNav = [
   { label: 'Collections', href: '/collections' },
   { label: 'Journal', href: '/blog' },
+  { label: 'About Us', href: '/about' },
 ]
 
 export function Header() {
