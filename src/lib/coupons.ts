@@ -60,16 +60,16 @@ export async function getApplicableCoupons(
       depth: 1,
     })
 
-    const productCategories =
-      (product as any).categories?.map((c: any) =>
+    const productCollections =
+      (product as any).collections?.map((c: any) =>
         typeof c === 'object' ? c.id : c,
       ) || []
 
     filtered = coupons.filter((c: any) => {
       const productConditions = c.productsConditions || []
-      const categoryConditions = c.categoriesConditions || []
+      const collectionConditions = c.collectionsConditions || []
 
-      if (productConditions.length === 0 && categoryConditions.length === 0) {
+      if (productConditions.length === 0 && collectionConditions.length === 0) {
         return true
       }
 
@@ -78,13 +78,13 @@ export async function getApplicableCoupons(
           String(typeof p === 'object' ? p.id : p) === String(productId),
       )
 
-      const categoryMatch = categoryConditions.some((cat: any) =>
-        productCategories
+      const collectionMatch = collectionConditions.some((col: any) =>
+        productCollections
           .map(String)
-          .includes(String(typeof cat === 'object' ? cat.id : cat)),
+          .includes(String(typeof col === 'object' ? col.id : col)),
       )
 
-      return productMatch || categoryMatch
+      return productMatch || collectionMatch
     })
   }
 

@@ -143,19 +143,22 @@ export async function POST(request: Request) {
       }
     }
 
-    // Check product / category conditions
+    // Check product / collection conditions
     const hasProductConditions = coupon.productsConditions?.length > 0
-    const hasCategoryConditions = coupon.categoriesConditions?.length > 0
+    const hasCollectionConditions = coupon.collectionsConditions?.length > 0
 
-    if ((hasProductConditions || hasCategoryConditions) && productIds?.length) {
+    if (
+      (hasProductConditions || hasCollectionConditions) &&
+      productIds?.length
+    ) {
       const conditionProductIds = hasProductConditions
         ? coupon.productsConditions.map((p: any) =>
             String(typeof p === 'object' ? p.id : p),
           )
         : []
 
-      const conditionCategoryIds = hasCategoryConditions
-        ? coupon.categoriesConditions.map((c: any) =>
+      const conditionCollectionIds = hasCollectionConditions
+        ? coupon.collectionsConditions.map((c: any) =>
             String(typeof c === 'object' ? c.id : c),
           )
         : []
@@ -167,9 +170,9 @@ export async function POST(request: Request) {
           )
         : false
 
-      // Check if ANY product in cart belongs to allowed categories
-      let categoryMatch = false
-      if (hasCategoryConditions && !productMatch) {
+      // Check if ANY product in cart belongs to allowed collections
+      let collectionMatch = false
+      if (hasCollectionConditions && !productMatch) {
         const cartProducts = await payload.find({
           collection: 'products',
           where: { id: { in: productIds.map((id: string) => Number(id)) } },
@@ -177,18 +180,18 @@ export async function POST(request: Request) {
           limit: 100,
           pagination: false,
         })
-        categoryMatch = (cartProducts.docs as any[]).some((p: any) => {
-          const catIds =
-            p.categories?.map((c: any) =>
+        collectionMatch = (cartProducts.docs as any[]).some((p: any) => {
+          const colIds =
+            p.collections?.map((c: any) =>
               String(typeof c === 'object' ? c.id : c),
             ) || []
-          return catIds.some((cid: string) =>
-            conditionCategoryIds.includes(cid),
+          return colIds.some((cid: string) =>
+            conditionCollectionIds.includes(cid),
           )
         })
       }
 
-      if (!productMatch && !categoryMatch) {
+      if (!productMatch && !collectionMatch) {
         let hint = ''
         if (hasProductConditions) {
           const productDocs = await payload.find({
@@ -204,15 +207,15 @@ export async function POST(request: Request) {
           } else if (names.length > 1) {
             hint = `Add products like '${names[0]}' or '${names[1]}'`
           }
-        } else if (hasCategoryConditions) {
-          const categoryDocs = await payload.find({
-            collection: 'categories',
-            where: { id: { in: conditionCategoryIds.map(Number) } },
+        } else if (hasCollectionConditions) {
+          const collectionDocs = await payload.find({
+            collection: 'collections',
+            where: { id: { in: conditionCollectionIds.map(Number) } },
             depth: 0,
             limit: 3,
             pagination: false,
           })
-          const names = (categoryDocs.docs as any[]).map((c: any) => c.name)
+          const names = (collectionDocs.docs as any[]).map((c: any) => c.name)
           if (names.length === 1) {
             hint = `Add ${names[0].toLowerCase()} products to your cart`
           } else if (names.length > 1) {
