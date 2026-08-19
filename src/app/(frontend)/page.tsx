@@ -7,17 +7,18 @@ import { ArrowRight } from 'lucide-react'
 // should sit in front for production.
 export const dynamic = 'force-dynamic'
 
-import {
-  IconBrandInstagram,
-  IconBrandFacebook,
-  IconBrandYoutube,
-  IconBrandPinterest,
-  IconHeart,
-  IconSparkles,
-  IconSun,
-  IconGift,
-  IconGlassFull,
-} from '@tabler/icons-react'
+// COMMENTED OUT (CLO-102):
+// import {
+//   IconBrandInstagram,
+//   IconBrandFacebook,
+//   IconBrandYoutube,
+//   IconBrandPinterest,
+//   IconHeart,
+//   IconSparkles,
+//   IconSun,
+//   IconGift,
+//   IconGlassFull,
+// } from '@tabler/icons-react'
 import Link from 'next/link'
 import { getPayload } from 'payload'
 import config from '@payload-config'
@@ -35,11 +36,12 @@ import { RefreshRouteOnSave } from '@/components/live-preview/RefreshRouteOnSave
 import { SectionHeading } from '@/components/homepage/SectionHeading'
 import { ProductCard } from '@/components/product/ProductCard'
 import { ProductCarousel } from '@/components/product/ProductCarousel'
+// COMMENTED OUT (CLO-102):
 import { CategoryCard } from '@/components/homepage/CategoryCard'
-import { InstagramGallery } from '@/components/homepage/InstagramGallery'
-import { OccasionButton } from '@/components/homepage/OccasionButton'
+// import { InstagramGallery } from '@/components/homepage/InstagramGallery'
+// import { OccasionButton } from '@/components/homepage/OccasionButton'
 import { TestimonialCard } from '@/components/homepage/TestimonialCard'
-import { TrendingColors } from '@/components/homepage/TrendingColors'
+// import { TrendingColors } from '@/components/homepage/TrendingColors'
 import {
   HeroCarousel,
   type HeroSlide,
@@ -124,6 +126,7 @@ function mapProductWithVariant(p: any) {
   return liftVariantGallery(p)
 }
 
+/* COMMENTED OUT (CLO-102):
 const OCCASIONS = [
   {
     label: 'Wedding',
@@ -151,6 +154,7 @@ const OCCASIONS = [
     href: '/category/designer',
   },
 ]
+*/
 
 const DEFAULT_TESTIMONIALS = [
   {
@@ -600,6 +604,7 @@ export default async function HomePage() {
         blockType: 'categoriesGrid'
       }
     | undefined
+
   const productBlocks = contentBlocks.filter(
     (b: any) => b.blockType === 'productGrid',
   ) as {
@@ -684,11 +689,11 @@ export default async function HomePage() {
         <HomeProductSpotlightsSection />
       </Suspense>
 
-      {/* ─── SECTION 4: SHOP BY OCCASION + TRENDING COLORS + SOCIAL (Renders instantly) ─── */}
+      {/* ─── SECTION 4: SHOP BY OCCASION + TRENDING COLORS + SOCIAL — COMMENTED OUT (CLO-102)
       <section className="bg-brand-50/20">
         <div className="container-page py-6 sm:py-8 md:py-10">
           <div className="grid grid-cols-1 gap-8 md:grid-cols-3 md:gap-6 lg:gap-10">
-            {/* Shop by Occasion */}
+            // Shop by Occasion
             <div>
               <SectionHeading
                 title="Shop by Occasion"
@@ -709,7 +714,7 @@ export default async function HomePage() {
               </div>
             </div>
 
-            {/* Trending Colors */}
+            // Trending Colors
             <div>
               <SectionHeading
                 title="Trending Colors"
@@ -722,7 +727,7 @@ export default async function HomePage() {
               </div>
             </div>
 
-            {/* Social */}
+            // Social
             <div>
               <SectionHeading
                 title="Follow the Loom"
@@ -772,6 +777,7 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+      */}
 
       {/* ─── SECTION 6: BEST SELLERS (Progressive Stream) ─── */}
       <Suspense fallback={<ProductSectionSkeleton count={4} />}>
@@ -779,11 +785,12 @@ export default async function HomePage() {
       </Suspense>
 
       {/* ─── SECTION 7: BLOG POSTS (Progressive Stream) ─── */}
-      <Suspense fallback={<BlogGridSkeleton />}>
+      {/* <Suspense fallback={<BlogGridSkeleton />}>
         <HomeBlogSection postBlock={postBlock} />
-      </Suspense>
+      </Suspense> */}
 
-      {/* ─── SECTION 8: INSTAGRAM GALLERY (Renders instantly) ─── */}
+      {/* ─── SECTION 8: INSTAGRAM GALLERY ─── */}
+      {/* COMMENTED OUT (CLO-102):
       <section className="bg-brand-50/20">
         <div className="container-page py-6 sm:py-8 md:py-10">
           <SectionHeading
@@ -795,6 +802,7 @@ export default async function HomePage() {
           <InstagramGallery />
         </div>
       </section>
+      */}
 
       {/* ─── SECTION 9: TESTIMONIALS (Renders instantly) ─── */}
       <section className="bg-white">
@@ -907,6 +915,7 @@ export default async function HomePage() {
                   Begin browsing
                   <ArrowRight className="h-4 w-4" />
                 </Link>
+                {/* COMMENTED OUT (CLO-102):
                 <Link
                   href="/about"
                   className="group text-brand-300 inline-flex h-11 items-center gap-2 text-sm font-medium transition-colors hover:text-white"
@@ -914,9 +923,9 @@ export default async function HomePage() {
                   Meet the weavers
                   <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Link>
+                */}
               </div>
             </div>
-
             <div className="self-start rounded-2xl bg-white p-5 shadow-lg sm:p-6">
               <h2 className="font-display text-brand-950 text-lg font-semibold tracking-tight sm:text-xl">
                 A weekly note from the loom
