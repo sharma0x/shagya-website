@@ -35,6 +35,7 @@ import {
 } from '@/components/ui/Skeleton'
 import type { SiteSetting } from '@/payload-types'
 
+// ISR cache for 5 minutes
 export const revalidate = 300
 
 type Props = {
@@ -258,7 +259,11 @@ export default async function ProductDetailPage({
   const isPreview = preview === 'true' && Boolean(id)
   const payload = await getPayload({ config })
   const reqHeaders = await nextHeaders()
-  const { user } = await payload.auth({ headers: reqHeaders })
+  let user: any = null
+  if (isPreview) {
+    const authResult = await payload.auth({ headers: reqHeaders })
+    user = authResult.user
+  }
 
   const product: any = isPreview
     ? await payload.findByID({
