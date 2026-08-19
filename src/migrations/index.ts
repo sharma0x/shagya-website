@@ -17,7 +17,7 @@ import * as migration_20260807_221534_trust_signals from './20260807_221534_trus
 import * as migration_20260808_000000_coupon_enhancements from './20260808_000000_coupon_enhancements'
 import * as migration_20260808_104707 from './20260808_104707'
 import * as migration_20260808_164034_add_testimonial_rating from './20260808_164034_add_testimonial_rating'
-import * as migration_20260819_182610 from './20260819_182610'
+import * as migration_20260820_001000_update_coupons_collections from './20260820_001000_update_coupons_collections'
 
 export const migrations = [
   {
@@ -116,8 +116,8 @@ export const migrations = [
     name: '20260808_164034_add_testimonial_rating',
   },
   {
-    up: migration_20260819_182610.up,
-    down: migration_20260819_182610.down,
-    name: '20260819_182610',
+    up: migration_20260820_001000_update_coupons_collections.up,
+    down: migration_20260820_001000_update_coupons_collections.down,
+    name: '20260820_001000_update_coupons_collections',
   },
 ]
