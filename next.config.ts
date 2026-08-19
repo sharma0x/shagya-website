@@ -33,6 +33,8 @@ const nextConfig: NextConfig = {
       },
       { protocol: 'https', hostname: '*.r2.cloudflarestorage.com' },
       { protocol: 'https', hostname: 'cdn.shayga.in' },
+      { protocol: 'https', hostname: 'shayga.in' },
+      { protocol: 'https', hostname: 'www.shayga.in' },
       { protocol: 'https', hostname: '*.vercel.app' },
     ],
   },
