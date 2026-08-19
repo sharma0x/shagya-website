@@ -14,6 +14,7 @@
         setup clean clean-all \
         docker-build docker-up docker-down docker-reset docker-logs \
         prod-login prod-pull prod-migrate prod-up prod-down prod-restart prod-logs prod-deploy \
+        prod-ssh prod-env-show prod-env-set prod-env-push prod-recreate prod-redeploy deploy \
         ghcr-build ghcr-push ghcr-build-push docker-build-ghcr docker-push-ghcr \
         docker-test-pull docker-test-image docker-test-logs docker-test-stop
 
@@ -38,6 +39,15 @@ help: ## Show this help message
 	@echo "  make ghcr-build       Build production Docker image locally (Usage: make ghcr-build [TAG=testing])"
 	@echo "  make ghcr-push        Push locally built image to GHCR (Usage: make ghcr-push [TAG=testing])"
 	@echo "  make ghcr-build-push  Build and push custom-tagged image in one step"
+	@echo ""
+	@echo "Remote Deployment (from your machine → production VPS):"
+	@echo "  make deploy           Build+push a tag, then deploy it to production (make deploy TAG=testing)"
+	@echo "  make prod-redeploy    Pull + migrate + up a tag on the VPS (make prod-redeploy TAG=testing)"
+	@echo "  make prod-env-set     Set env var(s) in production + recreate app (make prod-env-set R2_BUCKET=shayga-media)"
+	@echo "  make prod-env-push    Replace the whole production env file + recreate app (make prod-env-push FILE=infra/.env.production)"
+	@echo "  make prod-env-show    Show the production env file (or one var: make prod-env-show KEY=R2_BUCKET)"
+	@echo "  make prod-recreate    Recreate the app containers (picks up env changes)"
+	@echo "  make prod-ssh         SSH into the production VPS"
 	@echo ""
 	@echo "Local Container Image Testing:"
 	@echo "  make docker-test-pull Pull image locally for testing (Usage: make docker-test-pull [TAG=testing])"
@@ -494,8 +504,8 @@ prod-deploy: ## One-stop deployment: Pull image -> Run migrations -> Start conta
 # ============================================================================
 
 ghcr-build: ## Build production Docker image locally with a custom tag (Usage: make ghcr-build [TAG=testing])
-	@echo "Building Docker image $(DOCKER_IMAGE):$(TAG)..."
-	docker build -t $(DOCKER_IMAGE):$(TAG) .
+	@echo "Building Docker image $(DOCKER_IMAGE):$(TAG) (linux/amd64)..."
+	docker build --platform linux/amd64 --build-arg NODE_ENV=production --build-arg NEXT_TELEMETRY_DISABLED=1 -t $(DOCKER_IMAGE):$(TAG) .
 
 ghcr-push: ## Push locally built Docker image to GHCR (Usage: make ghcr-push [TAG=testing])
 	@echo "Pushing $(DOCKER_IMAGE):$(TAG) to GHCR..."
@@ -506,6 +516,51 @@ ghcr-build-push: ghcr-build ghcr-push ## Build and push custom-tagged Docker ima
 # Aliases for backwards compatibility
 docker-build-ghcr: ghcr-build
 docker-push-ghcr: ghcr-push
+
+# ============================================================================
+# Production Deployment (remote via SSH) — run from your LOCAL machine
+# ============================================================================
+
+# SSH host of the production VPS
+PROD_VPS ?= ubuntu@35.154.104.225
+# The deploy script names the env file .env.production.<vps-id> (the EC2
+# instance ID). Set to match. Find it: `make prod-ssh`, then `ls .env.production.*`
+PROD_ENV_FILE ?= .env.production.i-0b8fdac5ef38c22ad
+PROD_REMOTE_DIR ?= /opt/shayga
+
+prod-ssh: ## SSH into the production VPS
+	ssh $(PROD_VPS)
+
+prod-env-show: ## Show the production env file (or one var: make prod-env-show KEY=R2_BUCKET)
+	@if [ -n "$(KEY)" ]; then \
+		ssh $(PROD_VPS) "grep '^$(KEY)=' $(PROD_REMOTE_DIR)/$(PROD_ENV_FILE)"; \
+	else \
+		ssh $(PROD_VPS) "cat $(PROD_REMOTE_DIR)/$(PROD_ENV_FILE)"; \
+	fi
+
+prod-env-set: ## Set env var(s) in production + recreate app (make prod-env-set KEY=value [KEY2=value2 ...])
+	@if [ -z "$(MAKEOVERRIDES)" ]; then echo "Usage: make prod-env-set KEY=value (e.g. make prod-env-set R2_BUCKET=shayga-media)"; exit 1; fi
+	@for pair in $(MAKEOVERRIDES); do \
+		key=$${pair%%=*}; value=$${pair#*=}; \
+		echo "Setting $$key=$$value ..."; \
+		ssh $(PROD_VPS) "cd $(PROD_REMOTE_DIR) && { grep -q \"^$$key=\" $(PROD_ENV_FILE) && sed -i \"s|^$$key=.*|$$key=$$value|\" $(PROD_ENV_FILE) || printf '%s=%s\n' \"$$key\" \"$$value\" >> $(PROD_ENV_FILE); }"; \
+	done
+	@$(MAKE) prod-recreate
+
+prod-env-push: ## Replace the whole production env file with a local one + recreate app (make prod-env-push FILE=infra/.env.production)
+	@if [ -z "$(FILE)" ] || [ ! -f "$(FILE)" ]; then echo "Usage: make prod-env-push FILE=infra/.env.production"; exit 1; fi
+	@echo "Replacing $(PROD_ENV_FILE) on $(PROD_VPS) with $(FILE)..."
+	@scp $(FILE) $(PROD_VPS):$(PROD_REMOTE_DIR)/$(PROD_ENV_FILE)
+	@$(MAKE) prod-recreate
+
+prod-recreate: ## Recreate the app containers (picks up env-file changes)
+	@ssh $(PROD_VPS) "cd $(PROD_REMOTE_DIR) && make prod-up ENV_FILE=$(PROD_ENV_FILE) IMAGE_TAG=$(IMAGE_TAG)"
+
+prod-redeploy: ## Pull image + migrate + up on the production VPS (make prod-redeploy TAG=testing)
+	@echo "Deploying $(IMAGE_TAG) to $(PROD_VPS)..."
+	@ssh $(PROD_VPS) "cd $(PROD_REMOTE_DIR) && make prod-deploy ENV_FILE=$(PROD_ENV_FILE) IMAGE_TAG=$(IMAGE_TAG)"
+
+deploy: ghcr-build-push prod-redeploy ## Build+push a tag, then deploy it to production (make deploy TAG=testing)
 
 # ============================================================================
 # Local Container Image Testing
