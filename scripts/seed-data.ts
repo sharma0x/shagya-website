@@ -205,7 +205,7 @@ export const avatarImagePath = (index: number) =>
 // ---------------------------------------------------------------------------
 
 export const adminUser = {
-  email: process.env.SEED_ADMIN_EMAIL || 'admin@shayga.in',
+  email: process.env.SEED_ADMIN_EMAIL || 'archana.vaknalli@shayga.com',
   password: process.env.SEED_ADMIN_PASSWORD || 'admin123',
   name: 'Admin',
   role: 'super-admin' as const,

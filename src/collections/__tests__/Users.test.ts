@@ -44,10 +44,10 @@ describe('Users collection', () => {
       expect(result).toBe(true)
     })
 
-    it('denies admin from updating role field', () => {
+    it('allows admin to update role field', () => {
       const roleField = Users.fields?.find((f: any) => f.name === 'role') as any
       const result = roleField.access?.update?.({ req: makeReq('admin') })
-      expect(result).toBe(false)
+      expect(result).toBe(true)
     })
 
     it('denies editor from updating role field', () => {

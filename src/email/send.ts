@@ -34,7 +34,7 @@ async function getAdminEmail(payload: Payload): Promise<string> {
   } catch {
     // fall through
   }
-  return process.env.ADMIN_EMAIL || 'admin@shayga.in'
+  return process.env.ADMIN_EMAIL || 'archana.vaknalli@shayga.com'
 }
 
 async function safeSend(
