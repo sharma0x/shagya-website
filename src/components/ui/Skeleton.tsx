@@ -49,6 +49,38 @@ export function CategoryCardSkeleton() {
   return <Skeleton className="aspect-[3/4] w-full rounded-2xl" />
 }
 
+export function CollectionCardSkeleton() {
+  return (
+    <div
+      className="overflow-hidden rounded-2xl border border-neutral-100 bg-white shadow-xs"
+      aria-hidden="true"
+    >
+      <Skeleton className="aspect-[3/4] w-full rounded-none" />
+      <div className="space-y-3 p-5">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-6 w-1/2" />
+          <Skeleton className="h-8 w-8 rounded-full" />
+        </div>
+        <Skeleton className="h-4 w-5/6" />
+        <Skeleton className="h-4 w-2/3" />
+      </div>
+    </div>
+  )
+}
+
+export function CollectionsGridSkeleton({ count = 6 }: { count?: number }) {
+  return (
+    <div
+      className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-3"
+      aria-hidden="true"
+    >
+      {Array.from({ length: count }).map((_, i) => (
+        <CollectionCardSkeleton key={i} />
+      ))}
+    </div>
+  )
+}
+
 export function BlogPostSkeleton() {
   return (
     <div className="flex items-center gap-5 py-6" aria-hidden="true">
@@ -58,6 +90,42 @@ export function BlogPostSkeleton() {
         <Skeleton className="h-3 w-full" />
         <Skeleton className="h-3 w-2/3" />
       </div>
+    </div>
+  )
+}
+
+export function BlogCardSkeleton() {
+  return (
+    <div
+      className="flex flex-col overflow-hidden rounded-2xl border border-neutral-100 bg-white shadow-xs"
+      aria-hidden="true"
+    >
+      <Skeleton className="h-56 w-full rounded-none" />
+      <div className="flex flex-1 flex-col justify-between space-y-4 p-5">
+        <div className="space-y-3">
+          <div className="flex items-center gap-4">
+            <Skeleton className="h-3 w-20" />
+            <Skeleton className="h-3 w-16" />
+          </div>
+          <Skeleton className="h-5 w-4/5" />
+          <Skeleton className="h-3 w-full" />
+          <Skeleton className="h-3 w-3/4" />
+        </div>
+        <Skeleton className="mt-4 h-4 w-24" />
+      </div>
+    </div>
+  )
+}
+
+export function BlogIndexGridSkeleton({ count = 6 }: { count?: number }) {
+  return (
+    <div
+      className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3"
+      aria-hidden="true"
+    >
+      {Array.from({ length: count }).map((_, i) => (
+        <BlogCardSkeleton key={i} />
+      ))}
     </div>
   )
 }
