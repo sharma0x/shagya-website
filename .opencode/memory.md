@@ -1,5 +1,18 @@
 # Shayga — Agent Memory
 
+## MinIO bucket needs public read policy for direct media URLs (2026-08-19)
+
+**Symptom:** Homepage renders but zero images load; browser console shows 403s on `http://localhost:9000/shayga-media/*.jpg`. Server-side `mc ls` also says "Access Denied" until you set an explicit alias.
+**Root cause:** develop's media CDN change (commit 984ef95) switched media URLs from Payload's `/api/media/file/*` route to direct S3 endpoint URLs via `generateFileURL` (`R2_ENDPOINT` fallback in dev = MinIO). Payload's route authenticated server-side; direct browser GETs hit the bucket anonymously, and `minio-create-bucket` in docker-compose only ran `mc mb` — no public policy.
+**Fix:**
+```bash
+docker exec shayga-minio mc alias set local http://localhost:9000 minioadmin minioadmin
+docker exec shayga-minio mc anonymous set download local/shayga-media
+```
+- Durable fix committed: `minio-create-bucket` service in docker-compose.yml now runs `mc anonymous set download` after `mc mb`, so `make infra-reset` / fresh setups are covered.
+- Real R2/CDN (prod) is already public — this is dev-local-only.
+- Note: `mc`'s built-in `local` alias inside the minio container lacks creds for S3 ops (healthcheck `mc ready local` passes regardless) — always `mc alias set` explicitly before policy/list commands.
+
 ## RDS SG must match current public IP (recurring) (2026-08-16)
 
 **Symptom:** After PC/network change, app containers log `cannot connect to Postgres ... Connection terminated due to connection timeout` (NOT refused — AWS SG drops packets silently) and `/api/media/*` returns 500 `"There was an error initializing Payload"` on affected replicas. Homepage may still serve cached content.
