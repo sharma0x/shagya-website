@@ -128,9 +128,9 @@ export async function POST(request: Request) {
           { status: 200 },
         )
       }
-      const customerId = customers.docs[0].id
+      const customerId = String(customers.docs[0].id)
       const allowedIds = coupon.customersConditions.map((c: any) =>
-        typeof c === 'object' ? c.id : c,
+        String(typeof c === 'object' ? c.id : c),
       )
       if (!allowedIds.includes(customerId)) {
         return NextResponse.json(
@@ -150,19 +150,21 @@ export async function POST(request: Request) {
     if ((hasProductConditions || hasCategoryConditions) && productIds?.length) {
       const conditionProductIds = hasProductConditions
         ? coupon.productsConditions.map((p: any) =>
-            typeof p === 'object' ? p.id : p,
+            String(typeof p === 'object' ? p.id : p),
           )
         : []
 
       const conditionCategoryIds = hasCategoryConditions
         ? coupon.categoriesConditions.map((c: any) =>
-            typeof c === 'object' ? c.id : c,
+            String(typeof c === 'object' ? c.id : c),
           )
         : []
 
       // Check if ANY product in cart matches product conditions
       const productMatch = hasProductConditions
-        ? productIds.some((pid: string) => conditionProductIds.includes(pid))
+        ? productIds.some((pid: string) =>
+            conditionProductIds.includes(String(pid)),
+          )
         : false
 
       // Check if ANY product in cart belongs to allowed categories
@@ -177,8 +179,9 @@ export async function POST(request: Request) {
         })
         categoryMatch = (cartProducts.docs as any[]).some((p: any) => {
           const catIds =
-            p.categories?.map((c: any) => (typeof c === 'object' ? c.id : c)) ||
-            []
+            p.categories?.map((c: any) =>
+              String(typeof c === 'object' ? c.id : c),
+            ) || []
           return catIds.some((cid: string) =>
             conditionCategoryIds.includes(cid),
           )
