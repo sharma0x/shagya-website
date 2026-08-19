@@ -1,6 +1,7 @@
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import { cn } from '@/lib/utils'
+import { isUnoptimizedImage } from '@/lib/image-url'
 import { SkeletonImage } from '@/components/ui/SkeletonImage'
 import type { Media } from '@/payload-types'
 
@@ -53,6 +54,7 @@ export async function InstagramGallery({ className }: InstagramGalleryProps) {
               fill
               sizes="(max-width: 640px) 50vw, 20vw"
               className="object-cover transition-transform duration-500 group-hover:scale-105"
+              unoptimized={isUnoptimizedImage(getImageSrc(post))}
             />
           </div>
 
