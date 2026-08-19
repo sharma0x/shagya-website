@@ -187,12 +187,18 @@ async function HomeCategoriesSection({
 }: {
   subtitle?: string | null
 }) {
-  const payload = await getPayload({ config })
-  const categoriesRes = await payload.find({
-    collection: 'categories',
-    limit: 20,
-  })
-  const dbCategories = categoriesRes.docs
+  let dbCategories: any[] = []
+  try {
+    const payload = await getPayload({ config })
+    const categoriesRes = await payload.find({
+      collection: 'categories',
+      limit: 20,
+    })
+    dbCategories = categoriesRes.docs
+  } catch (e) {
+    console.error('[Home] categories query failed:', e)
+    return null
+  }
 
   return (
     <section className="bg-white">
@@ -241,39 +247,46 @@ async function HomeProductSpotlightsSection() {
   const THIRTY_DAYS_AGO = thirtyDaysAgo.toISOString()
 
   // Run independent queries in parallel for this section
-  const [initialNewArrivals, recentOrdersRes] = await Promise.all([
-    payload.find({
-      collection: 'products',
-      where: {
-        and: [
-          { status: { equals: 'published' } },
-          { createdAt: { greater_than: THIRTY_DAYS_AGO } },
-        ],
-      },
-      limit: 2,
-      sort: '-createdAt',
-      depth: 2,
-    }),
-    payload.find({
-      collection: 'orders',
-      where: {
-        and: [
-          { createdAt: { greater_than: THIRTY_DAYS_AGO } },
-          {
-            or: [
-              { status: { equals: 'confirmed' } },
-              { status: { equals: 'processing' } },
-              { status: { equals: 'shipped' } },
-              { status: { equals: 'delivered' } },
-              { status: { equals: 'pending' } },
-            ],
-          },
-        ],
-      },
-      limit: 50,
-      depth: 0,
-    }),
-  ])
+  let initialNewArrivals: any
+  let recentOrdersRes: any
+  try {
+    ;[initialNewArrivals, recentOrdersRes] = await Promise.all([
+      payload.find({
+        collection: 'products',
+        where: {
+          and: [
+            { status: { equals: 'published' } },
+            { createdAt: { greater_than: THIRTY_DAYS_AGO } },
+          ],
+        },
+        limit: 2,
+        sort: '-createdAt',
+        depth: 2,
+      }),
+      payload.find({
+        collection: 'orders',
+        where: {
+          and: [
+            { createdAt: { greater_than: THIRTY_DAYS_AGO } },
+            {
+              or: [
+                { status: { equals: 'confirmed' } },
+                { status: { equals: 'processing' } },
+                { status: { equals: 'shipped' } },
+                { status: { equals: 'delivered' } },
+                { status: { equals: 'pending' } },
+              ],
+            },
+          ],
+        },
+        limit: 50,
+        depth: 0,
+      }),
+    ])
+  } catch (e) {
+    console.error('[Home] spotlights query failed:', e)
+    return null
+  }
 
   let newArrivalsRes = initialNewArrivals
   if (newArrivalsRes.totalDocs === 0) {
@@ -443,13 +456,19 @@ async function HomeBestSellersSection({
   }
 }) {
   const payload = await getPayload({ config })
-  const allProductsRes = await payload.find({
-    collection: 'products',
-    where: { status: { equals: 'published' } },
-    limit: 12,
-    sort: '-createdAt',
-    depth: 2,
-  })
+  let allProductsRes: any
+  try {
+    allProductsRes = await payload.find({
+      collection: 'products',
+      where: { status: { equals: 'published' } },
+      limit: 12,
+      sort: '-createdAt',
+      depth: 2,
+    })
+  } catch (e) {
+    console.error('[Home] best sellers query failed:', e)
+    return null
+  }
 
   if (allProductsRes.docs.length === 0) return null
   const limit = productBlock?.limit || 4
@@ -483,14 +502,20 @@ async function HomeBlogSection({
   }
 }) {
   const payload = await getPayload({ config })
-  const postsRes = await payload.find({
-    collection: 'posts',
-    where: { status: { equals: 'published' } },
-    limit: 3,
-    sort: '-publishedAt',
-    depth: 1,
-  })
-  const dbPosts = postsRes.docs
+  let dbPosts: any[] = []
+  try {
+    const postsRes = await payload.find({
+      collection: 'posts',
+      where: { status: { equals: 'published' } },
+      limit: 3,
+      sort: '-publishedAt',
+      depth: 1,
+    })
+    dbPosts = postsRes.docs
+  } catch (e) {
+    console.error('[Home] blog query failed:', e)
+    return null
+  }
   if (dbPosts.length === 0) return null
 
   return (
@@ -568,13 +593,18 @@ export default async function HomePage() {
   const payload = await getPayload({ config })
 
   // Fast fetch for page doc shell settings
-  const pageRes = await payload.find({
-    collection: 'pages',
-    where: { slug: { equals: 'home' } },
-    limit: 1,
-    depth: 1,
-  })
-  const homeDoc = pageRes.docs[0]
+  let homeDoc: any = undefined
+  try {
+    const pageRes = await payload.find({
+      collection: 'pages',
+      where: { slug: { equals: 'home' } },
+      limit: 1,
+      depth: 1,
+    })
+    homeDoc = pageRes.docs[0]
+  } catch (e) {
+    console.error('[Home] page doc query failed:', e)
+  }
 
   // Extract CMS block headings
   const contentBlocks = homeDoc?.content ?? []

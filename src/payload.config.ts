@@ -348,7 +348,7 @@ export default buildConfig({
           : undefined,
       max: Number(process.env.DB_POOL_MAX || 15),
       idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 5000,
+      connectionTimeoutMillis: 10000,
     },
     // Disabled automatic schema push to prevent conflict/deletion of Better Auth tables in development
     push: false,
