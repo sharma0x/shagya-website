@@ -101,7 +101,7 @@ export function HeroCarousel({
           </div>
         ))}
 
-        <div className="container-page relative flex h-full items-center">
+        <div className="container-page relative flex h-full items-center pt-20 sm:pt-0">
           <div className="max-w-xl">
             <div className="mb-3 flex items-center gap-2 text-[10px] font-medium tracking-[0.2em] text-white/70 uppercase">
               <span className="bg-brand-400 h-px w-6" />
