@@ -5,6 +5,7 @@ import { X, Plus, Minus, Trash2, ShoppingBag } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
+import { isUnoptimizedImage } from '@/lib/image-url'
 import { galleryForColor, stockForColor } from '@/lib/product-utils'
 import { cartQtyCap } from '@/lib/cart-merge'
 
@@ -102,6 +103,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                         fill
                         className="object-cover"
                         sizes="80px"
+                        unoptimized={isUnoptimizedImage(imageUrl)}
                       />
                     </div>
 

@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { SkeletonImage } from '@/components/ui/SkeletonImage'
+import { isUnoptimizedImage } from '@/lib/image-url'
 
 export interface CollectionBannerData {
   title: string
@@ -48,6 +49,7 @@ export function CollectionBanners({
                   fill
                   sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                   className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  unoptimized={isUnoptimizedImage(banner.imageUrl)}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
                 <div className="absolute right-0 bottom-0 left-0 p-4 sm:p-5 md:p-6">
