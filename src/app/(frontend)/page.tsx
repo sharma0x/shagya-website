@@ -41,6 +41,7 @@ import { OccasionButton } from '@/components/homepage/OccasionButton'
 import { TestimonialCard } from '@/components/homepage/TestimonialCard'
 import { TrendingColors } from '@/components/homepage/TrendingColors'
 import { HeroCarousel } from '@/components/homepage/HeroCarousel'
+import { isUnoptimizedImage } from '@/lib/image-url'
 
 const ph = (w: number, h: number, bg: string, fg: string, text: string) =>
   `https://placehold.co/${w}x${h}/${bg}/${fg}?text=${encodeURIComponent(text)}&font=lora`
@@ -97,7 +98,7 @@ function ImagePanel({
         fill
         sizes="(max-width: 768px) 100vw, 50vw"
         className="object-cover"
-        unoptimized={src.startsWith('https://placehold.co')}
+        unoptimized={isUnoptimizedImage(src)}
         loading={loading ?? 'lazy'}
       />
       {caption && (

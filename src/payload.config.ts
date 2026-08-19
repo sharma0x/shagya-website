@@ -394,7 +394,21 @@ export default buildConfig({
     }),
     s3Storage({
       collections: {
-        media: true,
+        media: {
+          // Serve media through a CDN custom domain (e.g. cdn.shayga.in) when
+          // R2_CDN is set; otherwise fall back to the raw R2 endpoint. The CDN
+          // domain maps directly to the bucket, so the bucket name is omitted.
+          generateFileURL: ({ filename, prefix }) => {
+            const dir = prefix ? `${prefix}`.replace(/^\/+|\/+$/g, '') : ''
+            const key = dir
+              ? `${dir}/${encodeURIComponent(filename)}`
+              : encodeURIComponent(filename)
+            const base = process.env.R2_CDN
+              ? `https://${process.env.R2_CDN}`
+              : `${process.env.R2_ENDPOINT}/${process.env.R2_BUCKET}`
+            return `${base}/${key}`
+          },
+        },
       },
       bucket: process.env.R2_BUCKET || 'shayga-media',
       config: {

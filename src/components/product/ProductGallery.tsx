@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { SkeletonImage } from '@/components/ui/SkeletonImage'
 import { ProductImageZoom } from '@/components/product/ProductImageZoom'
+import { isUnoptimizedImage } from '@/lib/image-url'
 
 interface ProductGalleryProps {
   imageUrls: string[]
@@ -113,7 +114,7 @@ export function ProductGallery({
                   alt={`View ${idx + 1}`}
                   fill
                   className="object-cover"
-                  unoptimized={url.startsWith('https://placehold.co')}
+                  unoptimized={isUnoptimizedImage(url)}
                 />
               </button>
             )

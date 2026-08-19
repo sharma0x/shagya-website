@@ -32,6 +32,7 @@ const nextConfig: NextConfig = {
         hostname: 'shagya-website-git-develop-shayga.vercel.app',
       },
       { protocol: 'https', hostname: '*.r2.cloudflarestorage.com' },
+      { protocol: 'https', hostname: 'cdn.shayga.in' },
       { protocol: 'https', hostname: '*.vercel.app' },
     ],
   },

@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { SkeletonImage } from '@/components/ui/SkeletonImage'
+import { isUnoptimizedImage } from '@/lib/image-url'
 
 const ph = (w: number, h: number, bg: string, fg: string, text: string) =>
   `https://placehold.co/${w}x${h}/${bg}/${fg}?text=${encodeURIComponent(text)}&font=lora`
@@ -37,7 +38,7 @@ export function CategoryCard({
           fill
           sizes="(max-width: 640px) 60vw, 25vw"
           className="object-cover transition-transform duration-500 group-hover:scale-105"
-          unoptimized={imgSrc.startsWith('https://placehold.co')}
+          unoptimized={isUnoptimizedImage(imgSrc)}
         />
       </div>
 

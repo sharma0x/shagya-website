@@ -8,6 +8,7 @@ import { ProductBadge } from '@/components/ui/ProductBadge'
 import { cn } from '@/lib/utils'
 import { getProductUrl } from '@/lib/product-url'
 import { liftVariantGallery } from '@/lib/product-utils'
+import { isUnoptimizedImage } from '@/lib/image-url'
 
 const ph = (w: number, h: number, _bg: string, _fg: string, text: string) =>
   `https://images.placeholders.dev/?width=${w}&height=${h}&text=${encodeURIComponent(text.substring(0, 20))}&bgColor=%2369254e&textColor=%23f5e8ee&fontFamily=lora&fontWeight=600`
@@ -213,9 +214,7 @@ export function ProductCard({
             fill
             sizes="96px"
             className="object-cover"
-            unoptimized={galleryItems[0]?.url.startsWith(
-              'https://placehold.co',
-            )}
+            unoptimized={isUnoptimizedImage(galleryItems[0]?.url)}
           />
         </Link>
         <div className="flex flex-1 flex-col justify-between py-1">
@@ -285,7 +284,7 @@ export function ProductCard({
                   i === activeImage &&
                   'group-hover:scale-105',
               )}
-              unoptimized={item.url.startsWith('https://placehold.co')}
+              unoptimized={isUnoptimizedImage(item.url)}
             />
           ))}
 

@@ -3,6 +3,7 @@
 import { useRef, useState, useCallback } from 'react'
 import { SkeletonImage } from '@/components/ui/SkeletonImage'
 import { ZoomIn } from 'lucide-react'
+import { isUnoptimizedImage } from '@/lib/image-url'
 
 interface ProductImageZoomProps {
   imageUrl: string
@@ -84,7 +85,7 @@ export function ProductImageZoom({
           alt={productName}
           fill
           className="object-cover"
-          unoptimized={imageUrl.startsWith('https://placehold.co')}
+          unoptimized={isUnoptimizedImage(imageUrl)}
           priority
         />
       </div>

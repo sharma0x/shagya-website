@@ -103,6 +103,7 @@ import Link from 'next/link'
 import { SkeletonImage } from '@/components/ui/SkeletonImage'
 import { WishlistButton } from '@/components/product/WishlistButton'
 import { ProductBadge } from '@/components/ui/ProductBadge'
+import { isUnoptimizedImage } from '@/lib/image-url'
 
 const ph = (w: number, h: number, bg: string, fg: string, text: string) =>
   `https://placehold.co/${w}x${h}/${bg}/${fg}?text=${encodeURIComponent(text)}&font=lora`
@@ -141,7 +142,7 @@ function HomepageCard({ product, badge }: HomepageCardProps) {
             fill
             sizes="192px"
             className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-            unoptimized={imageUrl?.startsWith('https://placehold.co')}
+            unoptimized={isUnoptimizedImage(imageUrl)}
           />
         </div>
 

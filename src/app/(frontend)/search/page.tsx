@@ -10,6 +10,7 @@ import { FilterDrawerProvider } from '@/components/filters/filter-drawer-context
 import { ActiveFilterChips } from '@/components/filters/ActiveFilterChips'
 import { buildWhereClause } from '@/lib/filters/build-where-clause'
 import { getProductUrl } from '@/lib/product-url'
+import { isUnoptimizedImage } from '@/lib/image-url'
 
 const ph = (w: number, h: number, bg: string, fg: string, text: string) =>
   `https://placehold.co/${w}x${h}/${bg}/${fg}?text=${encodeURIComponent(text)}&font=lora`
@@ -35,7 +36,7 @@ function ImagePanel({
         fill
         sizes="(max-width: 768px) 50vw, 33vw"
         className="object-cover"
-        unoptimized={src.startsWith('https://placehold.co')}
+        unoptimized={isUnoptimizedImage(src)}
       />
     </div>
   )

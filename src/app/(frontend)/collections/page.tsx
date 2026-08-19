@@ -3,6 +3,7 @@ import { ArrowLeft, ArrowRight } from 'lucide-react'
 import { SkeletonImage } from '@/components/ui/SkeletonImage'
 import { getPayload } from 'payload'
 import config from '@payload-config'
+import { isUnoptimizedImage } from '@/lib/image-url'
 
 const ph = (w: number, h: number, bg: string, fg: string, text: string) =>
   `https://placehold.co/${w}x${h}/${bg}/${fg}?text=${encodeURIComponent(text)}&font=lora`
@@ -28,7 +29,7 @@ function ImagePanel({
         fill
         sizes="(max-width: 768px) 100vw, 50vw"
         className="object-cover"
-        unoptimized={src.startsWith('https://placehold.co')}
+        unoptimized={isUnoptimizedImage(src)}
       />
       {/* subtle texture overlay */}
       <div
