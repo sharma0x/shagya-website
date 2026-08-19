@@ -49,7 +49,8 @@ terraform {
 }
 
 provider "aws" {
-  region = var.aws_region
+  region  = var.aws_region
+  profile = var.aws_profile
 }
 
 # ---------------------------------------------------------------------------
@@ -60,6 +61,12 @@ variable "aws_region" {
   description = "AWS region to provision in"
   type        = string
   default     = "ap-south-1"
+}
+
+variable "aws_profile" {
+  description = "AWS CLI profile to authenticate as (which account). Override with -var='aws_profile=default' to switch accounts."
+  type        = string
+  default     = "914800441067-static"
 }
 
 variable "create_rds" {
@@ -118,12 +125,6 @@ variable "rds_db_name" {
   default     = "shayga"
 }
 
-variable "extra_public_ips" {
-  description = "Extra public IPs (CIDR-less) allowed to reach the new RDS (e.g. a legacy/external VPS, or your local dev machine)"
-  type        = list(string)
-  default     = []
-}
-
 variable "rds_publicly_accessible" {
   description = "Give the RDS a public endpoint. The VPS reaches RDS over its private IP (same VPC), so false is more secure; keep true only if you need direct access from home/CI. Access is still gated by the security group."
   type        = bool
@@ -141,12 +142,6 @@ variable "ssh_public_key" {
   description = "Contents of the SSH public key for the ubuntu user (required when create_vps=true)"
   type        = string
   default     = ""
-}
-
-variable "ssh_allowed_cidrs" {
-  description = "CIDRs allowed to SSH to the VPS. Required when create_vps=true — pass your office/home IP, e.g. -var='ssh_allowed_cidrs=[\"1.2.3.4/32\"]'. Deliberately has no world-open default."
-  type        = list(string)
-  default     = []
 }
 
 variable "instance_type" {
@@ -178,21 +173,13 @@ variable "domain_name" {
 # ---------------------------------------------------------------------------
 
 data "aws_vpc" "project" {
-  filter {
-    name   = "tag:Name"
-    values = ["project-vpc"]
-  }
+  default = true
 }
 
 data "aws_subnets" "public" {
   filter {
     name   = "vpc-id"
     values = [data.aws_vpc.project.id]
-  }
-
-  filter {
-    name   = "tag:Name"
-    values = ["project-subnet-public*"]
   }
 }
 
@@ -249,13 +236,13 @@ resource "aws_security_group" "rds_sg" {
   vpc_id      = data.aws_vpc.project.id
 
   ingress {
-    description = "PostgreSQL from App VPS (private, same VPC) + extra public IPs"
+    description = "PostgreSQL from App VPS (private, same VPC) + allowed admin IPs"
     from_port   = 5432
     to_port     = 5432
     protocol    = "tcp"
     cidr_blocks = concat(
       ["${local.vps_private_ip}/32"],
-      [for ip in var.extra_public_ips : "${ip}/32"],
+      [for ip in local.admin_ips : "${ip}/32"],
     )
   }
 
@@ -296,6 +283,12 @@ resource "aws_db_instance" "shayga" {
   # Never silently drop data on destroy: take a final snapshot instead.
   skip_final_snapshot       = false
   final_snapshot_identifier = var.final_snapshot_identifier
+
+  lifecycle {
+    # Guard against accidental `terraform destroy`. To actually delete, set
+    # this to false, `terraform apply`, then `terraform destroy`.
+    prevent_destroy = true
+  }
 }
 
 # When reusing an existing RDS but creating a NEW VPS, add the new VPS's
@@ -343,11 +336,11 @@ resource "aws_security_group" "vps_sg" {
   vpc_id      = data.aws_vpc.project.id
 
   ingress {
-    description = "SSH from admin"
+    description = "SSH from admin IPs"
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = var.ssh_allowed_cidrs
+    cidr_blocks = [for ip in local.admin_ips : "${ip}/32"]
   }
 
   ingress {
@@ -375,8 +368,8 @@ resource "aws_security_group" "vps_sg" {
 
   lifecycle {
     precondition {
-      condition     = length(var.ssh_allowed_cidrs) > 0 && !contains(var.ssh_allowed_cidrs, "0.0.0.0/0")
-      error_message = "ssh_allowed_cidrs must not be empty or world-open — pass your office/home IP, e.g. -var='ssh_allowed_cidrs=[\"1.2.3.4/32\"]'."
+      condition     = length(local.admin_ips) > 0 && !contains([for ip in local.admin_ips : "${ip}/32"], "0.0.0.0/0")
+      error_message = "allowed_ips.txt must contain at least one admin IP and must not contain 0.0.0.0/0. Run `make provision-allow-ip IP=<your-ip>` to add one."
     }
   }
 }
@@ -397,7 +390,8 @@ resource "aws_instance" "shayga_vps" {
   # refresh misreads as associate_public_ip_address=true and forces
   # replacement. The subnet has MapPublicIpOnLaunch=false, so ignore it.
   lifecycle {
-    ignore_changes = [associate_public_ip_address]
+    ignore_changes  = [associate_public_ip_address]
+    prevent_destroy = true
   }
 
   root_block_device {
@@ -457,6 +451,10 @@ resource "aws_eip" "shayga_vps" {
   tags = {
     Name = "shayga-vps-eip"
   }
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "aws_eip_association" "shayga_vps" {
@@ -470,6 +468,15 @@ resource "aws_eip_association" "shayga_vps" {
 # ---------------------------------------------------------------------------
 
 locals {
+  # Machines (public IPs, one per line) allowed to reach RDS (5432) and SSH (22).
+  # Edit infra/provision/allowed_ips.txt, or use `make provision-allow-ip` /
+  # `make provision-deny-ip`. Lines starting with # are ignored.
+  admin_ips = [
+    for line in split("\n", try(file("${path.module}/allowed_ips.txt"), "")) :
+    trimspace(line)
+    if trimspace(line) != "" && substr(trimspace(line), 0, 1) != "#"
+  ]
+
   rds_address  = var.create_rds ? aws_db_instance.shayga[0].address : data.aws_db_instance.existing_rds[0].address
   rds_port     = var.create_rds ? aws_db_instance.shayga[0].port : data.aws_db_instance.existing_rds[0].port
   rds_endpoint = "${local.rds_address}:${local.rds_port}"

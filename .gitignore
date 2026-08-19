@@ -89,5 +89,6 @@ infra/provision/*.tfvars.json
 infra/provision/*.tfplan
 infra/provision/*.crash.log
 infra/provision/.database_url
+infra/provision/allowed_ips.txt
 
 # Environment files

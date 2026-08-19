@@ -5,7 +5,8 @@
         lint format typecheck \
         test test-watch test-coverage test-e2e test-all ci-local \
         infra-up infra-down infra-logs infra-reset \
-        provision-init provision-plan provision-apply provision-deploy provision-destroy \
+        provision-init provision-plan provision-apply provision-deploy \
+        provision-allow-ip provision-deny-ip provision-allow-me provision-destroy \
         seed-local seed-preview seed-production \
         reset-local reset-preview-dangerous reset-production-dangerous \
         db-migrate db-migrate-create db-generate-types \
@@ -69,11 +70,14 @@ help: ## Show this help message
 	@echo "  make infra-reset      Reset PostgreSQL (delete all data)"
 	@echo ""
 	@echo "Provision + Deploy (Terraform, infra/provision):"
-	@echo "  make provision-init   Initialize Terraform for infra/provision"
-	@echo "  make provision-plan   Plan RDS + VPS + deploy (DB_PASSWORD='...')"
-	@echo "  make provision-apply  Provision RDS + VPS and deploy (DB_PASSWORD='...')"
-	@echo "  make provision-deploy Redeploy a tag to the existing VPS (EXISTING_VPS_ID=..., DOCKER_TAG=...)"
-	@echo "  make provision-destroy DESTROY RDS + VPS (DANGEROUS)"
+	@echo "  make provision-init     Initialize Terraform for infra/provision"
+	@echo "  make provision-plan     Plan RDS + VPS + deploy"
+	@echo "  make provision-apply    Provision RDS + VPS and deploy"
+	@echo "  make provision-deploy   Redeploy a tag to the existing VPS (EXISTING_VPS_ID=..., DOCKER_TAG=...)"
+	@echo "  make provision-allow-ip Allow a public IP for RDS+SSH (IP=1.2.3.4)"
+	@echo "  make provision-deny-ip  Remove a public IP from RDS+SSH (IP=1.2.3.4)"
+	@echo "  make provision-allow-me Allow your current public IP for RDS+SSH"
+	@echo "  make provision-destroy  DESTROY RDS + VPS (DANGEROUS, needs confirmation)"
 	@echo ""
 	@echo "Build:"
 	@echo "  make build            Production build"
@@ -203,46 +207,21 @@ infra-reset: ## Reset infrastructure (delete all data)
 # ============================================================================
 
 TF_DIR ?= infra/provision
-DB_PASSWORD ?=
-SSH_PUBLIC_KEY ?= $(shell cat ~/.ssh/id_ed25519.pub 2>/dev/null)
-SSH_ALLOWED_CIDRS ?=
 DOCKER_TAG ?= testing
 EXISTING_VPS_ID ?=
 
-# Shared guard: DB_PASSWORD is a secret, so require it explicitly on every invocation
-define check_db_password
-	@if [ -z "$(DB_PASSWORD)" ]; then \
-		echo "Error: DB_PASSWORD is required. Usage: make $(1) DB_PASSWORD='...'"; \
-		exit 1; \
-	fi
-endef
-
-# SSH_ALLOWED_CIDRS is a HCL list, e.g. SSH_ALLOWED_CIDRS='["1.2.3.4/32"]'
-define check_ssh_cidrs
-	@if [ -z "$(SSH_ALLOWED_CIDRS)" ]; then \
-		echo "Error: SSH_ALLOWED_CIDRS is required, e.g. SSH_ALLOWED_CIDRS='[\"1.2.3.4/32\"]'"; \
-		exit 1; \
-	fi
-endef
+# Sensitive values (db_password, ssh_public_key) live in
+# infra/provision/terraform.tfvars (gitignored) and are auto-loaded by terraform.
+# Admin IPs live in infra/provision/allowed_ips.txt (gitignored), one per line.
 
 provision-init: ## Initialize Terraform for infra/provision
 	cd $(TF_DIR) && terraform init
 
-provision-plan: ## Plan provisioning + deploy (Usage: make provision-plan DB_PASSWORD='...' SSH_ALLOWED_CIDRS='["1.2.3.4/32"]')
-	$(call check_db_password,provision-plan)
-	$(call check_ssh_cidrs)
-	cd $(TF_DIR) && terraform plan \
-		-var="db_password=$(DB_PASSWORD)" \
-		-var="ssh_public_key=$(SSH_PUBLIC_KEY)" \
-		-var='ssh_allowed_cidrs=$(SSH_ALLOWED_CIDRS)'
+provision-plan: ## Plan provisioning + deploy (reads terraform.tfvars + allowed_ips.txt)
+	cd $(TF_DIR) && terraform plan
 
-provision-apply: ## Provision RDS + VPS and deploy (Usage: make provision-apply DB_PASSWORD='...' SSH_ALLOWED_CIDRS='["1.2.3.4/32"]')
-	$(call check_db_password,provision-apply)
-	$(call check_ssh_cidrs)
-	cd $(TF_DIR) && terraform apply \
-		-var="db_password=$(DB_PASSWORD)" \
-		-var="ssh_public_key=$(SSH_PUBLIC_KEY)" \
-		-var='ssh_allowed_cidrs=$(SSH_ALLOWED_CIDRS)'
+provision-apply: ## Provision RDS + VPS and deploy (reads terraform.tfvars + allowed_ips.txt)
+	cd $(TF_DIR) && terraform apply
 
 provision-deploy: ## Redeploy a tag to the existing VPS (Usage: make provision-deploy EXISTING_VPS_ID=i-xxxx DOCKER_TAG=testing)
 	@if [ -z "$(EXISTING_VPS_ID)" ]; then \
@@ -255,13 +234,36 @@ provision-deploy: ## Redeploy a tag to the existing VPS (Usage: make provision-d
 		-var="docker_tag=$(DOCKER_TAG)" \
 		-replace=terraform_data.deploy
 
-provision-destroy: ## DESTROY RDS + VPS (Usage: make provision-destroy DB_PASSWORD='...')
-	$(call check_db_password,provision-destroy)
-	@echo "⚠️  WARNING: This will DESTROY the RDS and VPS."
+# --- IP allowlisting (allowed_ips.txt) ---------------------------------------
+# These grant BOTH RDS (5432) and SSH (22) access to the given public IP.
+
+provision-allow-ip: ## Allow a public IP for RDS+SSH (Usage: make provision-allow-ip IP=1.2.3.4)
+	@if [ -z "$(IP)" ]; then echo "Error: IP is required, e.g. make provision-allow-ip IP=1.2.3.4"; exit 1; fi
+	@grep -qxF "$(IP)" $(TF_DIR)/allowed_ips.txt || echo "$(IP)" >> $(TF_DIR)/allowed_ips.txt
+	cd $(TF_DIR) && terraform apply -auto-approve
+
+provision-deny-ip: ## Remove a public IP from RDS+SSH access (Usage: make provision-deny-ip IP=1.2.3.4)
+	@if [ -z "$(IP)" ]; then echo "Error: IP is required, e.g. make provision-deny-ip IP=1.2.3.4"; exit 1; fi
+	@grep -vx "$(IP)" $(TF_DIR)/allowed_ips.txt > $(TF_DIR)/allowed_ips.txt.tmp && mv $(TF_DIR)/allowed_ips.txt.tmp $(TF_DIR)/allowed_ips.txt
+	cd $(TF_DIR) && terraform apply -auto-approve
+
+provision-allow-me: ## Allow your current public IP for RDS+SSH
+	@IP=$$(curl -s --max-time 10 https://checkip.amazonaws.com | tr -d ' \n'); \
+	if grep -qxF "$$IP" $(TF_DIR)/allowed_ips.txt; then \
+		echo "IP already allowed: $$IP"; \
+	else \
+		echo "$$IP" >> $(TF_DIR)/allowed_ips.txt; \
+		echo "Allowed IP: $$IP"; \
+	fi
+	cd $(TF_DIR) && terraform apply -auto-approve
+
+provision-destroy: ## DESTROY RDS + VPS (needs confirmation; blocked by prevent_destroy)
+	@echo "⚠️  WARNING: This will DESTROY the RDS and VPS (a final RDS snapshot is taken)."
+	@echo "⚠️  Resources have prevent_destroy=true. To proceed you must first set"
+	@echo "⚠️  prevent_destroy = false in infra/provision/main.tf (3 places) and run"
+	@echo "⚠️  'make provision-apply', then re-run this target."
 	@read -p "Type 'DANGEROUS' to confirm: " ans && [ "$$ans" = "DANGEROUS" ]
-	cd $(TF_DIR) && terraform destroy -auto-approve \
-		-var="db_password=$(DB_PASSWORD)" \
-		-var="ssh_public_key=$(SSH_PUBLIC_KEY)"
+	cd $(TF_DIR) && terraform destroy -auto-approve
 
 # ============================================================================
 # Seed (one-stop command — works on a completely fresh database)
