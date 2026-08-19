@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 import { sendWebhook } from '@/lib/webhooks'
 import { sendOrderPlacedEmails, sendOrderStatusEmails } from '@/email/send'
+import { applyStockDecrement, type StockOrderItem } from '@/lib/stock'
 
 /**
  * Runs email, webhook, event-log, and purchaseCount side-effects.
@@ -13,7 +14,11 @@ async function runSideEffects(
   orderId: string,
   prevStatus: string | null,
   newStatus: string,
-  items?: Array<{ product?: string | number; quantity?: number }>,
+  items?: Array<
+    { product?: string | number } & Omit<StockOrderItem, 'color'> & {
+        color?: StockOrderItem['color']
+      }
+  >,
 ): Promise<void> {
   try {
     await sendOrderStatusEmails(payload, docId, newStatus).catch((err) => {
@@ -52,34 +57,37 @@ async function runSideEffects(
     prevStatus !== 'confirmed' &&
     items?.length
   ) {
+    // Group items per product so a multi-color order applies one consistent
+    // stock update per product (variant-aware via applyStockDecrement).
+    const itemsByProduct = new Map<string, StockOrderItem[]>()
     for (const item of items) {
       if (!item.product) continue
+      const pid =
+        typeof item.product === 'string' ? item.product : String(item.product)
+      const bucket = itemsByProduct.get(pid) ?? []
+      bucket.push({ color: item.color, quantity: item.quantity })
+      itemsByProduct.set(pid, bucket)
+    }
+
+    for (const [pid, productItems] of itemsByProduct) {
       try {
-        const pid =
-          typeof item.product === 'string' ? item.product : String(item.product)
         const product = await payload.findByID({
           collection: 'products',
           id: pid,
           overrideAccess: true,
+          depth: 0,
         })
-        if (product) {
-          const currentPurchase = (product as any).purchaseCount || 0
-          const currentQty = (product as any).quantity ?? 0
-          const trackQty = (product as any).trackQuantity === true
-          const orderQty = item.quantity || 1
+        if (!product) continue
 
-          await payload.update({
-            collection: 'products',
-            id: product.id,
-            data: {
-              purchaseCount: currentPurchase + orderQty,
-              quantity: trackQty
-                ? Math.max(0, currentQty - orderQty)
-                : currentQty,
-            },
-            overrideAccess: true,
-          })
-        }
+        const update = applyStockDecrement(product, productItems)
+        if (!update) continue
+
+        await payload.update({
+          collection: 'products',
+          id: product.id,
+          data: update,
+          overrideAccess: true,
+        })
       } catch {}
     }
   }
@@ -411,6 +419,25 @@ export const Orders: CollectionConfig = {
           name: 'variant',
           type: 'relationship',
           relationTo: 'variants',
+          admin: {
+            hidden: true,
+            description: 'Legacy — superseded by color/colorName',
+          },
+        },
+        {
+          name: 'color',
+          type: 'relationship',
+          relationTo: 'colors',
+          admin: {
+            description: 'Color variant purchased',
+          },
+        },
+        {
+          name: 'colorName',
+          type: 'text',
+          admin: {
+            description: 'Color name snapshot at purchase time',
+          },
         },
         {
           name: 'quantity',

@@ -362,6 +362,9 @@ export interface Product {
    */
   deliveryTime?: ('by-tomorrow' | 'within-2-days' | 'within-5-days' | 'within-7-days' | '7-plus-days') | null;
   trackQuantity?: boolean | null;
+  /**
+   * Auto-computed as the sum of color-variant stock when variants exist. Edit only for variant-less products.
+   */
   quantity?: number | null;
   lowStockThreshold?: number | null;
   /**
@@ -633,7 +636,18 @@ export interface Order {
   items?:
     | {
         product: number | Product;
+        /**
+         * Legacy — superseded by color/colorName
+         */
         variant?: (number | null) | Variant;
+        /**
+         * Color variant purchased
+         */
+        color?: (number | null) | Color;
+        /**
+         * Color name snapshot at purchase time
+         */
+        colorName?: string | null;
         quantity: number;
         unitPrice: number;
         totalPrice: number;
@@ -1591,6 +1605,8 @@ export interface OrdersSelect<T extends boolean = true> {
     | {
         product?: T;
         variant?: T;
+        color?: T;
+        colorName?: T;
         quantity?: T;
         unitPrice?: T;
         totalPrice?: T;

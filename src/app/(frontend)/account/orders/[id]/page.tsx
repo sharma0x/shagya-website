@@ -5,7 +5,7 @@ import configPromise from '@payload-config'
 import { ArrowLeft, Calendar, CreditCard, Truck, Package } from 'lucide-react'
 import { OrderTimeline } from '@/components/order/OrderTimeline'
 import { getProductUrl } from '@/lib/product-url'
-import { liftVariantGallery } from '@/lib/product-utils'
+import { galleryForColor } from '@/lib/product-utils'
 
 // Page props in Next.js 15+ App Router are promises
 export default async function OrderDetailsPage({
@@ -98,10 +98,14 @@ export default async function OrderDetailsPage({
               </h4>
               <div className="space-y-4">
                 {items?.map((item, idx) => {
-                  const adaptedProduct = item.product
-                    ? liftVariantGallery(item.product)
-                    : null
-                  const firstImage = adaptedProduct?.gallery?.[0]?.image
+                  const itemColorSlug =
+                    item.color && typeof item.color === 'object'
+                      ? item.color.slug
+                      : null
+                  const itemGallery = item.product
+                    ? galleryForColor(item.product, itemColorSlug)
+                    : []
+                  const firstImage = itemGallery?.[0]?.image
                   const imageUrl =
                     typeof firstImage === 'object' && firstImage !== null
                       ? firstImage.url || firstImage.sizes?.thumbnail?.url
@@ -137,6 +141,11 @@ export default async function OrderDetailsPage({
                         <h5 className="font-display group-hover:text-brand-700 truncate text-sm font-semibold text-neutral-900 transition-colors">
                           {item.product?.name || 'Handloom Saree'}
                         </h5>
+                        {item.colorName && (
+                          <p className="font-body mt-0.5 text-xs text-neutral-500">
+                            Color: {item.colorName}
+                          </p>
+                        )}
                         {item.variant && (
                           <p className="font-body mt-0.5 text-xs text-neutral-500">
                             {item.variant.title ||

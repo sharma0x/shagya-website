@@ -12,7 +12,7 @@ import {
 } from '@/components/address/AddressForm'
 import { GuestCheckout } from '@/components/checkout/GuestCheckout'
 import { OffersSection } from '@/components/coupons/OffersSection'
-import { liftVariantGallery } from '@/lib/product-utils'
+import { galleryForColor } from '@/lib/product-utils'
 import { deduplicateAddresses } from '@/lib/address-utils'
 import {
   ArrowLeft,
@@ -94,7 +94,7 @@ export default function CheckoutPage() {
         weave: i.product.weave,
         fabric: i.product.fabric,
         basePrice: i.unitPrice,
-        gallery: liftVariantGallery(i.product).gallery,
+        gallery: galleryForColor(i.product, i.variant?.color?.slug),
       },
       variant: i.variant,
       quantity: i.quantity,
@@ -446,6 +446,7 @@ export default function CheckoutPage() {
             cartItems: !isLoggedIn
               ? effectiveCart?.items.map((i) => ({
                   product: i.product.id,
+                  variant: i.variant ?? null,
                   quantity: i.quantity,
                   unitPrice: i.unitPrice,
                 }))
@@ -483,6 +484,7 @@ export default function CheckoutPage() {
             cartItems: !isLoggedIn
               ? effectiveCart?.items.map((i) => ({
                   product: i.product.id,
+                  variant: i.variant ?? null,
                   quantity: i.quantity,
                   unitPrice: i.unitPrice,
                 }))
@@ -536,6 +538,7 @@ export default function CheckoutPage() {
                   cartItems: !isLoggedIn
                     ? effectiveCart?.items.map((i) => ({
                         product: i.product.id,
+                        variant: i.variant ?? null,
                         quantity: i.quantity,
                         unitPrice: i.unitPrice,
                       }))
@@ -584,6 +587,7 @@ export default function CheckoutPage() {
               cartItems: !isLoggedIn
                 ? effectiveCart?.items.map((i) => ({
                     product: i.product.id,
+                    variant: i.variant ?? null,
                     quantity: i.quantity,
                     unitPrice: i.unitPrice,
                   }))
@@ -1041,8 +1045,11 @@ export default function CheckoutPage() {
                       </div>
                     ))
                   : effectiveCart?.items.map((item) => {
-                      const adapted = liftVariantGallery(item.product)
-                      const firstImage = adapted.gallery?.[0]?.image
+                      const itemGallery = galleryForColor(
+                        item.product,
+                        item.variant?.color?.slug,
+                      )
+                      const firstImage = itemGallery?.[0]?.image
                       const imageUrl =
                         typeof firstImage === 'object' && firstImage !== null
                           ? firstImage.url || firstImage.sizes?.thumbnail?.url

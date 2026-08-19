@@ -5,7 +5,9 @@ import { X, Plus, Minus, Trash2, ShoppingBag } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
-import { liftVariantGallery } from '@/lib/product-utils'
+import { isUnoptimizedImage } from '@/lib/image-url'
+import { galleryForColor, stockForColor } from '@/lib/product-utils'
+import { cartQtyCap } from '@/lib/cart-merge'
 
 interface CartDrawerProps {
   isOpen: boolean
@@ -78,13 +80,15 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
           ) : (
             <div className="space-y-6">
               {items.map((item, index) => {
-                const adapted = liftVariantGallery(item.product)
+                const itemColorSlug = item.variant?.color?.slug
+                const gallery = galleryForColor(item.product, itemColorSlug)
                 const imageUrl =
-                  adapted.gallery?.[0]?.image &&
-                  typeof adapted.gallery[0].image === 'object'
-                    ? adapted.gallery[0].image.sizes?.thumbnail?.url ||
-                      adapted.gallery[0].image.url
+                  gallery?.[0]?.image && typeof gallery[0].image === 'object'
+                    ? gallery[0].image.sizes?.thumbnail?.url ||
+                      gallery[0].image.url
                     : '/images/placeholder.jpg'
+                const qtyCap = cartQtyCap(item)
+                const stockLeft = stockForColor(item.product, itemColorSlug)
 
                 return (
                   <div
@@ -99,6 +103,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                         fill
                         className="object-cover"
                         sizes="80px"
+                        unoptimized={isUnoptimizedImage(imageUrl)}
                       />
                     </div>
 
@@ -151,11 +156,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                                 item.variant?.color?.slug,
                               )
                             }
-                            disabled={
-                              item.product.trackQuantity
-                                ? item.quantity >= (item.product.quantity ?? 10)
-                                : item.quantity >= 10
-                            }
+                            disabled={item.quantity >= qtyCap}
                             className="p-1.5 text-neutral-500 hover:text-neutral-900 disabled:opacity-30"
                             aria-label="Increase quantity"
                           >
@@ -176,6 +177,16 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                           <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
+
+                      {stockLeft !== null &&
+                        stockLeft > 0 &&
+                        stockLeft <= 5 && (
+                          <p className="font-body mt-1.5 text-[11px] font-medium text-red-600">
+                            {stockLeft === 1
+                              ? 'Last piece left in this color'
+                              : `Only ${stockLeft} left in this color`}
+                          </p>
+                        )}
                     </div>
 
                     {/* Price */}
