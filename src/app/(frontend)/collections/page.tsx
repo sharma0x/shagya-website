@@ -45,7 +45,8 @@ function ImagePanel({
   )
 }
 
-export const revalidate = 300
+// No DB access at build time — must render dynamically
+export const dynamic = 'force-dynamic'
 
 async function CollectionsList() {
   const payload = await getPayload({ config })

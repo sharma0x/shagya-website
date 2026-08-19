@@ -5,7 +5,8 @@ import Link from 'next/link'
 import { Calendar, User, ArrowRight } from 'lucide-react'
 import { BlogIndexGridSkeleton } from '@/components/ui/Skeleton'
 
-export const revalidate = 300
+// No DB access at build time — must render dynamically
+export const dynamic = 'force-dynamic'
 
 async function BlogPostsList() {
   const payload = await getPayload({ config })

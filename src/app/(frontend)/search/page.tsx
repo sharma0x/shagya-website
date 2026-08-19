@@ -12,6 +12,9 @@ import { buildWhereClause } from '@/lib/filters/build-where-clause'
 import { getProductUrl } from '@/lib/product-url'
 import { isUnoptimizedImage } from '@/lib/image-url'
 
+// No DB access at build time — must render dynamically
+export const dynamic = 'force-dynamic'
+
 const ph = (w: number, h: number, bg: string, fg: string, text: string) =>
   `https://placehold.co/${w}x${h}/${bg}/${fg}?text=${encodeURIComponent(text)}&font=lora`
 

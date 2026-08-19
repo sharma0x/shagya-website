@@ -9,7 +9,8 @@ import { ProductFilters } from '@/components/product/ProductFilters'
 import { ProductCard } from '@/components/product/ProductCard'
 import { ProductCardSkeleton } from '@/components/ui/Skeleton'
 
-export const revalidate = 120
+// ISR cache for 5 minutes
+export const revalidate = 300
 
 function getCommaParam(
   params: { [key: string]: string | string[] | undefined },
