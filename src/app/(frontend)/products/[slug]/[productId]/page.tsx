@@ -323,6 +323,7 @@ export default async function ProductDetailPage({
       .filter((v: any) => v.enabled !== false && v.color)
       .map((v: any) => ({
         color: {
+          id: v.color.id,
           slug: v.color.slug,
           name: v.color.name,
           hex: v.color.hex,

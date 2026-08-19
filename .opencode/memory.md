@@ -1,5 +1,25 @@
 # Shayga — Agent Memory
 
+## Vitest on this Windows machine needs --pool=forks (2026-08-19)
+
+**Symptom:** `pnpm vitest run` (any file selection) hangs then fails with `[vitest-pool-runner]: Timeout waiting for worker to respond` — "no tests" run at all.
+**Fix:** Always run `pnpm vitest run --pool=forks` locally. CI (ubuntu) is unaffected. Full suite ~110s with forks.
+
+## migrate:create re-detects columns from hand-written migrations (2026-08-19)
+
+**Symptom:** `pnpm payload migrate:create <name>` includes `ADD COLUMN` statements for columns that already exist in the DB (e.g. `pages_blocks_hero_images.link` from `20260819_120000_add_hero_slide_links.ts`).
+**Root cause:** That migration was hand-written and has **no `.json` snapshot** — Payload's migrate:create diffs against the drizzle snapshot chain, not the live DB, so un-snapshotted columns keep reappearing.
+**Fix:** Review every generated migration against the DB (`docker exec shayga-pg psql -U shayga -d shayga -c "\d <table>"`), strip statements for already-applied columns, then run it. The new migration's own `.json` snapshot records the columns, so the chain self-heals for future migrate:creates.
+- Local PG runs on port **5433** (not the 5432 documented in AGENTS.md) — `.env` already points there.
+
+## Per-Color Stock Model (2026-08-19)
+
+- `colorVariants[].stock` is the source of truth; top-level `quantity` is auto-derived as the sum of enabled variants in Products `beforeChange` (never hand-edit both).
+- Cart variant payload shape: `{ color: { id, slug, name, hex, stock } }` — `stock` is the add-time snapshot; `id` is the Colors doc ID (serialized on the PDP). `cartQtyCap()` (src/lib/cart-merge.ts) reads `variant.color.stock` first (it survives merging, where `product` is normalized to a bare ID and loses `trackQuantity`).
+- Order items record `color` (rel → colors) + `colorName` (text snapshot). `/api/razorpay/verify` resolves color ID via `variant.color.id` with a slug-lookup fallback (makeColorResolver).
+- Decrement on `status → confirmed` goes through `applyStockDecrement()` (src/lib/stock.ts), grouped per product in Orders `runSideEffects`. Unmatched colors (legacy orders) skip variant decrement but still bump `purchaseCount`.
+- `galleryForColor(product, slug)` (src/lib/product-utils.ts) replaces `liftVariantGallery` wherever a cart/order line's color is known — `liftVariantGallery` always shows the FIRST variant's image (wrong-color bug).
+
 ## MinIO bucket needs public read policy for direct media URLs (2026-08-19)
 
 **Symptom:** Homepage renders but zero images load; browser console shows 403s on `http://localhost:9000/shayga-media/*.jpg`. Server-side `mc ls` also says "Access Denied" until you set an explicit alias.

@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { normalizeVariant, dedupeCartItems } from '@/lib/cart-merge'
+import { normalizeVariant, dedupeCartItems, cartQtyCap } from '@/lib/cart-merge'
 
 export interface CartItem {
   product: {
@@ -28,9 +28,12 @@ export interface CartItem {
   }
   variant?: {
     color?: {
+      id?: number | string
       slug: string
       name: string
       hex: string
+      /** Add-time stock snapshot for this color variant */
+      stock?: number
     }
     size?: string
     blouseCustomization?: string
@@ -92,9 +95,13 @@ export const useCart = create<CartState>()(
         let newItems = [...currentItems]
         if (existingIndex > -1) {
           const existing = currentItems[existingIndex]
+          const capped = cartQtyCap({
+            product: { ...existing.product },
+            variant: normalizedVariant ?? existing.variant,
+          })
           newItems[existingIndex] = {
             ...existing,
-            quantity: Math.min(10, existing.quantity + quantity),
+            quantity: Math.min(capped, existing.quantity + quantity),
             variant: normalizedVariant ?? existing.variant,
           }
         } else {
@@ -104,10 +111,14 @@ export const useCart = create<CartState>()(
                 !(item.product.id === product.id && !item.variant?.color?.slug),
             )
           }
+          const capped = cartQtyCap({
+            product: { ...product },
+            variant: normalizedVariant,
+          })
           newItems.push({
             product,
             variant: normalizedVariant,
-            quantity: Math.min(10, quantity),
+            quantity: Math.min(capped, quantity),
             unitPrice: product.basePrice,
           })
         }
@@ -130,17 +141,27 @@ export const useCart = create<CartState>()(
       },
 
       updateQuantity: (productId, quantity, colorSlug?) => {
-        const qty = Math.max(1, Math.min(10, quantity))
         const newItems = get().items.map((item) => {
           const sameProduct = item.product.id === productId
           if (colorSlug !== undefined) {
             const itemColorSlug = item.variant?.color?.slug ?? ''
             if (sameProduct && itemColorSlug === colorSlug) {
-              return { ...item, quantity: qty }
+              const capped = cartQtyCap(item)
+              return {
+                ...item,
+                quantity: Math.min(capped, Math.max(1, quantity)),
+              }
             }
             return item
           }
-          return sameProduct ? { ...item, quantity: qty } : item
+          if (sameProduct) {
+            const capped = cartQtyCap(item)
+            return {
+              ...item,
+              quantity: Math.min(capped, Math.max(1, quantity)),
+            }
+          }
+          return item
         })
         set({ items: newItems })
         get().syncWithServer()
