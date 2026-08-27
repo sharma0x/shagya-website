@@ -14,14 +14,11 @@ const nextConfig: NextConfig = {
   },
 
   images: {
-    dangerouslyAllowLocalIP: true,
     formats: ['image/avif', 'image/webp'],
     minimumCacheTTL: 2592000,
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     remotePatterns: [
-      { protocol: 'https', hostname: 'placehold.co' },
-      { protocol: 'https', hostname: 'images.unsplash.com' },
       {
         protocol: 'http',
         hostname: 'localhost',
@@ -40,19 +37,10 @@ const nextConfig: NextConfig = {
         port: '3000',
         pathname: '/**',
       },
-      {
-        protocol: 'https',
-        hostname: 'shagya-website-sharma0x-4079-clow-work.vercel.app',
-      },
-      {
-        protocol: 'https',
-        hostname: 'shagya-website-git-develop-shayga.vercel.app',
-      },
       { protocol: 'https', hostname: '*.r2.cloudflarestorage.com' },
       { protocol: 'https', hostname: 'cdn.shayga.in' },
       { protocol: 'https', hostname: 'shayga.in' },
       { protocol: 'https', hostname: 'www.shayga.in' },
-      { protocol: 'https', hostname: '*.vercel.app' },
     ],
   },
 
