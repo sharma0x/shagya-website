@@ -78,6 +78,7 @@ help: ## Show this help message
 	@echo "  make infra-down       Stop PostgreSQL"
 	@echo "  make infra-logs       View PostgreSQL logs"
 	@echo "  make infra-reset      Reset PostgreSQL (delete all data)"
+	@echo "  make infra-minio-public Set MinIO bucket to public (download)"
 	@echo ""
 	@echo "Provision + Deploy (Terraform, infra/provision):"
 	@echo "  make provision-init     Initialize Terraform for infra/provision"
@@ -211,6 +212,9 @@ infra-logs: ## View infrastructure logs
 
 infra-reset: ## Reset infrastructure (delete all data)
 	docker compose -f infra/dev-services.yml down -v
+
+infra-minio-public: ## Set MinIO local bucket to public (download)
+	docker exec shayga-minio sh -c "mc alias set local http://localhost:9000 minioadmin minioadmin && mc anonymous set download local/shayga-media"
 
 # ============================================================================
 # Provisioning + Deploy (Terraform — infra/provision, the canonical config)
