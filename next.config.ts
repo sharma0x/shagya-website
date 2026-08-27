@@ -14,6 +14,7 @@ const nextConfig: NextConfig = {
   },
 
   images: {
+    dangerouslyAllowLocalIP: true,
     formats: ['image/avif', 'image/webp'],
     minimumCacheTTL: 2592000,
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048],
@@ -21,8 +22,24 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: 'https', hostname: 'placehold.co' },
       { protocol: 'https', hostname: 'images.unsplash.com' },
-      { protocol: 'http', hostname: 'localhost', port: '3000' },
-      { protocol: 'http', hostname: '127.0.0.1', port: '3000' },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '9000',
+        pathname: '/**',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '3000',
+        pathname: '/**',
+      },
+      {
+        protocol: 'http',
+        hostname: '127.0.0.1',
+        port: '3000',
+        pathname: '/**',
+      },
       {
         protocol: 'https',
         hostname: 'shagya-website-sharma0x-4079-clow-work.vercel.app',
