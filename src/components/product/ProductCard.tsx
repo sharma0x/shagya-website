@@ -10,9 +10,6 @@ import { getProductUrl } from '@/lib/product-url'
 import { liftVariantGallery } from '@/lib/product-utils'
 import { isUnoptimizedImage } from '@/lib/image-url'
 
-const ph = (w: number, h: number, _bg: string, _fg: string, text: string) =>
-  `https://images.placeholders.dev/?width=${w}&height=${h}&text=${encodeURIComponent(text.substring(0, 20))}&bgColor=%2369254e&textColor=%23f5e8ee&fontFamily=lora&fontWeight=600`
-
 interface GalleryItem {
   url: string
   colorName?: string
@@ -95,7 +92,7 @@ function getMultiColorGallery(product: any): GalleryItem[] {
   // Final placeholder fallback if completely empty
   if (items.length === 0) {
     items.push({
-      url: ph(600, 800, '69254e', 'f5e8ee', product.name || 'Saree'),
+      url: '/images/products/saree-01.jpg',
       colorName: product.color?.name,
     })
   }

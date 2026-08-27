@@ -10,8 +10,6 @@ export function isUnoptimizedImage(url?: string | null): boolean {
   if (!url) return false
 
   return (
-    url.startsWith('https://placehold.co') ||
-    url.includes('.r2.cloudflarestorage.com') ||
-    url.includes('cdn.shayga.in')
+    url.includes('.r2.cloudflarestorage.com') || url.includes('cdn.shayga.in')
   )
 }

@@ -45,9 +45,6 @@ const SUGGESTIONS = [
   'Kanchipuram',
 ]
 
-const ph = (w: number, h: number, bg: string, fg: string, text: string) =>
-  `https://placehold.co/${w}x${h}/${bg}/${fg}?text=${encodeURIComponent(text)}&font=lora`
-
 function getResultUrl(doc: SearchResult): string {
   if (doc.type === 'product') return getProductUrl(doc.slug, doc.id)
   return `/blog/${doc.slug}`
@@ -57,7 +54,7 @@ function ProductThumbnail({ doc }: { doc: FTSProductResult }) {
   return (
     <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-neutral-100">
       <Image
-        src={ph(56, 56, '69254e', 'f5e8ee', doc.name.charAt(0) || 'S')}
+        src={'/images/products/saree-01.jpg'}
         alt={doc.name}
         fill
         sizes="56px"

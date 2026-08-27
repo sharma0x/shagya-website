@@ -7,9 +7,6 @@ import { getPayload } from 'payload'
 import config from '@payload-config'
 import { isUnoptimizedImage } from '@/lib/image-url'
 
-const ph = (w: number, h: number, bg: string, fg: string, text: string) =>
-  `https://placehold.co/${w}x${h}/${bg}/${fg}?text=${encodeURIComponent(text)}&font=lora`
-
 function ImagePanel({
   src,
   alt,
@@ -60,7 +57,7 @@ async function CollectionsList() {
   const dbCollections = result.docs as any[]
 
   const collectionsWithCovers = dbCollections.map((col) => {
-    let coverImage = ph(800, 1000, '69254e', 'f5e8ee', col.name)
+    let coverImage = '/images/products/saree-01.jpg'
     if (col.image && typeof col.image === 'object') {
       coverImage = col.image.sizes?.card?.url || col.image.url || coverImage
     }

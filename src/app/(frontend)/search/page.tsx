@@ -15,9 +15,6 @@ import { isUnoptimizedImage } from '@/lib/image-url'
 // No DB access at build time — must render dynamically
 export const dynamic = 'force-dynamic'
 
-const ph = (w: number, h: number, bg: string, fg: string, text: string) =>
-  `https://placehold.co/${w}x${h}/${bg}/${fg}?text=${encodeURIComponent(text)}&font=lora`
-
 function ImagePanel({
   src,
   alt,
@@ -293,13 +290,7 @@ export default async function SearchPage({
                               >
                                 <div className="relative overflow-hidden rounded-xl transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-md">
                                   <ImagePanel
-                                    src={ph(
-                                      600,
-                                      800,
-                                      '69254e',
-                                      'f5e8ee',
-                                      p.name,
-                                    )}
+                                    src={'/images/products/saree-01.jpg'}
                                     alt={p.name}
                                     className="aspect-[3/4] w-full"
                                     rounded="none"

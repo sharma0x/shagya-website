@@ -43,9 +43,6 @@ import { TrendingColors } from '@/components/homepage/TrendingColors'
 import { HeroCarousel } from '@/components/homepage/HeroCarousel'
 import { isUnoptimizedImage } from '@/lib/image-url'
 
-const ph = (w: number, h: number, bg: string, fg: string, text: string) =>
-  `https://placehold.co/${w}x${h}/${bg}/${fg}?text=${encodeURIComponent(text)}&font=lora`
-
 function LexicalRenderer({ content }: { content: any }) {
   if (!content || !content.root || !Array.isArray(content.root.children)) {
     return null
@@ -853,7 +850,7 @@ export default async function HomePage() {
           const imgSrc =
             block.image && typeof block.image === 'object'
               ? block.image.sizes?.card?.url || block.image.url
-              : ph(800, 800, 'a97e34', 'fff8ec', 'Craft Story')
+              : '/images/blogs/blog-1.jpg'
 
           return (
             <section
