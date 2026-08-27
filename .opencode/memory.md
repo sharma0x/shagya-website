@@ -1,5 +1,17 @@
 # Shayga — Agent Memory
 
+## Touch-swipe product gallery via Embla (2026-08-27)
+
+- **`embla-carousel-react` is a direct dep** (added `pnpm add embla-carousel-react@8.6.0`); it also ships transitively via `shadcn` but pnpm strict mode means `src/` imports need it declared directly.
+- `ProductGallery.tsx` wraps the PDP main image in an Embla carousel so it swipes on touch. Key bits:
+  - `useEmblaCarousel({ containScroll: 'trimSnaps', watchDrag: cb })` — `watchDrag` callback gates dragging. Cast `event as PointerEvent` and only return true for `pointerType === 'touch' | 'pen'` so **desktop mouse hover-zoom still works** (mouse drag disabled). TS union on the embla event type has no `pointerType` on the `TouchEvent` variant — must cast.
+  - Sync dots/thumbnails/arrows to swipe state via `emblaApi.on('select')`/`on('reInit')` → `setActiveIdx(selectedScrollSnap())`. Do **not** call `onSelect()` synchronously in the effect body — this repo's ESLint `react-hooks/set-state-in-effect` errors on it (differs from upstream shadcn carousel.tsx).
+  - Reset when `imageUrls` changes (variant switch): `setActiveIdx(0)` + `emblaApi?.scrollTo(0, true)`.
+  - Render container: `<div ref={emblaRef} class="overflow-hidden">` → `<div class="flex touch-pan-y">` → slides `min-w-0 shrink-0 grow-0 basis-full`. `touch-pan-y` lets vertical page scroll still work.
+  - Only the active slide mounts `<ProductImageZoom>`; inactive slides render a plain `SkeletonImage` to avoid dead magnifier lens while offscreen.
+  - Arrows were `opacity-0 group-hover:opacity-100` (invisible on touch) → added `max-sm:opacity-100` so mobile users see them even without hover.
+
+
 ## RDS SG must match current public IP (recurring) (2026-08-16)
 
 **Symptom:** After PC/network change, app containers log `cannot connect to Postgres ... Connection terminated due to connection timeout` (NOT refused — AWS SG drops packets silently) and `/api/media/*` returns 500 `"There was an error initializing Payload"` on affected replicas. Homepage may still serve cached content.
