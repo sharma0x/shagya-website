@@ -111,3 +111,47 @@ export function applyStockDecrement(
 
   return { colorVariants: newVariants, quantity, purchaseCount }
 }
+
+/**
+ * Live purchasable stock for a cart/order line against a product doc.
+ * Returns `null` when the product doesn't track quantity (no cap).
+ * Semantics for variant products: a line whose color can't be matched
+ * (removed variant, disabled variant, or missing color) is NOT
+ * purchasable → 0.
+ */
+export function purchasableStock(
+  product: any,
+  colorSlug?: string | null,
+): number | null {
+  if (product?.trackQuantity !== true) return null
+  const variants = Array.isArray(product?.colorVariants)
+    ? product.colorVariants
+    : []
+  if (variants.length === 0) return Math.max(0, Number(product?.quantity) || 0)
+  if (!colorSlug) return 0
+  const variant = variants.find(
+    (v: any) =>
+      v?.enabled !== false && v?.color && v.color.slug === colorSlug,
+  )
+  return variant ? Math.max(0, Number(variant.stock) || 0) : 0
+}
+
+/**
+ * Effective stock for a cart line item, preferring the validated snapshot
+ * on the variant (`variant.color.stock`, refreshed by `validateStock`)
+ * and falling back to the product doc's live variant stock (populated
+ * carts from the DB). `null` = untracked, never OOS.
+ */
+export function lineStockFor(item: {
+  product?: unknown
+  variant?: {
+    color?: { stock?: number | null; slug?: string | null } | null
+    stock?: number | null
+  } | null
+}): number | null {
+  const snapshot = item.variant?.color?.stock ?? item.variant?.stock ?? null
+  if (typeof snapshot === 'number') return snapshot
+  const slug =
+    (item.variant?.color && (item.variant.color as any).slug) || null
+  return purchasableStock(item.product, slug)
+}

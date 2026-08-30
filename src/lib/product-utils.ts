@@ -29,7 +29,6 @@ export function liftVariantGallery(product: any) {
     colorVariants: product.colorVariants || [],
   }
 }
-
 /**
  * Gallery for a specific color variant. Falls back to the product-level
  * gallery (legacy products / stale carts) and then to the first enabled
@@ -46,24 +45,7 @@ export function galleryForColor(
       )
     : null
   const fallback = variants.find((v: any) => v?.enabled !== false)
-  const gallery = bySlug?.gallery || product?.gallery || fallback?.gallery || []
+  const gallery =
+    bySlug?.gallery || product?.gallery || fallback?.gallery || []
   return Array.isArray(gallery) ? gallery : []
-}
-
-/**
- * Stock count for a specific color variant. Falls back to the product-level
- * quantity when the variant can't be found (legacy carts, old orders).
- */
-export function stockForColor(
-  product: any,
-  colorSlug?: string | null,
-): number | null {
-  if (product?.trackQuantity !== true) return null
-  const variants = product?.colorVariants || []
-  if (variants.length === 0) return product?.quantity ?? null
-  if (!colorSlug) return null
-  const variant = variants.find(
-    (v: any) => v?.enabled !== false && v?.color?.slug === colorSlug,
-  )
-  return variant ? (variant.stock ?? 0) : 0
 }
