@@ -68,10 +68,12 @@ jobs:
       - name: Write staging env
         run: printf '%s\n' "${{ secrets.STAGING_ENV }}" > .env.staging
 
-      - name: Log in to GitHub Container Registry
+      - name: Authenticate Docker (GHCR)
         run: |
-          mkdir -p "$DOCKER_CONFIG"
-          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          mkdir -p "$DOCKER_CONFIG/cli-plugins"
+          ln -sf "$HOME/.docker/cli-plugins/docker-compose" "$DOCKER_CONFIG/cli-plugins/docker-compose"
+          AUTH=$(printf '%s:%s' "${{ github.actor }}" "${{ secrets.GITHUB_TOKEN }}" | base64)
+          printf '{"auths":{"ghcr.io":{"auth":"%s"}}}\n' "$AUTH" > "$DOCKER_CONFIG/config.json"
 
       - name: Pull image
         run: docker compose -f docker-compose.staging.yml pull app
