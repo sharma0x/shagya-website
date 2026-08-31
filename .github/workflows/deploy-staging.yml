@@ -59,6 +59,8 @@ jobs:
     name: Deploy to Staging
     runs-on: [self-hosted, staging]
     needs: build
+    env:
+      DOCKER_CONFIG: ${{ runner.temp }}/docker-config
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -67,7 +69,9 @@ jobs:
         run: printf '%s\n' "${{ secrets.STAGING_ENV }}" > .env.staging
 
       - name: Log in to GitHub Container Registry
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+        run: |
+          mkdir -p "$DOCKER_CONFIG"
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
 
       - name: Pull image
         run: docker compose -f docker-compose.staging.yml pull app
