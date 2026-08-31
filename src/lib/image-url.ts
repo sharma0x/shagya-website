@@ -10,6 +10,12 @@ export function isUnoptimizedImage(url?: string | null): boolean {
   if (!url) return false
 
   return (
-    url.includes('.r2.cloudflarestorage.com') || url.includes('cdn.shayga.in')
+    url.includes('.r2.cloudflarestorage.com') ||
+    url.includes('cdn.shayga.in') ||
+    // Local MinIO (dev): the Next.js optimizer refuses to fetch private-IP
+    // origins (localhost → 127.0.0.1) unless `dangerouslyAllowLocalIP` is set,
+    // and Payload already serves pre-sized variants, so optimization is wasted.
+    url.includes('://localhost:') ||
+    url.includes('://127.0.0.1:')
   )
 }
