@@ -120,7 +120,7 @@ export function ProductGallery({
               type="button"
               onClick={prev}
               aria-label="Previous image"
-              className="absolute top-1/2 left-3 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-neutral-700 opacity-0 shadow-md backdrop-blur-sm transition-all group-hover:opacity-100 hover:bg-white active:scale-95 max-sm:opacity-100"
+              className="absolute top-1/2 left-3 z-20 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-neutral-700 opacity-0 shadow-md backdrop-blur-sm transition-all group-hover:opacity-100 hover:bg-white active:scale-95 sm:flex"
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
@@ -128,7 +128,7 @@ export function ProductGallery({
               type="button"
               onClick={next}
               aria-label="Next image"
-              className="absolute top-1/2 right-3 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-neutral-700 opacity-0 shadow-md backdrop-blur-sm transition-all group-hover:opacity-100 hover:bg-white active:scale-95 max-sm:opacity-100"
+              className="absolute top-1/2 right-3 z-20 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-neutral-700 opacity-0 shadow-md backdrop-blur-sm transition-all group-hover:opacity-100 hover:bg-white active:scale-95 sm:flex"
             >
               <ChevronRight className="h-5 w-5" />
             </button>
