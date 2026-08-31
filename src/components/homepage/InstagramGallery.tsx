@@ -46,7 +46,7 @@ export async function InstagramGallery({ className }: InstagramGalleryProps) {
           rel="noopener noreferrer"
           className="group relative block overflow-hidden rounded-xl bg-neutral-100 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg"
         >
-          <div className="aspect-square">
+          <div className="relative aspect-square">
             <SkeletonImage
               src={getImageSrc(post)}
               alt={post.caption?.slice(0, 100) || 'Instagram post'}

@@ -132,7 +132,7 @@ function HomepageCard({ product, badge }: HomepageCardProps) {
       className="group block w-48 min-w-[192px] shrink-0"
     >
       <div className="relative overflow-hidden rounded-xl bg-neutral-100 transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-md">
-        <div className="aspect-[4/5] w-full">
+        <div className="relative aspect-[4/5] w-full">
           <SkeletonImage
             src={imageUrl || ''}
             alt={product.name}

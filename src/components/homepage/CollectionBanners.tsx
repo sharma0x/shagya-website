@@ -41,7 +41,7 @@ export function CollectionBanners({
               href={banner.link}
               className="group relative overflow-hidden rounded-2xl bg-neutral-100"
             >
-              <div className="aspect-[4/5] sm:aspect-[3/4] md:aspect-[16/10]">
+              <div className="relative aspect-[4/5] sm:aspect-[3/4] md:aspect-[16/10]">
                 <SkeletonImage
                   src={banner.imageUrl}
                   alt={banner.title}

@@ -98,7 +98,7 @@ export function ProductGallery({
                     productName={`${productName} — image ${idx + 1}`}
                   />
                 ) : (
-                  <div className="aspect-[3/4] w-full">
+                  <div className="relative aspect-[3/4] w-full">
                     <SkeletonImage
                       src={url}
                       alt={`${productName} — image ${idx + 1}`}
