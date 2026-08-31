@@ -60,7 +60,7 @@ jobs:
     runs-on: [self-hosted, staging]
     needs: build
     env:
-      DOCKER_CONFIG: ${{ runner.temp }}/docker-config
+      DOCKER_CONFIG: ${{ github.workspace }}/.docker-config
     steps:
       - name: Checkout
         uses: actions/checkout@v4
