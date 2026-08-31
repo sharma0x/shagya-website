@@ -66,10 +66,19 @@ jobs:
       - name: Write staging env
         run: printf '%s\n' "${{ secrets.STAGING_ENV }}" > .env.staging
 
-      - name: Configure Docker to skip keychain
+      - name: Configure Docker credentials (bypass macOS Keychain)
         run: |
+          # Remove any existing Docker config that uses Keychain
+          rm -f ~/.docker/config.json
           mkdir -p ~/.docker
-          echo '{"credsStore":""}' > ~/.docker/config.json
+
+          # Create config that explicitly disables credential helpers
+          cat > ~/.docker/config.json <<EOF
+          {
+            "auths": {},
+            "credsStore": ""
+          }
+          EOF
 
       - name: Log in to GitHub Container Registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
