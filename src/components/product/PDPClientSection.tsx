@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import { ProductGallery } from '@/components/product/ProductGallery'
 import { ProductActions } from '@/components/product/ProductActions'
 import { resolveVariantIndex } from '@/lib/product-utils'
@@ -42,7 +42,7 @@ export function PDPClientSection({
       <div className="lg:col-span-5">
         <div className="lg:sticky lg:top-24">
           {children}
-          <div className="mt-7">
+          <div key="product-actions" className="mt-7">
             <ProductActions
               product={product}
               isOutOfStock={isOutOfStock}
@@ -50,7 +50,9 @@ export function PDPClientSection({
               onVariantChange={setImageUrls}
             />
           </div>
-          {belowActions}
+          {belowActions != null && (
+            <Fragment key="below-actions">{belowActions}</Fragment>
+          )}
         </div>
       </div>
     </>
