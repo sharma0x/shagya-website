@@ -24,7 +24,7 @@ describe('Seed data', () => {
 
   describe('Admin user', () => {
     it('has correct email', () => {
-      expect(adminUser.email).toBe('admin@shayga.in')
+      expect(adminUser.email).toBe('archana.vaknalli@shayga.com')
     })
 
     it('has super-admin role', () => {

@@ -688,7 +688,7 @@ export interface Coupon {
   startDate?: string | null;
   endDate?: string | null;
   isActive?: boolean | null;
-  categoriesConditions?: (number | Category)[] | null;
+  collectionsConditions?: (number | Collection)[] | null;
   productsConditions?: (number | Product)[] | null;
   customersConditions?: (number | Customer)[] | null;
   updatedAt: string;
@@ -1684,7 +1684,7 @@ export interface CouponsSelect<T extends boolean = true> {
   startDate?: T;
   endDate?: T;
   isActive?: T;
-  categoriesConditions?: T;
+  collectionsConditions?: T;
   productsConditions?: T;
   customersConditions?: T;
   updatedAt?: T;

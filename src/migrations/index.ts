@@ -19,6 +19,7 @@ import * as migration_20260808_104707 from './20260808_104707'
 import * as migration_20260808_164034_add_testimonial_rating from './20260808_164034_add_testimonial_rating'
 import * as migration_20260819_120000_add_hero_slide_links from './20260819_120000_add_hero_slide_links'
 import * as migration_20260819_174456_add_order_item_color_fields from './20260819_174456_add_order_item_color_fields'
+import * as migration_20260820_001000_update_coupons_collections from './20260820_001000_update_coupons_collections'
 
 export const migrations = [
   {
@@ -125,5 +126,10 @@ export const migrations = [
     up: migration_20260819_174456_add_order_item_color_fields.up,
     down: migration_20260819_174456_add_order_item_color_fields.down,
     name: '20260819_174456_add_order_item_color_fields',
+  },
+  {
+    up: migration_20260820_001000_update_coupons_collections.up,
+    down: migration_20260820_001000_update_coupons_collections.down,
+    name: '20260820_001000_update_coupons_collections',
   },
 ]

@@ -105,9 +105,6 @@ import { WishlistButton } from '@/components/product/WishlistButton'
 import { ProductBadge } from '@/components/ui/ProductBadge'
 import { isUnoptimizedImage } from '@/lib/image-url'
 
-const ph = (w: number, h: number, bg: string, fg: string, text: string) =>
-  `https://placehold.co/${w}x${h}/${bg}/${fg}?text=${encodeURIComponent(text)}&font=lora`
-
 interface HomepageCardProps {
   product: any
   badge?: 'new' | 'sale' | 'bestseller'
@@ -118,7 +115,7 @@ function HomepageCard({ product, badge }: HomepageCardProps) {
     product.gallery?.[0]?.image && typeof product.gallery[0].image === 'object'
       ? product.gallery[0].image.sizes?.card?.url ||
         product.gallery[0].image.url
-      : ph(600, 800, '69254e', 'f5e8ee', product.name)
+      : '/images/products/saree-01.jpg'
 
   const discount =
     product.compareAtPrice && product.compareAtPrice > product.basePrice

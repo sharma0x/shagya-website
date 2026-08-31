@@ -60,16 +60,16 @@ export async function getApplicableCoupons(
       depth: 1,
     })
 
-    const productCategories =
-      (product as any).categories?.map((c: any) =>
+    const productCollections =
+      (product as any).collections?.map((c: any) =>
         typeof c === 'object' ? c.id : c,
       ) || []
 
     filtered = coupons.filter((c: any) => {
       const productConditions = c.productsConditions || []
-      const categoryConditions = c.categoriesConditions || []
+      const collectionConditions = c.collectionsConditions || []
 
-      if (productConditions.length === 0 && categoryConditions.length === 0) {
+      if (productConditions.length === 0 && collectionConditions.length === 0) {
         return true
       }
 
@@ -78,11 +78,13 @@ export async function getApplicableCoupons(
           String(typeof p === 'object' ? p.id : p) === String(productId),
       )
 
-      const categoryMatch = categoryConditions.some((cat: any) =>
-        productCategories.includes(typeof cat === 'object' ? cat.id : cat),
+      const collectionMatch = collectionConditions.some((col: any) =>
+        productCollections
+          .map(String)
+          .includes(String(typeof col === 'object' ? col.id : col)),
       )
 
-      return productMatch || categoryMatch
+      return productMatch || collectionMatch
     })
   }
 
@@ -96,13 +98,13 @@ export async function getApplicableCoupons(
         overrideAccess: true,
       })
       if (customers.docs.length > 0) {
-        const customerId = customers.docs[0].id
+        const customerId = String(customers.docs[0].id)
         filtered = filtered.filter((c: any) => {
           const customerConditions = c.customersConditions || []
           if (customerConditions.length === 0) return true
           return customerConditions.some(
             (cust: any) =>
-              (typeof cust === 'object' ? cust.id : cust) === customerId,
+              String(typeof cust === 'object' ? cust.id : cust) === customerId,
           )
         })
       }

@@ -246,13 +246,13 @@ describe('Coupons collection', () => {
   })
 
   describe('Relationship fields', () => {
-    it('has categoriesConditions as relationship to categories (hasMany)', () => {
+    it('has collectionsConditions as relationship to collections (hasMany)', () => {
       const field = Coupons.fields?.find(
-        (f: any) => f.name === 'categoriesConditions',
+        (f: any) => f.name === 'collectionsConditions',
       ) as any
       expect(field).toBeDefined()
       expect(field?.type).toBe('relationship')
-      expect(field?.relationTo).toBe('categories')
+      expect(field?.relationTo).toBe('collections')
       expect(field?.hasMany).toBe(true)
     })
 

@@ -18,6 +18,7 @@ import type { FormDoc } from '@/components/page/ContactForm'
 import { ContactForm } from '@/components/page/ContactForm'
 import { RefreshRouteOnSave } from '@/components/live-preview/RefreshRouteOnSave'
 
+// ISR cache for 5 minutes
 export const revalidate = 300
 
 type Props = {
@@ -55,7 +56,11 @@ export default async function CatchAllPage({ params, searchParams }: Props) {
   const { preview, id } = await searchParams
   const isPreview = preview === 'true' && Boolean(id)
   const payload = await getPayload({ config })
-  const { user } = await payload.auth({ headers: await nextHeaders() })
+  let user: any = null
+  if (isPreview) {
+    const authResult = await payload.auth({ headers: await nextHeaders() })
+    user = authResult.user
+  }
 
   const page: any = isPreview
     ? await payload.findByID({

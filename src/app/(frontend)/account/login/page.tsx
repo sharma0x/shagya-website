@@ -86,7 +86,7 @@ export default function LoginPage() {
     'font-body focus:border-brand-500 h-11 w-full rounded-xl border border-neutral-200 bg-white pr-4 pl-10 text-sm text-neutral-900 transition-colors outline-none placeholder:text-neutral-400'
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4 py-16">
+    <div className="flex min-h-[calc(100vh-60px)] items-start justify-center px-4 pt-12 pb-16">
       <div className="mx-auto w-full max-w-lg">
         <Link
           href="/"
@@ -95,7 +95,7 @@ export default function LoginPage() {
           <ArrowLeft className="h-3.5 w-3.5" />
           Back to store
         </Link>
-        <h2 className="font-display mt-6 text-center text-3xl font-semibold tracking-tight text-neutral-900">
+        <h2 className="font-display mt-4 text-center text-3xl font-semibold tracking-tight text-neutral-900">
           Welcome back
         </h2>
         <p className="font-body mt-2 text-center text-sm text-neutral-500">

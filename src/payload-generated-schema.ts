@@ -1330,7 +1330,7 @@ export const coupons_rels = pgTable(
     order: integer('order'),
     parent: integer('parent_id').notNull(),
     path: varchar('path').notNull(),
-    categoriesID: integer('categories_id'),
+    collectionsID: integer('collections_id'),
     productsID: integer('products_id'),
     customersID: integer('customers_id'),
   },
@@ -1338,7 +1338,7 @@ export const coupons_rels = pgTable(
     index('coupons_rels_order_idx').on(columns.order),
     index('coupons_rels_parent_idx').on(columns.parent),
     index('coupons_rels_path_idx').on(columns.path),
-    index('coupons_rels_categories_id_idx').on(columns.categoriesID),
+    index('coupons_rels_collections_id_idx').on(columns.collectionsID),
     index('coupons_rels_products_id_idx').on(columns.productsID),
     index('coupons_rels_customers_id_idx').on(columns.customersID),
     foreignKey({
@@ -1347,9 +1347,9 @@ export const coupons_rels = pgTable(
       name: 'coupons_rels_parent_fk',
     }).onDelete('cascade'),
     foreignKey({
-      columns: [columns['categoriesID']],
-      foreignColumns: [categories.id],
-      name: 'coupons_rels_categories_fk',
+      columns: [columns['collectionsID']],
+      foreignColumns: [collections.id],
+      name: 'coupons_rels_collections_fk',
     }).onDelete('cascade'),
     foreignKey({
       columns: [columns['productsID']],
@@ -4084,10 +4084,10 @@ export const relations_coupons_rels = relations(coupons_rels, ({ one }) => ({
     references: [coupons.id],
     relationName: '_rels',
   }),
-  categoriesID: one(categories, {
-    fields: [coupons_rels.categoriesID],
-    references: [categories.id],
-    relationName: 'categories',
+  collectionsID: one(collections, {
+    fields: [coupons_rels.collectionsID],
+    references: [collections.id],
+    relationName: 'collections',
   }),
   productsID: one(products, {
     fields: [coupons_rels.productsID],

@@ -3,9 +3,6 @@ import { cn } from '@/lib/utils'
 import { SkeletonImage } from '@/components/ui/SkeletonImage'
 import { isUnoptimizedImage } from '@/lib/image-url'
 
-const ph = (w: number, h: number, bg: string, fg: string, text: string) =>
-  `https://placehold.co/${w}x${h}/${bg}/${fg}?text=${encodeURIComponent(text)}&font=lora`
-
 interface CategoryCardProps {
   name: string
   slug?: string | null
@@ -21,7 +18,7 @@ export function CategoryCard({
   productCount,
   className,
 }: CategoryCardProps) {
-  const imgSrc = imageUrl || ph(300, 400, '7a3a5d', 'f5e8ee', name)
+  const imgSrc = imageUrl || '/images/products/saree-01.jpg'
 
   return (
     <Link

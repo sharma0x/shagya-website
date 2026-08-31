@@ -202,33 +202,42 @@ export const Orders: CollectionConfig = {
         if (operation === 'create') {
           const docId = (doc as Record<string, unknown>).id as string
           if (docId) {
-            await sendOrderPlacedEmails(
-              req.payload,
-              String(docId),
-              doc as Record<string, unknown>,
-            ).catch((err) =>
-              req.payload.logger.error(
-                `[Email] sendOrderPlacedEmails failed: ${err}`,
-              ),
-            )
-
-            const initialStatus = (doc as Record<string, unknown>).status as
-              | string
-              | undefined
-            if (initialStatus && initialStatus !== 'pending') {
-              const orderId = (doc as Record<string, unknown>)
-                .orderNumber as string
-              const items = (doc as Record<string, unknown>).items as
-                | Array<{ product?: string | number; quantity?: number }>
-                | undefined
-              await runSideEffects(
+            const backgroundTask = async () => {
+              await sendOrderPlacedEmails(
                 req.payload,
-                docId,
-                orderId,
-                null,
-                initialStatus,
-                items,
+                String(docId),
+                doc as Record<string, unknown>,
+              ).catch((err) =>
+                req.payload.logger.error(
+                  `[Email] sendOrderPlacedEmails failed: ${err}`,
+                ),
               )
+
+              const initialStatus = (doc as Record<string, unknown>).status as
+                | string
+                | undefined
+              if (initialStatus && initialStatus !== 'pending') {
+                const orderId = (doc as Record<string, unknown>)
+                  .orderNumber as string
+                const items = (doc as Record<string, unknown>).items as
+                  | Array<{ product?: string | number; quantity?: number }>
+                  | undefined
+                await runSideEffects(
+                  req.payload,
+                  docId,
+                  orderId,
+                  null,
+                  initialStatus,
+                  items,
+                )
+              }
+            }
+
+            try {
+              const { after } = await import('next/server')
+              after(backgroundTask)
+            } catch {
+              void backgroundTask()
             }
           }
           return doc
@@ -250,14 +259,23 @@ export const Orders: CollectionConfig = {
           | Array<{ product?: string | number; quantity?: number }>
           | undefined
 
-        await runSideEffects(
-          req.payload,
-          docId,
-          orderId,
-          prevStatus ?? null,
-          newStatus,
-          items,
-        )
+        const backgroundTask = async () => {
+          await runSideEffects(
+            req.payload,
+            docId,
+            orderId,
+            prevStatus ?? null,
+            newStatus,
+            items,
+          )
+        }
+
+        try {
+          const { after } = await import('next/server')
+          after(backgroundTask)
+        } catch {
+          void backgroundTask()
+        }
 
         return doc
       },

@@ -1,12 +1,11 @@
+import { Suspense } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, ArrowRight } from 'lucide-react'
 import { SkeletonImage } from '@/components/ui/SkeletonImage'
+import { CollectionsGridSkeleton } from '@/components/ui/Skeleton'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import { isUnoptimizedImage } from '@/lib/image-url'
-
-const ph = (w: number, h: number, bg: string, fg: string, text: string) =>
-  `https://placehold.co/${w}x${h}/${bg}/${fg}?text=${encodeURIComponent(text)}&font=lora`
 
 function ImagePanel({
   src,
@@ -43,58 +42,81 @@ function ImagePanel({
   )
 }
 
-export const revalidate = 300
+// No DB access at build time — must render dynamically
+export const dynamic = 'force-dynamic'
 
-export default async function CollectionsPage() {
-  let collectionsWithCovers: any[] = []
+async function CollectionsList() {
+  const payload = await getPayload({ config })
 
-  try {
-    const payload = await getPayload({ config })
+  const result = await payload.find({
+    collection: 'collections',
+    limit: 100,
+    depth: 1,
+    sort: 'name',
+  })
+  const dbCollections = result.docs as any[]
 
-    const result = await payload.find({
-      collection: 'collections',
-      limit: 100,
-    })
-    const dbCollections = result.docs as any[]
+  const collectionsWithCovers = dbCollections.map((col) => {
+    let coverImage = '/images/products/saree-01.jpg'
+    if (col.image && typeof col.image === 'object') {
+      coverImage = col.image.sizes?.card?.url || col.image.url || coverImage
+    }
+    return {
+      ...col,
+      coverImage,
+    }
+  })
 
-    collectionsWithCovers = await Promise.all(
-      dbCollections.map(async (col) => {
-        let coverImage = ph(800, 1000, '69254e', 'f5e8ee', col.name)
-
-        try {
-          const productsRes = await payload.find({
-            collection: 'products',
-            where: {
-              collections: { contains: col.id },
-              status: { equals: 'published' },
-            },
-            limit: 1,
-          })
-
-          if (productsRes.docs.length > 0) {
-            const firstProd = productsRes.docs[0]
-            if (
-              firstProd.colorVariants?.[0]?.gallery?.[0]?.image &&
-              typeof firstProd.colorVariants[0].gallery[0].image === 'object'
-            ) {
-              coverImage =
-                firstProd.colorVariants[0].gallery[0].image.url || coverImage
-            }
-          }
-        } catch {
-          // use placeholder
-        }
-
-        return {
-          ...col,
-          coverImage,
-        }
-      }),
+  if (collectionsWithCovers.length === 0) {
+    return (
+      <div className="mx-auto mt-12 max-w-md rounded-2xl border border-neutral-100 bg-white py-16 text-center shadow-xs">
+        <p className="font-body text-sm text-neutral-500">
+          No collections available at this time.
+        </p>
+        <Link
+          href="/"
+          className="font-display text-brand-700 hover:text-brand-800 mt-4 inline-block text-xs font-semibold underline"
+        >
+          Return Home
+        </Link>
+      </div>
     )
-  } catch {
-    collectionsWithCovers = []
   }
 
+  return (
+    <div className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+      {collectionsWithCovers.map((col) => (
+        <Link
+          key={col.id}
+          href={`/collections/${col.slug}`}
+          className="group block overflow-hidden rounded-2xl border border-neutral-100 bg-white shadow-xs transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md"
+        >
+          <ImagePanel
+            src={col.coverImage}
+            alt={col.name}
+            className="aspect-[3/4] w-full transition-transform duration-500 group-hover:scale-[1.02]"
+            rounded="rounded-none"
+          />
+          <div className="p-5">
+            <div className="flex items-center justify-between">
+              <h3 className="font-display group-hover:text-brand-700 text-xl font-semibold text-neutral-900 transition-colors">
+                {col.name}
+              </h3>
+              <span className="group-hover:bg-brand-50 group-hover:text-brand-700 flex h-8 w-8 items-center justify-center rounded-full bg-neutral-100 text-neutral-600 transition-colors">
+                <ArrowRight className="h-4 w-4" />
+              </span>
+            </div>
+            <p className="font-body mt-2 text-sm leading-relaxed text-neutral-500">
+              {col.description || 'Explore the curated selection.'}
+            </p>
+          </div>
+        </Link>
+      ))}
+    </div>
+  )
+}
+
+export default function CollectionsPage() {
   return (
     <div className="bg-surface min-h-screen py-12">
       <div className="container-page">
@@ -119,35 +141,9 @@ export default async function CollectionsPage() {
         </div>
 
         {/* Collections list */}
-        <div className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-          {collectionsWithCovers.map((col) => (
-            <Link
-              key={col.id}
-              href={`/collections/${col.slug}`}
-              className="group block overflow-hidden rounded-2xl border border-neutral-100 bg-white shadow-xs transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md"
-            >
-              <ImagePanel
-                src={col.coverImage}
-                alt={col.name}
-                className="aspect-[3/4] w-full transition-transform duration-500 group-hover:scale-[1.02]"
-                rounded="rounded-none"
-              />
-              <div className="p-5">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-display group-hover:text-brand-700 text-xl font-semibold text-neutral-900 transition-colors">
-                    {col.name}
-                  </h3>
-                  <span className="group-hover:bg-brand-50 group-hover:text-brand-700 flex h-8 w-8 items-center justify-center rounded-full bg-neutral-100 text-neutral-600 transition-colors">
-                    <ArrowRight className="h-4 w-4" />
-                  </span>
-                </div>
-                <p className="font-body mt-2 text-sm leading-relaxed text-neutral-500">
-                  {col.description || 'Explore the curated selection.'}
-                </p>
-              </div>
-            </Link>
-          ))}
-        </div>
+        <Suspense fallback={<CollectionsGridSkeleton />}>
+          <CollectionsList />
+        </Suspense>
       </div>
     </div>
   )

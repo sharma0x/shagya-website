@@ -7,6 +7,9 @@ import { OrderTimeline } from '@/components/order/OrderTimeline'
 import { getProductUrl } from '@/lib/product-url'
 import { galleryForColor } from '@/lib/product-utils'
 
+// No DB access at build time — must render dynamically
+export const dynamic = 'force-dynamic'
+
 // Page props in Next.js 15+ App Router are promises
 export default async function OrderDetailsPage({
   params,
