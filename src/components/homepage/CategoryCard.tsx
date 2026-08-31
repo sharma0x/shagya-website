@@ -28,7 +28,7 @@ export function CategoryCard({
         className,
       )}
     >
-      <div className="aspect-[4/5] w-full sm:aspect-square">
+      <div className="relative aspect-[4/5] w-full sm:aspect-square">
         <SkeletonImage
           src={imgSrc}
           alt={name}

@@ -114,7 +114,7 @@ export function ProductImageZoom({
       onTouchCancel={handleTouchEnd}
       style={{ cursor: lensVisible ? 'none' : 'zoom-in' }}
     >
-      <div className="aspect-[3/4] w-full">
+      <div className="relative aspect-[3/4] w-full">
         <SkeletonImage
           src={imageUrl}
           alt={productName}
