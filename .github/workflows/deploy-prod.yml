@@ -1,0 +1,111 @@
+name: Deploy Production
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Image tag to deploy (e.g. v1.2.3, or latest)'
+        required: false
+        default: 'latest'
+
+concurrency:
+  group: production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build:
+    name: Build & Push (multi-arch)
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Derive version
+        id: version
+        run: |
+          TAG="${{ github.event.release.tag_name }}"
+          FULL="${TAG#v}"
+          MINOR="${FULL%.*}"
+          MAJOR="${FULL%%.*}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "full=$FULL" >> "$GITHUB_OUTPUT"
+          echo "minor=$MINOR" >> "$GITHUB_OUTPUT"
+          echo "major=$MAJOR" >> "$GITHUB_OUTPUT"
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.tag }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.full }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.minor }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.major }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:sha-${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            NODE_ENV=production
+            NEXT_TELEMETRY_DISABLED=1
+
+  deploy:
+    name: Deploy to Production
+    runs-on: [self-hosted, production]
+    needs: build
+    if: always() && needs.build.result != 'failure'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve image tag
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            echo "tag=latest" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Log in to GitHub Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      - name: Sync deploy files
+        run: cp docker-compose.prod.yml Caddyfile Makefile /opt/shayga/
+
+      - name: Deploy
+        working-directory: /opt/shayga
+        run: make prod-deploy IMAGE_TAG=${{ steps.tag.outputs.tag }} ENV_FILE=.env.production.i-0b8fdac5ef38c22ad
+
+      - name: Verify containers
+        working-directory: /opt/shayga
+        run: |
+          docker compose -f docker-compose.prod.yml ps
+          docker compose -f docker-compose.prod.yml ps --status running --quiet app | grep -q . && echo "app running" || { echo "app not running"; exit 1; }
