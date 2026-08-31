@@ -130,16 +130,19 @@ Strict mode. Path aliases: `@/*` → `./src/*`, `@payload-config` → `./src/pay
 
 See [`docs/ci-cd.md`](docs/ci-cd.md) for the full setup. Quick reference:
 
-- **Branches**: `develop` (preview env), `main` (production)
-- **Workflows**: `ci.yml` (lint/test/build), `release.yml` (semantic-release on main), `deploy-preview.yml` (Vercel preview on develop), `deploy-prod.yml` (Vercel production on main)
+- **Branches**: `develop` (staging env), `main` (production)
+- **Workflows**:
+  - `ci.yml` — validate (format/lint/typecheck/test/build) on push/PR to `main`+`develop`
+  - `release.yml` — semantic-release on `main` → git tag `vX.Y.Z` + GitHub release
+  - `deploy-staging.yml` — on push to `develop`: multi-arch build (`:develop`) → deploy to local staging runner
+  - `deploy-prod.yml` — on `release: published`: multi-arch build (`:latest`, `:vX.Y.Z`, semver) → deploy to production runner
 - **Environments**:
-  - Dev DB: Neon branch `development`
-  - Prod DB: Neon branch `production`
-  - Dev storage: Cloudflare R2 bucket `shayga-dev`
-  - Prod storage: Cloudflare R2 bucket `shayga-media`
-- **Versioning**: semantic-release, Conventional Commits enforced by commitlint (husky hook on `commit-msg`)
+  - Staging: dev Mac (arm64), local Docker Postgres, `shayga.localhost`
+  - Production: AWS EC2 (x86_64), RDS Postgres 18, R2 bucket `shayga-media`
+- **Deployment**: self-hosted runners (`staging` on the Mac, `production` on the EC2). Deploy jobs run on the machine — pull from GHCR → run migrations → `up -d`. No SSH from CI.
+- **Versioning**: semantic-release on `main`, Conventional Commits enforced by commitlint (husky hook on `commit-msg`). Prod deploys mutable `:latest`; immutable `:vX.Y.Z` kept for rollback.
 
-GitHub Actions runs on push/PR to `main` or `develop`: format check → lint → typecheck → unit tests → production build. Needs `PAYLOAD_SECRET` env var set in CI.
+GitHub Actions runs on push/PR to `main` or `develop`: format check → lint → typecheck → unit tests → production build. Needs `PAYLOAD_SECRET` env var set in CI. `release.yml` requires `GH_TOKEN` (a PAT — not the actions `GITHUB_TOKEN`, whose pushes don't trigger downstream workflows).
 
 ## Git
 

@@ -1,0 +1,64 @@
+# =============================================================================
+# Shayga — Staging (local) Services
+# =============================================================================
+# Runs the app (GHCR image, arm64) + local Postgres on the developer's Mac,
+# served at http://shayga.localhost (requires `127.0.0.1 shayga.localhost` in
+# /etc/hosts and a `.env.staging` file next to this file).
+#
+# Start:  docker compose -f docker-compose.staging.yml up -d
+# Stop:   docker compose -f docker-compose.staging.yml down
+# Reset:  docker compose -f docker-compose.staging.yml down -v
+# =============================================================================
+
+services:
+  app:
+    image: ${DOCKER_IMAGE:-ghcr.io/sharma0x/shagya-website}:${IMAGE_TAG:-develop}
+    restart: unless-stopped
+    ports:
+      - '80:3000'
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env.staging
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -f http://localhost:3000/api/users || exit 0']
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '10m'
+        max-file: '3'
+
+  postgres:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: shayga
+      POSTGRES_PASSWORD: shayga_dev
+      POSTGRES_DB: shayga
+      # Postgres 18 Alpine: PGDATA must point at pgdata; volume mounts the
+      # parent dir (see infra/dev-services.yml).
+      PGDATA: /var/lib/postgresql/pgdata
+    expose:
+      - '5432'
+    volumes:
+      - shayga_staging_pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U shayga -d shayga']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '10m'
+        max-file: '3'
+
+volumes:
+  shayga_staging_pgdata:
+    name: shayga-staging-pgdata
