@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import { signIn } from '@/lib/auth-client'
+import { useOtpCooldown } from '@/lib/use-otp-cooldown'
 import Link from 'next/link'
 import {
   ArrowLeft,
@@ -19,9 +20,9 @@ export default function RegisterPage() {
   const [phoneNumber, setPhoneNumber] = useState('')
   const [otp, setOtp] = useState('')
   const [otpSent, setOtpSent] = useState(false)
-  const [cooldown, setCooldown] = useState(0)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const { cooldown, startCooldown } = useOtpCooldown()
 
   const handleSendOTP = useCallback(async () => {
     setError('')
@@ -45,22 +46,13 @@ export default function RegisterPage() {
         throw new Error(data.message || 'Failed to send OTP')
       }
       setOtpSent(true)
-      setCooldown(30)
-      const timer = setInterval(() => {
-        setCooldown((prev) => {
-          if (prev <= 1) {
-            clearInterval(timer)
-            return 0
-          }
-          return prev - 1
-        })
-      }, 1000)
+      startCooldown()
     } catch (err: any) {
       setError(err?.message || 'Failed to send OTP')
     } finally {
       setLoading(false)
     }
-  }, [email, name])
+  }, [email, name, startCooldown])
 
   const handleVerifyOTP = useCallback(async () => {
     setError('')
@@ -216,19 +208,28 @@ export default function RegisterPage() {
                     </div>
                     <p className="font-body mt-1.5 text-[11px] text-neutral-400">
                       OTP sent to {email}
-                      {cooldown > 0 && ` \u00b7 Resend in ${cooldown}s`}
-                      {cooldown === 0 && (
-                        <button
-                          onClick={() => {
-                            setOtpSent(false)
-                            setOtp('')
-                          }}
-                          className="text-brand-600 ml-1 font-semibold"
-                        >
-                          Change email
-                        </button>
-                      )}
                     </p>
+                    <div className="mt-1 flex items-center gap-1 text-[11px]">
+                      <button
+                        type="button"
+                        onClick={handleSendOTP}
+                        disabled={loading || cooldown > 0}
+                        className="text-brand-600 font-semibold disabled:cursor-not-allowed disabled:text-neutral-400"
+                      >
+                        {cooldown > 0 ? `Resend in ${cooldown}s` : 'Resend OTP'}
+                      </button>
+                      <span className="text-neutral-300">&middot;</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setOtpSent(false)
+                          setOtp('')
+                        }}
+                        className="text-brand-600 font-semibold"
+                      >
+                        Change email
+                      </button>
+                    </div>
                   </div>
 
                   <button
