@@ -3,6 +3,7 @@ import {
   mergeCartItems,
   dedupeCartItems,
   normalizeVariant,
+  cartQtyCap,
 } from '../cart-merge'
 
 const existingItem = (product: any, variant: any, quantity = 1) => ({
@@ -10,6 +11,101 @@ const existingItem = (product: any, variant: any, quantity = 1) => ({
   variant,
   quantity,
   unitPrice: 100,
+})
+
+describe('cartQtyCap', () => {
+  it('caps at variant stock when the variant carries a stock snapshot', () => {
+    const cap = cartQtyCap({
+      product: { id: 21, trackQuantity: true, quantity: 50 },
+      variant: { color: { slug: 'rose', stock: 2 } },
+      quantity: 1,
+      unitPrice: 100,
+    })
+
+    expect(cap).toBe(2)
+  })
+
+  it('also honors a root-level variant stock snapshot', () => {
+    const cap = cartQtyCap({
+      product: { id: 21, trackQuantity: true, quantity: 50 },
+      variant: { stock: 3 },
+      quantity: 1,
+      unitPrice: 100,
+    })
+
+    expect(cap).toBe(3)
+  })
+
+  it('falls back to product-level quantity when variant stock is absent', () => {
+    const cap = cartQtyCap({
+      product: { id: 21, trackQuantity: true, quantity: 3 },
+      variant: { color: { slug: 'rose' } },
+      quantity: 1,
+      unitPrice: 100,
+    })
+
+    expect(cap).toBe(3)
+  })
+
+  it('caps at 10 when the product does not track quantity', () => {
+    const cap = cartQtyCap({
+      product: { id: 21, trackQuantity: false, quantity: 0 },
+      variant: null,
+      quantity: 1,
+      unitPrice: 100,
+    })
+
+    expect(cap).toBe(10)
+  })
+
+  it('never exceeds the 10-item cart maximum even with high variant stock', () => {
+    const cap = cartQtyCap({
+      product: { id: 21, trackQuantity: true, quantity: 99 },
+      variant: { color: { slug: 'rose', stock: 50 } },
+      quantity: 1,
+      unitPrice: 100,
+    })
+
+    expect(cap).toBe(10)
+  })
+
+  it('allows zero stock (cap 0) so stale cart lines cannot be increased', () => {
+    const cap = cartQtyCap({
+      product: { id: 21, trackQuantity: true, quantity: 5 },
+      variant: { color: { slug: 'rose', stock: 0 } },
+      quantity: 1,
+      unitPrice: 100,
+    })
+
+    expect(cap).toBe(0)
+  })
+})
+
+describe('stock-capped merging', () => {
+  const rose = {
+    color: { slug: 'rose', name: 'Rose', hex: '#e11d48', stock: 2 },
+  }
+
+  it('dedupe caps summed quantity at the variant stock snapshot', () => {
+    const items = [
+      existingItem({ id: 21, trackQuantity: true }, rose, 2),
+      existingItem(21, rose, 2),
+    ]
+
+    const merged = dedupeCartItems(items)
+
+    expect(merged).toHaveLength(1)
+    expect(merged[0].quantity).toBe(2)
+  })
+
+  it('merge caps a high incoming quantity at the variant stock snapshot', () => {
+    const existing = [existingItem({ id: 21, trackQuantity: true }, rose, 1)]
+    const incoming = [existingItem(21, rose, 5)]
+
+    const merged = mergeCartItems(existing, incoming)
+
+    expect(merged[0].quantity).toBe(2)
+  })
 })
 
 describe('mergeCartItems', () => {

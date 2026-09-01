@@ -17,6 +17,7 @@ import * as migration_20260807_221534_trust_signals from './20260807_221534_trus
 import * as migration_20260808_000000_coupon_enhancements from './20260808_000000_coupon_enhancements'
 import * as migration_20260808_104707 from './20260808_104707'
 import * as migration_20260808_164034_add_testimonial_rating from './20260808_164034_add_testimonial_rating'
+import * as migration_20260819_174456_add_order_item_color_fields from './20260819_174456_add_order_item_color_fields'
 import * as migration_20260820_001000_update_coupons_collections from './20260820_001000_update_coupons_collections'
 
 export const migrations = [
@@ -114,6 +115,11 @@ export const migrations = [
     up: migration_20260808_164034_add_testimonial_rating.up,
     down: migration_20260808_164034_add_testimonial_rating.down,
     name: '20260808_164034_add_testimonial_rating',
+  },
+  {
+    up: migration_20260819_174456_add_order_item_color_fields.up,
+    down: migration_20260819_174456_add_order_item_color_fields.down,
+    name: '20260819_174456_add_order_item_color_fields',
   },
   {
     up: migration_20260820_001000_update_coupons_collections.up,
