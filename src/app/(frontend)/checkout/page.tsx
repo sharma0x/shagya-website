@@ -1029,7 +1029,7 @@ export default function CheckoutPage() {
               </h3>
 
               {/* Items List */}
-              <div className="mb-6 max-h-[320px] space-y-4 overflow-y-auto pr-2">
+              <div className="mb-6 max-h-[320px] space-y-4 overflow-y-auto pt-2 pr-2">
                 {showSkeleton
                   ? [0, 1].map((i) => (
                       <div key={i} className="flex animate-pulse gap-4">
