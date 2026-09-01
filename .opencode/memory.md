@@ -68,6 +68,17 @@ ENV_FILE=.env IMAGE_TAG=testing DOCKER_IMAGE=ghcr.io/sharma0x/shagya-website doc
 - `defaultValue` pre-fills the 3 original signals; an admin deleting all rows intentionally hides the section (frontend falls back to `DEFAULT_TRUST` only when the global was never saved).
 - Fixed stale pre-existing failure: `SiteSettings.test.ts` field-count assertion now matches reality (22 fields).
 
+## Product `occasion` text → `occasions` relationship (2026-09-01)
+
+- `Products.ts` field renamed `occasion` (text) → `occasions` (relationship, `relationTo: 'occasions'`, `hasMany: true`). Field count unchanged (32), so `Products.test.ts` count assertion still holds.
+- `payload migrate:create` **hung on an interactive prompt** (`occasions_id` create vs rename) — killed with `pkill -f "payload migrate:create"` and wrote the migration `.ts` by hand in `src/migrations/` following the coupons_rels pattern: add `products_rels.occasions_id` (+FK `products_rels_occasions_fk` + index `products_rels_occasions_id_idx`), same for `_products_v_rels`, then `DROP COLUMN products.occasion` / `_products_v.version_occasion`. Down reverses.
+- **Filtering a hasMany relationship**: single value `where.occasions = { contains: <id> }` (proven repo pattern in `collections/[slug]/page.tsx`), multiple values `where.occasions = { in: <ids> }`. Resolve slug → id first via `payload.find({ collection: 'occasions', where: { slug: { in: slugs } } })`.
+- Occasion browsing is unified on `/category/all?occasion=<slug>` (category page `buildWhere`/`CategoryProductsStream` resolves slugs). Legacy `/category/bridal` + `/category/festive` slugs still map to occasions `bridal`/`festive`.
+- Filter sidebar + search no longer offer an `occasion` checkbox (removed `OCCASION_OPTIONS` from `FilterSidebar.tsx`, `occasion` from `build-where-clause.ts` multiFilters and `use-filters.ts` FILTER_LABELS).
+- PDP displays occasion names from the populated `product.occasions` array (depth 2): `(product.occasions||[]).map(o => typeof o === 'object' ? o.name : null).filter(Boolean).join(', ')`.
+- Homepage "Shop by Occasion" is now dynamic: `HomeOccasionsSection` fetches `occasions`, maps slug → icon via `OCCASION_ICONS`, links to `/category/all?occasion=<slug>`.
+- Seed: `seed-data.ts` exports `occasions` (7 items), `seed.ts` `seedOccasions()` returns a slug→doc map consumed by `seedProducts()` (destructures `occasion` out of `...rest` so the removed field isn't passed through).
+
 ## DB Reset Flow
 
 1. `make infra-reset` (nukes Docker volumes)
