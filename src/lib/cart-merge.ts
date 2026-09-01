@@ -51,6 +51,44 @@ export function cartMergeKey(item: MergeableItem): string {
   return cid ? `${pid}::${cid}` : pid
 }
 
+export const CART_MAX_QTY = 10
+
+/**
+ * Maximum quantity a cart line item may reach. The color variant's
+ * add-time stock snapshot takes priority (it lives on the variant's color
+ * object, survives merging where the product is normalized to a bare ID,
+ * and matches the PDP's per-variant OOS semantics). Falls back to the
+ * tracked product-level quantity, then the general 10-item cap.
+ * `stock` is a snapshot from add-time (no reservation), so races can still
+ * oversell — the decrement on order confirmation clamps at zero.
+ */
+export function cartQtyCap(
+  item: MergeableItem & {
+    product?: {
+      trackQuantity?: boolean | null
+      quantity?: number | null
+      [key: string]: any
+    }
+    variant?: {
+      stock?: number | null
+      color?: { stock?: number | null; [key: string]: any } | null
+      [key: string]: any
+    } | null
+  },
+): number {
+  const variantStock = item.variant?.color?.stock ?? item.variant?.stock ?? null
+  if (typeof variantStock === 'number' && variantStock >= 0) {
+    return Math.min(CART_MAX_QTY, variantStock)
+  }
+  if (item.product?.trackQuantity === true) {
+    const productQty = item.product?.quantity
+    if (typeof productQty === 'number' && productQty >= 0) {
+      return Math.min(CART_MAX_QTY, productQty)
+    }
+  }
+  return CART_MAX_QTY
+}
+
 export function mergeCartItems(
   existing: MergeableItem[],
   incoming: MergeableItem[],
@@ -82,6 +120,10 @@ export function mergeCartItems(
     }
   }
 
+  for (const item of merged.values()) {
+    item.quantity = Math.min(item.quantity || 1, cartQtyCap(item))
+  }
+
   return [...merged.values()]
 }
 
@@ -93,7 +135,7 @@ export function dedupeCartItems<T extends MergeableItem>(items: T[]): T[] {
     const current = merged.get(key)
     if (current) {
       current.quantity = Math.min(
-        10,
+        CART_MAX_QTY,
         (current.quantity || 0) + (item.quantity || 1),
       )
       const v = normalizeVariant(item.variant)
@@ -101,6 +143,10 @@ export function dedupeCartItems<T extends MergeableItem>(items: T[]): T[] {
     } else {
       merged.set(key, { ...item, variant: normalizeVariant(item.variant) })
     }
+  }
+
+  for (const item of merged.values()) {
+    item.quantity = Math.min(item.quantity || 1, cartQtyCap(item))
   }
 
   return [...merged.values()]

@@ -40,6 +40,17 @@ export const Products: CollectionConfig = {
         } else {
           data.discountPercentage = 0
         }
+        // Variant-only stock model: when color variants exist, the top-level
+        // quantity is derived as the sum of enabled variant stocks so every
+        // product-level UI keeps working without manual dual bookkeeping.
+        const variants = Array.isArray(data?.colorVariants)
+          ? data.colorVariants
+          : null
+        if (variants && variants.length > 0) {
+          data.quantity = variants
+            .filter((v: any) => v?.enabled !== false)
+            .reduce((sum: number, v: any) => sum + (Number(v?.stock) || 0), 0)
+        }
         return data
       },
     ],
@@ -359,6 +370,10 @@ export const Products: CollectionConfig = {
       type: 'number',
       min: 0,
       defaultValue: 0,
+      admin: {
+        description:
+          'Auto-computed as the sum of color-variant stock when variants exist. Edit only for variant-less products.',
+      },
     },
     {
       name: 'lowStockThreshold',

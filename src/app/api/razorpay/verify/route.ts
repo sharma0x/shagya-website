@@ -5,6 +5,58 @@ import { auth } from '@/lib/auth'
 import crypto from 'crypto'
 import { isSameAddress } from '@/lib/address-utils'
 
+/**
+ * Resolves the color identity from a cart item's variant JSON
+ * (`{ color: { id?, slug, name, hex } }`) into the Colors doc ID + a name
+ * snapshot for the order record. Falls back to a slug lookup when the
+ * variant JSON lacks the color ID (older carts).
+ */
+function makeColorResolver(payload: any) {
+  const cache = new Map<string, { id: number; name: string }>()
+
+  return async function resolveOrderItemColor(
+    variant: unknown,
+  ): Promise<{ colorId: number | null; colorName: string | null }> {
+    const color =
+      variant && typeof variant === 'object' ? (variant as any).color : null
+    if (!color || typeof color !== 'object') {
+      return { colorId: null, colorName: null }
+    }
+
+    const name = typeof color.name === 'string' ? color.name : null
+
+    if (color.id != null && color.id !== '') {
+      const parsed = Number(color.id)
+      if (Number.isFinite(parsed)) {
+        return { colorId: parsed, colorName: name }
+      }
+    }
+
+    const slug = typeof color.slug === 'string' ? color.slug : ''
+    if (slug) {
+      const cached = cache.get(slug)
+      if (cached) return { colorId: cached.id, colorName: name ?? cached.name }
+      try {
+        const res = await payload.find({
+          collection: 'colors',
+          where: { slug: { equals: slug } },
+          limit: 1,
+          overrideAccess: true,
+        })
+        const found = res.docs[0]
+        if (found) {
+          cache.set(slug, { id: found.id as number, name: found.name })
+          return { colorId: found.id as number, colorName: name ?? found.name }
+        }
+      } catch {
+        // lookup failure — record name only
+      }
+    }
+
+    return { colorId: null, colorName: name }
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json()
@@ -81,16 +133,25 @@ export async function POST(request: Request) {
     let orderItems: any[]
     let subtotal = 0
     let cartId: string | number | null = null
+    const resolveOrderItemColor = makeColorResolver(payload)
 
     if (isGuest && guestCartItems && guestCartItems.length > 0) {
       // Guest — use cart items from request body
-      orderItems = guestCartItems.map((item: any) => ({
-        product: Number(item.product),
-        variant: item.variant ? Number(item.variant) : null,
-        quantity: item.quantity || 1,
-        unitPrice: item.unitPrice || 0,
-        totalPrice: (item.unitPrice || 0) * (item.quantity || 1),
-      }))
+      orderItems = await Promise.all(
+        guestCartItems.map(async (item: any) => {
+          const { colorId, colorName } = await resolveOrderItemColor(
+            item.variant,
+          )
+          return {
+            product: Number(item.product),
+            color: colorId,
+            colorName,
+            quantity: item.quantity || 1,
+            unitPrice: item.unitPrice || 0,
+            totalPrice: (item.unitPrice || 0) * (item.quantity || 1),
+          }
+        }),
+      )
       subtotal = orderItems.reduce((a: number, i: any) => a + i.totalPrice, 0)
     } else {
       // Logged in — get cart from DB
@@ -119,26 +180,25 @@ export async function POST(request: Request) {
           0,
         )
 
-      orderItems = (cart.items || []).map((item: any) => {
-        const productId =
-          typeof item.product === 'object' && item.product !== null
-            ? item.product.id
-            : item.product
-        let variantId = null
-        if (item.variant) {
-          variantId =
-            typeof item.variant === 'object'
-              ? item.variant.id || null
-              : item.variant
-        }
-        return {
-          product: productId,
-          variant: variantId,
-          quantity: item.quantity,
-          unitPrice: item.unitPrice,
-          totalPrice: item.unitPrice * item.quantity,
-        }
-      })
+      orderItems = await Promise.all(
+        (cart.items || []).map(async (item: any) => {
+          const productId =
+            typeof item.product === 'object' && item.product !== null
+              ? item.product.id
+              : item.product
+          const { colorId, colorName } = await resolveOrderItemColor(
+            item.variant,
+          )
+          return {
+            product: productId,
+            color: colorId,
+            colorName,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            totalPrice: item.unitPrice * item.quantity,
+          }
+        }),
+      )
     }
 
     const siteSettings = await payload.findGlobal({

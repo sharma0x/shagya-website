@@ -1034,6 +1034,10 @@ export const orders_items = pgTable(
     variant: integer('variant_id').references(() => variants.id, {
       onDelete: 'set null',
     }),
+    color: integer('color_id').references(() => colors.id, {
+      onDelete: 'set null',
+    }),
+    colorName: varchar('color_name'),
     quantity: numeric('quantity', { mode: 'number' }).notNull().default(1),
     unitPrice: numeric('unit_price', { mode: 'number' }).notNull(),
     totalPrice: numeric('total_price', { mode: 'number' }).notNull(),
@@ -1043,6 +1047,7 @@ export const orders_items = pgTable(
     index('orders_items_parent_id_idx').on(columns._parentID),
     index('orders_items_product_idx').on(columns.product),
     index('orders_items_variant_idx').on(columns.variant),
+    index('orders_items_color_idx').on(columns.color),
     foreignKey({
       columns: [columns['_parentID']],
       foreignColumns: [orders.id],
@@ -4019,6 +4024,11 @@ export const relations_orders_items = relations(orders_items, ({ one }) => ({
     fields: [orders_items.variant],
     references: [variants.id],
     relationName: 'variant',
+  }),
+  color: one(colors, {
+    fields: [orders_items.color],
+    references: [colors.id],
+    relationName: 'color',
   }),
 }))
 export const relations_orders = relations(orders, ({ one, many }) => ({
