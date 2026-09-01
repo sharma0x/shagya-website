@@ -59,6 +59,8 @@ jobs:
     name: Deploy to Staging
     runs-on: [self-hosted, staging]
     needs: build
+    env:
+      DOCKER_CONFIG: ${{ github.workspace }}/.docker-config
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -66,19 +68,16 @@ jobs:
       - name: Write staging env
         run: printf '%s\n' "${{ secrets.STAGING_ENV }}" > .env.staging
 
-      - name: Configure Docker credentials (bypass macOS Keychain)
+      - name: Isolate Docker config (bypass macOS Keychain)
         run: |
-          # Remove any existing Docker config that uses Keychain
-          rm -f ~/.docker/config.json
-          mkdir -p ~/.docker
-
-          # Create config that explicitly disables credential helpers
-          cat > ~/.docker/config.json <<EOF
-          {
-            "auths": {},
-            "credsStore": ""
-          }
-          EOF
+          # DOCKER_CONFIG points docker at a job-local directory so that
+          # `docker login` writes a plain-text config here instead of trying
+          # to store the GHCR password in the macOS Keychain, which fails on
+          # non-interactive CI runners with "User interaction is not allowed
+          # (-25308)".
+          mkdir -p "$DOCKER_CONFIG"
+          echo '{"auths":{},"credsStore":""}' > "$DOCKER_CONFIG/config.json"
+          echo "Docker config isolated to $DOCKER_CONFIG"
 
       - name: Log in to GitHub Container Registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
