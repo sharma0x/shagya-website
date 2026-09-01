@@ -45,13 +45,6 @@ const PATTERN_OPTIONS: FilterOption[] = [
   { label: 'Painted', value: 'painted' },
 ]
 
-const OCCASION_OPTIONS: FilterOption[] = [
-  { label: 'Festive', value: 'festive' },
-  { label: 'Bridal', value: 'bridal' },
-  { label: 'Casual', value: 'casual' },
-  { label: 'Daily Wear', value: 'daily-wear' },
-]
-
 export function FilterSidebar({
   className,
   mobileOpen,
@@ -107,10 +100,6 @@ export function FilterSidebar({
 
       <FilterSection title="Pattern" defaultOpen={false}>
         <CheckboxFilter options={PATTERN_OPTIONS} paramName="pattern" />
-      </FilterSection>
-
-      <FilterSection title="Occasion" defaultOpen={false}>
-        <CheckboxFilter options={OCCASION_OPTIONS} paramName="occasion" />
       </FilterSection>
 
       <FilterSection title="Color" defaultOpen={false}>

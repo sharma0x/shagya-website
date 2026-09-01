@@ -1,4 +1,4 @@
-import { Suspense } from 'react'
+import { Suspense, type ReactNode } from 'react'
 import { ArrowRight } from 'lucide-react'
 
 // Rendered per-request. The page can't be statically prerendered at build time
@@ -118,33 +118,17 @@ function mapProductWithVariant(p: any) {
   return liftVariantGallery(p)
 }
 
-const OCCASIONS = [
-  {
-    label: 'Wedding',
-    icon: <IconHeart className="h-6 w-6" />,
-    href: '/category/all?occasion=wedding',
-  },
-  {
-    label: 'Festival',
-    icon: <IconSparkles className="h-6 w-6" />,
-    href: '/category/all?occasion=festive',
-  },
-  {
-    label: 'Daily Wear',
-    icon: <IconSun className="h-6 w-6" />,
-    href: '/category/cotton',
-  },
-  {
-    label: 'Gifting',
-    icon: <IconGift className="h-6 w-6" />,
-    href: '/collections/gift-guide',
-  },
-  {
-    label: 'Party',
-    icon: <IconGlassFull className="h-6 w-6" />,
-    href: '/category/designer',
-  },
-]
+const OCCASION_ICONS: Record<string, ReactNode> = {
+  wedding: <IconHeart className="h-6 w-6" />,
+  bridal: <IconHeart className="h-6 w-6" />,
+  festive: <IconSparkles className="h-6 w-6" />,
+  party: <IconGlassFull className="h-6 w-6" />,
+  'daily-wear': <IconSun className="h-6 w-6" />,
+  casual: <IconSun className="h-6 w-6" />,
+  gifting: <IconGift className="h-6 w-6" />,
+}
+
+const DEFAULT_OCCASION_ICON = <IconSparkles className="h-6 w-6" />
 
 const DEFAULT_TESTIMONIALS = [
   {
@@ -188,10 +172,10 @@ async function HomeCategoriesSection({
     <section className="bg-white">
       <div className="container-page py-6 sm:py-8 md:py-10">
         <SectionHeading
-          title="Our Collection"
+          title="Shop by Category"
           subtitle={
             subtitle ||
-            'Explore our collection of handloom sarees, each woven with tradition and care'
+            'Explore our range of handloom sarees, each woven with tradition and care'
           }
           viewAllHref="/category/all"
           viewAllLabel="Browse All"
@@ -221,6 +205,63 @@ async function HomeCategoriesSection({
         )}
       </div>
     </section>
+  )
+}
+
+async function HomeOccasionsSection() {
+  const payload = await getPayload({ config })
+  const occasionsRes = await payload.find({
+    collection: 'occasions',
+    limit: 20,
+    sort: 'createdAt',
+  })
+  const occasions = occasionsRes.docs
+
+  return (
+    <div>
+      <SectionHeading
+        title="Shop by Occasion"
+        subtitle="Find the perfect saree"
+        align="center"
+        size="sm"
+      />
+      <div className="flex flex-wrap justify-center gap-2">
+        {occasions.map((occ) => (
+          <OccasionButton
+            key={occ.id}
+            label={occ.name}
+            icon={
+              occ.slug
+                ? (OCCASION_ICONS[occ.slug] ?? DEFAULT_OCCASION_ICON)
+                : DEFAULT_OCCASION_ICON
+            }
+            href={`/category/all?occasion=${occ.slug ?? ''}`}
+            compact
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function OccasionsSkeleton() {
+  return (
+    <div aria-hidden="true">
+      <SectionHeading
+        title="Shop by Occasion"
+        subtitle="Find the perfect saree"
+        align="center"
+        size="sm"
+      />
+      <div className="flex flex-wrap justify-center gap-2">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="flex flex-col items-center gap-1">
+            <div className="h-12 w-12 animate-pulse rounded-full bg-neutral-100" />
+            <div className="h-3 w-14 animate-pulse rounded bg-neutral-100" />
+          </div>
+        ))}
+      </div>
+    </div>
   )
 }
 
@@ -709,25 +750,9 @@ export default async function HomePage() {
         <div className="container-page py-6 sm:py-8 md:py-10">
           <div className="grid grid-cols-1 gap-8 md:grid-cols-3 md:gap-6 lg:gap-10">
             {/* Shop by Occasion */}
-            <div>
-              <SectionHeading
-                title="Shop by Occasion"
-                subtitle="Find the perfect saree"
-                align="center"
-                size="sm"
-              />
-              <div className="flex flex-wrap justify-center gap-2">
-                {OCCASIONS.map((occ) => (
-                  <OccasionButton
-                    key={occ.label}
-                    label={occ.label}
-                    icon={occ.icon}
-                    href={occ.href}
-                    compact
-                  />
-                ))}
-              </div>
-            </div>
+            <Suspense fallback={<OccasionsSkeleton />}>
+              <HomeOccasionsSection />
+            </Suspense>
 
             {/* Trending Colors */}
             <div>

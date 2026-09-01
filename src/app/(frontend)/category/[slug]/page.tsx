@@ -151,26 +151,25 @@ async function CategoryProductsStream({
   const payload = await getPayload({ config })
   const where = buildWhere(sParams, slug)
 
-  if (slug.toLowerCase() === 'bridal') {
-    where.occasion = { like: 'Bridal' }
-  } else if (slug.toLowerCase() === 'festive') {
-    where.occasion = { like: 'Festive' }
-  } else if (
-    !FABRICS.includes(slug.toLowerCase()) &&
-    !WEAVES.includes(slug.toLowerCase()) &&
-    slug.toLowerCase() !== 'all'
-  ) {
-    const catDoc = await payload.find({
-      collection: 'categories',
-      where: { slug: { equals: slug } },
-      limit: 1,
+  const lowerSlug = slug.toLowerCase()
+  const occasionSlugs = getCommaParam(sParams, 'occasion')
+  // Legacy category slugs bridal/festive map to the occasions relationship
+  // (they were formerly filtered via the free-text occasion field).
+  if (lowerSlug === 'bridal' || lowerSlug === 'festive') {
+    occasionSlugs.push(lowerSlug)
+  }
+  if (occasionSlugs.length > 0) {
+    const occRes = await payload.find({
+      collection: 'occasions',
+      where: { slug: { in: occasionSlugs } },
+      limit: 100,
+      depth: 0,
     })
-    if (catDoc.docs.length > 0) {
-      if (slug.toLowerCase() === 'bridal') {
-        where.occasion = { like: 'Bridal' }
-      } else if (slug.toLowerCase() === 'festive') {
-        where.occasion = { like: 'Festive' }
-      }
+    const occasionIds = occRes.docs.map((d) => d.id)
+    if (occasionIds.length === 1) {
+      where.occasions = { contains: occasionIds[0] }
+    } else if (occasionIds.length > 1) {
+      where.occasions = { in: occasionIds }
     }
   }
 
