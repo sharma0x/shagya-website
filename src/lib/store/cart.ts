@@ -66,7 +66,7 @@ interface CartState {
   clearCart: () => void
   setItems: (items: CartItem[]) => void
   setCoupon: (coupon: CartState['coupon']) => void
-  syncWithServer: () => Promise<void>
+  syncWithServer: (action?: 'overwrite' | 'merge') => Promise<void>
   loadFromServer: () => Promise<void>
   getSubtotal: () => number
   getTotal: () => number
@@ -180,7 +180,7 @@ export const useCart = create<CartState>()(
         set({ coupon })
       },
 
-      syncWithServer: async () => {
+      syncWithServer: async (action = 'overwrite') => {
         try {
           // Verify session via fetch rather than Client SDK directly in hooks to avoid circular dependencies
           const res = await fetch('/api/cart', {
@@ -189,6 +189,7 @@ export const useCart = create<CartState>()(
             body: JSON.stringify({
               items: get().items,
               couponId: get().coupon?.id || null,
+              action,
             }),
           })
           if (res.status === 401) {
