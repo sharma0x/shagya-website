@@ -92,6 +92,8 @@ export const auth = betterAuth({
   },
   plugins: [
     emailOTP({
+      resendStrategy: 'reuse',
+      rateLimit: { window: 60, max: 3 },
       sendVerificationOTP: async ({ email, otp }) => {
         runEmailInBackground('sendOTPEmail', async () => {
           const { sendOTPEmail: send } = await import('@/email/send')
