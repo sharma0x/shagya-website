@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { isUnoptimizedImage } from '@/lib/image-url'
 import { SkeletonImage } from '@/components/ui/SkeletonImage'
 
 export interface HeroSlide {
@@ -96,12 +97,13 @@ export function HeroCarousel({
               className="object-cover"
               loading={i === 0 ? 'eager' : 'lazy'}
               priority={i === 0}
+              unoptimized={isUnoptimizedImage(slide.imageUrl)}
             />
             <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/35 to-transparent" />
           </div>
         ))}
 
-        <div className="container-page relative flex h-full items-center pt-20 sm:pt-0">
+        <div className="container-page relative flex h-full items-center pt-20 lg:pt-0">
           <div className="max-w-xl">
             <div className="mb-3 flex items-center gap-2 text-[10px] font-medium tracking-[0.2em] text-white/70 uppercase">
               <span className="bg-brand-400 h-px w-6" />

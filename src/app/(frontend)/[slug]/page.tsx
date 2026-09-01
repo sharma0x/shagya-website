@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { headers as nextHeaders } from 'next/headers'
 import Link from 'next/link'
 import Image from 'next/image'
+import { isUnoptimizedImage } from '@/lib/image-url'
 import {
   ArrowRight,
   HelpCircle,
@@ -242,6 +243,9 @@ export default async function CatchAllPage({ params, searchParams }: Props) {
                       fill
                       priority
                       className="object-cover"
+                      unoptimized={isUnoptimizedImage(
+                        block.backgroundImage.url,
+                      )}
                     />
                   )}
                   <div className="absolute inset-0 bg-neutral-950/45" />
