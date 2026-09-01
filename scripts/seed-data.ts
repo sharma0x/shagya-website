@@ -29,6 +29,12 @@ export interface SeedBrand {
   description: string
 }
 
+export interface SeedOccasion {
+  name: string
+  slug: string
+  description?: string
+}
+
 export interface SeedColorVariant {
   colorName: string
   imagePath: string
@@ -76,6 +82,48 @@ export const colors: SeedColor[] = [
   { name: 'Mint Green', hex: '#98FB98' },
   { name: 'Lavender Purple', hex: '#E6E6FA' },
   { name: 'Charcoal Black', hex: '#36454F' },
+]
+
+export const occasions: SeedOccasion[] = [
+  {
+    name: 'Wedding',
+    slug: 'wedding',
+    description:
+      'Heirloom-worthy silk sarees for weddings, receptions, and engagement ceremonies.',
+  },
+  {
+    name: 'Festive',
+    slug: 'festive',
+    description:
+      'Celebration sarees for festivals, poojas, and family gatherings.',
+  },
+  {
+    name: 'Daily Wear',
+    slug: 'daily-wear',
+    description:
+      'Lightweight, breathable sarees for everyday comfort and work.',
+  },
+  {
+    name: 'Gifting',
+    slug: 'gifting',
+    description:
+      'Beautifully crafted sarees, perfect for gifting on special occasions.',
+  },
+  {
+    name: 'Party',
+    slug: 'party',
+    description: 'Statement sarees for parties, dinners, and evening events.',
+  },
+  {
+    name: 'Bridal',
+    slug: 'bridal',
+    description: 'The finest handwoven silks for brides and trousseaus.',
+  },
+  {
+    name: 'Casual',
+    slug: 'casual',
+    description: 'Relaxed, easy-drape sarees for laid-back days and outings.',
+  },
 ]
 
 // ---------------------------------------------------------------------------
@@ -1461,7 +1509,7 @@ export const products: SeedProduct[] = [
     palluDetails: 'Scalloped pallu with stone and bead edging',
     borderType: '1-inch stone-studded border',
     weavePattern: 'Chiffon base with hand-applied stone work',
-    occasion: 'party-wear',
+    occasion: 'party',
     gstPercent: 5,
     shippingPrice: 0,
     length: 5.5,
