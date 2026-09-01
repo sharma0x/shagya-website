@@ -45,7 +45,7 @@ function mockCoupon(overrides: Partial<Record<string, unknown>> = {}) {
     maxDiscount: 500,
     endDate: null,
     productsConditions: [],
-    categoriesConditions: [],
+    collectionsConditions: [],
     customersConditions: [],
     ...overrides,
   }
