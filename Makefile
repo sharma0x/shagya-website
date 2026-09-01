@@ -36,13 +36,13 @@ help: ## Show this help message
 	@echo "  make prod-login       Login to GitHub Container Registry"
 	@echo ""
 	@echo "Local Image Build & Push (GHCR):"
-	@echo "  make ghcr-build       Build production Docker image locally (Usage: make ghcr-build [TAG=testing])"
-	@echo "  make ghcr-push        Push locally built image to GHCR (Usage: make ghcr-push [TAG=testing])"
+	@echo "  make ghcr-build       Build production Docker image locally (Usage: make ghcr-build [TAG=latest])"
+	@echo "  make ghcr-push        Push locally built image to GHCR (Usage: make ghcr-push [TAG=latest])"
 	@echo "  make ghcr-build-push  Build and push custom-tagged image in one step"
 	@echo ""
 	@echo "Remote Deployment (from your machine → production VPS):"
-	@echo "  make deploy           Build+push a tag, then deploy it to production (make deploy TAG=testing)"
-	@echo "  make prod-redeploy    Pull + migrate + up a tag on the VPS (make prod-redeploy TAG=testing)"
+	@echo "  make deploy           Build+push a tag, then deploy it to production (make deploy TAG=latest)"
+	@echo "  make prod-redeploy    Pull + migrate + up a tag on the VPS (make prod-redeploy TAG=latest)"
 	@echo "  make prod-env-set     Set env var(s) in production + recreate app (make prod-env-set R2_BUCKET=shayga-media)"
 	@echo "  make prod-env-push    Replace the whole production env file + recreate app (make prod-env-push FILE=infra/.env.production)"
 	@echo "  make prod-env-show    Show the production env file (or one var: make prod-env-show KEY=R2_BUCKET)"
@@ -221,7 +221,7 @@ infra-minio-public: ## Set MinIO local bucket to public (download)
 # ============================================================================
 
 TF_DIR ?= infra/provision
-DOCKER_TAG ?= testing
+DOCKER_TAG ?= latest
 EXISTING_VPS_ID ?=
 
 # Sensitive values (db_password, ssh_public_key) live in
@@ -237,7 +237,7 @@ provision-plan: ## Plan provisioning + deploy (reads terraform.tfvars + allowed_
 provision-apply: ## Provision RDS + VPS and deploy (reads terraform.tfvars + allowed_ips.txt)
 	cd $(TF_DIR) && terraform apply
 
-provision-deploy: ## Redeploy a tag to the existing VPS (Usage: make provision-deploy EXISTING_VPS_ID=i-xxxx DOCKER_TAG=testing)
+provision-deploy: ## Redeploy a tag to the existing VPS (Usage: make provision-deploy EXISTING_VPS_ID=i-xxxx DOCKER_TAG=latest)
 	@if [ -z "$(EXISTING_VPS_ID)" ]; then \
 		echo "Error: EXISTING_VPS_ID is required (the EC2 instance ID)."; exit 1; \
 	fi
@@ -456,7 +456,7 @@ docker-logs: ## Tail logs from all local services
 # ============================================================================
 
 PROD_COMPOSE = docker compose -f docker-compose.prod.yml
-TAG ?= testing
+TAG ?= latest
 IMAGE_TAG ?= $(TAG)
 DOCKER_IMAGE ?= ghcr.io/sharma0x/shagya-website
 ENV_FILE ?= $(if $(wildcard .env.production),.env.production,.env)
@@ -507,15 +507,15 @@ prod-deploy: ## One-stop deployment: Pull image -> Run migrations -> Start conta
 # Local Image Build & GHCR Operations
 # ============================================================================
 
-ghcr-build: ## Build production Docker image locally with a custom tag (Usage: make ghcr-build [TAG=testing])
+ghcr-build: ## Build production Docker image locally with a custom tag (Usage: make ghcr-build [TAG=latest])
 	@echo "Building Docker image $(DOCKER_IMAGE):$(TAG) (linux/amd64)..."
 	docker build --platform linux/amd64 --build-arg NODE_ENV=production --build-arg NEXT_TELEMETRY_DISABLED=1 -t $(DOCKER_IMAGE):$(TAG) .
 
-ghcr-push: ## Push locally built Docker image to GHCR (Usage: make ghcr-push [TAG=testing])
+ghcr-push: ## Push locally built Docker image to GHCR (Usage: make ghcr-push [TAG=latest])
 	@echo "Pushing $(DOCKER_IMAGE):$(TAG) to GHCR..."
 	docker push $(DOCKER_IMAGE):$(TAG)
 
-ghcr-build-push: ghcr-build ghcr-push ## Build and push custom-tagged Docker image in one command (Usage: make ghcr-build-push [TAG=testing])
+ghcr-build-push: ghcr-build ghcr-push ## Build and push custom-tagged Docker image in one command (Usage: make ghcr-build-push [TAG=latest])
 
 # Aliases for backwards compatibility
 docker-build-ghcr: ghcr-build
@@ -560,11 +560,11 @@ prod-env-push: ## Replace the whole production env file with a local one + recre
 prod-recreate: ## Recreate the app containers (picks up env-file changes)
 	@ssh $(PROD_VPS) "cd $(PROD_REMOTE_DIR) && make prod-up ENV_FILE=$(PROD_ENV_FILE) IMAGE_TAG=$(IMAGE_TAG)"
 
-prod-redeploy: ## Pull image + migrate + up on the production VPS (make prod-redeploy TAG=testing)
+prod-redeploy: ## Pull image + migrate + up on the production VPS (make prod-redeploy TAG=latest)
 	@echo "Deploying $(IMAGE_TAG) to $(PROD_VPS)..."
 	@ssh $(PROD_VPS) "cd $(PROD_REMOTE_DIR) && make prod-deploy ENV_FILE=$(PROD_ENV_FILE) IMAGE_TAG=$(IMAGE_TAG)"
 
-deploy: ghcr-build-push prod-redeploy ## Build+push a tag, then deploy it to production (make deploy TAG=testing)
+deploy: ghcr-build-push prod-redeploy ## Build+push a tag, then deploy it to production (make deploy TAG=latest)
 
 # ============================================================================
 # Local Container Image Testing

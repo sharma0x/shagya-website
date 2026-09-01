@@ -15,7 +15,7 @@ set -euo pipefail
 
 VPS_IP=""
 VPS_ID=""
-TAG="testing"
+TAG="latest"
 IMAGE="ghcr.io/sharma0x/shagya-website"
 DATABASE_URL_FILE=""
 DOMAIN="shayga.in"
@@ -29,7 +29,7 @@ Required:
   --vps-id <id>            EC2 instance ID of the VPS (used to name the env file)
 
 Options:
-  --tag <tag>              Docker image tag to deploy (default: testing)
+  --tag <tag>              Docker image tag to deploy (default: latest)
   --image <repo>           Docker image repo (default: ghcr.io/sharma0x/shagya-website)
   --database-url-file <f>  File containing the DATABASE_URL to write (only for a
                            newly created RDS; keep absent to reuse the existing one)
