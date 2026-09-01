@@ -69,7 +69,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { items, couponId } = await request.json()
+    const { items, couponId, action } = await request.json()
     if (!Array.isArray(items)) {
       return NextResponse.json(
         { error: 'Items must be an array' },
@@ -133,17 +133,19 @@ export async function POST(request: Request): Promise<NextResponse> {
     }
 
     if (carts.docs.length > 0) {
-      // Merge incoming items with existing cart items. Existing items come
-      // back from payload.find with relationships populated (default depth
-      // >= 1), so keys must normalize populated product objects + variants.
-      const existingItems = (carts.docs[0] as any).items || []
+      if (action === 'merge') {
+        // Merge incoming items with existing cart items. Existing items come
+        // back from payload.find with relationships populated (default depth
+        // >= 1), so keys must normalize populated product objects + variants.
+        const existingItems = (carts.docs[0] as any).items || []
 
-      data.items = mergeCartItems(existingItems, data.items)
-      data.subtotal = data.items.reduce(
-        (acc: number, item: any) =>
-          acc + (item.unitPrice || 0) * (item.quantity || 1),
-        0,
-      )
+        data.items = mergeCartItems(existingItems, data.items)
+        data.subtotal = data.items.reduce(
+          (acc: number, item: any) =>
+            acc + (item.unitPrice || 0) * (item.quantity || 1),
+          0,
+        )
+      }
 
       cart = await payload.update({
         collection: 'carts',

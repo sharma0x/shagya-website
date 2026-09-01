@@ -152,7 +152,9 @@ export function Header() {
     if (sessionData?.user && !prevUserRef.current) {
       const { items, syncWithServer, loadFromServer } = useCart.getState()
       if (items.length > 0) {
-        syncWithServer().then(() => loadFromServer())
+        syncWithServer('merge').then(() => loadFromServer())
+      } else {
+        loadFromServer()
       }
     }
     prevUserRef.current = sessionData?.user
