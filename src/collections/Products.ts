@@ -18,7 +18,7 @@ export const Products: CollectionConfig = {
   },
   hooks: {
     beforeChange: [
-      ({ data }) => {
+      async ({ data, req }) => {
         if (data?.name) {
           data.slug = data.name
             .toLowerCase()
@@ -51,6 +51,54 @@ export const Products: CollectionConfig = {
             .filter((v: any) => v?.enabled !== false)
             .reduce((sum: number, v: any) => sum + (Number(v?.stock) || 0), 0)
         }
+
+        // --- Smart Collections Evaluation ---
+        try {
+          const automatedCollections = await req.payload.find({
+            collection: 'collections',
+            where: { isAutomated: { equals: true } },
+            limit: 1000,
+            pagination: false,
+            depth: 0,
+          })
+
+          if (automatedCollections.docs.length > 0) {
+            const { evaluateProductAgainstRules } =
+              await import('../lib/smartCollections')
+
+            let currentCollections = Array.isArray(data.collections)
+              ? data.collections.map((c: any) =>
+                  String(typeof c === 'object' ? c.id : c),
+                )
+              : []
+
+            for (const collection of automatedCollections.docs as any[]) {
+              const colId = String(collection.id)
+              const matches = evaluateProductAgainstRules(
+                data, // evaluating the incoming data payload
+                (collection.matchType as 'all' | 'any') || 'all',
+                collection.rules || [],
+              )
+              const hasCol = currentCollections.includes(colId)
+
+              if (matches && !hasCol) {
+                currentCollections.push(colId)
+              } else if (!matches && hasCol) {
+                currentCollections = currentCollections.filter(
+                  (id: string) => id !== colId,
+                )
+              }
+            }
+
+            data.collections = currentCollections
+          }
+        } catch (error) {
+          console.error(
+            'Error in Product beforeChange smart collections sync:',
+            error,
+          )
+        }
+
         return data
       },
     ],
@@ -217,8 +265,14 @@ export const Products: CollectionConfig = {
       },
     },
     {
-      name: 'occasion',
-      type: 'text',
+      name: 'occasions',
+      type: 'relationship',
+      relationTo: 'occasions',
+      hasMany: true,
+      admin: {
+        description:
+          'Occasions this saree is suited for (e.g., Bridal, Festive)',
+      },
     },
     {
       name: 'tags',
