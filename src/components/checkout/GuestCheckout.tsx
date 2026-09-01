@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
+import { useOtpCooldown } from '@/lib/use-otp-cooldown'
 import {
   Loader2,
   Check,
@@ -23,7 +24,7 @@ export function GuestCheckout({ onVerified }: GuestCheckoutProps) {
   const [verifying, setVerifying] = useState(false)
   const [verified, setVerified] = useState(false)
   const [error, setError] = useState('')
-  const [cooldown, setCooldown] = useState(0)
+  const { cooldown, startCooldown } = useOtpCooldown()
 
   const handleSendOTP = useCallback(async () => {
     setError('')
@@ -48,22 +49,13 @@ export function GuestCheckout({ onVerified }: GuestCheckoutProps) {
         throw new Error(data.message || 'Failed to send OTP')
       }
       setOtpSent(true)
-      setCooldown(30)
-      const timer = setInterval(() => {
-        setCooldown((prev) => {
-          if (prev <= 1) {
-            clearInterval(timer)
-            return 0
-          }
-          return prev - 1
-        })
-      }, 1000)
+      startCooldown()
     } catch (err: any) {
       setError(err?.message || 'Failed to send OTP')
     } finally {
       setSendingOTP(false)
     }
-  }, [email, name])
+  }, [email, name, startCooldown])
 
   const handleVerifyOTP = useCallback(async () => {
     setError('')
