@@ -90,7 +90,7 @@ variable "run_deploy" {
 variable "docker_tag" {
   description = "Docker image tag to deploy (e.g. latest, testing)"
   type        = string
-  default     = "testing"
+  default     = "latest"
 }
 
 variable "docker_image" {
@@ -150,6 +150,12 @@ variable "instance_type" {
   default     = "t3.medium"
 }
 
+variable "ami_id" {
+  description = "Ubuntu 24.04 AMI ID for the VPS. Pinned to avoid the most_recent lookup drifting and forcing a replacement of a long-lived instance."
+  type        = string
+  default     = "ami-07e5ce642bbc48c0d"
+}
+
 variable "existing_vps_instance_id" {
   description = "EC2 instance ID of an existing VPS (required when create_vps=false)"
   type        = string
@@ -180,21 +186,6 @@ data "aws_subnets" "public" {
   filter {
     name   = "vpc-id"
     values = [data.aws_vpc.project.id]
-  }
-}
-
-data "aws_ami" "ubuntu" {
-  most_recent = true
-  owners      = ["099720109477"] # Canonical
-
-  filter {
-    name   = "name"
-    values = ["ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-server-*"]
-  }
-
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
   }
 }
 
@@ -376,7 +367,7 @@ resource "aws_security_group" "vps_sg" {
 
 resource "aws_instance" "shayga_vps" {
   count         = var.create_vps ? 1 : 0
-  ami           = data.aws_ami.ubuntu.id
+  ami           = var.ami_id
   instance_type = var.instance_type
 
   subnet_id              = data.aws_subnets.public.ids[0]
