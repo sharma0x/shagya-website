@@ -226,12 +226,14 @@ describe('Products collection', () => {
       expect(field?.type).toBe('text')
     })
 
-    it('has occasion text field', () => {
+    it('has occasions relationship field', () => {
       const field = Products.fields?.find(
-        (f: any) => f.name === 'occasion',
+        (f: any) => f.name === 'occasions',
       ) as any
       expect(field).toBeDefined()
-      expect(field?.type).toBe('text')
+      expect(field?.type).toBe('relationship')
+      expect(field?.relationTo).toBe('occasions')
+      expect(field?.hasMany).toBe(true)
     })
     it('has exactly 32 fields in total', () => {
       expect(Products.fields).toHaveLength(32)
