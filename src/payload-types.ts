@@ -308,7 +308,10 @@ export interface Product {
    * The city/region where this saree originates (e.g., Varanasi, Kanchipuram)
    */
   cityOfOrigin?: string | null;
-  occasion?: string | null;
+  /**
+   * Occasions this saree is suited for (e.g., Bridal, Festive)
+   */
+  occasions?: (number | Occasion)[] | null;
   /**
    * Comma-separated tags (e.g., Zari Work, Handwoven, Eco Friendly)
    */
@@ -395,6 +398,18 @@ export interface Product {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "occasions".
+ */
+export interface Occasion {
+  id: number;
+  name: string;
+  slug?: string | null;
+  description?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "media".
  */
 export interface Media {
@@ -457,6 +472,50 @@ export interface Collection {
   slug?: string | null;
   description?: string | null;
   image?: (number | null) | Media;
+  /**
+   * Automatically include products based on specific rules.
+   */
+  isAutomated?: boolean | null;
+  matchType?: ('all' | 'any') | null;
+  rules?:
+    | (
+        | {
+            operator: 'equals' | 'not_equals';
+            value: number | Brand;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'brandRule';
+          }
+        | {
+            operator: 'equals' | 'not_equals';
+            value: 'silk' | 'cotton' | 'linen' | 'georgette' | 'chiffon' | 'crepe' | 'velvet' | 'net' | 'blend';
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'fabricRule';
+          }
+        | {
+            operator: 'equals' | 'greater_than' | 'less_than';
+            value: number;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'priceRule';
+          }
+        | {
+            operator: 'equals' | 'contains';
+            value: string;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'tagRule';
+          }
+        | {
+            operator: 'equals' | 'not_equals';
+            value: number | Occasion;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'occasionRule';
+          }
+      )[]
+    | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -962,18 +1021,6 @@ export interface FabricType {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "occasions".
- */
-export interface Occasion {
-  id: number;
-  name: string;
-  slug?: string | null;
-  description?: string | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "event-logs".
  */
 export interface EventLog {
@@ -1458,7 +1505,7 @@ export interface ProductsSelect<T extends boolean = true> {
   borderType?: T;
   weavePattern?: T;
   cityOfOrigin?: T;
-  occasion?: T;
+  occasions?: T;
   tags?: T;
   features?:
     | T
@@ -1531,6 +1578,52 @@ export interface CollectionsSelect<T extends boolean = true> {
   slug?: T;
   description?: T;
   image?: T;
+  isAutomated?: T;
+  matchType?: T;
+  rules?:
+    | T
+    | {
+        brandRule?:
+          | T
+          | {
+              operator?: T;
+              value?: T;
+              id?: T;
+              blockName?: T;
+            };
+        fabricRule?:
+          | T
+          | {
+              operator?: T;
+              value?: T;
+              id?: T;
+              blockName?: T;
+            };
+        priceRule?:
+          | T
+          | {
+              operator?: T;
+              value?: T;
+              id?: T;
+              blockName?: T;
+            };
+        tagRule?:
+          | T
+          | {
+              operator?: T;
+              value?: T;
+              id?: T;
+              blockName?: T;
+            };
+        occasionRule?:
+          | T
+          | {
+              operator?: T;
+              value?: T;
+              id?: T;
+              blockName?: T;
+            };
+      };
   updatedAt?: T;
   createdAt?: T;
 }

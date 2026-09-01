@@ -563,7 +563,6 @@ export const products = pgTable(
     borderType: varchar('border_type'),
     weavePattern: varchar('weave_pattern'),
     cityOfOrigin: varchar('city_of_origin'),
-    occasion: varchar('occasion'),
     tags: varchar('tags'),
     basePrice: numeric('base_price', { mode: 'number' }),
     compareAtPrice: numeric('compare_at_price', { mode: 'number' }),
@@ -644,17 +643,24 @@ export const products_rels = pgTable(
     order: integer('order'),
     parent: integer('parent_id').notNull(),
     path: varchar('path').notNull(),
+    occasionsID: integer('occasions_id'),
     collectionsID: integer('collections_id'),
   },
   (columns) => [
     index('products_rels_order_idx').on(columns.order),
     index('products_rels_parent_idx').on(columns.parent),
     index('products_rels_path_idx').on(columns.path),
+    index('products_rels_occasions_id_idx').on(columns.occasionsID),
     index('products_rels_collections_id_idx').on(columns.collectionsID),
     foreignKey({
       columns: [columns['parent']],
       foreignColumns: [products.id],
       name: 'products_rels_parent_fk',
+    }).onDelete('cascade'),
+    foreignKey({
+      columns: [columns['occasionsID']],
+      foreignColumns: [occasions.id],
+      name: 'products_rels_occasions_fk',
     }).onDelete('cascade'),
     foreignKey({
       columns: [columns['collectionsID']],
@@ -764,7 +770,6 @@ export const _products_v = pgTable(
     version_borderType: varchar('version_border_type'),
     version_weavePattern: varchar('version_weave_pattern'),
     version_cityOfOrigin: varchar('version_city_of_origin'),
-    version_occasion: varchar('version_occasion'),
     version_tags: varchar('version_tags'),
     version_basePrice: numeric('version_base_price', { mode: 'number' }),
     version_compareAtPrice: numeric('version_compare_at_price', {
@@ -892,17 +897,24 @@ export const _products_v_rels = pgTable(
     order: integer('order'),
     parent: integer('parent_id').notNull(),
     path: varchar('path').notNull(),
+    occasionsID: integer('occasions_id'),
     collectionsID: integer('collections_id'),
   },
   (columns) => [
     index('_products_v_rels_order_idx').on(columns.order),
     index('_products_v_rels_parent_idx').on(columns.parent),
     index('_products_v_rels_path_idx').on(columns.path),
+    index('_products_v_rels_occasions_id_idx').on(columns.occasionsID),
     index('_products_v_rels_collections_id_idx').on(columns.collectionsID),
     foreignKey({
       columns: [columns['parent']],
       foreignColumns: [_products_v.id],
       name: '_products_v_rels_parent_fk',
+    }).onDelete('cascade'),
+    foreignKey({
+      columns: [columns['occasionsID']],
+      foreignColumns: [occasions.id],
+      name: '_products_v_rels_occasions_fk',
     }).onDelete('cascade'),
     foreignKey({
       columns: [columns['collectionsID']],
@@ -3858,6 +3870,11 @@ export const relations_products_rels = relations(products_rels, ({ one }) => ({
     references: [products.id],
     relationName: '_rels',
   }),
+  occasionsID: one(occasions, {
+    fields: [products_rels.occasionsID],
+    references: [occasions.id],
+    relationName: 'occasions',
+  }),
   collectionsID: one(collections, {
     fields: [products_rels.collectionsID],
     references: [collections.id],
@@ -3948,6 +3965,11 @@ export const relations__products_v_rels = relations(
       fields: [_products_v_rels.parent],
       references: [_products_v.id],
       relationName: '_rels',
+    }),
+    occasionsID: one(occasions, {
+      fields: [_products_v_rels.occasionsID],
+      references: [occasions.id],
+      relationName: 'occasions',
     }),
     collectionsID: one(collections, {
       fields: [_products_v_rels.collectionsID],
