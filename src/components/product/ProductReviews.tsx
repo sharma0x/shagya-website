@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Rating } from '@/components/ui/Rating'
 import { useSession } from '@/lib/auth-client'
@@ -65,6 +65,25 @@ export function ProductReviews({
   const router = useRouter()
   const { data: session } = useSession()
   const [expandedImage, setExpandedImage] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!expandedImage) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setExpandedImage(null)
+      }
+    }
+
+    const originalOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.body.style.overflow = originalOverflow
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [expandedImage])
   const [showForm, setShowForm] = useState(false)
   const [sortMode, setSortMode] = useState<SortMode>('recent')
   const [formRating, setFormRating] = useState(0)
@@ -81,7 +100,8 @@ export function ProductReviews({
   const [pendingReview, setPendingReview] = useState<ReviewData | null>(null)
 
   const isPendingInServerList =
-    pendingReview && (allReviews || []).some((r) => r.id === pendingReview.id)
+    pendingReview &&
+    (allReviews || []).some((r) => String(r.id) === String(pendingReview.id))
 
   const reviews = useMemo(() => {
     const merged = [...(allReviews || [])]
@@ -138,15 +158,19 @@ export function ProductReviews({
     setSubmitting(true)
     setFormError('')
     try {
+      const formData = new FormData()
+      formData.append('productId', String(productId))
+      formData.append('rating', String(formRating))
+      formData.append('title', formTitle.trim())
+      formData.append('body', formBody.trim())
+
+      formImages.forEach((file) => {
+        formData.append('images', file)
+      })
+
       const res = await fetch('/api/reviews', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          productId,
-          rating: formRating,
-          title: formTitle.trim(),
-          body: formBody.trim(),
-        }),
+        body: formData,
       })
       if (!res.ok) {
         const data = await res.json()
@@ -176,6 +200,9 @@ export function ProductReviews({
             name: session?.user?.name || 'Verified Customer',
             image: session?.user?.image || null,
           },
+          images: formPreviews.map((url) => ({
+            image: { url },
+          })),
         })
       }
       router.refresh()
@@ -535,26 +562,6 @@ export function ProductReviews({
                     </div>
                   )}
 
-                  {expandedImage &&
-                    review.images?.some(
-                      (img) => img.image?.url === expandedImage,
-                    ) && (
-                      <div className="relative mt-4 overflow-hidden rounded-xl bg-neutral-100">
-                        <img
-                          src={expandedImage}
-                          alt=""
-                          className="max-h-80 w-full object-contain"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setExpandedImage(null)}
-                          className="absolute top-3 right-3 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-xs text-white hover:bg-black/80"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    )}
-
                   <button
                     type="button"
                     onClick={(e) => {
@@ -597,6 +604,39 @@ export function ProductReviews({
               <Edit3 className="h-4 w-4" />
               Write a Review
             </button>
+          </div>
+        )}
+        {/* Full-page Image Preview Lightbox */}
+        {expandedImage && (
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Image preview"
+            onClick={() => setExpandedImage(null)}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-sm sm:p-8"
+          >
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                setExpandedImage(null)
+              }}
+              aria-label="Close full preview"
+              className="fixed top-4 right-4 flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-md transition-all hover:scale-105 hover:bg-white/25 active:scale-95 sm:top-6 sm:right-6"
+            >
+              <X className="h-6 w-6" />
+            </button>
+
+            <div
+              className="relative max-h-[90vh] max-w-[90vw] overflow-hidden rounded-2xl shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <img
+                src={expandedImage}
+                alt="Customer review photo"
+                className="max-h-[85vh] max-w-[90vw] rounded-2xl object-contain"
+              />
+            </div>
           </div>
         )}
       </div>
