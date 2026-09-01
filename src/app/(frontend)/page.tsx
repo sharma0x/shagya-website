@@ -7,18 +7,17 @@ import { ArrowRight } from 'lucide-react'
 // should sit in front for production.
 export const dynamic = 'force-dynamic'
 
-// COMMENTED OUT (CLO-102):
-// import {
-//   IconBrandInstagram,
-//   IconBrandFacebook,
-//   IconBrandYoutube,
-//   IconBrandPinterest,
-//   IconHeart,
-//   IconSparkles,
-//   IconSun,
-//   IconGift,
-//   IconGlassFull,
-// } from '@tabler/icons-react'
+import {
+  IconBrandInstagram,
+  IconBrandFacebook,
+  IconBrandYoutube,
+  IconBrandPinterest,
+  IconHeart,
+  IconSparkles,
+  IconSun,
+  IconGift,
+  IconGlassFull,
+} from '@tabler/icons-react'
 import Link from 'next/link'
 import { getPayload } from 'payload'
 import config from '@payload-config'
@@ -36,10 +35,9 @@ import { RefreshRouteOnSave } from '@/components/live-preview/RefreshRouteOnSave
 import { SectionHeading } from '@/components/homepage/SectionHeading'
 import { ProductCard } from '@/components/product/ProductCard'
 import { ProductCarousel } from '@/components/product/ProductCarousel'
-// COMMENTED OUT (CLO-102):
 import { CategoryCard } from '@/components/homepage/CategoryCard'
 // import { InstagramGallery } from '@/components/homepage/InstagramGallery'
-// import { OccasionButton } from '@/components/homepage/OccasionButton'
+import { OccasionButton } from '@/components/homepage/OccasionButton'
 import { TestimonialCard } from '@/components/homepage/TestimonialCard'
 // import { TrendingColors } from '@/components/homepage/TrendingColors'
 import {
@@ -123,7 +121,6 @@ function mapProductWithVariant(p: any) {
   return liftVariantGallery(p)
 }
 
-/* COMMENTED OUT (CLO-102):
 const OCCASIONS = [
   {
     label: 'Wedding',
@@ -151,7 +148,19 @@ const OCCASIONS = [
     href: '/category/designer',
   },
 ]
-*/
+
+// COMMENTED OUT (upstream feature branch — DB-driven occasions):
+// const OCCASION_ICONS: Record<string, ReactNode> = {
+//   wedding: <IconHeart className="h-6 w-6" />,
+//   bridal: <IconHeart className="h-6 w-6" />,
+//   festive: <IconSparkles className="h-6 w-6" />,
+//   party: <IconGlassFull className="h-6 w-6" />,
+//   'daily-wear': <IconSun className="h-6 w-6" />,
+//   casual: <IconSun className="h-6 w-6" />,
+//   gifting: <IconGift className="h-6 w-6" />,
+// }
+//
+// const DEFAULT_OCCASION_ICON = <IconSparkles className="h-6 w-6" />
 
 const DEFAULT_TESTIMONIALS = [
   {
@@ -195,10 +204,10 @@ async function HomeCategoriesSection({
     <section className="bg-white">
       <div className="container-page py-6 sm:py-8 md:py-10">
         <SectionHeading
-          title="Our Collection"
+          title="Shop by Category"
           subtitle={
             subtitle ||
-            'Explore our collection of handloom sarees, each woven with tradition and care'
+            'Explore our range of handloom sarees, each woven with tradition and care'
           }
           viewAllHref="/category/all"
           viewAllLabel="Browse All"
@@ -230,6 +239,64 @@ async function HomeCategoriesSection({
     </section>
   )
 }
+
+// COMMENTED OUT (upstream DB-driven occasions — alternative to OCCASIONS):
+// async function HomeOccasionsSection() {
+//   const payload = await getPayload({ config })
+//   const occasionsRes = await payload.find({
+//     collection: 'occasions',
+//     limit: 20,
+//     sort: 'createdAt',
+//   })
+//   const occasions = occasionsRes.docs
+//
+//   return (
+//     <div>
+//       <SectionHeading
+//         title="Shop by Occasion"
+//         subtitle="Find the perfect saree"
+//         align="center"
+//         size="sm"
+//       />
+//       <div className="flex flex-wrap justify-center gap-2">
+//         {occasions.map((occ) => (
+//           <OccasionButton
+//             key={occ.id}
+//             label={occ.name}
+//             icon={
+//               occ.slug
+//                 ? (OCCASION_ICONS[occ.slug] ?? DEFAULT_OCCASION_ICON)
+//                 : DEFAULT_OCCASION_ICON
+//             }
+//             href={`/category/all?occasion=${occ.slug ?? ''}`}
+//             compact
+//           />
+//         ))}
+//       </div>
+//     </div>
+//   )
+// }
+//
+// function OccasionsSkeleton() {
+//   return (
+//     <div aria-hidden="true">
+//       <SectionHeading
+//         title="Shop by Occasion"
+//         subtitle="Find the perfect saree"
+//         align="center"
+//         size="sm"
+//       />
+//       <div className="flex flex-wrap justify-center gap-2">
+//         {Array.from({ length: 6 }).map((_, i) => (
+//           <div key={i} className="flex flex-col items-center gap-1">
+//             <div className="h-12 w-12 animate-pulse rounded-full bg-neutral-100" />
+//             <div className="h-3 w-14 animate-pulse rounded bg-neutral-100" />
+//           </div>
+//         ))}
+//       </div>
+//     </div>
+//   )
+// }
 
 async function HomeProductSpotlightsSection() {
   const payload = await getPayload({ config })
@@ -710,6 +777,10 @@ export default async function HomePage() {
                 ))}
               </div>
             </div>
+            // Shop by Occasion (upstream DB-driven) — COMMENTED OUT
+            // <Suspense fallback={<OccasionsSkeleton />}>
+            //   <HomeOccasionsSection />
+            // </Suspense>
 
             // Trending Colors
             <div>

@@ -348,6 +348,11 @@ export default async function ProductDetailPage({
     weave: product.weave,
   }
 
+  const occasionNames = (product.occasions || [])
+    .map((o: any) => (o && typeof o === 'object' ? o.name : null))
+    .filter(Boolean)
+    .join(', ')
+
   const specs: { label: string; value: string }[] = [
     product.fabric && {
       label: 'Fabric',
@@ -369,7 +374,7 @@ export default async function ProductDetailPage({
       label: 'Weave technique',
       value: product.weavePattern,
     },
-    product.occasion && { label: 'Occasion', value: product.occasion },
+    occasionNames && { label: 'Occasion', value: occasionNames },
   ].filter(Boolean) as { label: string; value: string }[]
 
   return (
@@ -438,9 +443,9 @@ export default async function ProductDetailPage({
                     product.weave.slice(1)}{' '}
                   Weave
                 </span>
-                {product.occasion && (
+                {occasionNames && (
                   <span className="font-body text-xs text-neutral-400">
-                    {product.occasion}
+                    {occasionNames}
                   </span>
                 )}
               </div>

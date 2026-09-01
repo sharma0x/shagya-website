@@ -11,13 +11,9 @@ export function buildWhereClause(
   const where: Record<string, any> = { ...baseWhere }
 
   // Multi-value enum filters (comma-separated)
-  const multiFilters = [
-    'weave',
-    'fabric',
-    'pattern',
-    'occasion',
-    'color',
-  ] as const
+  // Note: 'occasion' is intentionally absent — products now filter occasions
+  // via the 'occasions' relationship (resolved by slug on the category page).
+  const multiFilters = ['weave', 'fabric', 'pattern', 'color'] as const
   for (const key of multiFilters) {
     const value = params.get(key)
     if (value) {
