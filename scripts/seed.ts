@@ -546,11 +546,15 @@ export async function seedProducts(
       }),
     )
 
+    const intendedStatus: 'published' | 'draft' =
+      prod.status === 'published' ? 'published' : 'draft'
+
     if (existing.totalDocs === 0) {
       await (payload.create as any)({
         collection: 'products',
         data: {
           ...rest,
+          _status: intendedStatus,
           colorVariants: variantData,
           collections: collectionIds,
           occasions: occasionIds,
@@ -565,6 +569,12 @@ export async function seedProducts(
     } else {
       const doc = existing.docs[0]
       const updateData: any = {}
+
+      // Republish products whose _status is stuck as draft (e.g. pre-fix
+      // seeds never set _status, so Payload defaulted them to draft)
+      if ((doc as any)._status !== intendedStatus) {
+        updateData._status = intendedStatus
+      }
 
       // Update colorVariants if missing or empty
       if (
