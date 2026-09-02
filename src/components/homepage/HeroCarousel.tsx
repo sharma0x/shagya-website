@@ -13,15 +13,9 @@ export interface HeroSlide {
 
 interface HeroCarouselProps {
   slides: HeroSlide[]
-  heading?: string
-  tagline?: string
 }
 
-export function HeroCarousel({
-  slides,
-  heading = 'Shayga',
-  tagline = 'Handwoven narratives from Varanasi',
-}: HeroCarouselProps) {
+export function HeroCarousel({ slides }: HeroCarouselProps) {
   // Normalize slides defensively — an invalid slide can never render a
   // Link with an undefined href (guards against stale/partial props).
   const safeSlides = slides
@@ -70,20 +64,6 @@ export function HeroCarousel({
 
   return (
     <section className="motion-safe:select-none" aria-label="Featured weaves">
-      {/* Brand heading — centered wordmark with hairline underline */}
-      <div className="container-page pt-8 pb-5 text-center sm:pt-10 sm:pb-6">
-        <h1 className="font-display text-brand-950 text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
-          {heading}
-        </h1>
-        <div
-          className="bg-gold-400 mx-auto mt-3 h-px w-20 sm:w-24"
-          aria-hidden="true"
-        />
-        <p className="text-brand-700/60 font-body mt-2 text-sm tracking-wide sm:text-base">
-          {tagline}
-        </p>
-      </div>
-
       {/* Image carousel — text-free, each slide links out */}
       <div
         className="relative overflow-hidden"
@@ -94,7 +74,7 @@ export function HeroCarousel({
         role="group"
         aria-roledescription="carousel"
       >
-        <div className="relative aspect-[4/5] sm:aspect-[21/9] md:aspect-[21/8]">
+        <div className="relative aspect-[21/9] md:aspect-[21/8]">
           {safeSlides.map((slide, i) => (
             <Link
               key={i}
