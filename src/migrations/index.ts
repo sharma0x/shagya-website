@@ -21,6 +21,7 @@ import * as migration_20260819_120000_add_hero_slide_links from './20260819_1200
 import * as migration_20260819_174456_add_order_item_color_fields from './20260819_174456_add_order_item_color_fields'
 import * as migration_20260820_001000_update_coupons_collections from './20260820_001000_update_coupons_collections'
 import * as migration_20260901_222400_convert_product_occasion_to_occasions_relationship from './20260901_222400_convert_product_occasion_to_occasions_relationship'
+import * as migration_20260902_000000_add_smart_collections_rules from './20260902_000000_add_smart_collections_rules'
 
 export const migrations = [
   {
@@ -137,5 +138,10 @@ export const migrations = [
     up: migration_20260901_222400_convert_product_occasion_to_occasions_relationship.up,
     down: migration_20260901_222400_convert_product_occasion_to_occasions_relationship.down,
     name: '20260901_222400_convert_product_occasion_to_occasions_relationship',
+  },
+  {
+    up: migration_20260902_000000_add_smart_collections_rules.up,
+    down: migration_20260902_000000_add_smart_collections_rules.down,
+    name: '20260902_000000_add_smart_collections_rules',
   },
 ]

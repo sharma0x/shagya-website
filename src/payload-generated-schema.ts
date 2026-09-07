@@ -147,6 +147,44 @@ export const enum__products_v_published_locale = pgEnum(
   'enum__products_v_published_locale',
   ['en'],
 )
+export const enum_collections_blocks_brand_rule_operator = pgEnum(
+  'enum_collections_blocks_brand_rule_operator',
+  ['equals', 'not_equals'],
+)
+export const enum_collections_blocks_fabric_rule_operator = pgEnum(
+  'enum_collections_blocks_fabric_rule_operator',
+  ['equals', 'not_equals'],
+)
+export const enum_collections_blocks_fabric_rule_value = pgEnum(
+  'enum_collections_blocks_fabric_rule_value',
+  [
+    'silk',
+    'cotton',
+    'linen',
+    'georgette',
+    'chiffon',
+    'crepe',
+    'velvet',
+    'net',
+    'blend',
+  ],
+)
+export const enum_collections_blocks_price_rule_operator = pgEnum(
+  'enum_collections_blocks_price_rule_operator',
+  ['equals', 'greater_than', 'less_than'],
+)
+export const enum_collections_blocks_tag_rule_operator = pgEnum(
+  'enum_collections_blocks_tag_rule_operator',
+  ['equals', 'contains'],
+)
+export const enum_collections_blocks_occasion_rule_operator = pgEnum(
+  'enum_collections_blocks_occasion_rule_operator',
+  ['equals', 'not_equals'],
+)
+export const enum_collections_match_type = pgEnum(
+  'enum_collections_match_type',
+  ['all', 'any'],
+)
 export const enum_variants_size = pgEnum('enum_variants_size', [
   'XS',
   'S',
@@ -961,6 +999,137 @@ export const categories = pgTable(
   ],
 )
 
+export const collections_blocks_brand_rule = pgTable(
+  'collections_blocks_brand_rule',
+  {
+    _order: integer('_order').notNull(),
+    _parentID: integer('_parent_id').notNull(),
+    _path: text('_path').notNull(),
+    id: varchar('id').primaryKey(),
+    operator:
+      enum_collections_blocks_brand_rule_operator('operator').default('equals'),
+    value: integer('value_id').references(() => brands.id, {
+      onDelete: 'set null',
+    }),
+    blockName: varchar('block_name'),
+  },
+  (columns) => [
+    index('collections_blocks_brand_rule_order_idx').on(columns._order),
+    index('collections_blocks_brand_rule_parent_id_idx').on(columns._parentID),
+    index('collections_blocks_brand_rule_path_idx').on(columns._path),
+    index('collections_blocks_brand_rule_value_idx').on(columns.value),
+    foreignKey({
+      columns: [columns['_parentID']],
+      foreignColumns: [collections.id],
+      name: 'collections_blocks_brand_rule_parent_id_fk',
+    }).onDelete('cascade'),
+  ],
+)
+
+export const collections_blocks_fabric_rule = pgTable(
+  'collections_blocks_fabric_rule',
+  {
+    _order: integer('_order').notNull(),
+    _parentID: integer('_parent_id').notNull(),
+    _path: text('_path').notNull(),
+    id: varchar('id').primaryKey(),
+    operator:
+      enum_collections_blocks_fabric_rule_operator('operator').default(
+        'equals',
+      ),
+    value: enum_collections_blocks_fabric_rule_value('value'),
+    blockName: varchar('block_name'),
+  },
+  (columns) => [
+    index('collections_blocks_fabric_rule_order_idx').on(columns._order),
+    index('collections_blocks_fabric_rule_parent_id_idx').on(columns._parentID),
+    index('collections_blocks_fabric_rule_path_idx').on(columns._path),
+    foreignKey({
+      columns: [columns['_parentID']],
+      foreignColumns: [collections.id],
+      name: 'collections_blocks_fabric_rule_parent_id_fk',
+    }).onDelete('cascade'),
+  ],
+)
+
+export const collections_blocks_price_rule = pgTable(
+  'collections_blocks_price_rule',
+  {
+    _order: integer('_order').notNull(),
+    _parentID: integer('_parent_id').notNull(),
+    _path: text('_path').notNull(),
+    id: varchar('id').primaryKey(),
+    operator: enum_collections_blocks_price_rule_operator('operator'),
+    value: numeric('value', { mode: 'number' }),
+    blockName: varchar('block_name'),
+  },
+  (columns) => [
+    index('collections_blocks_price_rule_order_idx').on(columns._order),
+    index('collections_blocks_price_rule_parent_id_idx').on(columns._parentID),
+    index('collections_blocks_price_rule_path_idx').on(columns._path),
+    foreignKey({
+      columns: [columns['_parentID']],
+      foreignColumns: [collections.id],
+      name: 'collections_blocks_price_rule_parent_id_fk',
+    }).onDelete('cascade'),
+  ],
+)
+
+export const collections_blocks_tag_rule = pgTable(
+  'collections_blocks_tag_rule',
+  {
+    _order: integer('_order').notNull(),
+    _parentID: integer('_parent_id').notNull(),
+    _path: text('_path').notNull(),
+    id: varchar('id').primaryKey(),
+    operator:
+      enum_collections_blocks_tag_rule_operator('operator').default('contains'),
+    value: varchar('value'),
+    blockName: varchar('block_name'),
+  },
+  (columns) => [
+    index('collections_blocks_tag_rule_order_idx').on(columns._order),
+    index('collections_blocks_tag_rule_parent_id_idx').on(columns._parentID),
+    index('collections_blocks_tag_rule_path_idx').on(columns._path),
+    foreignKey({
+      columns: [columns['_parentID']],
+      foreignColumns: [collections.id],
+      name: 'collections_blocks_tag_rule_parent_id_fk',
+    }).onDelete('cascade'),
+  ],
+)
+
+export const collections_blocks_occasion_rule = pgTable(
+  'collections_blocks_occasion_rule',
+  {
+    _order: integer('_order').notNull(),
+    _parentID: integer('_parent_id').notNull(),
+    _path: text('_path').notNull(),
+    id: varchar('id').primaryKey(),
+    operator:
+      enum_collections_blocks_occasion_rule_operator('operator').default(
+        'equals',
+      ),
+    value: integer('value_id').references(() => occasions.id, {
+      onDelete: 'set null',
+    }),
+    blockName: varchar('block_name'),
+  },
+  (columns) => [
+    index('collections_blocks_occasion_rule_order_idx').on(columns._order),
+    index('collections_blocks_occasion_rule_parent_id_idx').on(
+      columns._parentID,
+    ),
+    index('collections_blocks_occasion_rule_path_idx').on(columns._path),
+    index('collections_blocks_occasion_rule_value_idx').on(columns.value),
+    foreignKey({
+      columns: [columns['_parentID']],
+      foreignColumns: [collections.id],
+      name: 'collections_blocks_occasion_rule_parent_id_fk',
+    }).onDelete('cascade'),
+  ],
+)
+
 export const collections = pgTable(
   'collections',
   {
@@ -971,6 +1140,8 @@ export const collections = pgTable(
     image: integer('image_id').references(() => media.id, {
       onDelete: 'set null',
     }),
+    isAutomated: boolean('is_automated').default(false),
+    matchType: enum_collections_match_type('match_type').default('all'),
     updatedAt: timestamp('updated_at', {
       mode: 'string',
       withTimezone: true,
@@ -4019,13 +4190,91 @@ export const relations_categories = relations(categories, ({ one }) => ({
     relationName: 'parent',
   }),
 }))
-export const relations_collections = relations(collections, ({ one }) => ({
-  image: one(media, {
-    fields: [collections.image],
-    references: [media.id],
-    relationName: 'image',
+export const relations_collections_blocks_brand_rule = relations(
+  collections_blocks_brand_rule,
+  ({ one }) => ({
+    _parentID: one(collections, {
+      fields: [collections_blocks_brand_rule._parentID],
+      references: [collections.id],
+      relationName: '_blocks_brandRule',
+    }),
+    value: one(brands, {
+      fields: [collections_blocks_brand_rule.value],
+      references: [brands.id],
+      relationName: 'value',
+    }),
   }),
-}))
+)
+export const relations_collections_blocks_fabric_rule = relations(
+  collections_blocks_fabric_rule,
+  ({ one }) => ({
+    _parentID: one(collections, {
+      fields: [collections_blocks_fabric_rule._parentID],
+      references: [collections.id],
+      relationName: '_blocks_fabricRule',
+    }),
+  }),
+)
+export const relations_collections_blocks_price_rule = relations(
+  collections_blocks_price_rule,
+  ({ one }) => ({
+    _parentID: one(collections, {
+      fields: [collections_blocks_price_rule._parentID],
+      references: [collections.id],
+      relationName: '_blocks_priceRule',
+    }),
+  }),
+)
+export const relations_collections_blocks_tag_rule = relations(
+  collections_blocks_tag_rule,
+  ({ one }) => ({
+    _parentID: one(collections, {
+      fields: [collections_blocks_tag_rule._parentID],
+      references: [collections.id],
+      relationName: '_blocks_tagRule',
+    }),
+  }),
+)
+export const relations_collections_blocks_occasion_rule = relations(
+  collections_blocks_occasion_rule,
+  ({ one }) => ({
+    _parentID: one(collections, {
+      fields: [collections_blocks_occasion_rule._parentID],
+      references: [collections.id],
+      relationName: '_blocks_occasionRule',
+    }),
+    value: one(occasions, {
+      fields: [collections_blocks_occasion_rule.value],
+      references: [occasions.id],
+      relationName: 'value',
+    }),
+  }),
+)
+export const relations_collections = relations(
+  collections,
+  ({ one, many }) => ({
+    image: one(media, {
+      fields: [collections.image],
+      references: [media.id],
+      relationName: 'image',
+    }),
+    _blocks_brandRule: many(collections_blocks_brand_rule, {
+      relationName: '_blocks_brandRule',
+    }),
+    _blocks_fabricRule: many(collections_blocks_fabric_rule, {
+      relationName: '_blocks_fabricRule',
+    }),
+    _blocks_priceRule: many(collections_blocks_price_rule, {
+      relationName: '_blocks_priceRule',
+    }),
+    _blocks_tagRule: many(collections_blocks_tag_rule, {
+      relationName: '_blocks_tagRule',
+    }),
+    _blocks_occasionRule: many(collections_blocks_occasion_rule, {
+      relationName: '_blocks_occasionRule',
+    }),
+  }),
+)
 export const relations_variants = relations(variants, ({ one }) => ({
   product: one(products, {
     fields: [variants.product],
@@ -5156,6 +5405,13 @@ type DatabaseSchema = {
   enum__products_v_version_pattern: typeof enum__products_v_version_pattern
   enum__products_v_version_delivery_time: typeof enum__products_v_version_delivery_time
   enum__products_v_published_locale: typeof enum__products_v_published_locale
+  enum_collections_blocks_brand_rule_operator: typeof enum_collections_blocks_brand_rule_operator
+  enum_collections_blocks_fabric_rule_operator: typeof enum_collections_blocks_fabric_rule_operator
+  enum_collections_blocks_fabric_rule_value: typeof enum_collections_blocks_fabric_rule_value
+  enum_collections_blocks_price_rule_operator: typeof enum_collections_blocks_price_rule_operator
+  enum_collections_blocks_tag_rule_operator: typeof enum_collections_blocks_tag_rule_operator
+  enum_collections_blocks_occasion_rule_operator: typeof enum_collections_blocks_occasion_rule_operator
+  enum_collections_match_type: typeof enum_collections_match_type
   enum_variants_size: typeof enum_variants_size
   enum_variants_color: typeof enum_variants_color
   enum_orders_status: typeof enum_orders_status
@@ -5201,6 +5457,11 @@ type DatabaseSchema = {
   _products_v_locales: typeof _products_v_locales
   _products_v_rels: typeof _products_v_rels
   categories: typeof categories
+  collections_blocks_brand_rule: typeof collections_blocks_brand_rule
+  collections_blocks_fabric_rule: typeof collections_blocks_fabric_rule
+  collections_blocks_price_rule: typeof collections_blocks_price_rule
+  collections_blocks_tag_rule: typeof collections_blocks_tag_rule
+  collections_blocks_occasion_rule: typeof collections_blocks_occasion_rule
   collections: typeof collections
   variants: typeof variants
   orders_items: typeof orders_items
@@ -5299,6 +5560,11 @@ type DatabaseSchema = {
   relations__products_v_rels: typeof relations__products_v_rels
   relations__products_v: typeof relations__products_v
   relations_categories: typeof relations_categories
+  relations_collections_blocks_brand_rule: typeof relations_collections_blocks_brand_rule
+  relations_collections_blocks_fabric_rule: typeof relations_collections_blocks_fabric_rule
+  relations_collections_blocks_price_rule: typeof relations_collections_blocks_price_rule
+  relations_collections_blocks_tag_rule: typeof relations_collections_blocks_tag_rule
+  relations_collections_blocks_occasion_rule: typeof relations_collections_blocks_occasion_rule
   relations_collections: typeof relations_collections
   relations_variants: typeof relations_variants
   relations_orders_items: typeof relations_orders_items

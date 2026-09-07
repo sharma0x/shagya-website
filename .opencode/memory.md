@@ -111,6 +111,13 @@ ENV_FILE=.env IMAGE_TAG=testing DOCKER_IMAGE=ghcr.io/sharma0x/shagya-website doc
 - Homepage "Shop by Occasion" is now dynamic: `HomeOccasionsSection` fetches `occasions`, maps slug → icon via `OCCASION_ICONS`, links to `/category/all?occasion=<slug>`.
 - Seed: `seed-data.ts` exports `occasions` (7 items), `seed.ts` `seedOccasions()` returns a slug→doc map consumed by `seedProducts()` (destructures `occasion` out of `...rest` so the removed field isn't passed through).
 
+## Smart Collections blocks → homepage 500 (2026-09-02)
+
+- **Symptom:** homepage returns "This page couldn't load / A server error occurred". Server log: `Failed query ... relation "collections_blocks_brand_rule" does not exist` (42P01). The homepage SSR query joins block tables for the `collections` collection.
+- **Root cause:** commit `f6d68c3` added `isAutomated`/`matchType`/`rules` blocks (`brandRule`, `fabricRule`, `priceRule`, `tagRule`, `occasionRule`) to `Collections.ts` but **no migration was generated** — all 5 `collections_blocks_*` tables and the 2 columns were missing in the DB. `payload-generated-schema.ts` was also stale.
+- **Fix:** `pnpm payload generate:db-schema` (regenerates schema from config) → `migrate:create` hung on the known interactive Drizzle prompt (`occasions_id` create vs rename — pre-existing applied migration) → killed it and wrote the migration `.ts` **by hand** (`20260902_000000_add_smart_collections_rules.ts`): 7 enum types (`enum_collections_match_type`, per-block operator/value enums), `ALTER collections ADD is_automated boolean DEFAULT false` + `ADD match_type enum DEFAULT 'all'`, then the 5 block tables with `_parent_id` FK → `collections.id` (integer, since collections PK is serial), `_path` text NOT NULL, `id` varchar PK, `block_name varchar`, relationship columns (`value_id integer` for brand/occasion, enum for fabric, `numeric` for price, `varchar` for tag), plus `_order`/`_parent_id`/`_path`/`value` indexes. Registered in `src/migrations/index.ts` (hand-written migrations have no `.json` snapshot — see 2026-08-19 note).
+- `make db-migrate` applies it (66ms) and the homepage returns 200 again.
+
 ## DB Reset Flow
 
 1. `make infra-reset` (nukes Docker volumes)
