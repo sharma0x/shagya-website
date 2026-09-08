@@ -3,6 +3,8 @@ import { Public_Sans, Sora, Noto_Sans_Devanagari } from 'next/font/google'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav'
+import { getPayload } from 'payload'
+import configPromise from '@payload-config'
 import './globals.css'
 
 const sora = Sora({
@@ -42,11 +44,28 @@ export const metadata: Metadata = {
   ],
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const payload = await getPayload({ config: configPromise })
+
+  const [categoriesRes, fabricTypesRes, brandsRes, occasionsRes] =
+    await Promise.all([
+      payload.find({ collection: 'categories', limit: 100, depth: 0 }),
+      payload.find({ collection: 'fabric-types', limit: 100, depth: 0 }),
+      payload.find({ collection: 'brands', limit: 100, depth: 0 }),
+      payload.find({ collection: 'occasions', limit: 100, depth: 0 }),
+    ])
+
+  const taxonomies = {
+    categories: categoriesRes.docs,
+    fabricTypes: fabricTypesRes.docs,
+    brands: brandsRes.docs,
+    occasions: occasionsRes.docs,
+  }
+
   return (
     <html
       lang="en"
@@ -54,7 +73,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="font-body flex min-h-screen flex-col pb-16 antialiased lg:pb-0">
-        <Header />
+        <Header taxonomies={taxonomies} />
         <main className="flex-1">{children}</main>
         <Footer />
         <MobileBottomNav />

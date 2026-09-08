@@ -173,6 +173,22 @@ async function CategoryProductsStream({
     }
   }
 
+  const brandSlugs = getCommaParam(sParams, 'brand')
+  if (brandSlugs.length > 0) {
+    const brandRes = await payload.find({
+      collection: 'brands',
+      where: { slug: { in: brandSlugs } },
+      limit: 100,
+      depth: 0,
+    })
+    const brandIds = brandRes.docs.map((d) => d.id)
+    if (brandIds.length === 1) {
+      where.brand = { equals: brandIds[0] }
+    } else if (brandIds.length > 1) {
+      where.brand = { in: brandIds }
+    }
+  }
+
   const page = Math.max(1, parseInt((sParams.page as string) || '1', 10))
   const prodLimit = Math.max(
     1,
