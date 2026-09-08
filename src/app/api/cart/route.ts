@@ -3,6 +3,11 @@ import { getPayload } from 'payload'
 import config from '@payload-config'
 import { auth } from '@/lib/auth'
 import { mergeCartItems, normalizeVariant } from '@/lib/cart-merge'
+import {
+  validateCartStock,
+  applyStockClamp,
+  type CartStockItem,
+} from '@/lib/stock'
 
 /**
  * GET /api/cart
@@ -78,6 +83,23 @@ export async function POST(request: Request): Promise<NextResponse> {
     }
 
     const payload = await getPayload({ config })
+
+    // ── Server-side stock validation ──
+    const stockItems: CartStockItem[] = items.map((item: any) => ({
+      product: item.product,
+      variant: item.variant,
+      quantity: item.quantity || 1,
+    }))
+
+    const stockCheck = await validateCartStock(payload, stockItems)
+
+    if (!stockCheck.ok) {
+      // Clamp quantities to available stock instead of rejecting entirely
+      const clampedItems = applyStockClamp(items, stockCheck)
+      // Replace items array with clamped version for downstream processing
+      items.length = 0
+      items.push(...clampedItems)
+    }
 
     // Find the customer linked to this Better Auth user
     const customers = await payload.find({

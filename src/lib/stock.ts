@@ -7,6 +7,8 @@
  * top-level `quantity`.
  */
 
+import type { Payload } from 'payload'
+
 export interface StockOrderItem {
   /** Colors collection doc ID (order items' `color` relationship value) */
   color?: number | string | { id?: number | string } | null
@@ -110,4 +112,184 @@ export function applyStockDecrement(
     )
 
   return { colorVariants: newVariants, quantity, purchaseCount }
+}
+
+// ── Server-side stock validation ──────────────────────────────────────
+
+export interface CartStockItem {
+  /** Product ID (number or string) */
+  product: number | string
+  /** Variant color slug (if color variant product) */
+  variant?: { color?: { slug?: string } | string } | string | null
+  /** Requested quantity */
+  quantity: number
+}
+
+export interface StockCheckResult {
+  /** Whether all items pass stock validation */
+  ok: boolean
+  /** Items with clamped quantities (keyed by `${productId}::${colorSlug}`) */
+  clamped: Record<string, { requested: number; available: number }>
+  /** Error message if not ok */
+  error?: string
+}
+
+/**
+ * Server-side stock check: verifies that the requested cart quantities
+ * are available against the current DB stock. Returns clamped items
+ * where the requested quantity exceeded available stock.
+ *
+ * If `allowBackorder` is true on the product, the check is skipped.
+ * If `trackQuantity` is false on the product, the check is skipped.
+ */
+export async function validateCartStock(
+  payload: Payload,
+  items: CartStockItem[],
+): Promise<StockCheckResult> {
+  if (!items || items.length === 0) {
+    return { ok: true, clamped: {} }
+  }
+
+  // Collect unique product IDs
+  const productIds = [
+    ...new Set(
+      items.map((item) =>
+        typeof item.product === 'object' && item.product !== null
+          ? (item.product as any).id
+          : item.product,
+      ),
+    ),
+  ]
+
+  // Fetch all relevant products in one query
+  const products = await payload.find({
+    collection: 'products',
+    where: {
+      id: { in: productIds },
+    },
+    limit: productIds.length,
+    overrideAccess: true,
+  })
+
+  const productMap = new Map<string, any>()
+  for (const doc of products.docs) {
+    productMap.set(String((doc as any).id), doc)
+  }
+
+  const clamped: StockCheckResult['clamped'] = {}
+  let allOk = true
+
+  for (const item of items) {
+    const productId =
+      typeof item.product === 'object' && item.product !== null
+        ? (item.product as any).id
+        : item.product
+
+    const product = productMap.get(String(productId))
+    if (!product) continue
+
+    // Skip products that don't track quantity
+    if (!product.trackQuantity) continue
+
+    // Skip products with backorder allowed
+    if (product.allowBackorder) continue
+
+    const requestedQty = item.quantity || 1
+
+    // Determine the color slug for variant lookup
+    let colorSlug: string | null = null
+    if (item.variant && typeof item.variant === 'object') {
+      const color = (item.variant as any).color
+      if (color && typeof color === 'object' && color.slug) {
+        colorSlug = String(color.slug)
+      } else if (typeof color === 'string') {
+        colorSlug = color
+      }
+    }
+
+    let availableStock: number | null = null
+
+    // Variant product: check per-color stock
+    if (
+      colorSlug &&
+      Array.isArray(product.colorVariants) &&
+      product.colorVariants.length > 0
+    ) {
+      // Find the variant by matching the color relationship's slug
+      // The color field is a relationship to the Colors collection
+      const variant = product.colorVariants.find((v: any) => {
+        if (v.enabled === false) return false
+        // color is a populated relationship object or just an ID
+        const colorRel = v.color
+        if (colorRel && typeof colorRel === 'object' && colorRel.slug) {
+          return String(colorRel.slug) === colorSlug
+        }
+        return false
+      })
+      if (variant) {
+        availableStock = Number(variant.stock) || 0
+      }
+    }
+
+    // Non-variant product or variant not found: use top-level quantity
+    if (availableStock === null) {
+      availableStock = Number(product.quantity) || 0
+    }
+
+    // Clamp the quantity
+    if (requestedQty > availableStock) {
+      const key = colorSlug
+        ? `${String(productId)}::${colorSlug}`
+        : String(productId)
+      clamped[key] = { requested: requestedQty, available: availableStock }
+      allOk = false
+    }
+  }
+
+  const error = !allOk
+    ? `Some items exceed available stock. Quantities have been adjusted.`
+    : undefined
+
+  return { ok: allOk, clamped, error }
+}
+
+/**
+ * Clamps cart item quantities to available stock in-place.
+ * Returns the items with quantities adjusted to not exceed available stock.
+ */
+export function applyStockClamp(
+  items: CartStockItem[],
+  clampResult: StockCheckResult,
+): CartStockItem[] {
+  if (clampResult.ok) return items
+
+  return items.map((item) => {
+    const productId =
+      typeof item.product === 'object' && item.product !== null
+        ? (item.product as any).id
+        : item.product
+
+    let colorSlug: string | null = null
+    if (item.variant && typeof item.variant === 'object') {
+      const color = (item.variant as any).color
+      if (color && typeof color === 'object' && color.slug) {
+        colorSlug = String(color.slug)
+      } else if (typeof color === 'string') {
+        colorSlug = color
+      }
+    }
+
+    const key = colorSlug
+      ? `${String(productId)}::${colorSlug}`
+      : String(productId)
+
+    const clamp = clampResult.clamped[key]
+    if (clamp) {
+      return {
+        ...item,
+        quantity: Math.max(1, clamp.available),
+      }
+    }
+    return item
+  })
 }

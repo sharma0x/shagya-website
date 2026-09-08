@@ -4,6 +4,7 @@ import config from '@payload-config'
 import { auth } from '@/lib/auth'
 import crypto from 'crypto'
 import { isSameAddress } from '@/lib/address-utils'
+import { validateCartStock, type CartStockItem } from '@/lib/stock'
 
 /**
  * Resolves the color identity from a cart item's variant JSON
@@ -133,6 +134,7 @@ export async function POST(request: Request) {
     let orderItems: any[]
     let subtotal = 0
     let cartId: string | number | null = null
+    let cart: any = null
     const resolveOrderItemColor = makeColorResolver(payload)
 
     if (isGuest && guestCartItems && guestCartItems.length > 0) {
@@ -161,7 +163,7 @@ export async function POST(request: Request) {
         limit: 1,
       } as any)
 
-      const cart = carts.docs[0] as any
+      cart = carts.docs[0] as any
 
       if (
         carts.docs.length === 0 ||
@@ -199,6 +201,49 @@ export async function POST(request: Request) {
           }
         }),
       )
+    }
+
+    // ── Server-side stock validation before order creation ──
+    const stockItems: CartStockItem[] = orderItems.map((item: any) => ({
+      product: item.product,
+      variant: null, // order items use color ID, we need to check via product ID + quantity
+      quantity: item.quantity || 1,
+    }))
+
+    // For variant products, we need to check per-color stock.
+    // Build stock items from the original cart/guest items with variant info.
+    const rawStockItems: CartStockItem[] = isGuest
+      ? (guestCartItems || []).map((item: any) => ({
+          product: item.product,
+          variant: item.variant,
+          quantity: item.quantity || 1,
+        }))
+      : (cart?.items || []).map((item: any) => ({
+          product:
+            typeof item.product === 'object' && item.product !== null
+              ? item.product.id
+              : item.product,
+          variant: item.variant,
+          quantity: item.quantity || 1,
+        }))
+
+    if (rawStockItems.length > 0) {
+      const stockCheck = await validateCartStock(payload, rawStockItems)
+      if (!stockCheck.ok) {
+        return NextResponse.json(
+          {
+            error:
+              'Some items are no longer in stock or have insufficient quantity. Please refresh your cart.',
+            details: Object.entries(stockCheck.clamped)
+              .map(
+                ([key, info]) =>
+                  `${key}: requested ${info.requested}, available ${info.available}`,
+              )
+              .join('; '),
+          },
+          { status: 409 },
+        )
+      }
     }
 
     const siteSettings = await payload.findGlobal({

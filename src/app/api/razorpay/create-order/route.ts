@@ -3,6 +3,7 @@ import { getPayload } from 'payload'
 import config from '@payload-config'
 import { auth } from '@/lib/auth'
 import Razorpay from 'razorpay'
+import { validateCartStock, type CartStockItem } from '@/lib/stock'
 
 export async function POST(request: Request) {
   try {
@@ -76,6 +77,56 @@ export async function POST(request: Request) {
             acc + (item.unitPrice || 0) * (item.quantity || 1),
           0,
         )
+    }
+
+    // ── Server-side stock validation ──
+    const stockItems: CartStockItem[] = isGuest
+      ? (guestCartItems || []).map((item: any) => ({
+          product: item.product,
+          variant: item.variant,
+          quantity: item.quantity || 1,
+        }))
+      : [] // logged-in user: validate from DB cart below
+
+    if (!isGuest && cartId) {
+      // Fetch cart items from DB to validate against current stock
+      const cartDoc = await payload.findByID({
+        collection: 'carts',
+        id: cartId,
+      } as any)
+      const cartItems = (cartDoc as any)?.items || []
+      for (const item of cartItems) {
+        const productId =
+          typeof item.product === 'object' && item.product !== null
+            ? item.product.id
+            : item.product
+        stockItems.push({
+          product: productId,
+          variant: item.variant,
+          quantity: item.quantity || 1,
+        })
+      }
+    }
+
+    if (stockItems.length > 0) {
+      const stockCheck = await validateCartStock(payload, stockItems)
+      if (!stockCheck.ok) {
+        // Find which items are out of stock for a clear error message
+        const outOfStockDetails = Object.entries(stockCheck.clamped)
+          .map(
+            ([key, info]) =>
+              `${key}: requested ${info.requested}, available ${info.available}`,
+          )
+          .join('; ')
+        return NextResponse.json(
+          {
+            error:
+              'Some items are no longer in stock or have insufficient quantity',
+            details: outOfStockDetails,
+          },
+          { status: 409 },
+        )
+      }
     }
 
     const siteSettings = await payload.findGlobal({
