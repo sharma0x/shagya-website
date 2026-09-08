@@ -364,11 +364,8 @@ export default buildConfig({
     }),
     searchPlugin({
       collections: ['products', 'pages', 'posts'],
-      syncDrafts: true,
+      syncDrafts: false,
       beforeSync: ({ originalDoc, searchDoc }) => {
-        if (originalDoc?.status && originalDoc.status !== 'published') {
-          return null as any
-        }
         const extraText = extractSearchText(originalDoc)
         const baseTitle =
           originalDoc.title || originalDoc.name || searchDoc.title || ''

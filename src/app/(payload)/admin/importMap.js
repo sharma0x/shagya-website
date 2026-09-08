@@ -29,6 +29,7 @@ import { MetaTitleComponent as MetaTitleComponent_a8a977ebc872c5d5ea7ee689724c08
 import { MetaDescriptionComponent as MetaDescriptionComponent_a8a977ebc872c5d5ea7ee689724c0860 } from '@payloadcms/plugin-seo/client'
 import { MetaImageComponent as MetaImageComponent_a8a977ebc872c5d5ea7ee689724c0860 } from '@payloadcms/plugin-seo/client'
 import { PreviewComponent as PreviewComponent_a8a977ebc872c5d5ea7ee689724c0860 } from '@payloadcms/plugin-seo/client'
+import { SyncSmartCollectionButton as SyncSmartCollectionButton_ce5f763b3bf1c95f1af1ffe9941171e0 } from '@/components/SyncSmartCollectionButton'
 import { LinkToDoc as LinkToDoc_aead06e4cbf6b2620c5c51c9ab283634 } from '@payloadcms/plugin-search/client'
 import { ReindexButton as ReindexButton_aead06e4cbf6b2620c5c51c9ab283634 } from '@payloadcms/plugin-search/client'
 import { AdminIcon as AdminIcon_7a969c861589af9322f5d573a708d2fb } from '@/components/payload/AdminIcon'
@@ -103,6 +104,8 @@ export const importMap = {
     MetaImageComponent_a8a977ebc872c5d5ea7ee689724c0860,
   '@payloadcms/plugin-seo/client#PreviewComponent':
     PreviewComponent_a8a977ebc872c5d5ea7ee689724c0860,
+  '@/components/SyncSmartCollectionButton#SyncSmartCollectionButton':
+    SyncSmartCollectionButton_ce5f763b3bf1c95f1af1ffe9941171e0,
   '@payloadcms/plugin-search/client#LinkToDoc':
     LinkToDoc_aead06e4cbf6b2620c5c51c9ab283634,
   '@payloadcms/plugin-search/client#ReindexButton':

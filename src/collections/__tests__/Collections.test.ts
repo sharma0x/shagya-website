@@ -58,8 +58,8 @@ describe('Collections collection', () => {
       expect(field?.relationTo).toBe('media')
     })
 
-    it('has exactly 4 fields (no parent)', () => {
-      expect(Collections.fields).toHaveLength(4)
+    it('has exactly 8 fields (no parent)', () => {
+      expect(Collections.fields).toHaveLength(8)
     })
   })
 

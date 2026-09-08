@@ -58,12 +58,12 @@ describe('Products collection', () => {
   })
 
   describe('Slug generation hook', () => {
-    it('generates lowercase slug from name', () => {
+    it('generates lowercase slug from name', async () => {
       const hook = Products.hooks?.beforeChange?.[0]
       expect(hook).toBeDefined()
       if (!hook) return
 
-      const result = hook({
+      const result = await hook({
         data: { name: 'Banarasi Silk Saree' },
         operation: 'create',
       } as any)
@@ -71,11 +71,11 @@ describe('Products collection', () => {
       expect(result.slug).toBe('banarasi-silk-saree')
     })
 
-    it('replaces spaces with dashes', () => {
+    it('replaces spaces with dashes', async () => {
       const hook = Products.hooks?.beforeChange?.[0]
       if (!hook) return
 
-      const result = hook({
+      const result = await hook({
         data: { name: 'Pure Cotton  Saree  ' },
         operation: 'create',
       } as any)
@@ -83,11 +83,11 @@ describe('Products collection', () => {
       expect(result.slug).toBe('pure-cotton-saree')
     })
 
-    it('removes special characters', () => {
+    it('removes special characters', async () => {
       const hook = Products.hooks?.beforeChange?.[0]
       if (!hook) return
 
-      const result = hook({
+      const result = await hook({
         data: { name: 'Bandhani Silk (Pure) @ ₹5000!' },
         operation: 'create',
       } as any)
