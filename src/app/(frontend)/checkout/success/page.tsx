@@ -103,8 +103,13 @@ export default function CheckoutSuccessPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-[75vh] items-center justify-center bg-neutral-50">
-          <div className="text-neutral-500">Loading...</div>
+        <div className="bg-surface flex min-h-[75vh] items-center justify-center">
+          <div className="flex flex-col items-center gap-3">
+            <div className="border-brand-600 h-8 w-8 animate-spin rounded-full border-2 border-t-transparent" />
+            <p className="font-body text-xs text-neutral-400">
+              Loading order details...
+            </p>
+          </div>
         </div>
       }
     >
