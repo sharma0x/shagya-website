@@ -110,6 +110,7 @@ help: ## Show this help message
 	@echo "  make db-migrate       Run pending migrations"
 	@echo "  make db-migrate-create Create a new migration (MSG='description')"
 	@echo "  make db-generate-types Generate Payload TypeScript types"
+	@echo "  make seed-admin       Create super-admin using .env (SEED_ADMIN_EMAIL, SEED_ADMIN_PASSWORD)"
 	@echo ""
 	@echo "Utilities:"
 	@echo "  make setup            First-time environment setup"
@@ -286,6 +287,10 @@ provision-destroy: ## DESTROY RDS + VPS (needs confirmation; blocked by prevent_
 # ============================================================================
 # Database
 # ============================================================================
+
+seed-admin: ## Create super admin user from .env variables
+	@echo "Creating admin user from .env..."
+	@node --env-file=.env --import tsx/esm scripts/create-admin.ts
 
 db-migrate: ## Run pending database migrations
 	pnpm payload migrate

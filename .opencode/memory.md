@@ -151,3 +151,21 @@ ENV_FILE=.env IMAGE_TAG=testing DOCKER_IMAGE=ghcr.io/sharma0x/shagya-website doc
 - `NEXT_PUBLIC_SERVER_URL` is read **at runtime, server-side** (`src/lib/env.ts` `getServerURL`) for Payload `serverURL` + CORS/CSRF + Better Auth `trustedOrigins`/`rpID`. It's NOT inlined client-side except via `ProductShareButton` (build-time, effectively undefined in CI image).
 - **Dual-origin (domain + IP)**: set `NEXT_PUBLIC_SERVER_URL` to the canonical domain and add `EXTRA_ALLOWED_ORIGINS=https://<IP>`; `getAllowedOrigins()` (env.ts) appends it. Otherwise admin/CSRF/checkout via the non-serverURL origin 403s.
 - Caddy env vars come from the container env; caddy service uses `env_file: ${ENV_FILE:-.env.production}` so `{$PUBLIC_IP}` / `{$DOMAIN_NAME}` resolve. Don't put `environment:` overrides on caddy — they take precedence over env_file.
+
+## Homepage Hero From Admin — Creation Workaround (2026-09-07)
+
+- Root cause of "homepage shows static image": the Pages collection was **empty**. `src/app/(frontend)/page.tsx` fetches by `slug: 'home'`; with no doc it falls back to `/images/hero/hero-main.png`.
+- **`/admin/collections/pages/create` is BROKEN** (the CLO-3 admin SSR bug): it server-redirects to the list with `?notFound=N`. Cannot create a Page (or upload media) through the admin create forms.
+- Fix path (use it instead of fighting the admin UI): a local-API script like `scripts/create-home-hero.ts`, run with `node --env-file=.env --import tsx/esm scripts/create-home-hero.ts`. It uploads media via `payload.create({ collection:'media', data:{alt}, file:{data,name,mimetype,size} })` then upserts the Page.
+- Upload a media file the right way: `data: { alt: '...' }` + `file: { data: <Buffer>, name, mimetype, size }` in one `payload.create` call. `overrideAccess: true` bypasses access control.
+- To make a Page publicly visible: MUST set BOTH `status: 'published'` and `_status: 'published'` in the data (anonymous read filters on `_status`). Just the custom `status` field is ignored for visibility.
+- **Editing an existing doc WORKS**: `/admin/collections/pages/<id>` renders the full form (Hero block, slide Images array, Background Image, reorder, links) — only *creating new* and *uploading brand-new media* via the admin UI are affected by CLO-3. If a media file already exists in the Media collection, you can pick it via "Choose from existing" and it works.
+- Home page id 8 (slug `home`): slides hero-1.jpg + hero-2.jpg (Media ids 1,2), background hero-main.png (id 3), on MinIO at `/shayga-media/hero-*.jpg`.
+- Dev server died mid-session (unresponsive → `lsof :3000` empty). Restart with `nohup pnpm dev > /tmp/shayga-dev.log 2>&1 &`. Autosave drafts don't survive a crash; published versions are safe.
+
+## Pages Collection Scope + Seed `_status` Bug for Pages (2026-09-08)
+
+- The `pages` collection is for **ALL static pages**, not just Home. `scripts/seed-data.ts` defines **26 pages** (`export const pages` at line ~1659): Home, About, FAQ, Contact, Privacy, Terms, Careers, Shipping & Returns, plus sub-page docs (delivery options, return policies, careers roles, impact/about sub-pages, etc.). Frontend routes (`/about`, `/faq`, `/privacy`, ...) fetch these by slug — no doc = placeholder/404.
+- **Local DB was simply unseeded**, not intentionally empty: counts via local API → products=0, categories=0, collections=0, coupons=0 (tags=10, brands=5 = partial leftovers). `make seed-local` is the intended way to populate everything (download images → `scripts/seed.ts`).
+- **Verified empirically (pages, matches the known Posts bug):** creating a Page with only `status: 'published'` but NO `_status` → returned doc has `_status: 'draft'` → **invisible** to anonymous REST (`GET /api/pages?...` → `totalDocs: 0`). `seedPages` in `scripts/seed.ts` (line ~627) passes `status` but NOT `_status`, so any seeded pages would ALSO be drafts. Same one-line fix the posts got: add `_status: page.status === 'published' ? 'published' : 'draft'` to the create data.
+- Gotcha: local-API `payload.find` without `overrideAccess` may still return draft rows (observed `totalDocs=1`), while anonymous REST correctly returns 0. **REST is the source of truth for public visibility**, the same one the frontend uses.
