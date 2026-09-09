@@ -81,7 +81,7 @@ export function ProductGallery({
 
   return (
     <div className="mx-auto flex w-full max-w-[460px] flex-col gap-3">
-      {/* Main image with touch swipe + hover magnifier */}
+      {/* Main image with touch swipe + hover/pinch zoom */}
       <div className="group relative overflow-hidden rounded-2xl bg-neutral-100">
         <div ref={emblaRef} className="overflow-hidden">
           <div className="flex touch-pan-y">
