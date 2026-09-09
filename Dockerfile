@@ -9,6 +9,8 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV PAYLOAD_SECRET=build-placeholder-secret-32-chars-long
 ENV BETTER_AUTH_SECRET=build-placeholder-secret-32-chars-long
 ENV NEXT_PUBLIC_SERVER_URL=http://localhost:3000
+ARG NEXT_PUBLIC_RAZORPAY_KEY_ID
+ENV NEXT_PUBLIC_RAZORPAY_KEY_ID=$NEXT_PUBLIC_RAZORPAY_KEY_ID
 
 RUN apk add --no-cache python3 make g++
 COPY package.json pnpm-lock.yaml ./
