@@ -28,6 +28,7 @@ function buildWhere(
   collectionId: number,
 ) {
   const where: Record<string, any> = {
+    _status: { equals: 'published' },
     collections: { contains: collectionId },
     status: { equals: 'published' },
   }

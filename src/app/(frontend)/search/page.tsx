@@ -101,6 +101,7 @@ export default async function SearchPage({
     if (hasFilters) {
       // Bypass FTS — query products directly with where clause + search term
       const where = buildWhereClause(filterParams, {
+        _status: { equals: 'published' },
         name: { like: q },
         status: { equals: 'published' },
       })

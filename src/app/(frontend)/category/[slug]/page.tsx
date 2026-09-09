@@ -55,6 +55,7 @@ const WEAVES = [
 
 function buildWhere(sParams: FilterParams, slug: string) {
   const where: Record<string, any> = {
+    _status: { equals: 'published' },
     status: { equals: 'published' },
   }
 

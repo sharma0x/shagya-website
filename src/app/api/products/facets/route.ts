@@ -62,6 +62,7 @@ export async function GET(request: Request): Promise<NextResponse> {
 
     // Build base where matching the current product filters
     const baseWhere: Record<string, any> = {
+      _status: { equals: 'published' },
       status: { equals: 'published' },
     }
 

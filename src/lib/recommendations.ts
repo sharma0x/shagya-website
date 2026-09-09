@@ -24,6 +24,7 @@ export async function getRelatedProducts(
       where: {
         id: { not_equals: productId },
         fabric: { equals: fabric },
+        _status: { equals: 'published' },
         status: { equals: 'published' },
       },
       limit: 8,
@@ -40,6 +41,7 @@ export async function getRelatedProducts(
       where: {
         id: { not_equals: productId },
         weave: { equals: weave },
+        _status: { equals: 'published' },
         status: { equals: 'published' },
       },
       limit: 8,
@@ -56,6 +58,7 @@ export async function getRelatedProducts(
       where: {
         id: { not_equals: productId },
         collections: { in: collectionIds },
+        _status: { equals: 'published' },
         status: { equals: 'published' },
       },
       limit: 6,
@@ -86,6 +89,7 @@ export async function getTrendingProducts(limit = 6) {
   const res = await payload.find({
     collection: 'products',
     where: {
+      _status: { equals: 'published' },
       status: { equals: 'published' },
       purchaseCount: { greater_than: 0 },
     },
@@ -106,6 +110,7 @@ export async function getProductsByIds(ids: (string | number)[]) {
     collection: 'products',
     where: {
       id: { in: ids },
+      _status: { equals: 'published' },
       status: { equals: 'published' },
     },
     limit: ids.length,

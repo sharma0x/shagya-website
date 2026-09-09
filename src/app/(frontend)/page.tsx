@@ -310,6 +310,7 @@ async function HomeProductSpotlightsSection() {
       collection: 'products',
       where: {
         and: [
+          { _status: { equals: 'published' } },
           { status: { equals: 'published' } },
           { createdAt: { greater_than: THIRTY_DAYS_AGO } },
         ],
@@ -343,7 +344,12 @@ async function HomeProductSpotlightsSection() {
   if (newArrivalsRes.totalDocs === 0) {
     newArrivalsRes = await payload.find({
       collection: 'products',
-      where: { status: { equals: 'published' } },
+      where: {
+        and: [
+          { _status: { equals: 'published' } },
+          { status: { equals: 'published' } },
+        ],
+      },
       limit: 2,
       sort: '-createdAt',
       depth: 2,
@@ -374,7 +380,13 @@ async function HomeProductSpotlightsSection() {
     const topIds = sortedProductIds.slice(0, 2)
     const trendingRes = await payload.find({
       collection: 'products',
-      where: { id: { in: topIds } },
+      where: {
+        and: [
+          { _status: { equals: 'published' } },
+          { status: { equals: 'published' } },
+          { id: { in: topIds } },
+        ],
+      },
       limit: 2,
       depth: 2,
     })
@@ -385,6 +397,7 @@ async function HomeProductSpotlightsSection() {
       collection: 'products',
       where: {
         and: [
+          { _status: { equals: 'published' } },
           { status: { equals: 'published' } },
           { id: { not_in: [...newArrivalIds] } },
         ],
@@ -399,6 +412,7 @@ async function HomeProductSpotlightsSection() {
   const trendingIds = new Set(trendingNow.map((p) => p.id))
 
   const bestOffersWhere: any[] = [
+    { _status: { equals: 'published' } },
     { status: { equals: 'published' } },
     { compareAtPrice: { exists: true } },
   ]
@@ -509,7 +523,12 @@ async function HomeBestSellersSection({
   const payload = await getPayload({ config })
   const allProductsRes = await payload.find({
     collection: 'products',
-    where: { status: { equals: 'published' } },
+    where: {
+      and: [
+        { _status: { equals: 'published' } },
+        { status: { equals: 'published' } },
+      ],
+    },
     limit: 12,
     sort: '-createdAt',
     depth: 2,

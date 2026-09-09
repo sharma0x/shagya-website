@@ -279,6 +279,7 @@ export default async function ProductDetailPage({
           collection: 'products',
           where: {
             and: [
+              { _status: { equals: 'published' } },
               { id: { equals: productId } },
               { status: { equals: 'published' } },
             ],

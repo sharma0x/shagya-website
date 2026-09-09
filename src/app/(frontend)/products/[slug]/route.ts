@@ -21,6 +21,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
   const { docs } = await payload.find({
     collection: 'products',
     where: {
+      _status: { equals: 'published' },
       slug: { equals: slug },
       status: { equals: 'published' },
     },
