@@ -49,7 +49,7 @@ const topNav = [
   { label: 'About Us', href: '/about' },
 ]
 
-export function Header({ taxonomies }: { taxonomies?: any }) {
+export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [mobileSareesOpen, setMobileSareesOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
@@ -58,6 +58,12 @@ export function Header({ taxonomies }: { taxonomies?: any }) {
     announcements: { text: string; link?: string }[]
   } | null>(null)
   const [activeAnnouncement, setActiveAnnouncement] = useState(0)
+  const [taxonomies, setTaxonomies] = useState<{
+    categories?: { name: string; slug: string }[]
+    fabricTypes?: { name: string; slug: string }[]
+    brands?: { name: string; slug: string }[]
+    occasions?: { name: string; slug: string }[]
+  } | null>(null)
   const announcementTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const { items } = useCart()
   const { data: sessionData } = useSession()
@@ -92,6 +98,33 @@ export function Header({ taxonomies }: { taxonomies?: any }) {
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (data?.announcementBar) setAnnouncement(data.announcementBar)
+      })
+      .catch(() => {})
+
+    // Fetch taxonomy nav menus client-side to keep the layout free of DB reads
+    Promise.all([
+      fetch('/api/categories?limit=100&depth=0').then((r) =>
+        r.ok ? r.json() : null,
+      ),
+      fetch('/api/fabric-types?limit=100&depth=0').then((r) =>
+        r.ok ? r.json() : null,
+      ),
+      fetch('/api/brands?limit=100&depth=0').then((r) =>
+        r.ok ? r.json() : null,
+      ),
+      fetch('/api/occasions?limit=100&depth=0').then((r) =>
+        r.ok ? r.json() : null,
+      ),
+    ])
+      .then(([cats, fabrics, brands, occasions]) => {
+        if (cats || fabrics || brands || occasions) {
+          setTaxonomies({
+            categories: cats?.docs || [],
+            fabricTypes: fabrics?.docs || [],
+            brands: brands?.docs || [],
+            occasions: occasions?.docs || [],
+          })
+        }
       })
       .catch(() => {})
   }, [])
