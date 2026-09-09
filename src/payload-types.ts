@@ -672,6 +672,43 @@ export interface Order {
    * Shipping method chosen at checkout
    */
   shippingType: 'standard' | 'express';
+  /**
+   * Delhivery fulfilment details (managed by the ship endpoint)
+   */
+  delhivery?: {
+    /**
+     * Delhivery waybill / AWB number
+     */
+    waybill?: string | null;
+    /**
+     * Last known Delhivery scan status
+     */
+    status?: string | null;
+    /**
+     * URL of the generated shipping label PDF
+     */
+    labelUrl?: string | null;
+    /**
+     * Delhivery pickup request id
+     */
+    pickupRequestId?: string | null;
+    /**
+     * Raw create.json response for debugging
+     */
+    manifestResponse?:
+      | {
+          [k: string]: unknown;
+        }
+      | unknown[]
+      | string
+      | number
+      | boolean
+      | null;
+    /**
+     * Set when the order was manifested with Delhivery
+     */
+    shippedViaDelhivery?: boolean | null;
+  };
   shippingAddress?: {
     fullName?: string | null;
     phone?: string | null;
@@ -1669,6 +1706,16 @@ export interface OrdersSelect<T extends boolean = true> {
   trackingId?: T;
   trackingUrl?: T;
   shippingType?: T;
+  delhivery?:
+    | T
+    | {
+        waybill?: T;
+        status?: T;
+        labelUrl?: T;
+        pickupRequestId?: T;
+        manifestResponse?: T;
+        shippedViaDelhivery?: T;
+      };
   shippingAddress?:
     | T
     | {

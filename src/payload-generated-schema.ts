@@ -1277,6 +1277,12 @@ export const orders = pgTable(
     shippingType: enum_orders_shipping_type('shipping_type')
       .notNull()
       .default('standard'),
+    delhivery_waybill: varchar('delhivery_waybill'),
+    delhivery_status: varchar('delhivery_status'),
+    delhivery_labelUrl: varchar('delhivery_label_url'),
+    delhivery_pickupRequestId: varchar('delhivery_pickup_request_id'),
+    delhivery_manifestResponse: jsonb('delhivery_manifest_response'),
+    delhivery_shippedViaDelhivery: boolean('delhivery_shipped_via_delhivery'),
     shippingAddress_fullName: varchar('shipping_address_full_name'),
     shippingAddress_phone: varchar('shipping_address_phone'),
     shippingAddress_line1: varchar('shipping_address_line1'),

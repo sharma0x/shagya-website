@@ -2,6 +2,13 @@ import type { CollectionConfig } from 'payload'
 import { sendWebhook } from '@/lib/webhooks'
 import { sendOrderPlacedEmails, sendOrderStatusEmails } from '@/email/send'
 import { applyStockDecrement, type StockOrderItem } from '@/lib/stock'
+import { shipOrderWithDelhivery } from '@/lib/delhivery/ship-order'
+import {
+  createPickupRequest,
+  generateLabel,
+  trackShipment,
+} from '@/lib/delhivery/fulfillment'
+import { mapScanToOrderStatus } from '@/lib/delhivery/mapping'
 
 /**
  * Runs email, webhook, event-log, and purchaseCount side-effects.
@@ -281,6 +288,222 @@ export const Orders: CollectionConfig = {
       },
     ],
   },
+  endpoints: [
+    {
+      path: '/:id/delhivery/ship',
+      method: 'post',
+      handler: async (req) => {
+        if (!req.user) {
+          return Response.json({ error: 'Unauthorized' }, { status: 403 })
+        }
+        const orderId = req.routeParams?.id as string
+        if (!orderId) {
+          return Response.json({ error: 'Missing order id' }, { status: 400 })
+        }
+        try {
+          const result = await shipOrderWithDelhivery(req.payload, orderId)
+          if (!result.ok) {
+            return Response.json(
+              { error: result.reason },
+              { status: result.status },
+            )
+          }
+          return Response.json(result)
+        } catch (error) {
+          req.payload.logger.error(
+            `[Delhivery] ship failed for order ${orderId}: ${error}`,
+          )
+          return Response.json({ error: 'Internal error' }, { status: 500 })
+        }
+      },
+    },
+    {
+      path: '/:id/delhivery/label',
+      method: 'get',
+      handler: async (req) => {
+        if (!req.user) {
+          return Response.json({ error: 'Unauthorized' }, { status: 403 })
+        }
+        const orderId = req.routeParams?.id as string
+        if (!orderId) {
+          return Response.json({ error: 'Missing order id' }, { status: 400 })
+        }
+        try {
+          const order = await req.payload.findByID({
+            collection: 'orders',
+            id: orderId,
+            depth: 0,
+          })
+          const waybill = (order as any)?.delhivery?.waybill as
+            | string
+            | undefined
+          if (!waybill) {
+            return Response.json(
+              { error: 'Order has no Delhivery waybill' },
+              { status: 400 },
+            )
+          }
+          const { pdfUrl } = await generateLabel(waybill)
+          await req.payload.update({
+            collection: 'orders',
+            id: orderId,
+            data: { delhivery: { labelUrl: pdfUrl } },
+          })
+          return Response.json({ ok: true, labelUrl: pdfUrl })
+        } catch (error) {
+          req.payload.logger.error(
+            `[Delhivery] label failed for order ${orderId}: ${error}`,
+          )
+          return Response.json({ error: 'Internal error' }, { status: 500 })
+        }
+      },
+    },
+    {
+      path: '/:id/delhivery/pickup',
+      method: 'post',
+      handler: async (req) => {
+        if (!req.user) {
+          return Response.json({ error: 'Unauthorized' }, { status: 403 })
+        }
+        const orderId = req.routeParams?.id as string
+        if (!orderId) {
+          return Response.json({ error: 'Missing order id' }, { status: 400 })
+        }
+        try {
+          const body = (await req.json?.()) ?? {}
+          const now = new Date()
+          const pickupTime =
+            body.pickupTime ??
+            `${String(now.getHours() + 1).padStart(2, '0')}:00:00`
+          const pickupDate = body.pickupDate ?? now.toISOString().slice(0, 10)
+          const response = await createPickupRequest({
+            pickupTime,
+            pickupDate,
+            expectedPackageCount: Number(body.expectedPackageCount ?? 1),
+          })
+          if (response.pickupRequestId) {
+            await req.payload.update({
+              collection: 'orders',
+              id: orderId,
+              data: {
+                delhivery: { pickupRequestId: response.pickupRequestId },
+              },
+            })
+          }
+          return Response.json({ ok: true, ...response })
+        } catch (error: any) {
+          if (String(error?.message ?? '').includes('open')) {
+            return Response.json(
+              { error: 'A pickup request is already open for this location' },
+              { status: 409 },
+            )
+          }
+          req.payload.logger.error(
+            `[Delhivery] pickup failed for order ${orderId}: ${error}`,
+          )
+          return Response.json({ error: 'Internal error' }, { status: 500 })
+        }
+      },
+    },
+    {
+      path: '/:id/delhivery/track',
+      method: 'get',
+      handler: async (req) => {
+        if (!req.user) {
+          return Response.json({ error: 'Unauthorized' }, { status: 403 })
+        }
+        const orderId = req.routeParams?.id as string
+        if (!orderId) {
+          return Response.json({ error: 'Missing order id' }, { status: 400 })
+        }
+        try {
+          const order = await req.payload.findByID({
+            collection: 'orders',
+            id: orderId,
+            depth: 0,
+          })
+          const waybill = (order as any)?.delhivery?.waybill as
+            | string
+            | undefined
+          if (!waybill) {
+            return Response.json(
+              { error: 'Order has no Delhivery waybill' },
+              { status: 400 },
+            )
+          }
+          const tracking = await trackShipment(waybill)
+          const latestStatus = tracking?.shipments?.[0]?.Shipment_Status
+          if (latestStatus) {
+            await req.payload.update({
+              collection: 'orders',
+              id: orderId,
+              data: { delhivery: { status: latestStatus } },
+            })
+          }
+          return Response.json({ ok: true, status: latestStatus, ...tracking })
+        } catch (error) {
+          req.payload.logger.error(
+            `[Delhivery] track failed for order ${orderId}: ${error}`,
+          )
+          return Response.json({ error: 'Internal error' }, { status: 500 })
+        }
+      },
+    },
+    {
+      path: '/:id/delhivery/sync',
+      method: 'post',
+      handler: async (req) => {
+        if (!req.user) {
+          return Response.json({ error: 'Unauthorized' }, { status: 403 })
+        }
+        const orderId = req.routeParams?.id as string
+        if (!orderId) {
+          return Response.json({ error: 'Missing order id' }, { status: 400 })
+        }
+        try {
+          const order = await req.payload.findByID({
+            collection: 'orders',
+            id: orderId,
+            depth: 0,
+          })
+          const waybill = (order as any)?.delhivery?.waybill as
+            | string
+            | undefined
+          if (!waybill) {
+            return Response.json(
+              { error: 'Order has no Delhivery waybill' },
+              { status: 400 },
+            )
+          }
+          const tracking = await trackShipment(waybill)
+          const latestStatus = tracking?.shipments?.[0]?.Shipment_Status
+          if (!latestStatus) {
+            return Response.json({ ok: true, action: 'none' })
+          }
+          const mapped = mapScanToOrderStatus({
+            status_type: 'DL',
+            status: latestStatus,
+          })
+          if (mapped.action === 'update' && order.status !== mapped.status) {
+            await req.payload.update({
+              collection: 'orders',
+              id: orderId,
+              data: {
+                status: mapped.status,
+                delhivery: { status: latestStatus },
+              },
+            })
+          }
+          return Response.json({ ok: true, action: mapped.action })
+        } catch (error) {
+          req.payload.logger.error(
+            `[Delhivery] sync failed for order ${orderId}: ${error}`,
+          )
+          return Response.json({ error: 'Internal error' }, { status: 500 })
+        }
+      },
+    },
+  ],
   fields: [
     {
       name: 'orderNumber',
@@ -412,6 +635,64 @@ export const Orders: CollectionConfig = {
         { label: 'Express', value: 'express' },
       ],
       admin: { description: 'Shipping method chosen at checkout' },
+    },
+    {
+      name: 'delhivery',
+      type: 'group',
+      admin: {
+        description:
+          'Delhivery fulfilment details (managed by the ship endpoint)',
+      },
+      fields: [
+        {
+          name: 'waybill',
+          type: 'text',
+          admin: {
+            readOnly: true,
+            description: 'Delhivery waybill / AWB number',
+          },
+        },
+        {
+          name: 'status',
+          type: 'text',
+          admin: {
+            readOnly: true,
+            description: 'Last known Delhivery scan status',
+          },
+        },
+        {
+          name: 'labelUrl',
+          type: 'text',
+          admin: {
+            readOnly: true,
+            description: 'URL of the generated shipping label PDF',
+          },
+        },
+        {
+          name: 'pickupRequestId',
+          type: 'text',
+          admin: {
+            readOnly: true,
+            description: 'Delhivery pickup request id',
+          },
+        },
+        {
+          name: 'manifestResponse',
+          type: 'json',
+          admin: {
+            readOnly: true,
+            description: 'Raw create.json response for debugging',
+          },
+        },
+        {
+          name: 'shippedViaDelhivery',
+          type: 'checkbox',
+          admin: {
+            readOnly: true,
+            description: 'Set when the order was manifested with Delhivery',
+          },
+        },
+      ],
     },
     {
       name: 'shippingAddress',
