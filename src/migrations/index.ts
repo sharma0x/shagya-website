@@ -24,6 +24,7 @@ import * as migration_20260901_222400_convert_product_occasion_to_occasions_rela
 import * as migration_20260902_000000_add_smart_collections_rules from './20260902_000000_add_smart_collections_rules'
 import * as migration_20260909_000000_add_order_delhivery_fulfilment_fields from './20260909_000000_add_order_delhivery_fulfilment_fields'
 import * as migration_20260910_000000_add_archived_to_products_status_enums from './20260910_000000_add_archived_to_products_status_enums'
+import * as migration_20260910_235500_admin_notification_emails_array from './20260910_235500_admin_notification_emails_array'
 
 export const migrations = [
   {
@@ -155,5 +156,10 @@ export const migrations = [
     up: migration_20260910_000000_add_archived_to_products_status_enums.up,
     down: migration_20260910_000000_add_archived_to_products_status_enums.down,
     name: '20260910_000000_add_archived_to_products_status_enums',
+  },
+  {
+    up: migration_20260910_235500_admin_notification_emails_array.up,
+    down: migration_20260910_235500_admin_notification_emails_array.down,
+    name: '20260910_235500_admin_notification_emails_array',
   },
 ]

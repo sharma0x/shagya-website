@@ -3677,6 +3677,29 @@ export const payload_migrations = pgTable(
   ],
 )
 
+export const site_settings_admin_notification_emails = pgTable(
+  'site_settings_admin_notification_emails',
+  {
+    _order: integer('_order').notNull(),
+    _parentID: integer('_parent_id').notNull(),
+    id: varchar('id').primaryKey(),
+    email: varchar('email'),
+  },
+  (columns) => [
+    index('site_settings_admin_notification_emails_order_idx').on(
+      columns._order,
+    ),
+    index('site_settings_admin_notification_emails_parent_id_idx').on(
+      columns._parentID,
+    ),
+    foreignKey({
+      columns: [columns['_parentID']],
+      foreignColumns: [site_settings.id],
+      name: 'site_settings_admin_notification_emails_parent_id_fk',
+    }).onDelete('cascade'),
+  ],
+)
+
 export const site_settings_trust_signals = pgTable(
   'site_settings_trust_signals',
   {
@@ -3734,7 +3757,6 @@ export const site_settings = pgTable(
     favicon: integer('favicon_id').references(() => media.id, {
       onDelete: 'set null',
     }),
-    adminNotificationEmail: varchar('admin_notification_email'),
     contactEmail: varchar('contact_email'),
     contactPhone: varchar('contact_phone'),
     address: varchar('address'),
@@ -3798,6 +3820,30 @@ export const site_settings_rels = pgTable(
       columns: [columns['couponsID']],
       foreignColumns: [coupons.id],
       name: 'site_settings_rels_coupons_fk',
+    }).onDelete('cascade'),
+  ],
+)
+
+export const _site_settings_v_version_admin_notification_emails = pgTable(
+  '_site_settings_v_version_admin_notification_emails',
+  {
+    _order: integer('_order').notNull(),
+    _parentID: integer('_parent_id').notNull(),
+    id: serial('id').primaryKey(),
+    email: varchar('email'),
+    _uuid: varchar('_uuid'),
+  },
+  (columns) => [
+    index('_site_settings_v_version_admin_notification_emails_order_idx').on(
+      columns._order,
+    ),
+    index(
+      '_site_settings_v_version_admin_notification_emails_parent_id_idx',
+    ).on(columns._parentID),
+    foreignKey({
+      columns: [columns['_parentID']],
+      foreignColumns: [_site_settings_v.id],
+      name: '_site_settings_v_version_admin_notification_emails_parent_id_fk',
     }).onDelete('cascade'),
   ],
 )
@@ -3867,7 +3913,6 @@ export const _site_settings_v = pgTable(
     version_favicon: integer('version_favicon_id').references(() => media.id, {
       onDelete: 'set null',
     }),
-    version_adminNotificationEmail: varchar('version_admin_notification_email'),
     version_contactEmail: varchar('version_contact_email'),
     version_contactPhone: varchar('version_contact_phone'),
     version_address: varchar('version_address'),
@@ -5268,6 +5313,16 @@ export const relations_payload_migrations = relations(
   payload_migrations,
   () => ({}),
 )
+export const relations_site_settings_admin_notification_emails = relations(
+  site_settings_admin_notification_emails,
+  ({ one }) => ({
+    _parentID: one(site_settings, {
+      fields: [site_settings_admin_notification_emails._parentID],
+      references: [site_settings.id],
+      relationName: 'adminNotificationEmails',
+    }),
+  }),
+)
 export const relations_site_settings_trust_signals = relations(
   site_settings_trust_signals,
   ({ one }) => ({
@@ -5316,6 +5371,9 @@ export const relations_site_settings = relations(
       references: [media.id],
       relationName: 'favicon',
     }),
+    adminNotificationEmails: many(site_settings_admin_notification_emails, {
+      relationName: 'adminNotificationEmails',
+    }),
     trustSignals: many(site_settings_trust_signals, {
       relationName: 'trustSignals',
     }),
@@ -5330,6 +5388,14 @@ export const relations_site_settings = relations(
     }),
   }),
 )
+export const relations__site_settings_v_version_admin_notification_emails =
+  relations(_site_settings_v_version_admin_notification_emails, ({ one }) => ({
+    _parentID: one(_site_settings_v, {
+      fields: [_site_settings_v_version_admin_notification_emails._parentID],
+      references: [_site_settings_v.id],
+      relationName: 'version_adminNotificationEmails',
+    }),
+  }))
 export const relations__site_settings_v_version_trust_signals = relations(
   _site_settings_v_version_trust_signals,
   ({ one }) => ({
@@ -5381,6 +5447,12 @@ export const relations__site_settings_v = relations(
       references: [media.id],
       relationName: 'version_favicon',
     }),
+    version_adminNotificationEmails: many(
+      _site_settings_v_version_admin_notification_emails,
+      {
+        relationName: 'version_adminNotificationEmails',
+      },
+    ),
     version_trustSignals: many(_site_settings_v_version_trust_signals, {
       relationName: 'version_trustSignals',
     }),
@@ -5541,10 +5613,12 @@ type DatabaseSchema = {
   payload_preferences: typeof payload_preferences
   payload_preferences_rels: typeof payload_preferences_rels
   payload_migrations: typeof payload_migrations
+  site_settings_admin_notification_emails: typeof site_settings_admin_notification_emails
   site_settings_trust_signals: typeof site_settings_trust_signals
   site_settings_announcement_bar_announcements: typeof site_settings_announcement_bar_announcements
   site_settings: typeof site_settings
   site_settings_rels: typeof site_settings_rels
+  _site_settings_v_version_admin_notification_emails: typeof _site_settings_v_version_admin_notification_emails
   _site_settings_v_version_trust_signals: typeof _site_settings_v_version_trust_signals
   _site_settings_v_version_announcement_bar_announcements: typeof _site_settings_v_version_announcement_bar_announcements
   _site_settings_v: typeof _site_settings_v
@@ -5644,10 +5718,12 @@ type DatabaseSchema = {
   relations_payload_preferences_rels: typeof relations_payload_preferences_rels
   relations_payload_preferences: typeof relations_payload_preferences
   relations_payload_migrations: typeof relations_payload_migrations
+  relations_site_settings_admin_notification_emails: typeof relations_site_settings_admin_notification_emails
   relations_site_settings_trust_signals: typeof relations_site_settings_trust_signals
   relations_site_settings_announcement_bar_announcements: typeof relations_site_settings_announcement_bar_announcements
   relations_site_settings_rels: typeof relations_site_settings_rels
   relations_site_settings: typeof relations_site_settings
+  relations__site_settings_v_version_admin_notification_emails: typeof relations__site_settings_v_version_admin_notification_emails
   relations__site_settings_v_version_trust_signals: typeof relations__site_settings_v_version_trust_signals
   relations__site_settings_v_version_announcement_bar_announcements: typeof relations__site_settings_v_version_announcement_bar_announcements
   relations__site_settings_v_rels: typeof relations__site_settings_v_rels

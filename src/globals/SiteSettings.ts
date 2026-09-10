@@ -46,13 +46,20 @@ export const SiteSettings: GlobalConfig = {
 
     // ---- Email Notifications ----
     {
-      name: 'adminNotificationEmail',
-      type: 'email',
-      label: 'Admin Notification Email',
+      name: 'adminNotificationEmails',
+      type: 'array',
+      label: 'Admin Notification Emails',
       admin: {
         description:
-          'All order and system notifications (new orders, cancellations, refunds) are sent to this address. Falls back to the ADMIN_EMAIL env var if not set.',
+          'All order and system notifications (new orders, cancellations, refunds) are sent to these addresses. Falls back to the ADMIN_EMAIL env var if not set.',
       },
+      fields: [
+        {
+          name: 'email',
+          type: 'email',
+          required: true,
+        },
+      ],
     },
 
     // ---- Contact Info ----

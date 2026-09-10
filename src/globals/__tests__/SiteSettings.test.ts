@@ -72,6 +72,20 @@ describe('SiteSettings global', () => {
     })
   })
 
+  // ---- Email Notification Fields ----
+  describe('Email notification fields', () => {
+    it('has adminNotificationEmails field (array of emails)', () => {
+      const field = findField('adminNotificationEmails')
+      expect(field).toBeDefined()
+      expect(field?.type).toBe('array')
+      expect(field?.label).toBe('Admin Notification Emails')
+      expect(field?.fields).toHaveLength(1)
+      expect(field?.fields?.[0]?.name).toBe('email')
+      expect(field?.fields?.[0]?.type).toBe('email')
+      expect(field?.fields?.[0]?.required).toBe(true)
+    })
+  })
+
   // ---- Contact Info Fields ----
   describe('Contact info fields', () => {
     it('has contactEmail field (email)', () => {

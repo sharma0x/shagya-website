@@ -2312,9 +2312,14 @@ export interface SiteSetting {
   logo?: (number | null) | Media;
   favicon?: (number | null) | Media;
   /**
-   * All order and system notifications (new orders, cancellations, refunds) are sent to this address. Falls back to the ADMIN_EMAIL env var if not set.
+   * All order and system notifications (new orders, cancellations, refunds) are sent to these addresses. Falls back to the ADMIN_EMAIL env var if not set.
    */
-  adminNotificationEmail?: string | null;
+  adminNotificationEmails?:
+    | {
+        email: string;
+        id?: string | null;
+      }[]
+    | null;
   contactEmail?: string | null;
   contactPhone?: string | null;
   address?: string | null;
@@ -2376,7 +2381,12 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   tagline?: T;
   logo?: T;
   favicon?: T;
-  adminNotificationEmail?: T;
+  adminNotificationEmails?:
+    | T
+    | {
+        email?: T;
+        id?: T;
+      };
   contactEmail?: T;
   contactPhone?: T;
   address?: T;
