@@ -217,3 +217,9 @@ ENV_FILE=.env IMAGE_TAG=testing DOCKER_IMAGE=ghcr.io/sharma0x/shagya-website doc
 - Shared eligibility lives in `src/lib/delhivery/eligibility.ts` (`getShipEligibility` + `shipEligibilityForOrder`) mirroring the server guards.
 - **Payload 3.86 `useFormFields(selector)` takes ONE arg** (selector over `[fields, dispatch]`), unlike older docs (`useFormFields(fn, paths)` → TS2554). Select via `WATCH_PATHS.map((p) => allFields[p])`.
 - After endpoint actions, sync the form: `useForm().dispatchFields({ type: 'UPDATE', path, value })` (nested groups via `delhivery.waybill`) then `setModified(false)`. List rows refresh via `useListQuery().refineListData(query)`.
+
+## Admin custom components need importMap regeneration (2026-09-10)
+
+- Adding a new custom admin component (UI field Field/Cell, views, etc.) is NOT enough for prod — the checked-in `src/app/(payload)/admin/importMap.js` must be regenerated with `pnpm payload generate:importmap`, committed, and rebuilt. The Docker `next build` does NOT regenerate it in this setup.
+- Symptom when skipped: build succeeds, component source strings appear in `.next/server/chunks` (config serialization), but there is NO client chunk in `.next/static` for the component (compare with a working component like SyncSmartCollectionButton), and the edit-view sidebar renders empty (`render-fields` div with no children). No console errors.
+- Verify in a container: `grep -rl <ComponentName> .next/static | head` — must return a chunk. Also verify key parity after regenerating: extract map keys from old/new importMap.js and diff (regeneration may reorder/rewrite formatting).
