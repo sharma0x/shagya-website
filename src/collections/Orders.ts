@@ -145,6 +145,14 @@ export const Orders: CollectionConfig = {
   admin: {
     useAsTitle: 'orderNumber',
     group: 'Orders',
+    defaultColumns: [
+      'orderNumber',
+      'customerEmail',
+      'status',
+      'total',
+      'fulfilmentPanel',
+      'updatedAt',
+    ],
   },
   access: {
     read: ({ req: { user } }) => {
@@ -505,6 +513,19 @@ export const Orders: CollectionConfig = {
     },
   ],
   fields: [
+    {
+      name: 'fulfilmentPanel',
+      label: 'Fulfilment',
+      type: 'ui',
+      admin: {
+        position: 'sidebar',
+        components: {
+          Field:
+            '@/components/payload/OrderFulfilmentPanel#OrderFulfilmentPanel',
+          Cell: '@/components/payload/OrderFulfilmentCell#OrderFulfilmentCell',
+        },
+      },
+    },
     {
       name: 'orderNumber',
       type: 'text',
