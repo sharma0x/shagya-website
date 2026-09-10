@@ -161,6 +161,60 @@ describe('shipOrderWithDelhivery', () => {
     )
   })
 
+  it('reads waybill from the packages array on success', async () => {
+    mockFetchWaybill.mockResolvedValueOnce(['70351234567'])
+    mockCreateShipment.mockResolvedValueOnce({
+      success: true,
+      packages: [{ status: 'Success', waybill: '70351234567' }],
+    })
+
+    const payload = mockPayload()
+    const result = await shipOrderWithDelhivery(payload, 'order-1')
+
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.waybill).toBe('70351234567')
+    expect(payload.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ status: 'shipped' }),
+      }),
+    )
+  })
+
+  it('does not mark the order shipped when the manifest fails', async () => {
+    mockFetchWaybill.mockResolvedValueOnce(['70351234567'])
+    mockCreateShipment.mockResolvedValueOnce({
+      success: false,
+      rmk: 'An internal Error has occurred',
+      packages: [
+        {
+          status: 'Fail',
+          waybill: '70351234567',
+          remarks: [
+            'Prepaid client manifest charge API failed due to insufficient balance',
+          ],
+        },
+      ],
+    })
+
+    const payload = mockPayload()
+    const result = await shipOrderWithDelhivery(payload, 'order-1')
+
+    expect(result).toMatchObject({
+      ok: false,
+      status: 502,
+      reason: expect.stringContaining('insufficient balance'),
+    })
+    expect(payload.update).not.toHaveBeenCalled()
+    expect(payload.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        collection: 'event-logs',
+        data: expect.objectContaining({ event: 'delhivery.ship_failed' }),
+        overrideAccess: true,
+      }),
+    )
+  })
+
   it('rejects COD orders', async () => {
     const payload = mockPayload({
       findByID: vi

@@ -46,7 +46,18 @@ export interface ShipmentResult {
   status?: string
 }
 
+export interface ShipmentPackage {
+  waybill?: string
+  refnum?: string
+  status?: string
+  remarks?: string[]
+  serviceable?: boolean
+}
+
 export interface ShipmentResponse {
+  success?: boolean
+  rmk?: string
+  packages?: ShipmentPackage[]
   shipments?: ShipmentResult[]
   packages_queued?: boolean
 }

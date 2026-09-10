@@ -137,7 +137,25 @@ export async function shipOrderWithDelhivery(
     return { ok: false, reason, status: 502 }
   }
 
-  const returnedWaybill = response?.shipments?.[0]?.waybill || waybill
+  const failedPackages = (response?.packages ?? []).filter(
+    (pkg) => (pkg.status ?? '').toLowerCase() === 'fail',
+  )
+  if (response?.success === false || failedPackages.length > 0) {
+    const remarks = failedPackages.flatMap((pkg) => pkg.remarks ?? [])
+    const reason =
+      remarks.join('; ') || response?.rmk || 'Delhivery rejected the shipment'
+    await logShipmentFailure(
+      payload,
+      order,
+      `Delhivery manifest failed: ${reason}`,
+    )
+    return { ok: false, reason, status: 502 }
+  }
+
+  const returnedWaybill =
+    response?.packages?.[0]?.waybill ||
+    response?.shipments?.[0]?.waybill ||
+    waybill
   const orderIdValue = String(order.id)
 
   await payload.update({
