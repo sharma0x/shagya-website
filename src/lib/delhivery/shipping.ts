@@ -24,6 +24,15 @@ export async function fetchWaybill(count = 1): Promise<string[]> {
   const res = await delhiveryFetch<WaybillResponse>(
     `/waybill/api/bulk/json/?count=${count}`,
   )
+  if (typeof res === 'string') {
+    return res
+      .split(',')
+      .map((w) => w.trim())
+      .filter(Boolean)
+  }
+  if (Array.isArray(res)) {
+    return res.map(String)
+  }
   const list = Array.isArray(res?.data) ? res.data : []
   return list.map(String)
 }

@@ -1,8 +1,9 @@
 export type DelhiveryMode = 'test' | 'prod'
 
-export interface WaybillResponse {
-  data?: string[]
-}
+export type WaybillResponse =
+  | string
+  | string[]
+  | { data?: Array<string | number> }
 
 export interface ShipmentRequest {
   name: string

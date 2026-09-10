@@ -36,14 +36,27 @@ export const OrderFulfilmentCell: React.FC<OrderFulfilmentCellProps> = ({
       const res = await fetch(`/api/orders/${rowData?.id}/delhivery/ship`, {
         method: 'POST',
       })
-      const json = await res.json().catch(() => ({}))
+      let json: Record<string, unknown> = {}
+      let bodyText = ''
+      try {
+        bodyText = await res.text()
+        json = bodyText ? JSON.parse(bodyText) : {}
+      } catch {
+        json = {}
+      }
       if (res.ok && json.waybill) {
         toast.success(
           `Shipped ${rowData?.orderNumber ?? ''} — waybill ${json.waybill}`,
         )
         await refineListData(query)
       } else {
-        toast.error(json.error || 'Ship request failed.')
+        const reason =
+          typeof json.error === 'string' && json.error
+            ? json.error
+            : res.ok
+              ? 'Ship request failed.'
+              : `Ship request failed (HTTP ${res.status}).`
+        toast.error(reason)
       }
     } catch {
       toast.error('Network error — could not reach the ship endpoint.')

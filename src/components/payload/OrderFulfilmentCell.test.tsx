@@ -50,7 +50,7 @@ describe('OrderFulfilmentCell', () => {
     vi.clearAllMocks()
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
-      json: async () => ({ waybill: 'WB123' }),
+      text: async () => JSON.stringify({ waybill: 'WB123' }),
     })
   })
 
@@ -89,9 +89,10 @@ describe('OrderFulfilmentCell', () => {
   it('shows the endpoint error when ship fails', async () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: false,
-      json: async () => ({
-        error: 'Only prepaid orders can be shipped with Delhivery',
-      }),
+      text: async () =>
+        JSON.stringify({
+          error: 'Only prepaid orders can be shipped with Delhivery',
+        }),
     })
     render(<OrderFulfilmentCell rowData={order()} />)
     await act(async () => {

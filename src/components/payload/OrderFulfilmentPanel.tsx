@@ -103,12 +103,24 @@ export const OrderFulfilmentPanel: React.FC = () => {
       const res = await fetch(`/api/orders/${id}/delhivery/ship`, {
         method: 'POST',
       })
-      const json = await res.json().catch(() => ({}))
+      let json: Record<string, unknown> = {}
+      let bodyText = ''
+      try {
+        bodyText = await res.text()
+        json = bodyText ? JSON.parse(bodyText) : {}
+      } catch {
+        json = {}
+      }
       if (res.ok && json.waybill) {
-        markShippedInForm(json.waybill)
+        markShippedInForm(String(json.waybill))
         toast.success(`Shipped via Delhivery — waybill ${json.waybill}`)
       } else {
-        const reason = json.error || 'Ship request failed.'
+        const reason =
+          typeof json.error === 'string' && json.error
+            ? json.error
+            : res.ok
+              ? 'Ship request failed.'
+              : `Ship request failed (HTTP ${res.status}).`
         setError(reason)
         toast.error(reason)
       }
@@ -126,18 +138,28 @@ export const OrderFulfilmentPanel: React.FC = () => {
     setError(null)
     try {
       const res = await fetch(`/api/orders/${id}/delhivery/label`)
-      const json = await res.json().catch(() => ({}))
-      if (res.ok && json.labelUrl) {
-        window.open(json.labelUrl, '_blank')
+      let json: Record<string, unknown> = {}
+      try {
+        const bodyText = await res.text()
+        json = bodyText ? JSON.parse(bodyText) : {}
+      } catch {
+        json = {}
+      }
+      const labelUrl = typeof json.labelUrl === 'string' ? json.labelUrl : ''
+      if (res.ok && labelUrl) {
+        window.open(labelUrl, '_blank')
         dispatchFields({
           type: 'UPDATE',
           path: 'delhivery.labelUrl',
-          value: json.labelUrl,
+          value: labelUrl,
         })
         setModified(false)
         toast.success('Label generated — PDF opened in a new tab.')
       } else {
-        const reason = json.error || 'Label request failed.'
+        const reason =
+          typeof json.error === 'string' && json.error
+            ? json.error
+            : 'Label request failed.'
         setError(reason)
         toast.error(reason)
       }
@@ -159,19 +181,30 @@ export const OrderFulfilmentPanel: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: '{}',
       })
-      const json = await res.json().catch(() => ({}))
+      let json: Record<string, unknown> = {}
+      try {
+        const bodyText = await res.text()
+        json = bodyText ? JSON.parse(bodyText) : {}
+      } catch {
+        json = {}
+      }
       if (res.ok) {
-        if (json.pickupRequestId) {
+        const pickupRequestId =
+          typeof json.pickupRequestId === 'string' ? json.pickupRequestId : ''
+        if (pickupRequestId) {
           dispatchFields({
             type: 'UPDATE',
             path: 'delhivery.pickupRequestId',
-            value: json.pickupRequestId,
+            value: pickupRequestId,
           })
           setModified(false)
         }
         toast.success('Pickup scheduled with Delhivery.')
       } else {
-        const reason = json.error || 'Pickup request failed.'
+        const reason =
+          typeof json.error === 'string' && json.error
+            ? json.error
+            : 'Pickup request failed.'
         setError(reason)
         toast.error(reason)
       }

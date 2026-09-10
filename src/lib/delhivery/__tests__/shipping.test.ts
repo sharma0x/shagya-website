@@ -46,6 +46,18 @@ describe('shipping', () => {
       expect(waybills).toEqual(['70351234567'])
     })
 
+    it('splits the comma-separated string format returned by the API', async () => {
+      mockDelhiveryFetch.mockResolvedValueOnce('60528410000066,60528410000070')
+      const waybills = await fetchWaybill(2)
+      expect(waybills).toEqual(['60528410000066', '60528410000070'])
+    })
+
+    it('handles a bare single waybill string', async () => {
+      mockDelhiveryFetch.mockResolvedValueOnce('60528410000055')
+      const waybills = await fetchWaybill(1)
+      expect(waybills).toEqual(['60528410000055'])
+    })
+
     it('returns empty array when data is missing', async () => {
       mockDelhiveryFetch.mockResolvedValueOnce({})
       const waybills = await fetchWaybill()
