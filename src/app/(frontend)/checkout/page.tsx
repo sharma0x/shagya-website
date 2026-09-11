@@ -461,7 +461,9 @@ export default function CheckoutPage() {
 
         const data = await res.json()
         zCart.clearCart()
-        router.push(`/checkout/success?orderNumber=${data.orderNumber}`)
+        router.push(
+          `/checkout/success?orderNumber=${data.orderNumber}&email=${encodeURIComponent(sessionData?.user?.email || guestData?.email || '')}`,
+        )
       } else {
         // Razorpay checkout
         const isScriptLoaded = await loadRazorpayScript()
@@ -554,7 +556,9 @@ export default function CheckoutPage() {
 
               const data = await verifyRes.json()
               zCart.clearCart()
-              router.push(`/checkout/success?orderNumber=${data.orderNumber}`)
+              router.push(
+                `/checkout/success?orderNumber=${data.orderNumber}&email=${encodeURIComponent(sessionData?.user?.email || guestData?.email || '')}`,
+              )
             } catch (err: any) {
               setError(err.message || 'Payment verification failed')
               setActionLoading(false)
@@ -603,7 +607,9 @@ export default function CheckoutPage() {
 
           const data = await verifyRes.json()
           zCart.clearCart()
-          router.push(`/checkout/success?orderNumber=${data.orderNumber}`)
+          router.push(
+            `/checkout/success?orderNumber=${data.orderNumber}&email=${encodeURIComponent(sessionData?.user?.email || guestData?.email || '')}`,
+          )
           return
         }
 

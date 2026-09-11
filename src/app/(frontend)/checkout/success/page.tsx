@@ -10,10 +10,12 @@ import {
   Calendar,
   Heart,
 } from 'lucide-react'
+import { DownloadReceiptButton } from '@/components/order/DownloadReceiptButton'
 
 function CheckoutSuccessContent() {
   const searchParams = useSearchParams()
   const orderNumber = searchParams.get('orderNumber') || 'ORD-00001'
+  const email = searchParams.get('email') || undefined
 
   return (
     <div className="flex min-h-[75vh] flex-col justify-center bg-neutral-50 px-4 py-12 sm:px-6 lg:px-8">
@@ -81,6 +83,11 @@ function CheckoutSuccessContent() {
             Track in My Orders
             <ArrowRight className="h-4 w-4" />
           </Link>
+          <DownloadReceiptButton
+            orderNumber={orderNumber}
+            email={email}
+            variant="outline"
+          />
           <Link
             href="/"
             className="font-display flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-neutral-200 bg-white text-sm font-semibold text-neutral-700 transition-colors hover:bg-neutral-50"

@@ -4,6 +4,8 @@ import { getPayload } from 'payload'
 import configPromise from '@payload-config'
 import { ArrowLeft, Calendar, CreditCard, Truck, Package } from 'lucide-react'
 import { OrderTimeline } from '@/components/order/OrderTimeline'
+import { DownloadReceiptButton } from '@/components/order/DownloadReceiptButton'
+import { getSession } from '@/lib/auth-server'
 import { getProductUrl } from '@/lib/product-url'
 import { galleryForColor } from '@/lib/product-utils'
 
@@ -18,6 +20,7 @@ export default async function OrderDetailsPage({
 }) {
   const { id } = await params
   const payload = await getPayload({ config: configPromise })
+  const session = await getSession()
 
   // Find the order by orderNumber (or id)
   const result = await payload.find({
@@ -83,6 +86,13 @@ export default async function OrderDetailsPage({
                 })}
               </p>
             </div>
+            {session?.user && (
+              <DownloadReceiptButton
+                orderNumber={order.orderNumber as string}
+                variant="solid"
+                className="w-full sm:w-52"
+              />
+            )}
           </div>
         </div>
 
