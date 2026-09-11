@@ -74,6 +74,25 @@ export function nextPickupSlotIST(): {
   }
 }
 
+export function defaultPickupSlotIST(): {
+  pickupDate: string
+  pickupTime: string
+} {
+  const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000)
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Kolkata',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(tomorrow)
+  const get = (type: string) =>
+    parts.find((p) => p.type === type)?.value ?? '00'
+  return {
+    pickupDate: `${get('year')}-${get('month')}-${get('day')}`,
+    pickupTime: '10:00:00',
+  }
+}
+
 export async function createPickupRequest(
   input: PickupRequestInput,
 ): Promise<{ pickupRequestId?: string }> {

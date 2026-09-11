@@ -4,6 +4,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import {
   createPickupRequest,
+  defaultPickupSlotIST,
   generateLabel,
   nextPickupSlotIST,
   trackShipment,
@@ -114,6 +115,14 @@ describe('fulfillment', () => {
       const slot = nextPickupSlotIST()
       expect(slot.pickupDate).toMatch(/^\d{4}-\d{2}-\d{2}$/)
       expect(slot.pickupTime).toMatch(/^\d{2}:00:00$/)
+    })
+  })
+
+  describe('defaultPickupSlotIST', () => {
+    it('defaults to a next-day 10:00 IST slot', () => {
+      const slot = defaultPickupSlotIST()
+      expect(slot.pickupDate).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+      expect(slot.pickupTime).toBe('10:00:00')
     })
   })
 

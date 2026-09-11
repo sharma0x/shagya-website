@@ -170,11 +170,11 @@ describe('OrderFulfilmentPanel', () => {
     })
     expect(global.fetch).toHaveBeenCalledWith(
       '/api/orders/1/delhivery/pickup',
-      {
+      expect.objectContaining({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: '{}',
-      },
+        body: expect.stringContaining('"pickupTime":"10:00:00"'),
+      }),
     )
 
     await act(async () => {

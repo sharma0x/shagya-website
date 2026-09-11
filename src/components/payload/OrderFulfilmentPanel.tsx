@@ -12,6 +12,7 @@ import {
   DELHIVERY_TRACK_URL,
   getShipEligibility,
 } from '@/lib/delhivery/eligibility'
+import { defaultPickupSlotIST } from '@/lib/delhivery/fulfillment'
 
 const WATCH_PATHS = [
   'status',
@@ -38,6 +39,10 @@ export const OrderFulfilmentPanel: React.FC = () => {
   const [isShipping, setIsShipping] = useState(false)
   const [isFetchingLabel, setIsFetchingLabel] = useState(false)
   const [isSchedulingPickup, setIsSchedulingPickup] = useState(false)
+  const [pickupDate, setPickupDate] = useState(
+    defaultPickupSlotIST().pickupDate,
+  )
+  const [pickupTime, setPickupTime] = useState('10:00')
   const [error, setError] = useState<string | null>(null)
 
   const fields = useFormFields(([allFields]) =>
@@ -179,7 +184,10 @@ export const OrderFulfilmentPanel: React.FC = () => {
       const res = await fetch(`/api/orders/${id}/delhivery/pickup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: '{}',
+        body: JSON.stringify({
+          pickupDate,
+          pickupTime: `${pickupTime}:00`,
+        }),
       })
       let json: Record<string, unknown> = {}
       try {
@@ -290,6 +298,49 @@ export const OrderFulfilmentPanel: React.FC = () => {
             <Button onClick={handleTrack} size="small" buttonStyle="secondary">
               Track
             </Button>
+          </div>
+          <div
+            style={{
+              display: 'flex',
+              gap: '0.5rem',
+              marginTop: '0.75rem',
+              flexWrap: 'wrap',
+            }}
+          >
+            <label
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.25rem',
+                fontSize: '0.75rem',
+                color: 'var(--theme-elevation-500)',
+              }}
+            >
+              Pickup date
+              <input
+                type="date"
+                value={pickupDate}
+                onChange={(e) => setPickupDate(e.target.value)}
+                style={{ padding: '0.4rem' }}
+              />
+            </label>
+            <label
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.25rem',
+                fontSize: '0.75rem',
+                color: 'var(--theme-elevation-500)',
+              }}
+            >
+              Pickup time (IST)
+              <input
+                type="time"
+                value={pickupTime}
+                onChange={(e) => setPickupTime(e.target.value)}
+                style={{ padding: '0.4rem' }}
+              />
+            </label>
           </div>
           {text((pickupRequestId as Fieldish)?.value) && (
             <p
