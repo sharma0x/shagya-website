@@ -277,6 +277,40 @@ describe('FormSubmissions collection', () => {
       expect(callArgs.html).toContain('john@test.com')
     })
 
+    it('afterChange hook resolves an object form relationship value', async () => {
+      const hook = FormSubmissions.hooks?.afterChange?.[0]
+      if (!hook) return
+
+      const { sendEmail } = await import('@/lib/email')
+      vi.mocked(sendEmail).mockClear()
+      mockGetAdminEmails.mockResolvedValue([])
+
+      const mockReq = {
+        payload: {
+          findByID: vi.fn().mockResolvedValue({
+            id: 5,
+            title: 'Contact Us',
+            emailTo: 'archana.vaknalli@shayga.com',
+          }),
+          logger: { error: vi.fn() },
+        },
+      } as any
+
+      await hook({
+        doc: { form: { value: 5 }, data: { name: 'John' } },
+        previousDoc: {},
+        operation: 'create',
+        req: mockReq,
+        collection: { slug: 'form-submissions' } as any,
+      } as any)
+
+      expect(mockReq.payload.findByID).toHaveBeenCalledWith({
+        collection: 'forms',
+        id: 5,
+      })
+      expect(sendEmail).toHaveBeenCalledTimes(1)
+    })
+
     it('afterChange hook notifies every admin notification email', async () => {
       const hook = FormSubmissions.hooks?.afterChange?.[0]
       if (!hook) return

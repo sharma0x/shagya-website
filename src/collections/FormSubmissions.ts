@@ -33,8 +33,22 @@ export const FormSubmissions: CollectionConfig = {
         }
 
         // Look up the form to get the notification email
-        const formId = submission.form as string | number | undefined
-        if (!formId) return doc
+        const rawForm = submission.form as unknown
+        let formId: string | number | null = null
+        if (typeof rawForm === 'object' && rawForm !== null) {
+          const record = rawForm as { id?: unknown; value?: unknown }
+          if (typeof record.id === 'string' || typeof record.id === 'number') {
+            formId = record.id
+          } else if (
+            typeof record.value === 'string' ||
+            typeof record.value === 'number'
+          ) {
+            formId = record.value
+          }
+        } else if (typeof rawForm === 'string' || typeof rawForm === 'number') {
+          formId = rawForm
+        }
+        if (formId == null) return doc
 
         try {
           const form = await req.payload.findByID({
