@@ -5,6 +5,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import {
   createPickupRequest,
   generateLabel,
+  nextPickupSlotIST,
   trackShipment,
 } from '../fulfillment'
 
@@ -48,6 +49,14 @@ describe('fulfillment', () => {
       const { pdfUrl } = await generateLabel('70351234567')
       expect(pdfUrl).toBe('https://s3/nested.pdf')
     })
+
+    it('extracts pdf_download_link from packages (real API shape)', async () => {
+      mockDelhiveryFetch.mockResolvedValueOnce({
+        packages: [{ pdf_download_link: 'https://s3/packing-slip.pdf' }],
+      })
+      const { pdfUrl } = await generateLabel('70351234567')
+      expect(pdfUrl).toBe('https://s3/packing-slip.pdf')
+    })
   })
 
   describe('createPickupRequest', () => {
@@ -84,6 +93,27 @@ describe('fulfillment', () => {
           expectedPackageCount: 0,
         }),
       ).rejects.toThrow('expectedPackageCount must be at least 1')
+    })
+
+    it('reads pickup_id from the real API response', async () => {
+      mockDelhiveryFetch.mockResolvedValueOnce({
+        pickup_id: 320124198,
+        client_name: 'SHAYGA B2C',
+      })
+      const res = await createPickupRequest({
+        pickupTime: '11:00:00',
+        pickupDate: '2026-09-10',
+        expectedPackageCount: 1,
+      })
+      expect(res.pickupRequestId).toBe('320124198')
+    })
+  })
+
+  describe('nextPickupSlotIST', () => {
+    it('returns an IST date and a top-of-the-next-hour time', () => {
+      const slot = nextPickupSlotIST()
+      expect(slot.pickupDate).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+      expect(slot.pickupTime).toMatch(/^\d{2}:00:00$/)
     })
   })
 

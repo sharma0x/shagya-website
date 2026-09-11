@@ -88,6 +88,7 @@ export interface TrackingResponse {
 }
 
 export interface PickupRequestResponse {
+  pickup_id?: string | number
   pickup_request_id?: string
 }
 

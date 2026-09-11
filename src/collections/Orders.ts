@@ -6,6 +6,7 @@ import { shipOrderWithDelhivery } from '@/lib/delhivery/ship-order'
 import {
   createPickupRequest,
   generateLabel,
+  nextPickupSlotIST,
   trackShipment,
 } from '@/lib/delhivery/fulfillment'
 import { mapScanToOrderStatus } from '@/lib/delhivery/mapping'
@@ -379,14 +380,10 @@ export const Orders: CollectionConfig = {
         }
         try {
           const body = (await req.json?.()) ?? {}
-          const now = new Date()
-          const pickupTime =
-            body.pickupTime ??
-            `${String(now.getHours() + 1).padStart(2, '0')}:00:00`
-          const pickupDate = body.pickupDate ?? now.toISOString().slice(0, 10)
+          const { pickupDate, pickupTime } = nextPickupSlotIST()
           const response = await createPickupRequest({
-            pickupTime,
-            pickupDate,
+            pickupTime: body.pickupTime ?? pickupTime,
+            pickupDate: body.pickupDate ?? pickupDate,
             expectedPackageCount: Number(body.expectedPackageCount ?? 1),
           })
           if (response.pickupRequestId) {
