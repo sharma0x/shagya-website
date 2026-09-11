@@ -23,6 +23,7 @@ export interface FormDoc {
 export function ContactForm({ form }: { form: FormDoc | null }) {
   const [formData, setFormData] = useState<Record<string, any>>({})
   const [honeypot, setHoneypot] = useState('')
+  const [notRobot, setNotRobot] = useState(false)
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [message, setMessage] = useState('')
@@ -49,6 +50,7 @@ export function ContactForm({ form }: { form: FormDoc | null }) {
           formId: form?.id || 'default-contact',
           data: formData,
           honeypot,
+          notRobot,
         }),
       })
 
@@ -197,6 +199,24 @@ export function ContactForm({ form }: { form: FormDoc | null }) {
           </div>
         )
       })}
+
+      {/* "I am not a robot" bot protection */}
+      <div className="flex items-center gap-2.5 pt-1">
+        <input
+          id="not-a-robot"
+          type="checkbox"
+          required
+          checked={notRobot}
+          onChange={(e) => setNotRobot(e.target.checked)}
+          className="accent-brand-600 h-4.5 w-4.5 rounded border-neutral-300"
+        />
+        <label
+          htmlFor="not-a-robot"
+          className="font-body text-xs text-neutral-600"
+        >
+          I am not a robot
+        </label>
+      </div>
 
       <div className="pt-2">
         <button

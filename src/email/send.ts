@@ -22,7 +22,7 @@ async function getBaseURL(): Promise<string> {
   return getServerURL().replace(/\/+$/, '') || 'https://shayga.in'
 }
 
-async function getAdminEmails(payload: Payload): Promise<string[]> {
+export async function getAdminEmails(payload: Payload): Promise<string[]> {
   try {
     const settings = (await payload.findGlobal({
       slug: 'site-settings',
