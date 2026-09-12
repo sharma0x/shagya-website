@@ -291,3 +291,30 @@ Pattern for build-time DB (now baked into workflows + Dockerfile):
 Release secret: repo has NO GH_TOKEN/NPM_TOKEN. `GH_SECRET` is the PAT — wire
 release job checkout + semantic-release to `secrets.GH_SECRET`. NPM_TOKEN is
 unneeded: release.config.cjs sets `npmPublish: false`.
+
+## CI/CD: macOS self-hosted runner Docker gotchas (2026-09-12, staging verified)
+
+- **`docker login` on the macOS staging runner fails** with `error saving
+  credentials ... User interaction is not allowed. (-25308)` — Docker tries the
+  osxkeychain helper, which can't prompt in a non-interactive runner. Setting
+  `DOCKER_CONFIG` to a job-local dir is NOT enough on its own: with an empty/
+  absent `credsStore` the Docker CLI still falls back to `osxkeychain` on macOS.
+  **Fix:** write the GHCR auth straight into `$DOCKER_CONFIG/config.json` instead
+  of `docker login` — `AUTH=$(printf '%s:%s' "$USER" "$TOKEN" | base64)` then
+  `printf '{"auths":{"ghcr.io":{"auth":"%s"}}}' "$AUTH" > "$DOCKER_CONFIG/config.json"`.
+  Plaintext `auths` needs no credential helper, so the keychain is never touched.
+- **Setting `DOCKER_CONFIG` also hides the `docker compose` CLI plugin.** Plugins
+  are discovered under `$DOCKER_CONFIG/cli-plugins`, not the system dirs, so
+  `docker compose ...` dies with `unknown shorthand flag: 'f' in -f` (docker
+  parses `-f` itself). **Fix:** symlink the plugin into the isolated config in the
+  same step: `mkdir -p "$DOCKER_CONFIG/cli-plugins"` +
+  `ln -sf ~/.docker/cli-plugins/docker-compose "$DOCKER_CONFIG/cli-plugins/docker-compose"`.
+  (Docker Desktop installs that symlink under `~/.docker/cli-plugins/`.)
+- `.docker-config/` is written into `github.workspace` — gitignore it.
+- `deploy-prod` runs on Linux (EC2) where none of this applies; only the macOS
+  `staging` runner needs the plaintext-auth + plugin-symlink dance.
+- **Stale field-count tests block CI after CMS field additions.** `Pages.test.ts`
+  (7→8, `header` group) and `SiteSettings.test.ts` (22→23) failed because the
+  feature commits that added fields didn't update the count assertions. The
+  earlier memory note claiming SiteSettings was "22 fields / matches reality"
+  is superseded — it is 23 now.
