@@ -4,6 +4,60 @@ import config from '@payload-config'
 import { auth } from '@/lib/auth'
 import crypto from 'crypto'
 import { isSameAddress } from '@/lib/address-utils'
+import { validateCartStock, type CartStockItem } from '@/lib/stock'
+import { resolveCurrentPrices, applyCurrentPrice } from '@/lib/cart-prices'
+
+/**
+ * Resolves the color identity from a cart item's variant JSON
+ * (`{ color: { id?, slug, name, hex } }`) into the Colors doc ID + a name
+ * snapshot for the order record. Falls back to a slug lookup when the
+ * variant JSON lacks the color ID (older carts).
+ */
+function makeColorResolver(payload: any) {
+  const cache = new Map<string, { id: number; name: string }>()
+
+  return async function resolveOrderItemColor(
+    variant: unknown,
+  ): Promise<{ colorId: number | null; colorName: string | null }> {
+    const color =
+      variant && typeof variant === 'object' ? (variant as any).color : null
+    if (!color || typeof color !== 'object') {
+      return { colorId: null, colorName: null }
+    }
+
+    const name = typeof color.name === 'string' ? color.name : null
+
+    if (color.id != null && color.id !== '') {
+      const parsed = Number(color.id)
+      if (Number.isFinite(parsed)) {
+        return { colorId: parsed, colorName: name }
+      }
+    }
+
+    const slug = typeof color.slug === 'string' ? color.slug : ''
+    if (slug) {
+      const cached = cache.get(slug)
+      if (cached) return { colorId: cached.id, colorName: name ?? cached.name }
+      try {
+        const res = await payload.find({
+          collection: 'colors',
+          where: { slug: { equals: slug } },
+          limit: 1,
+          overrideAccess: true,
+        })
+        const found = res.docs[0]
+        if (found) {
+          cache.set(slug, { id: found.id as number, name: found.name })
+          return { colorId: found.id as number, colorName: name ?? found.name }
+        }
+      } catch {
+        // lookup failure — record name only
+      }
+    }
+
+    return { colorId: null, colorName: name }
+  }
+}
 
 export async function POST(request: Request) {
   try {
@@ -81,16 +135,29 @@ export async function POST(request: Request) {
     let orderItems: any[]
     let subtotal = 0
     let cartId: string | number | null = null
+    let cart: any = null
+    const resolveOrderItemColor = makeColorResolver(payload)
 
     if (isGuest && guestCartItems && guestCartItems.length > 0) {
-      // Guest — use cart items from request body
-      orderItems = guestCartItems.map((item: any) => ({
-        product: Number(item.product),
-        variant: item.variant ? Number(item.variant) : null,
-        quantity: item.quantity || 1,
-        unitPrice: item.unitPrice || 0,
-        totalPrice: (item.unitPrice || 0) * (item.quantity || 1),
-      }))
+      // Guest — use cart items from request body but price them from the
+      // CURRENT product documents (never trust the stale client snapshot)
+      const priceMap = await resolveCurrentPrices(payload, guestCartItems)
+      orderItems = await Promise.all(
+        guestCartItems.map(async (item: any) => {
+          const { unitPrice } = applyCurrentPrice(item, priceMap)
+          const { colorId, colorName } = await resolveOrderItemColor(
+            item.variant,
+          )
+          return {
+            product: Number(item.product),
+            color: colorId,
+            colorName,
+            quantity: item.quantity || 1,
+            unitPrice,
+            totalPrice: unitPrice * (item.quantity || 1),
+          }
+        }),
+      )
       subtotal = orderItems.reduce((a: number, i: any) => a + i.totalPrice, 0)
     } else {
       // Logged in — get cart from DB
@@ -100,7 +167,7 @@ export async function POST(request: Request) {
         limit: 1,
       } as any)
 
-      const cart = carts.docs[0] as any
+      cart = carts.docs[0] as any
 
       if (
         carts.docs.length === 0 ||
@@ -111,34 +178,74 @@ export async function POST(request: Request) {
       }
 
       cartId = cart.id as string | number
-      subtotal =
-        (cart as any).subtotal ||
-        ((cart as any).items || []).reduce(
-          (acc: number, item: any) =>
-            acc + (item.unitPrice || 0) * (item.quantity || 1),
-          0,
-        )
+      const cartItems = (cart.items || []) as any[]
+      // Price the order from CURRENT product documents, not the stored
+      // add-time unitPrice snapshot
+      const priceMap = await resolveCurrentPrices(payload, cartItems)
+      orderItems = await Promise.all(
+        cartItems.map(async (item: any) => {
+          const productId =
+            typeof item.product === 'object' && item.product !== null
+              ? item.product.id
+              : item.product
+          const { unitPrice } = applyCurrentPrice(item, priceMap)
+          const { colorId, colorName } = await resolveOrderItemColor(
+            item.variant,
+          )
+          return {
+            product: productId,
+            color: colorId,
+            colorName,
+            quantity: item.quantity,
+            unitPrice,
+            totalPrice: unitPrice * item.quantity,
+          }
+        }),
+      )
+      subtotal = orderItems.reduce((a: number, i: any) => a + i.totalPrice, 0)
+    }
 
-      orderItems = (cart.items || []).map((item: any) => {
-        const productId =
-          typeof item.product === 'object' && item.product !== null
-            ? item.product.id
-            : item.product
-        let variantId = null
-        if (item.variant) {
-          variantId =
-            typeof item.variant === 'object'
-              ? item.variant.id || null
-              : item.variant
-        }
-        return {
-          product: productId,
-          variant: variantId,
-          quantity: item.quantity,
-          unitPrice: item.unitPrice,
-          totalPrice: item.unitPrice * item.quantity,
-        }
-      })
+    // ── Server-side stock validation before order creation ──
+    const stockItems: CartStockItem[] = orderItems.map((item: any) => ({
+      product: item.product,
+      variant: null, // order items use color ID, we need to check via product ID + quantity
+      quantity: item.quantity || 1,
+    }))
+
+    // For variant products, we need to check per-color stock.
+    // Build stock items from the original cart/guest items with variant info.
+    const rawStockItems: CartStockItem[] = isGuest
+      ? (guestCartItems || []).map((item: any) => ({
+          product: item.product,
+          variant: item.variant,
+          quantity: item.quantity || 1,
+        }))
+      : (cart?.items || []).map((item: any) => ({
+          product:
+            typeof item.product === 'object' && item.product !== null
+              ? item.product.id
+              : item.product,
+          variant: item.variant,
+          quantity: item.quantity || 1,
+        }))
+
+    if (rawStockItems.length > 0) {
+      const stockCheck = await validateCartStock(payload, rawStockItems)
+      if (!stockCheck.ok) {
+        return NextResponse.json(
+          {
+            error:
+              'Some items are no longer in stock or have insufficient quantity. Please refresh your cart.',
+            details: Object.entries(stockCheck.clamped)
+              .map(
+                ([key, info]) =>
+                  `${key}: requested ${info.requested}, available ${info.available}`,
+              )
+              .join('; '),
+          },
+          { status: 409 },
+        )
+      }
     }
 
     const siteSettings = await payload.findGlobal({

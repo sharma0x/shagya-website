@@ -1,11 +1,12 @@
 import { Suspense } from 'react'
-import {
-  ArrowRight,
-  Truck,
-  RotateCcw,
-  ShieldCheck,
-  Sparkles,
-} from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
+
+// Rendered per-request. The page can't be statically prerendered at build time
+// (the build environment has no DB access), and the DB is now colocated (RDS in
+// the same region as the VPS) so per-request SSR is fast. A CDN/edge cache
+// should sit in front for production.
+export const dynamic = 'force-dynamic'
+
 import {
   IconBrandInstagram,
   IconBrandFacebook,
@@ -32,16 +33,18 @@ import {
 } from '@/components/ui/Skeleton'
 import { RefreshRouteOnSave } from '@/components/live-preview/RefreshRouteOnSave'
 import { SectionHeading } from '@/components/homepage/SectionHeading'
-import { ProductCard, ProductCarousel } from '@/components/homepage/ProductCard'
+import { ProductCard } from '@/components/product/ProductCard'
+import { ProductCarousel } from '@/components/product/ProductCarousel'
 import { CategoryCard } from '@/components/homepage/CategoryCard'
-import { InstagramGallery } from '@/components/homepage/InstagramGallery'
+// import { InstagramGallery } from '@/components/homepage/InstagramGallery'
 import { OccasionButton } from '@/components/homepage/OccasionButton'
 import { TestimonialCard } from '@/components/homepage/TestimonialCard'
-import { TrendingColors } from '@/components/homepage/TrendingColors'
-import { HeroCarousel } from '@/components/homepage/HeroCarousel'
-
-const ph = (w: number, h: number, bg: string, fg: string, text: string) =>
-  `https://placehold.co/${w}x${h}/${bg}/${fg}?text=${encodeURIComponent(text)}&font=lora`
+// import { TrendingColors } from '@/components/homepage/TrendingColors'
+import {
+  HeroCarousel,
+  type HeroSlide,
+} from '@/components/homepage/HeroCarousel'
+import { isUnoptimizedImage } from '@/lib/image-url'
 
 function LexicalRenderer({ content }: { content: any }) {
   if (!content || !content.root || !Array.isArray(content.root.children)) {
@@ -95,7 +98,7 @@ function ImagePanel({
         fill
         sizes="(max-width: 768px) 100vw, 50vw"
         className="object-cover"
-        unoptimized={src.startsWith('https://placehold.co')}
+        unoptimized={isUnoptimizedImage(src)}
         loading={loading ?? 'lazy'}
       />
       {caption && (
@@ -117,29 +120,6 @@ function ImagePanel({
 function mapProductWithVariant(p: any) {
   return liftVariantGallery(p)
 }
-
-const TRUST_FEATURES = [
-  {
-    icon: <Truck className="h-7 w-7" />,
-    title: 'Free Shipping',
-    description: 'On all orders above ₹1,999',
-  },
-  {
-    icon: <RotateCcw className="h-7 w-7" />,
-    title: 'Easy Returns',
-    description: '15-day hassle-free returns',
-  },
-  {
-    icon: <ShieldCheck className="h-7 w-7" />,
-    title: 'Authentic Handloom',
-    description: 'Verified by our craft team',
-  },
-  {
-    icon: <Sparkles className="h-7 w-7" />,
-    title: 'Premium Fabric',
-    description: 'Handpicked quality materials',
-  },
-]
 
 const OCCASIONS = [
   {
@@ -168,6 +148,19 @@ const OCCASIONS = [
     href: '/category/designer',
   },
 ]
+
+// COMMENTED OUT (upstream feature branch — DB-driven occasions):
+// const OCCASION_ICONS: Record<string, ReactNode> = {
+//   wedding: <IconHeart className="h-6 w-6" />,
+//   bridal: <IconHeart className="h-6 w-6" />,
+//   festive: <IconSparkles className="h-6 w-6" />,
+//   party: <IconGlassFull className="h-6 w-6" />,
+//   'daily-wear': <IconSun className="h-6 w-6" />,
+//   casual: <IconSun className="h-6 w-6" />,
+//   gifting: <IconGift className="h-6 w-6" />,
+// }
+//
+// const DEFAULT_OCCASION_ICON = <IconSparkles className="h-6 w-6" />
 
 const DEFAULT_TESTIMONIALS = [
   {
@@ -211,10 +204,10 @@ async function HomeCategoriesSection({
     <section className="bg-white">
       <div className="container-page py-6 sm:py-8 md:py-10">
         <SectionHeading
-          title="Our Collection"
+          title="Shop by Category"
           subtitle={
             subtitle ||
-            'Explore our collection of handloom sarees, each woven with tradition and care'
+            'Explore our range of handloom sarees, each woven with tradition and care'
           }
           viewAllHref="/category/all"
           viewAllLabel="Browse All"
@@ -247,6 +240,64 @@ async function HomeCategoriesSection({
   )
 }
 
+// COMMENTED OUT (upstream DB-driven occasions — alternative to OCCASIONS):
+// async function HomeOccasionsSection() {
+//   const payload = await getPayload({ config })
+//   const occasionsRes = await payload.find({
+//     collection: 'occasions',
+//     limit: 20,
+//     sort: 'createdAt',
+//   })
+//   const occasions = occasionsRes.docs
+//
+//   return (
+//     <div>
+//       <SectionHeading
+//         title="Shop by Occasion"
+//         subtitle="Find the perfect saree"
+//         align="center"
+//         size="sm"
+//       />
+//       <div className="flex flex-wrap justify-center gap-2">
+//         {occasions.map((occ) => (
+//           <OccasionButton
+//             key={occ.id}
+//             label={occ.name}
+//             icon={
+//               occ.slug
+//                 ? (OCCASION_ICONS[occ.slug] ?? DEFAULT_OCCASION_ICON)
+//                 : DEFAULT_OCCASION_ICON
+//             }
+//             href={`/category/all?occasion=${occ.slug ?? ''}`}
+//             compact
+//           />
+//         ))}
+//       </div>
+//     </div>
+//   )
+// }
+//
+// function OccasionsSkeleton() {
+//   return (
+//     <div aria-hidden="true">
+//       <SectionHeading
+//         title="Shop by Occasion"
+//         subtitle="Find the perfect saree"
+//         align="center"
+//         size="sm"
+//       />
+//       <div className="flex flex-wrap justify-center gap-2">
+//         {Array.from({ length: 6 }).map((_, i) => (
+//           <div key={i} className="flex flex-col items-center gap-1">
+//             <div className="h-12 w-12 animate-pulse rounded-full bg-neutral-100" />
+//             <div className="h-3 w-14 animate-pulse rounded bg-neutral-100" />
+//           </div>
+//         ))}
+//       </div>
+//     </div>
+//   )
+// }
+
 async function HomeProductSpotlightsSection() {
   const payload = await getPayload({ config })
   const thirtyDaysAgo = new Date()
@@ -259,6 +310,7 @@ async function HomeProductSpotlightsSection() {
       collection: 'products',
       where: {
         and: [
+          { _status: { equals: 'published' } },
           { status: { equals: 'published' } },
           { createdAt: { greater_than: THIRTY_DAYS_AGO } },
         ],
@@ -283,7 +335,7 @@ async function HomeProductSpotlightsSection() {
           },
         ],
       },
-      limit: 500,
+      limit: 50,
       depth: 0,
     }),
   ])
@@ -292,7 +344,12 @@ async function HomeProductSpotlightsSection() {
   if (newArrivalsRes.totalDocs === 0) {
     newArrivalsRes = await payload.find({
       collection: 'products',
-      where: { status: { equals: 'published' } },
+      where: {
+        and: [
+          { _status: { equals: 'published' } },
+          { status: { equals: 'published' } },
+        ],
+      },
       limit: 2,
       sort: '-createdAt',
       depth: 2,
@@ -323,7 +380,13 @@ async function HomeProductSpotlightsSection() {
     const topIds = sortedProductIds.slice(0, 2)
     const trendingRes = await payload.find({
       collection: 'products',
-      where: { id: { in: topIds } },
+      where: {
+        and: [
+          { _status: { equals: 'published' } },
+          { status: { equals: 'published' } },
+          { id: { in: topIds } },
+        ],
+      },
       limit: 2,
       depth: 2,
     })
@@ -334,6 +397,7 @@ async function HomeProductSpotlightsSection() {
       collection: 'products',
       where: {
         and: [
+          { _status: { equals: 'published' } },
           { status: { equals: 'published' } },
           { id: { not_in: [...newArrivalIds] } },
         ],
@@ -348,6 +412,7 @@ async function HomeProductSpotlightsSection() {
   const trendingIds = new Set(trendingNow.map((p) => p.id))
 
   const bestOffersWhere: any[] = [
+    { _status: { equals: 'published' } },
     { status: { equals: 'published' } },
     { compareAtPrice: { exists: true } },
   ]
@@ -458,7 +523,12 @@ async function HomeBestSellersSection({
   const payload = await getPayload({ config })
   const allProductsRes = await payload.find({
     collection: 'products',
-    where: { status: { equals: 'published' } },
+    where: {
+      and: [
+        { _status: { equals: 'published' } },
+        { status: { equals: 'published' } },
+      ],
+    },
     limit: 12,
     sort: '-createdAt',
     depth: 2,
@@ -543,6 +613,7 @@ async function HomeBlogSection({
                       fill
                       sizes="(max-width: 768px) 100vw, 33vw"
                       className="object-cover transition-transform duration-500 group-hover:scale-105"
+                      unoptimized={isUnoptimizedImage(thumbSrc)}
                     />
                   </div>
                 )}
@@ -576,13 +647,7 @@ async function HomeBlogSection({
   )
 }
 
-type Props = {
-  searchParams: Promise<{ preview?: string; id?: string }>
-}
-
-export default async function HomePage({ searchParams }: Props) {
-  const { preview, id } = await searchParams
-  const isPreview = preview === 'true' && id === 'site-settings'
+export default async function HomePage() {
   const payload = await getPayload({ config })
 
   // Fast fetch for page doc shell settings
@@ -603,7 +668,11 @@ export default async function HomePage({ searchParams }: Props) {
         ctaText?: string | null
         ctaLink?: string | null
         images?:
-          | { image: { url?: string | null } | number; id?: string }[]
+          | {
+              image: { url?: string | null } | number
+              link?: string | null
+              id?: string
+            }[]
           | null
         backgroundImage?: { url?: string | null } | number | null
         blockType: 'hero'
@@ -618,6 +687,7 @@ export default async function HomePage({ searchParams }: Props) {
         blockType: 'categoriesGrid'
       }
     | undefined
+
   const productBlocks = contentBlocks.filter(
     (b: any) => b.blockType === 'productGrid',
   ) as {
@@ -665,99 +735,48 @@ export default async function HomePage({ searchParams }: Props) {
       ? heroBlock.backgroundImage.url
       : '/images/hero/hero-main.png'
 
-  const heroSlides = (() => {
+  // Hero v2 (CLO-103): text-free linked slides — image + CMS-managed link
+  const heroSlides: HeroSlide[] = (() => {
     const imgs = heroBlock?.images
     if (imgs && imgs.length > 0) {
-      return imgs.map((entry) => {
-        const url =
-          typeof entry.image === 'object' && entry.image?.url
-            ? entry.image.url
-            : fallbackHeroUrl
-        return {
-          imageUrl: url,
-          heading: heroBlock?.heading || (
-            <>
-              <span className="text-white">Timeless</span>{' '}
-              <span className="text-white">Elegance</span>
-              <br />
-              <span className="text-brand-300">in every drape</span>
-            </>
-          ),
-          subheading:
-            heroBlock?.subheading ||
-            "Every saree carries the story of the hands that wove it. Direct from India's weaving clusters — no middlemen, no markup.",
-          ctaText: heroBlock?.ctaText || 'Shop the collection',
-          ctaLink: heroBlock?.ctaLink || '/category/all',
-          secondaryCtaText: 'Our craft story',
-          secondaryCtaLink: '/about',
-        }
-      })
+      const slides = imgs
+        .map((entry) => {
+          const url =
+            typeof entry.image === 'object' && entry.image?.url
+              ? entry.image.url
+              : null
+          return url
+            ? { imageUrl: url, link: entry.link || '/category/all' }
+            : null
+        })
+        .filter((s): s is HeroSlide => s !== null)
+      if (slides.length > 0) return slides
     }
-    return [
-      {
-        imageUrl: fallbackHeroUrl,
-        heading: heroBlock?.heading || (
-          <>
-            <span className="text-white">Timeless</span>{' '}
-            <span className="text-white">Elegance</span>
-            <br />
-            <span className="text-brand-300">in every drape</span>
-          </>
-        ),
-        subheading:
-          heroBlock?.subheading ||
-          "Every saree carries the story of the hands that wove it. Direct from India's weaving clusters — no middlemen, no markup.",
-        ctaText: heroBlock?.ctaText || 'Shop the collection',
-        ctaLink: heroBlock?.ctaLink || '/category/all',
-        secondaryCtaText: 'Our craft story',
-        secondaryCtaLink: '/about',
-      },
-    ]
+    return [{ imageUrl: fallbackHeroUrl, link: '/category/all' }]
   })()
 
   return (
     <div className="overflow-hidden">
-      {isPreview && <RefreshRouteOnSave />}
+      <RefreshRouteOnSave />
 
       {/* ─── SECTION 1: HERO (Renders instantly) ─── */}
       <HeroCarousel slides={heroSlides} />
 
-      {/* ─── SECTION 2: TRUST FEATURES (Renders instantly) ─── */}
-      <section className="border-brand-100/40 bg-brand-50/30 border-y">
-        <div className="grid grid-cols-2 items-baseline justify-start gap-x-6 gap-y-3 px-4 py-4 sm:flex sm:flex-wrap sm:justify-center sm:gap-x-10 sm:py-5 md:gap-x-14 lg:gap-x-18">
-          {TRUST_FEATURES.map((feature) => (
-            <div key={feature.title} className="flex items-start gap-2">
-              <div className="text-brand-600 flex h-8 w-8 shrink-0 items-center justify-center sm:h-9 sm:w-9">
-                {feature.icon}
-              </div>
-              <div className="flex flex-col">
-                <span className="font-display text-brand-950 text-xs font-medium whitespace-nowrap sm:text-sm">
-                  {feature.title}
-                </span>
-                <span className="text-brand-700/50 text-[10px] sm:text-xs">
-                  {feature.description}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ─── SECTION 3: SHOP BY CATEGORY (Progressive Stream) ─── */}
+      {/* ─── SECTION 2: SHOP BY CATEGORY (Progressive Stream) ─── */}
       <Suspense fallback={<CategoriesGridSkeleton />}>
         <HomeCategoriesSection subtitle={categoriesBlock?.subheading} />
       </Suspense>
 
-      {/* ─── SECTION 4: PRODUCT SPOTLIGHTS (Progressive Stream) ─── */}
+      {/* ─── SECTION 3: PRODUCT SPOTLIGHTS (Progressive Stream) ─── */}
       <Suspense fallback={<SpotlightsGridSkeleton />}>
         <HomeProductSpotlightsSection />
       </Suspense>
 
-      {/* ─── SECTION 5: SHOP BY OCCASION + TRENDING COLORS + SOCIAL (Renders instantly) ─── */}
+      {/* ─── SECTION 4: SHOP BY OCCASION + TRENDING COLORS + SOCIAL — COMMENTED OUT (CLO-102)
       <section className="bg-brand-50/20">
         <div className="container-page py-6 sm:py-8 md:py-10">
           <div className="grid grid-cols-1 gap-8 md:grid-cols-3 md:gap-6 lg:gap-10">
-            {/* Shop by Occasion */}
+            // Shop by Occasion
             <div>
               <SectionHeading
                 title="Shop by Occasion"
@@ -777,8 +796,12 @@ export default async function HomePage({ searchParams }: Props) {
                 ))}
               </div>
             </div>
+            // Shop by Occasion (upstream DB-driven) — COMMENTED OUT
+            // <Suspense fallback={<OccasionsSkeleton />}>
+            //   <HomeOccasionsSection />
+            // </Suspense>
 
-            {/* Trending Colors */}
+            // Trending Colors
             <div>
               <SectionHeading
                 title="Trending Colors"
@@ -791,7 +814,7 @@ export default async function HomePage({ searchParams }: Props) {
               </div>
             </div>
 
-            {/* Social */}
+            // Social
             <div>
               <SectionHeading
                 title="Follow the Loom"
@@ -841,6 +864,7 @@ export default async function HomePage({ searchParams }: Props) {
           </div>
         </div>
       </section>
+      */}
 
       {/* ─── SECTION 6: BEST SELLERS (Progressive Stream) ─── */}
       <Suspense fallback={<ProductSectionSkeleton count={4} />}>
@@ -848,11 +872,12 @@ export default async function HomePage({ searchParams }: Props) {
       </Suspense>
 
       {/* ─── SECTION 7: BLOG POSTS (Progressive Stream) ─── */}
-      <Suspense fallback={<BlogGridSkeleton />}>
+      {/* <Suspense fallback={<BlogGridSkeleton />}>
         <HomeBlogSection postBlock={postBlock} />
-      </Suspense>
+      </Suspense> */}
 
-      {/* ─── SECTION 8: INSTAGRAM GALLERY (Renders instantly) ─── */}
+      {/* ─── SECTION 8: INSTAGRAM GALLERY ─── */}
+      {/* COMMENTED OUT (CLO-102):
       <section className="bg-brand-50/20">
         <div className="container-page py-6 sm:py-8 md:py-10">
           <SectionHeading
@@ -864,6 +889,7 @@ export default async function HomePage({ searchParams }: Props) {
           <InstagramGallery />
         </div>
       </section>
+      */}
 
       {/* ─── SECTION 9: TESTIMONIALS (Renders instantly) ─── */}
       <section className="bg-white">
@@ -900,7 +926,7 @@ export default async function HomePage({ searchParams }: Props) {
           const imgSrc =
             block.image && typeof block.image === 'object'
               ? block.image.sizes?.card?.url || block.image.url
-              : ph(800, 800, 'a97e34', 'fff8ec', 'Craft Story')
+              : '/images/blogs/blog-1.jpg'
 
           return (
             <section
@@ -976,6 +1002,7 @@ export default async function HomePage({ searchParams }: Props) {
                   Begin browsing
                   <ArrowRight className="h-4 w-4" />
                 </Link>
+                {/* COMMENTED OUT (CLO-102):
                 <Link
                   href="/about"
                   className="group text-brand-300 inline-flex h-11 items-center gap-2 text-sm font-medium transition-colors hover:text-white"
@@ -983,9 +1010,9 @@ export default async function HomePage({ searchParams }: Props) {
                   Meet the weavers
                   <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Link>
+                */}
               </div>
             </div>
-
             <div className="self-start rounded-2xl bg-white p-5 shadow-lg sm:p-6">
               <h2 className="font-display text-brand-950 text-lg font-semibold tracking-tight sm:text-xl">
                 A weekly note from the loom

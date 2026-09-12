@@ -6,6 +6,9 @@ import Link from 'next/link'
 import { ArrowLeft, Calendar, User } from 'lucide-react'
 import { RefreshRouteOnSave } from '@/components/live-preview/RefreshRouteOnSave'
 
+// ISR cache for 5 minutes
+export const revalidate = 300
+
 type Props = {
   params: Promise<{ slug: string }>
   searchParams: Promise<{ preview?: string; id?: string }>
@@ -53,7 +56,11 @@ export default async function BlogDetailPage({ params, searchParams }: Props) {
   const { preview, id } = await searchParams
   const isPreview = preview === 'true' && Boolean(id)
   const payload = await getPayload({ config })
-  const { user } = await payload.auth({ headers: await nextHeaders() })
+  let user: any = null
+  if (isPreview) {
+    const authResult = await payload.auth({ headers: await nextHeaders() })
+    user = authResult.user
+  }
 
   const post: any = isPreview
     ? await payload.findByID({

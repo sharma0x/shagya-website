@@ -1,90 +1,105 @@
 import type { CollectionConfig } from 'payload'
 import { sendWebhook } from '@/lib/webhooks'
 import { sendOrderPlacedEmails, sendOrderStatusEmails } from '@/email/send'
+import { applyStockDecrement, type StockOrderItem } from '@/lib/stock'
+import { shipOrderWithDelhivery } from '@/lib/delhivery/ship-order'
+import {
+  createPickupRequest,
+  generateLabel,
+  nextPickupSlotIST,
+  trackShipment,
+} from '@/lib/delhivery/fulfillment'
+import { getDelhiverySettings } from '@/lib/delhivery/settings'
+import { mapScanToOrderStatus } from '@/lib/delhivery/mapping'
 
 /**
- * Runs email, webhook, event-log, and purchaseCount side-effects detached
- * from the request transaction. This prevents Neon's idle-in-transaction
- * timeout from killing the connection and rolling back the order save.
+ * Runs email, webhook, event-log, and purchaseCount side-effects.
+ * Awaited inside afterChange to ensure serverless execution environments
+ * (Vercel/Lambda) complete all network requests before freezing the container.
  */
-function scheduleSideEffects(
+async function runSideEffects(
   payload: any,
   docId: string,
   orderId: string,
   prevStatus: string | null,
   newStatus: string,
-  items?: Array<{ product?: string | number; quantity?: number }>,
-) {
-  Promise.resolve().then(async () => {
-    try {
-      sendOrderStatusEmails(payload, docId, newStatus).catch(() => {})
-    } catch {}
-
-    try {
-      const webhookUrl = process.env.WEBHOOK_URL
-      if (webhookUrl) {
-        await sendWebhook(webhookUrl, {
-          event: 'order.status_changed',
-          orderId,
-          previousStatus: prevStatus ?? null,
-          newStatus,
-        })
+  items?: Array<
+    { product?: string | number } & Omit<StockOrderItem, 'color'> & {
+        color?: StockOrderItem['color']
       }
-    } catch {}
+  >,
+): Promise<void> {
+  try {
+    await sendOrderStatusEmails(payload, docId, newStatus).catch((err) => {
+      payload.logger.error(`[Email] sendOrderStatusEmails failed: ${err}`)
+    })
+  } catch {}
 
-    try {
-      await payload.create({
-        collection: 'event-logs',
-        data: {
-          event: 'order.status_changed',
-          orderId,
-          status: newStatus,
-          payload: { orderId, previousStatus: prevStatus, newStatus },
-          response: { note: 'WEBHOOK_URL not configured — skipped' },
-        },
-        overrideAccess: true,
+  try {
+    const webhookUrl = process.env.WEBHOOK_URL
+    if (webhookUrl) {
+      await sendWebhook(webhookUrl, {
+        event: 'order.status_changed',
+        orderId,
+        previousStatus: prevStatus ?? null,
+        newStatus,
       })
-    } catch {}
-
-    if (
-      newStatus === 'confirmed' &&
-      prevStatus !== 'confirmed' &&
-      items?.length
-    ) {
-      for (const item of items) {
-        if (!item.product) continue
-        try {
-          const pid =
-            typeof item.product === 'string'
-              ? item.product
-              : String(item.product)
-          const product = await payload.findByID({
-            collection: 'products',
-            id: pid,
-            overrideAccess: true,
-          })
-          if (product) {
-            const currentPurchase = (product as any).purchaseCount || 0
-            const currentQty = (product as any).quantity ?? 0
-            const trackQty = (product as any).trackQuantity === true
-            const orderQty = item.quantity || 1
-
-            await payload.update({
-              collection: 'products',
-              id: product.id,
-              data: {
-                purchaseCount: currentPurchase + orderQty,
-                quantity: trackQty
-                  ? Math.max(0, currentQty - orderQty)
-                  : currentQty,
-              },
-              overrideAccess: true,
-            })
-          }
-        } catch {}
-      }
     }
-  })
+  } catch {}
+
+  try {
+    await payload.create({
+      collection: 'event-logs',
+      data: {
+        event: 'order.status_changed',
+        orderId,
+        status: newStatus,
+        payload: { orderId, previousStatus: prevStatus, newStatus },
+        response: { note: 'WEBHOOK_URL not configured — skipped' },
+      },
+      overrideAccess: true,
+    })
+  } catch {}
+
+  if (
+    newStatus === 'confirmed' &&
+    prevStatus !== 'confirmed' &&
+    items?.length
+  ) {
+    // Group items per product so a multi-color order applies one consistent
+    // stock update per product (variant-aware via applyStockDecrement).
+    const itemsByProduct = new Map<string, StockOrderItem[]>()
+    for (const item of items) {
+      if (!item.product) continue
+      const pid =
+        typeof item.product === 'string' ? item.product : String(item.product)
+      const bucket = itemsByProduct.get(pid) ?? []
+      bucket.push({ color: item.color, quantity: item.quantity })
+      itemsByProduct.set(pid, bucket)
+    }
+
+    for (const [pid, productItems] of itemsByProduct) {
+      try {
+        const product = await payload.findByID({
+          collection: 'products',
+          id: pid,
+          overrideAccess: true,
+          depth: 0,
+        })
+        if (!product) continue
+
+        const update = applyStockDecrement(product, productItems)
+        if (!update) continue
+
+        await payload.update({
+          collection: 'products',
+          id: product.id,
+          data: update,
+          overrideAccess: true,
+        })
+      } catch {}
+    }
+  }
 }
 
 const addressGroup = {
@@ -132,6 +147,14 @@ export const Orders: CollectionConfig = {
   admin: {
     useAsTitle: 'orderNumber',
     group: 'Orders',
+    defaultColumns: [
+      'orderNumber',
+      'customerEmail',
+      'status',
+      'total',
+      'fulfilmentPanel',
+      'updatedAt',
+    ],
   },
   access: {
     read: ({ req: { user } }) => {
@@ -196,36 +219,42 @@ export const Orders: CollectionConfig = {
         if (operation === 'create') {
           const docId = (doc as Record<string, unknown>).id as string
           if (docId) {
-            // Fire-and-forget: do not await. The hook must not block the
-            // order create response on SMTP. Errors are logged via the
-            // email-logs collection by safeSend.
-            void sendOrderPlacedEmails(
-              req.payload,
-              String(docId),
-              doc as Record<string, unknown>,
-            ).catch((err) =>
-              req.payload.logger.error(
-                `[Email] sendOrderPlacedEmails failed: ${err}`,
-              ),
-            )
-
-            const initialStatus = (doc as Record<string, unknown>).status as
-              | string
-              | undefined
-            if (initialStatus && initialStatus !== 'pending') {
-              const orderId = (doc as Record<string, unknown>)
-                .orderNumber as string
-              const items = (doc as Record<string, unknown>).items as
-                | Array<{ product?: string | number; quantity?: number }>
-                | undefined
-              scheduleSideEffects(
+            const backgroundTask = async () => {
+              await sendOrderPlacedEmails(
                 req.payload,
-                docId,
-                orderId,
-                null,
-                initialStatus,
-                items,
+                String(docId),
+                doc as Record<string, unknown>,
+              ).catch((err) =>
+                req.payload.logger.error(
+                  `[Email] sendOrderPlacedEmails failed: ${err}`,
+                ),
               )
+
+              const initialStatus = (doc as Record<string, unknown>).status as
+                | string
+                | undefined
+              if (initialStatus && initialStatus !== 'pending') {
+                const orderId = (doc as Record<string, unknown>)
+                  .orderNumber as string
+                const items = (doc as Record<string, unknown>).items as
+                  | Array<{ product?: string | number; quantity?: number }>
+                  | undefined
+                await runSideEffects(
+                  req.payload,
+                  docId,
+                  orderId,
+                  null,
+                  initialStatus,
+                  items,
+                )
+              }
+            }
+
+            try {
+              const { after } = await import('next/server')
+              after(backgroundTask)
+            } catch {
+              void backgroundTask()
             }
           }
           return doc
@@ -247,20 +276,256 @@ export const Orders: CollectionConfig = {
           | Array<{ product?: string | number; quantity?: number }>
           | undefined
 
-        scheduleSideEffects(
-          req.payload,
-          docId,
-          orderId,
-          prevStatus ?? null,
-          newStatus,
-          items,
-        )
+        const backgroundTask = async () => {
+          await runSideEffects(
+            req.payload,
+            docId,
+            orderId,
+            prevStatus ?? null,
+            newStatus,
+            items,
+          )
+        }
+
+        try {
+          const { after } = await import('next/server')
+          after(backgroundTask)
+        } catch {
+          void backgroundTask()
+        }
 
         return doc
       },
     ],
   },
+  endpoints: [
+    {
+      path: '/:id/delhivery/ship',
+      method: 'post',
+      handler: async (req) => {
+        if (!req.user) {
+          return Response.json({ error: 'Unauthorized' }, { status: 403 })
+        }
+        const orderId = req.routeParams?.id as string
+        if (!orderId) {
+          return Response.json({ error: 'Missing order id' }, { status: 400 })
+        }
+        try {
+          const result = await shipOrderWithDelhivery(req.payload, orderId)
+          if (!result.ok) {
+            return Response.json(
+              { error: result.reason },
+              { status: result.status },
+            )
+          }
+          return Response.json(result)
+        } catch (error) {
+          req.payload.logger.error(
+            `[Delhivery] ship failed for order ${orderId}: ${error}`,
+          )
+          return Response.json({ error: 'Internal error' }, { status: 500 })
+        }
+      },
+    },
+    {
+      path: '/:id/delhivery/label',
+      method: 'get',
+      handler: async (req) => {
+        if (!req.user) {
+          return Response.json({ error: 'Unauthorized' }, { status: 403 })
+        }
+        const orderId = req.routeParams?.id as string
+        if (!orderId) {
+          return Response.json({ error: 'Missing order id' }, { status: 400 })
+        }
+        try {
+          const order = await req.payload.findByID({
+            collection: 'orders',
+            id: orderId,
+            depth: 0,
+          })
+          const waybill = (order as any)?.delhivery?.waybill as
+            | string
+            | undefined
+          if (!waybill) {
+            return Response.json(
+              { error: 'Order has no Delhivery waybill' },
+              { status: 400 },
+            )
+          }
+          const { pdfUrl } = await generateLabel(waybill)
+          await req.payload.update({
+            collection: 'orders',
+            id: orderId,
+            data: { delhivery: { labelUrl: pdfUrl } },
+          })
+          return Response.json({ ok: true, labelUrl: pdfUrl })
+        } catch (error) {
+          req.payload.logger.error(
+            `[Delhivery] label failed for order ${orderId}: ${error}`,
+          )
+          return Response.json({ error: 'Internal error' }, { status: 500 })
+        }
+      },
+    },
+    {
+      path: '/:id/delhivery/pickup',
+      method: 'post',
+      handler: async (req) => {
+        if (!req.user) {
+          return Response.json({ error: 'Unauthorized' }, { status: 403 })
+        }
+        const orderId = req.routeParams?.id as string
+        if (!orderId) {
+          return Response.json({ error: 'Missing order id' }, { status: 400 })
+        }
+        try {
+          const body = (await req.json?.()) ?? {}
+          const { pickupDate, pickupTime } = nextPickupSlotIST()
+          const settings = await getDelhiverySettings(req.payload)
+          const response = await createPickupRequest({
+            pickupTime: body.pickupTime ?? pickupTime,
+            pickupDate: body.pickupDate ?? pickupDate,
+            expectedPackageCount: Number(body.expectedPackageCount ?? 1),
+            pickupLocation: settings.pickupLocation,
+          })
+          if (response.pickupRequestId) {
+            await req.payload.update({
+              collection: 'orders',
+              id: orderId,
+              data: {
+                delhivery: { pickupRequestId: response.pickupRequestId },
+              },
+            })
+          }
+          return Response.json({ ok: true, ...response })
+        } catch (error: any) {
+          if (String(error?.message ?? '').includes('open')) {
+            return Response.json(
+              { error: 'A pickup request is already open for this location' },
+              { status: 409 },
+            )
+          }
+          req.payload.logger.error(
+            `[Delhivery] pickup failed for order ${orderId}: ${error}`,
+          )
+          return Response.json({ error: 'Internal error' }, { status: 500 })
+        }
+      },
+    },
+    {
+      path: '/:id/delhivery/track',
+      method: 'get',
+      handler: async (req) => {
+        if (!req.user) {
+          return Response.json({ error: 'Unauthorized' }, { status: 403 })
+        }
+        const orderId = req.routeParams?.id as string
+        if (!orderId) {
+          return Response.json({ error: 'Missing order id' }, { status: 400 })
+        }
+        try {
+          const order = await req.payload.findByID({
+            collection: 'orders',
+            id: orderId,
+            depth: 0,
+          })
+          const waybill = (order as any)?.delhivery?.waybill as
+            | string
+            | undefined
+          if (!waybill) {
+            return Response.json(
+              { error: 'Order has no Delhivery waybill' },
+              { status: 400 },
+            )
+          }
+          const tracking = await trackShipment(waybill)
+          const latestStatus = tracking?.shipments?.[0]?.Shipment_Status
+          if (latestStatus) {
+            await req.payload.update({
+              collection: 'orders',
+              id: orderId,
+              data: { delhivery: { status: latestStatus } },
+            })
+          }
+          return Response.json({ ok: true, status: latestStatus, ...tracking })
+        } catch (error) {
+          req.payload.logger.error(
+            `[Delhivery] track failed for order ${orderId}: ${error}`,
+          )
+          return Response.json({ error: 'Internal error' }, { status: 500 })
+        }
+      },
+    },
+    {
+      path: '/:id/delhivery/sync',
+      method: 'post',
+      handler: async (req) => {
+        if (!req.user) {
+          return Response.json({ error: 'Unauthorized' }, { status: 403 })
+        }
+        const orderId = req.routeParams?.id as string
+        if (!orderId) {
+          return Response.json({ error: 'Missing order id' }, { status: 400 })
+        }
+        try {
+          const order = await req.payload.findByID({
+            collection: 'orders',
+            id: orderId,
+            depth: 0,
+          })
+          const waybill = (order as any)?.delhivery?.waybill as
+            | string
+            | undefined
+          if (!waybill) {
+            return Response.json(
+              { error: 'Order has no Delhivery waybill' },
+              { status: 400 },
+            )
+          }
+          const tracking = await trackShipment(waybill)
+          const latestStatus = tracking?.shipments?.[0]?.Shipment_Status
+          if (!latestStatus) {
+            return Response.json({ ok: true, action: 'none' })
+          }
+          const mapped = mapScanToOrderStatus({
+            status_type: 'DL',
+            status: latestStatus,
+          })
+          if (mapped.action === 'update' && order.status !== mapped.status) {
+            await req.payload.update({
+              collection: 'orders',
+              id: orderId,
+              data: {
+                status: mapped.status,
+                delhivery: { status: latestStatus },
+              },
+            })
+          }
+          return Response.json({ ok: true, action: mapped.action })
+        } catch (error) {
+          req.payload.logger.error(
+            `[Delhivery] sync failed for order ${orderId}: ${error}`,
+          )
+          return Response.json({ error: 'Internal error' }, { status: 500 })
+        }
+      },
+    },
+  ],
   fields: [
+    {
+      name: 'fulfilmentPanel',
+      label: 'Fulfilment',
+      type: 'ui',
+      admin: {
+        position: 'sidebar',
+        components: {
+          Field:
+            '@/components/payload/OrderFulfilmentPanel#OrderFulfilmentPanel',
+          Cell: '@/components/payload/OrderFulfilmentCell#OrderFulfilmentCell',
+        },
+      },
+    },
     {
       name: 'orderNumber',
       type: 'text',
@@ -393,6 +658,64 @@ export const Orders: CollectionConfig = {
       admin: { description: 'Shipping method chosen at checkout' },
     },
     {
+      name: 'delhivery',
+      type: 'group',
+      admin: {
+        description:
+          'Delhivery fulfilment details (managed by the ship endpoint)',
+      },
+      fields: [
+        {
+          name: 'waybill',
+          type: 'text',
+          admin: {
+            readOnly: true,
+            description: 'Delhivery waybill / AWB number',
+          },
+        },
+        {
+          name: 'status',
+          type: 'text',
+          admin: {
+            readOnly: true,
+            description: 'Last known Delhivery scan status',
+          },
+        },
+        {
+          name: 'labelUrl',
+          type: 'text',
+          admin: {
+            readOnly: true,
+            description: 'URL of the generated shipping label PDF',
+          },
+        },
+        {
+          name: 'pickupRequestId',
+          type: 'text',
+          admin: {
+            readOnly: true,
+            description: 'Delhivery pickup request id',
+          },
+        },
+        {
+          name: 'manifestResponse',
+          type: 'json',
+          admin: {
+            readOnly: true,
+            description: 'Raw create.json response for debugging',
+          },
+        },
+        {
+          name: 'shippedViaDelhivery',
+          type: 'checkbox',
+          admin: {
+            readOnly: true,
+            description: 'Set when the order was manifested with Delhivery',
+          },
+        },
+      ],
+    },
+    {
       name: 'shippingAddress',
       type: 'group',
       fields: addressGroup.fields,
@@ -416,6 +739,25 @@ export const Orders: CollectionConfig = {
           name: 'variant',
           type: 'relationship',
           relationTo: 'variants',
+          admin: {
+            hidden: true,
+            description: 'Legacy — superseded by color/colorName',
+          },
+        },
+        {
+          name: 'color',
+          type: 'relationship',
+          relationTo: 'colors',
+          admin: {
+            description: 'Color variant purchased',
+          },
+        },
+        {
+          name: 'colorName',
+          type: 'text',
+          admin: {
+            description: 'Color name snapshot at purchase time',
+          },
         },
         {
           name: 'quantity',

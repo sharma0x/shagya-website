@@ -308,7 +308,10 @@ export interface Product {
    * The city/region where this saree originates (e.g., Varanasi, Kanchipuram)
    */
   cityOfOrigin?: string | null;
-  occasion?: string | null;
+  /**
+   * Occasions this saree is suited for (e.g., Bridal, Festive)
+   */
+  occasions?: (number | Occasion)[] | null;
   /**
    * Comma-separated tags (e.g., Zari Work, Handwoven, Eco Friendly)
    */
@@ -362,6 +365,9 @@ export interface Product {
    */
   deliveryTime?: ('by-tomorrow' | 'within-2-days' | 'within-5-days' | 'within-7-days' | '7-plus-days') | null;
   trackQuantity?: boolean | null;
+  /**
+   * Auto-computed as the sum of color-variant stock when variants exist. Edit only for variant-less products.
+   */
   quantity?: number | null;
   lowStockThreshold?: number | null;
   /**
@@ -389,6 +395,18 @@ export interface Product {
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "occasions".
+ */
+export interface Occasion {
+  id: number;
+  name: string;
+  slug?: string | null;
+  description?: string | null;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -454,6 +472,50 @@ export interface Collection {
   slug?: string | null;
   description?: string | null;
   image?: (number | null) | Media;
+  /**
+   * Automatically include products based on specific rules.
+   */
+  isAutomated?: boolean | null;
+  matchType?: ('all' | 'any') | null;
+  rules?:
+    | (
+        | {
+            operator: 'equals' | 'not_equals';
+            value: number | Brand;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'brandRule';
+          }
+        | {
+            operator: 'equals' | 'not_equals';
+            value: 'silk' | 'cotton' | 'linen' | 'georgette' | 'chiffon' | 'crepe' | 'velvet' | 'net' | 'blend';
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'fabricRule';
+          }
+        | {
+            operator: 'equals' | 'greater_than' | 'less_than';
+            value: number;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'priceRule';
+          }
+        | {
+            operator: 'equals' | 'contains';
+            value: string;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'tagRule';
+          }
+        | {
+            operator: 'equals' | 'not_equals';
+            value: number | Occasion;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'occasionRule';
+          }
+      )[]
+    | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -610,6 +672,43 @@ export interface Order {
    * Shipping method chosen at checkout
    */
   shippingType: 'standard' | 'express';
+  /**
+   * Delhivery fulfilment details (managed by the ship endpoint)
+   */
+  delhivery?: {
+    /**
+     * Delhivery waybill / AWB number
+     */
+    waybill?: string | null;
+    /**
+     * Last known Delhivery scan status
+     */
+    status?: string | null;
+    /**
+     * URL of the generated shipping label PDF
+     */
+    labelUrl?: string | null;
+    /**
+     * Delhivery pickup request id
+     */
+    pickupRequestId?: string | null;
+    /**
+     * Raw create.json response for debugging
+     */
+    manifestResponse?:
+      | {
+          [k: string]: unknown;
+        }
+      | unknown[]
+      | string
+      | number
+      | boolean
+      | null;
+    /**
+     * Set when the order was manifested with Delhivery
+     */
+    shippedViaDelhivery?: boolean | null;
+  };
   shippingAddress?: {
     fullName?: string | null;
     phone?: string | null;
@@ -633,7 +732,18 @@ export interface Order {
   items?:
     | {
         product: number | Product;
+        /**
+         * Legacy — superseded by color/colorName
+         */
         variant?: (number | null) | Variant;
+        /**
+         * Color variant purchased
+         */
+        color?: (number | null) | Color;
+        /**
+         * Color name snapshot at purchase time
+         */
+        colorName?: string | null;
         quantity: number;
         unitPrice: number;
         totalPrice: number;
@@ -674,7 +784,7 @@ export interface Coupon {
   startDate?: string | null;
   endDate?: string | null;
   isActive?: boolean | null;
-  categoriesConditions?: (number | Category)[] | null;
+  collectionsConditions?: (number | Collection)[] | null;
   productsConditions?: (number | Product)[] | null;
   customersConditions?: (number | Customer)[] | null;
   updatedAt: string;
@@ -760,6 +870,10 @@ export interface Page {
             images?:
               | {
                   image: number | Media;
+                  /**
+                   * Where this slide navigates when clicked (e.g. /category/banarasi)
+                   */
+                  link?: string | null;
                   id?: string | null;
                 }[]
               | null;
@@ -875,6 +989,19 @@ export interface Page {
           }
       )[]
     | null;
+  /**
+   * Override the eyebrow and tagline shown in the page header (About / Contact / FAQ templates).
+   */
+  header?: {
+    /**
+     * Small uppercase label above the page title (e.g. "Shayga Heritage").
+     */
+    eyebrow?: string | null;
+    /**
+     * Description shown under the page title.
+     */
+    tagline?: string | null;
+  };
   metaTitle?: string | null;
   metaDescription?: string | null;
   meta?: {
@@ -939,18 +1066,6 @@ export interface Tag {
  * via the `definition` "fabric-types".
  */
 export interface FabricType {
-  id: number;
-  name: string;
-  slug?: string | null;
-  description?: string | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "occasions".
- */
-export interface Occasion {
   id: number;
   name: string;
   slug?: string | null;
@@ -1444,7 +1559,7 @@ export interface ProductsSelect<T extends boolean = true> {
   borderType?: T;
   weavePattern?: T;
   cityOfOrigin?: T;
-  occasion?: T;
+  occasions?: T;
   tags?: T;
   features?:
     | T
@@ -1517,6 +1632,52 @@ export interface CollectionsSelect<T extends boolean = true> {
   slug?: T;
   description?: T;
   image?: T;
+  isAutomated?: T;
+  matchType?: T;
+  rules?:
+    | T
+    | {
+        brandRule?:
+          | T
+          | {
+              operator?: T;
+              value?: T;
+              id?: T;
+              blockName?: T;
+            };
+        fabricRule?:
+          | T
+          | {
+              operator?: T;
+              value?: T;
+              id?: T;
+              blockName?: T;
+            };
+        priceRule?:
+          | T
+          | {
+              operator?: T;
+              value?: T;
+              id?: T;
+              blockName?: T;
+            };
+        tagRule?:
+          | T
+          | {
+              operator?: T;
+              value?: T;
+              id?: T;
+              blockName?: T;
+            };
+        occasionRule?:
+          | T
+          | {
+              operator?: T;
+              value?: T;
+              id?: T;
+              blockName?: T;
+            };
+      };
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1558,6 +1719,16 @@ export interface OrdersSelect<T extends boolean = true> {
   trackingId?: T;
   trackingUrl?: T;
   shippingType?: T;
+  delhivery?:
+    | T
+    | {
+        waybill?: T;
+        status?: T;
+        labelUrl?: T;
+        pickupRequestId?: T;
+        manifestResponse?: T;
+        shippedViaDelhivery?: T;
+      };
   shippingAddress?:
     | T
     | {
@@ -1587,6 +1758,8 @@ export interface OrdersSelect<T extends boolean = true> {
     | {
         product?: T;
         variant?: T;
+        color?: T;
+        colorName?: T;
         quantity?: T;
         unitPrice?: T;
         totalPrice?: T;
@@ -1664,7 +1837,7 @@ export interface CouponsSelect<T extends boolean = true> {
   startDate?: T;
   endDate?: T;
   isActive?: T;
-  categoriesConditions?: T;
+  collectionsConditions?: T;
   productsConditions?: T;
   customersConditions?: T;
   updatedAt?: T;
@@ -1754,6 +1927,7 @@ export interface PagesSelect<T extends boolean = true> {
                 | T
                 | {
                     image?: T;
+                    link?: T;
                     id?: T;
                   };
               backgroundImage?: T;
@@ -1856,6 +2030,12 @@ export interface PagesSelect<T extends boolean = true> {
               id?: T;
               blockName?: T;
             };
+      };
+  header?:
+    | T
+    | {
+        eyebrow?: T;
+        tagline?: T;
       };
   metaTitle?: T;
   metaDescription?: T;
@@ -2151,9 +2331,14 @@ export interface SiteSetting {
   logo?: (number | null) | Media;
   favicon?: (number | null) | Media;
   /**
-   * All order and system notifications (new orders, cancellations, refunds) are sent to this address. Falls back to the ADMIN_EMAIL env var if not set.
+   * All order and system notifications (new orders, cancellations, refunds) are sent to these addresses. Falls back to the ADMIN_EMAIL env var if not set.
    */
-  adminNotificationEmail?: string | null;
+  adminNotificationEmails?:
+    | {
+        email: string;
+        id?: string | null;
+      }[]
+    | null;
   contactEmail?: string | null;
   contactPhone?: string | null;
   address?: string | null;
@@ -2202,6 +2387,27 @@ export interface SiteSetting {
    * Select coupons to display on the checkout page under pre-populated offers
    */
   activeCoupons?: (number | Coupon)[] | null;
+  /**
+   * Fulfilment identity used when manifesting orders with Delhivery. Leave a field blank to fall back to its environment variable (DELHIVERY_*).
+   */
+  delhivery?: {
+    /**
+     * Pickup point name registered in the Delhivery One Panel (e.g. SHAYGA B2C).
+     */
+    pickupLocation?: string | null;
+    /**
+     * Origin pincode used for shipments and return labels.
+     */
+    pickupPin?: string | null;
+    /**
+     * Client/account name shown to Delhivery.
+     */
+    clientName?: string | null;
+    sellerName?: string | null;
+    sellerAddress?: string | null;
+    sellerPhone?: string | null;
+    sellerEmail?: string | null;
+  };
   _status?: ('draft' | 'published') | null;
   updatedAt?: string | null;
   createdAt?: string | null;
@@ -2215,7 +2421,12 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   tagline?: T;
   logo?: T;
   favicon?: T;
-  adminNotificationEmail?: T;
+  adminNotificationEmails?:
+    | T
+    | {
+        email?: T;
+        id?: T;
+      };
   contactEmail?: T;
   contactPhone?: T;
   address?: T;
@@ -2251,6 +2462,17 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   expressShippingRate?: T;
   freeShippingThreshold?: T;
   activeCoupons?: T;
+  delhivery?:
+    | T
+    | {
+        pickupLocation?: T;
+        pickupPin?: T;
+        clientName?: T;
+        sellerName?: T;
+        sellerAddress?: T;
+        sellerPhone?: T;
+        sellerEmail?: T;
+      };
   _status?: T;
   updatedAt?: T;
   createdAt?: T;

@@ -17,6 +17,7 @@ import {
   tags,
   brands,
   colors,
+  occasions,
   products,
   pages,
   blogPosts,
@@ -398,14 +399,50 @@ export async function seedColors(payload: Payload): Promise<Map<string, any>> {
   return createdColors
 }
 
+export async function seedOccasions(
+  payload: Payload,
+): Promise<Map<string, any>> {
+  console.log(`\n🎉 Seeding ${occasions.length} occasions...`)
+  const createdOccasions = new Map<string, any>()
+
+  for (const occ of occasions) {
+    const existing = await payload.find({
+      collection: 'occasions',
+      where: { slug: { equals: occ.slug } },
+      limit: 1,
+      overrideAccess: true,
+    })
+
+    if (existing.docs.length > 0) {
+      createdOccasions.set(occ.slug, existing.docs[0])
+      console.log(`  ⏭️  Occasion already exists: ${occ.name}`)
+    } else {
+      const created = await payload.create({
+        collection: 'occasions',
+        data: {
+          name: occ.name,
+          slug: occ.slug,
+          description: occ.description ?? '',
+        },
+        overrideAccess: true,
+      })
+      createdOccasions.set(occ.slug, created)
+      console.log(`  ✅ Created occasion: ${occ.name}`)
+    }
+  }
+
+  return createdOccasions
+}
+
 export async function seedProducts(
   payload: Payload,
   createdColors: Map<string, any>,
+  createdOccasions: Map<string, any>,
 ): Promise<void> {
   console.log(`\n👗 Seeding ${products.length} products...`)
 
   for (const prod of products) {
-    const { description, colorVariants, ...rest } = prod
+    const { description, colorVariants, occasion, ...rest } = prod
     const existing = await (payload.find as any)({
       collection: 'products',
       where: { name: { equals: prod.name } },
@@ -452,6 +489,24 @@ export async function seedProducts(
       collectionIds.push(...foundCols.docs.map((c) => c.id as any))
     }
 
+    const occasionIds: string[] = []
+    if (occasion) {
+      const occDoc = createdOccasions.get(occasion)
+      if (occDoc) {
+        occasionIds.push(occDoc.id as any)
+      } else {
+        const foundOcc = await payload.find({
+          collection: 'occasions',
+          where: { slug: { equals: occasion } },
+          limit: 1,
+          overrideAccess: true,
+        })
+        if (foundOcc.docs.length > 0) {
+          occasionIds.push(foundOcc.docs[0].id as any)
+        }
+      }
+    }
+
     const variantData = await Promise.all(
       colorVariants.map(async (cv, vi) => {
         const gallery: { image: number; alt?: string }[] = []
@@ -491,13 +546,18 @@ export async function seedProducts(
       }),
     )
 
+    const intendedStatus: 'published' | 'draft' =
+      prod.status === 'published' ? 'published' : 'draft'
+
     if (existing.totalDocs === 0) {
       await (payload.create as any)({
         collection: 'products',
         data: {
           ...rest,
+          _status: intendedStatus,
           colorVariants: variantData,
           collections: collectionIds,
+          occasions: occasionIds,
           description: lexicalRichText(description),
           length: 5.5,
           gstPercent: 5,
@@ -510,6 +570,12 @@ export async function seedProducts(
       const doc = existing.docs[0]
       const updateData: any = {}
 
+      // Republish products whose _status is stuck as draft (e.g. pre-fix
+      // seeds never set _status, so Payload defaulted them to draft)
+      if ((doc as any)._status !== intendedStatus) {
+        updateData._status = intendedStatus
+      }
+
       // Update colorVariants if missing or empty
       if (
         !(doc as any).colorVariants ||
@@ -521,6 +587,11 @@ export async function seedProducts(
       // Update collections if missing or empty
       if (!doc.collections || doc.collections.length === 0) {
         updateData.collections = collectionIds
+      }
+
+      // Update occasions if missing or empty
+      if (!(doc as any).occasions || (doc as any).occasions.length === 0) {
+        updateData.occasions = occasionIds
       }
 
       if (Object.keys(updateData).length > 0) {
@@ -682,6 +753,7 @@ export async function seedBlogPosts(payload: Payload): Promise<void> {
         data: {
           title: post.title,
           status: post.status,
+          _status: post.status === 'published' ? 'published' : 'draft',
           excerpt: post.excerpt,
           author: authorId,
           content: lexicalRichText(post.body),
@@ -825,7 +897,8 @@ async function main(): Promise<void> {
     await seedTags(payload)
     await seedBrands(payload)
     const createdColors = await seedColors(payload)
-    await seedProducts(payload, createdColors)
+    const createdOccasions = await seedOccasions(payload)
+    await seedProducts(payload, createdColors, createdOccasions)
     await seedPages(payload)
     await seedBlogPosts(payload)
     await seedNavigation(payload)

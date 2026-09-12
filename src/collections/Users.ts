@@ -51,8 +51,11 @@ export const Users: CollectionConfig = {
         { label: 'Content Manager', value: 'content-manager' },
       ],
       access: {
-        // Only super-admin can change roles
-        update: ({ req: { user } }) => user?.role === 'super-admin',
+        // Super-admin and admin can set/change roles
+        create: ({ req: { user } }) =>
+          user?.role === 'super-admin' || user?.role === 'admin',
+        update: ({ req: { user } }) =>
+          user?.role === 'super-admin' || user?.role === 'admin',
       },
     },
   ],

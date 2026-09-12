@@ -35,6 +35,9 @@ import {
 } from '@/components/ui/Skeleton'
 import type { SiteSetting } from '@/payload-types'
 
+// ISR cache for 5 minutes
+export const revalidate = 300
+
 type Props = {
   params: Promise<{ slug: string; productId: string }>
   searchParams: Promise<{ preview?: string; id?: string; color?: string }>
@@ -256,7 +259,11 @@ export default async function ProductDetailPage({
   const isPreview = preview === 'true' && Boolean(id)
   const payload = await getPayload({ config })
   const reqHeaders = await nextHeaders()
-  const { user } = await payload.auth({ headers: reqHeaders })
+  let user: any = null
+  if (isPreview) {
+    const authResult = await payload.auth({ headers: reqHeaders })
+    user = authResult.user
+  }
 
   const product: any = isPreview
     ? await payload.findByID({
@@ -272,6 +279,7 @@ export default async function ProductDetailPage({
           collection: 'products',
           where: {
             and: [
+              { _status: { equals: 'published' } },
               { id: { equals: productId } },
               { status: { equals: 'published' } },
             ],
@@ -321,6 +329,7 @@ export default async function ProductDetailPage({
       .filter((v: any) => v.enabled !== false && v.color)
       .map((v: any) => ({
         color: {
+          id: v.color.id,
           slug: v.color.slug,
           name: v.color.name,
           hex: v.color.hex,
@@ -339,6 +348,11 @@ export default async function ProductDetailPage({
     fabric: product.fabric,
     weave: product.weave,
   }
+
+  const occasionNames = (product.occasions || [])
+    .map((o: any) => (o && typeof o === 'object' ? o.name : null))
+    .filter(Boolean)
+    .join(', ')
 
   const specs: { label: string; value: string }[] = [
     product.fabric && {
@@ -361,7 +375,7 @@ export default async function ProductDetailPage({
       label: 'Weave technique',
       value: product.weavePattern,
     },
-    product.occasion && { label: 'Occasion', value: product.occasion },
+    occasionNames && { label: 'Occasion', value: occasionNames },
   ].filter(Boolean) as { label: string; value: string }[]
 
   return (
@@ -430,9 +444,9 @@ export default async function ProductDetailPage({
                     product.weave.slice(1)}{' '}
                   Weave
                 </span>
-                {product.occasion && (
+                {occasionNames && (
                   <span className="font-body text-xs text-neutral-400">
-                    {product.occasion}
+                    {occasionNames}
                   </span>
                 )}
               </div>

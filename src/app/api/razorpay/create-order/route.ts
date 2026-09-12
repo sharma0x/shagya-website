@@ -3,6 +3,8 @@ import { getPayload } from 'payload'
 import config from '@payload-config'
 import { auth } from '@/lib/auth'
 import Razorpay from 'razorpay'
+import { validateCartStock, type CartStockItem } from '@/lib/stock'
+import { resolveCurrentPrices, applyCurrentPrice } from '@/lib/cart-prices'
 
 export async function POST(request: Request) {
   try {
@@ -27,10 +29,13 @@ export async function POST(request: Request) {
     const payload = await getPayload({ config })
 
     if (isGuest && guestCartItems && guestCartItems.length > 0) {
-      // Guest — calculate from cart items in request
+      // Guest — resolve CURRENT prices so a price change in the admin is
+      // reflected at checkout instead of trusting the stale client snapshot
+      const priceMap = await resolveCurrentPrices(payload, guestCartItems)
       subtotal = guestCartItems.reduce(
         (acc: number, item: any) =>
-          acc + (item.unitPrice || 0) * (item.quantity || 1),
+          acc +
+          applyCurrentPrice(item, priceMap).unitPrice * (item.quantity || 1),
         0,
       )
     } else {
@@ -69,13 +74,66 @@ export async function POST(request: Request) {
 
       const cart = carts.docs[0] as any
       cartId = cart.id
-      subtotal =
-        cart.subtotal ||
-        (cart.items || []).reduce(
-          (acc: number, item: any) =>
-            acc + (item.unitPrice || 0) * (item.quantity || 1),
-          0,
+      const cartItems = (cart.items || []) as any[]
+      // Resolve CURRENT prices from the DB (the stored unitPrice may be a
+      // stale add-time snapshot)
+      const priceMap = await resolveCurrentPrices(payload, cartItems)
+      subtotal = cartItems.reduce(
+        (acc: number, item: any) =>
+          acc +
+          applyCurrentPrice(item, priceMap).unitPrice * (item.quantity || 1),
+        0,
+      )
+    }
+
+    // ── Server-side stock validation ──
+    const stockItems: CartStockItem[] = isGuest
+      ? (guestCartItems || []).map((item: any) => ({
+          product: item.product,
+          variant: item.variant,
+          quantity: item.quantity || 1,
+        }))
+      : [] // logged-in user: validate from DB cart below
+
+    if (!isGuest && cartId) {
+      // Fetch cart items from DB to validate against current stock
+      const cartDoc = await payload.findByID({
+        collection: 'carts',
+        id: cartId,
+      } as any)
+      const cartItems = (cartDoc as any)?.items || []
+      for (const item of cartItems) {
+        const productId =
+          typeof item.product === 'object' && item.product !== null
+            ? item.product.id
+            : item.product
+        stockItems.push({
+          product: productId,
+          variant: item.variant,
+          quantity: item.quantity || 1,
+        })
+      }
+    }
+
+    if (stockItems.length > 0) {
+      const stockCheck = await validateCartStock(payload, stockItems)
+      if (!stockCheck.ok) {
+        // Find which items are out of stock for a clear error message
+        const outOfStockDetails = Object.entries(stockCheck.clamped)
+          .map(
+            ([key, info]) =>
+              `${key}: requested ${info.requested}, available ${info.available}`,
+          )
+          .join('; ')
+        return NextResponse.json(
+          {
+            error:
+              'Some items are no longer in stock or have insufficient quantity',
+            details: outOfStockDetails,
+          },
+          { status: 409 },
         )
+      }
     }
 
     const siteSettings = await payload.findGlobal({

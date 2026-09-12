@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useSession } from '@/lib/auth-client'
 import { getProductUrl } from '@/lib/product-url'
-import { liftVariantGallery } from '@/lib/product-utils'
+import { galleryForColor } from '@/lib/product-utils'
 import {
   ArrowLeft,
   ShoppingBag,
@@ -42,6 +42,13 @@ interface OrderItem {
     size?: string
     blouseCustomization?: string
   } | null
+  color?: {
+    id?: string | number
+    slug?: string
+    name?: string
+    hex?: string
+  } | null
+  colorName?: string | null
   quantity: number
   unitPrice: number
   totalPrice: number
@@ -245,11 +252,14 @@ export default function OrdersPage() {
                         </h4>
                         <div className="space-y-4">
                           {order.items?.map((item) => {
-                            const adaptedProduct = item.product
-                              ? liftVariantGallery(item.product)
-                              : null
-                            const firstImage =
-                              adaptedProduct?.gallery?.[0]?.image
+                            const itemColorSlug =
+                              item.color && typeof item.color === 'object'
+                                ? item.color.slug
+                                : null
+                            const itemGallery = item.product
+                              ? galleryForColor(item.product, itemColorSlug)
+                              : []
+                            const firstImage = itemGallery?.[0]?.image
                             const imageUrl =
                               typeof firstImage === 'object' &&
                               firstImage !== null
@@ -290,6 +300,11 @@ export default function OrdersPage() {
                                   <h5 className="font-display group-hover:text-brand-700 truncate text-sm font-semibold text-neutral-900 transition-colors">
                                     {item.product?.name || 'Handloom Saree'}
                                   </h5>
+                                  {item.colorName && (
+                                    <p className="font-body mt-0.5 text-xs text-neutral-500">
+                                      Color: {item.colorName}
+                                    </p>
+                                  )}
                                   {item.variant && (
                                     <p className="font-body mt-0.5 text-xs text-neutral-500">
                                       {item.variant.title ||

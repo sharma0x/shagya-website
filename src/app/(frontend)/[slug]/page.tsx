@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { headers as nextHeaders } from 'next/headers'
 import Link from 'next/link'
 import Image from 'next/image'
+import { isUnoptimizedImage } from '@/lib/image-url'
 import {
   ArrowRight,
   HelpCircle,
@@ -16,6 +17,9 @@ import {
 import type { FormDoc } from '@/components/page/ContactForm'
 import { ContactForm } from '@/components/page/ContactForm'
 import { RefreshRouteOnSave } from '@/components/live-preview/RefreshRouteOnSave'
+
+// ISR cache for 5 minutes
+export const revalidate = 300
 
 type Props = {
   params: Promise<{ slug: string }>
@@ -52,7 +56,11 @@ export default async function CatchAllPage({ params, searchParams }: Props) {
   const { preview, id } = await searchParams
   const isPreview = preview === 'true' && Boolean(id)
   const payload = await getPayload({ config })
-  const { user } = await payload.auth({ headers: await nextHeaders() })
+  let user: any = null
+  if (isPreview) {
+    const authResult = await payload.auth({ headers: await nextHeaders() })
+    user = authResult.user
+  }
 
   const page: any = isPreview
     ? await payload.findByID({
@@ -103,14 +111,14 @@ export default async function CatchAllPage({ params, searchParams }: Props) {
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(105,37,78,0.25),rgba(255,255,255,0))]" />
           <div className="relative z-10 mx-auto max-w-3xl space-y-4">
             <span className="text-gold-300 font-display text-[10px] font-semibold tracking-widest uppercase">
-              Shayga Heritage
+              {(page as any).header?.eyebrow || 'Shayga Heritage'}
             </span>
             <h1 className="font-display text-4xl leading-tight font-bold tracking-tight text-white sm:text-5xl">
               {page.title}
             </h1>
             <p className="font-body mx-auto max-w-xl text-sm text-neutral-300 sm:text-base">
-              Weaving stories of Indian tradition, silk craftsmanship, and
-              timeless drape aesthetics.
+              {(page as any).header?.tagline ||
+                'Weaving stories of Indian tradition, silk craftsmanship, and timeless drape aesthetics.'}
             </p>
           </div>
         </div>
@@ -186,10 +194,10 @@ export default async function CatchAllPage({ params, searchParams }: Props) {
                     Email Address
                   </p>
                   <a
-                    href="mailto:care@shayga.com"
+                    href="mailto:care@shayga.in"
                     className="hover:text-brand-700 transition-colors"
                   >
-                    care@shayga.com
+                    care@shayga.in
                   </a>
                 </div>
               </div>
@@ -235,6 +243,9 @@ export default async function CatchAllPage({ params, searchParams }: Props) {
                       fill
                       priority
                       className="object-cover"
+                      unoptimized={isUnoptimizedImage(
+                        block.backgroundImage.url,
+                      )}
                     />
                   )}
                   <div className="absolute inset-0 bg-neutral-950/45" />

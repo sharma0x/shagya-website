@@ -10,9 +10,10 @@ import { FilterDrawerProvider } from '@/components/filters/filter-drawer-context
 import { ActiveFilterChips } from '@/components/filters/ActiveFilterChips'
 import { buildWhereClause } from '@/lib/filters/build-where-clause'
 import { getProductUrl } from '@/lib/product-url'
+import { isUnoptimizedImage } from '@/lib/image-url'
 
-const ph = (w: number, h: number, bg: string, fg: string, text: string) =>
-  `https://placehold.co/${w}x${h}/${bg}/${fg}?text=${encodeURIComponent(text)}&font=lora`
+// No DB access at build time — must render dynamically
+export const dynamic = 'force-dynamic'
 
 function ImagePanel({
   src,
@@ -35,7 +36,7 @@ function ImagePanel({
         fill
         sizes="(max-width: 768px) 50vw, 33vw"
         className="object-cover"
-        unoptimized={src.startsWith('https://placehold.co')}
+        unoptimized={isUnoptimizedImage(src)}
       />
     </div>
   )
@@ -100,6 +101,7 @@ export default async function SearchPage({
     if (hasFilters) {
       // Bypass FTS — query products directly with where clause + search term
       const where = buildWhereClause(filterParams, {
+        _status: { equals: 'published' },
         name: { like: q },
         status: { equals: 'published' },
       })
@@ -289,13 +291,7 @@ export default async function SearchPage({
                               >
                                 <div className="relative overflow-hidden rounded-xl transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-md">
                                   <ImagePanel
-                                    src={ph(
-                                      600,
-                                      800,
-                                      '69254e',
-                                      'f5e8ee',
-                                      p.name,
-                                    )}
+                                    src={'/images/products/saree-01.jpg'}
                                     alt={p.name}
                                     className="aspect-[3/4] w-full"
                                     rounded="none"

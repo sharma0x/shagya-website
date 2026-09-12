@@ -1,56 +1,89 @@
-# CI/CD Pipeline
+# CI/CD & Release Pipeline
 
 ## Branches & Environments
 
-| Git branch | Environment | Neon branch   | R2 bucket      |
-| ---------- | ----------- | ------------- | -------------- |
-| `develop`  | Preview     | `development` | `shayga-dev`   |
-| `main`     | Production  | `production`  | `shayga-media` |
-
-Both Neon branches live in the same project (`shayga`, region `aws-us-east-1`).
+| Git branch | Environment | Machine          | Runner label | Domain             | DB                    | Storage (R2)       | Deployed tag |
+| ---------- | ----------- | ---------------- | ------------ | ------------------ | --------------------- | ------------------ | ------------ |
+| `develop`  | Staging     | Dev Mac (arm64)  | `staging`    | `shayga.localhost` | local Docker Postgres | `shayga-media-dev` | `:develop`   |
+| `main`     | Production  | AWS EC2 (x86_64) | `production` | `shayga.in`        | AWS RDS (Postgres 18) | `shayga-media`     | `:latest`    |
 
 ## Workflows
 
-| File                 | Trigger                 | Purpose                                               |
-| -------------------- | ----------------------- | ----------------------------------------------------- |
-| `ci.yml`             | push/PR to main/develop | Format, lint, typecheck, unit tests, production build |
-| `release.yml`        | push to main            | semantic-release: bumps version, updates CHANGELOG    |
-| `deploy-preview.yml` | push to develop         | Build + deploy to Vercel preview                      |
-| `deploy-prod.yml`    | push to main            | Build + deploy to Vercel production                   |
+| File                 | Trigger                                    | Purpose                                                                                          |
+| -------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| `ci.yml`             | Push on `develop` / PR on `main`+`develop` | Format, lint, typecheck, unit tests, migrations, Next.js build (against ephemeral Postgres)      |
+| `deploy-staging.yml` | Push on `develop`                          | Build + push (`:develop`, `:sha-*`) → deploy to `staging` runner                                 |
+| `deploy-prod.yml`    | Push on `main` + `workflow_dispatch`       | Validate → semantic-release → build + push (`:latest`, `:vX.Y.Z`, semver) → deploy to production |
 
-## Environment Variables (fully automated)
+## How it flows
 
-All Vercel project env vars are configured per-environment. No manual setup needed.
+1. Merge a PR to `main` → `deploy-prod.yml` runs `validate` (lint/typecheck/test/build against an ephemeral Postgres), then `release` (semantic-release creates the GitHub release + git tag `vX.Y.Z`).
+2. If a new version was published, the `build` job starts a throwaway Postgres ("builddb") and runs `docker build --network=host --build-arg DATABASE_URL=...` — the builder stage applies migrations before `next build` — tagging `:latest`, `:vX.Y.Z`, `:X.Y.Z`, `:X.Y`, `:X`, `:sha-*`.
+3. The `deploy` job (production self-hosted runner) pulls `:latest`, syncs compose files to `/opt/shayga`, and runs `make prod-deploy`.
+4. Push to `develop` → `deploy-staging.yml` builds `:develop` + `:sha-*` the same way and deploys to the local staging runner.
 
-| Variable                 | Production                                | Preview                               |
-| ------------------------ | ----------------------------------------- | ------------------------------------- |
-| `DATABASE_URL`           | Neon `production` branch (encrypted)      | Neon `development` branch (encrypted) |
-| `PAYLOAD_SECRET`         | Set (encrypted)                           | Set (encrypted)                       |
-| `R2_ENDPOINT`            | `https://<acct>.r2.cloudflarestorage.com` | Same                                  |
-| `R2_ACCESS_KEY_ID`       | Prod R2 key (encrypted)                   | Dev R2 key (encrypted)                |
-| `R2_SECRET_ACCESS_KEY`   | Prod R2 secret (encrypted)                | Dev R2 secret (encrypted)             |
-| `R2_BUCKET`              | `shayga-media`                            | `shayga-dev`                          |
-| `R2_REGION`              | `auto`                                    | `auto`                                |
-| `NEXT_PUBLIC_SERVER_URL` | `https://shayga.com`                      | (Vercel auto-assigns at deploy time)  |
-| `RESEND_API_KEY`         | Set (encrypted)                           | Set (encrypted)                       |
+The release commit pushed by semantic-release carries a `[skip ci]` marker, so
+GitHub's push-trigger skips that commit and the workflow does not re-run itself.
 
-## GitHub Secrets (all set)
+## Secrets
 
-| Secret                   | Status                              |
-| ------------------------ | ----------------------------------- |
-| `VERCEL_TOKEN`           | ✅ Set                              |
-| `VERCEL_PROJECT_ID`      | ✅ prj_9ukLY4iSNNqLH1Fz7kRO21WVj3Z2 |
-| `VERCEL_ORG_ID`          | ✅ team_PDEqGGotRP1BxyRqoJG2t5AJ    |
-| `NEON_DATABASE_URL_DEV`  | ✅ Set                              |
-| `NEON_DATABASE_URL_PROD` | ✅ Set                              |
-| `PAYLOAD_SECRET`         | ✅ Set                              |
+| Secret      | Purpose                                         |
+| ----------- | ----------------------------------------------- |
+| `GH_SECRET` | Fine-grained/PAT token used to push the release |
 
-## GitHub Variables
+## Image Tagging Matrix
 
-| Variable                | Value                                             |
-| ----------------------- | ------------------------------------------------- |
-| `VERCEL_PREVIEW_DOMAIN` | `shayga-website-git-develop-clow-work.vercel.app` |
-| `VERCEL_PROD_DOMAIN`    | `shayga.com`                                      |
+| Trigger Event                  | Published Tags                                               |
+| ------------------------------ | ------------------------------------------------------------ |
+| Push to `develop`              | `:develop`, `:sha-<short>`                                   |
+| Push to `main` (new `v1.2.3`)  | `:latest`, `:v1.2.3`, `:1.2.3`, `:1.2`, `:1`, `:sha-<short>` |
+| `workflow_dispatch` (rollback) | deploy only — no build                                       |
+
+Images are built **amd64-only** on the hosted ubuntu runner. The prod EC2 pulls
+amd64 natively; the dev Mac runs the amd64 image under Rosetta
+(`platform: linux/amd64` pinned in the compose file). Builds use
+`docker build --network=host` so the builder stage can reach the ephemeral
+`builddb` Postgres on `127.0.0.1:5432` (Linux runner only — that flag doesn't
+work on Docker Desktop/macOS).
+
+## Self-Hosted Runners
+
+Two self-hosted runners power the deploy jobs (they run _on_ the target machine,
+dialing GitHub over outbound HTTPS — no SSH/ingress required):
+
+- **`production`** — the AWS EC2, installed as a systemd service
+  (`actions.runner.sharma0x-shagya-website.shayga-prod-runner`).
+- **`staging`** — the developer Mac, installed as a launchd service.
+
+Deploy jobs run `docker compose pull → migrate → up` against `/opt/shayga`
+(prod) or the repo checkout (staging). Prod deploy files
+(`docker-compose.prod.yml`, `Caddyfile`, `Makefile`) are re-synced from the repo
+on every run to prevent drift.
+
+## Staging (local) Setup
+
+```bash
+# one-time: hosts entry
+sudo sh -c 'echo "127.0.0.1 shayga.localhost" >> /etc/hosts'
+
+# one-time: env file
+cp .env.staging.example .env.staging   # then fill in secrets
+
+# manual run (workflow also does this automatically)
+docker compose -f docker-compose.staging.yml up -d
+```
+
+Served at `http://shayga.localhost`.
+
+## Rollback
+
+Roll back production to any immutable version from the Actions UI
+(`deploy-prod.yml` → Run workflow → `version=v1.2.3`), or from a machine with
+SSH access:
+
+```bash
+make prod-deploy IMAGE_TAG=v1.2.3
+```
 
 ## Semantic Versioning
 
@@ -62,13 +95,3 @@ All Vercel project env vars are configured per-environment. No manual setup need
 | `docs:`, `style:`, `test:`, `build:`, `ci:`, `chore:` | none         |
 
 Husky + commitlint enforces Conventional Commits on every commit.
-
-## Local Development
-
-```bash
-make setup                 # install deps
-make infra-up              # local Postgres + MinIO
-make db-migrate            # run migrations
-make dev                   # start dev server
-make test / make test-all  # run tests
-```

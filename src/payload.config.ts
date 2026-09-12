@@ -335,11 +335,20 @@ export default buildConfig({
   globals: [SiteSettings],
 
   // ---------------------------------------------------------------------------
-  // Database — PostgreSQL 18 via Neon
+  // Database — PostgreSQL (AWS RDS / Neon / Local Docker)
   // ---------------------------------------------------------------------------
   db: postgresAdapter({
     pool: {
       connectionString: process.env.DATABASE_URL || '',
+      ssl:
+        process.env.DATABASE_URL?.includes('sslmode=require') ||
+        process.env.DATABASE_URL?.includes('neon.tech') ||
+        process.env.DATABASE_URL?.includes('rds.amazonaws.com')
+          ? { rejectUnauthorized: false }
+          : undefined,
+      max: Number(process.env.DB_POOL_MAX || 15),
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 5000,
     },
     // Disabled automatic schema push to prevent conflict/deletion of Better Auth tables in development
     push: false,
@@ -355,11 +364,8 @@ export default buildConfig({
     }),
     searchPlugin({
       collections: ['products', 'pages', 'posts'],
-      syncDrafts: true,
+      syncDrafts: false,
       beforeSync: ({ originalDoc, searchDoc }) => {
-        if (originalDoc?.status && originalDoc.status !== 'published') {
-          return null as any
-        }
         const extraText = extractSearchText(originalDoc)
         const baseTitle =
           originalDoc.title || originalDoc.name || searchDoc.title || ''
@@ -385,7 +391,21 @@ export default buildConfig({
     }),
     s3Storage({
       collections: {
-        media: true,
+        media: {
+          // Serve media through a CDN custom domain (e.g. cdn.shayga.in) when
+          // R2_CDN is set; otherwise fall back to the raw R2 endpoint. The CDN
+          // domain maps directly to the bucket, so the bucket name is omitted.
+          generateFileURL: ({ filename, prefix }) => {
+            const dir = prefix ? `${prefix}`.replace(/^\/+|\/+$/g, '') : ''
+            const key = dir
+              ? `${dir}/${encodeURIComponent(filename)}`
+              : encodeURIComponent(filename)
+            const base = process.env.R2_CDN
+              ? `https://${process.env.R2_CDN}`
+              : `${process.env.R2_ENDPOINT}/${process.env.R2_BUCKET}`
+            return `${base}/${key}`
+          },
+        },
       },
       bucket: process.env.R2_BUCKET || 'shayga-media',
       config: {

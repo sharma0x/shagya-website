@@ -16,22 +16,66 @@ import {
 // ─── Internal helpers ─────────────────────────────────────────────────────────
 
 async function getBaseURL(): Promise<string> {
-  return getServerURL()
+  // Emails must never point at localhost. getServerURL() resolves the real
+  // public URL from the runtime env (PAYLOAD_PUBLIC_SERVER_URL); the
+  // production domain is the last-resort fallback.
+  return getServerURL().replace(/\/+$/, '') || 'https://shayga.in'
 }
 
-async function getAdminEmail(payload: Payload): Promise<string> {
+export async function getAdminEmails(payload: Payload): Promise<string[]> {
   try {
     const settings = (await payload.findGlobal({
       slug: 'site-settings',
       overrideAccess: true,
     })) as unknown as Record<string, unknown>
-    if (typeof settings?.adminNotificationEmail === 'string') {
-      return settings.adminNotificationEmail
+
+    if (
+      Array.isArray(settings?.adminNotificationEmails) &&
+      settings.adminNotificationEmails.length > 0
+    ) {
+      const emails = settings.adminNotificationEmails
+        .map((entry: any) => (typeof entry === 'string' ? entry : entry?.email))
+        .filter((e: any) => typeof e === 'string' && e.trim().length > 0)
+        .map((e: string) => e.trim())
+
+      if (emails.length > 0) {
+        return emails
+      }
+    }
+
+    if (
+      typeof settings?.adminNotificationEmail === 'string' &&
+      settings.adminNotificationEmail.trim().length > 0
+    ) {
+      const parsed = settings.adminNotificationEmail
+        .split(',')
+        .map((e) => e.trim())
+        .filter(Boolean)
+      if (parsed.length > 0) {
+        return parsed
+      }
     }
   } catch {
     // fall through
   }
-  return process.env.ADMIN_EMAIL || 'admin@shayga.in'
+
+  const envEmail = process.env.ADMIN_EMAIL
+  if (envEmail) {
+    const parsed = envEmail
+      .split(',')
+      .map((e) => e.trim())
+      .filter(Boolean)
+    if (parsed.length > 0) {
+      return parsed
+    }
+  }
+
+  return ['archana.vaknalli@shayga.com']
+}
+
+async function getAdminEmail(payload: Payload): Promise<string> {
+  const emails = await getAdminEmails(payload)
+  return emails[0] || 'archana.vaknalli@shayga.com'
 }
 
 async function safeSend(
@@ -95,7 +139,9 @@ async function fetchOrder(
   id: string,
 ): Promise<PopulatedOrder | null> {
   try {
-    payload.logger.info(`[Email] fetchOrder — querying orders collection id=${id}`)
+    payload.logger.info(
+      `[Email] fetchOrder — querying orders collection id=${id}`,
+    )
     const doc = await payload.findByID({
       collection: 'orders',
       id,
@@ -172,12 +218,18 @@ export async function sendOrderPlacedEmails(
   orderId: string,
   orderDoc?: Record<string, unknown>,
 ): Promise<void> {
-  payload.logger.info(`[Email] sendOrderPlacedEmails called — orderId=${orderId}`)
+  payload.logger.info(
+    `[Email] sendOrderPlacedEmails called — orderId=${orderId}`,
+  )
   let order = await fetchOrder(payload, orderId)
-  payload.logger.info(`[Email] fetchOrder result — orderId=${orderId} found=${!!order}`)
+  payload.logger.info(
+    `[Email] fetchOrder result — orderId=${orderId} found=${!!order}`,
+  )
 
   if (!order && orderDoc) {
-    payload.logger.info(`[Email] Using hook doc as fallback — orderId=${orderId}`)
+    payload.logger.info(
+      `[Email] Using hook doc as fallback — orderId=${orderId}`,
+    )
     order = {
       id: String(orderDoc.id ?? orderId),
       orderNumber: (orderDoc.orderNumber as string) || '',
@@ -197,9 +249,9 @@ export async function sendOrderPlacedEmails(
 
   if (!order) return
 
-  const [storeUrl, adminEmail, customerName] = await Promise.all([
+  const [storeUrl, adminEmails, customerName] = await Promise.all([
     getBaseURL(),
-    getAdminEmail(payload),
+    getAdminEmails(payload),
     resolveCustomerName(payload, order.customerEmail),
   ])
 
@@ -219,12 +271,14 @@ export async function sendOrderPlacedEmails(
       custEmail.html,
       'order-placed-customer',
     ),
-    safeSend(
-      payload,
-      adminEmail,
-      adminEmailData.subject,
-      adminEmailData.html,
-      'admin-new-order',
+    ...adminEmails.map((email) =>
+      safeSend(
+        payload,
+        email,
+        adminEmailData.subject,
+        adminEmailData.html,
+        'admin-new-order',
+      ),
     ),
   ])
 }
@@ -264,9 +318,9 @@ export async function sendOrderStatusEmails(
   const order = await fetchOrder(payload, orderId)
   if (!order) return
 
-  const [storeUrl, adminEmail, customerName] = await Promise.all([
+  const [storeUrl, adminEmails, customerName] = await Promise.all([
     getBaseURL(),
-    getAdminEmail(payload),
+    getAdminEmails(payload),
     resolveCustomerName(payload, order.customerEmail),
   ])
 
@@ -291,9 +345,14 @@ export async function sendOrderStatusEmails(
   }
 
   if (config.adminSlug) {
+    const adminSlug = config.adminSlug
     sends.push(
-      renderEmail(payload, config.adminSlug, vars).then(({ subject, html }) =>
-        safeSend(payload, adminEmail, subject, html, config.adminSlug!),
+      renderEmail(payload, adminSlug, vars).then(({ subject, html }) =>
+        Promise.all(
+          adminEmails.map((email) =>
+            safeSend(payload, email, subject, html, adminSlug),
+          ),
+        ).then(() => {}),
       ),
     )
   }

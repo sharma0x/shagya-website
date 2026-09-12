@@ -16,8 +16,24 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const body = await request.json()
-    const { productId, rating, title, body: reviewBody } = body
+    let productId, rating, title, reviewBody
+    let imageFiles: File[] = []
+
+    const contentType = request.headers.get('content-type') || ''
+    if (contentType.includes('multipart/form-data')) {
+      const formData = await request.formData()
+      productId = formData.get('productId') as string
+      rating = Number(formData.get('rating'))
+      title = formData.get('title') as string
+      reviewBody = formData.get('body') as string
+      imageFiles = formData.getAll('images') as File[]
+    } else {
+      const body = await request.json()
+      productId = body.productId
+      rating = body.rating
+      title = body.title
+      reviewBody = body.body
+    }
 
     if (!productId || !rating || !title || !reviewBody) {
       return NextResponse.json(
@@ -94,6 +110,32 @@ export async function POST(request: Request) {
 
     const alreadyReviewed = existingReviews.docs.length > 0
 
+    // ── Upload Images ──
+    const uploadedImages = []
+    for (const file of imageFiles) {
+      if (file.size > 0) {
+        const arrayBuffer = await file.arrayBuffer()
+        const buffer = Buffer.from(arrayBuffer)
+
+        const mediaDoc = await payload.create({
+          collection: 'media',
+          data: {
+            alt: `Review image for product ${productId}`,
+          },
+          file: {
+            data: buffer,
+            name: file.name,
+            mimetype: file.type,
+            size: file.size,
+          },
+        })
+
+        uploadedImages.push({
+          image: mediaDoc.id,
+        })
+      }
+    }
+
     const review = await payload.create({
       collection: 'reviews',
       data: {
@@ -104,6 +146,7 @@ export async function POST(request: Request) {
         body: reviewBody.trim(),
         verifiedPurchase: hasPurchasedProduct,
         status: 'approved',
+        ...(uploadedImages.length > 0 && { images: uploadedImages }),
       },
     })
 
@@ -112,6 +155,7 @@ export async function POST(request: Request) {
       reviewId: review.id,
       verifiedPurchase: hasPurchasedProduct,
       alreadyReviewed: false,
+      images: review.images,
     })
   } catch (error) {
     console.error('[API] POST /api/reviews error:', error)

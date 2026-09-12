@@ -10,6 +10,9 @@ import { ProductFilters } from '@/components/product/ProductFilters'
 import { ProductCard } from '@/components/product/ProductCard'
 import { ProductCardSkeleton } from '@/components/ui/Skeleton'
 
+// ISR cache for 5 minutes
+export const revalidate = 300
+
 function getCommaParam(
   params: { [key: string]: string | string[] | undefined },
   key: string,
@@ -25,6 +28,7 @@ function buildWhere(
   collectionId: number,
 ) {
   const where: Record<string, any> = {
+    _status: { equals: 'published' },
     collections: { contains: collectionId },
     status: { equals: 'published' },
   }
@@ -79,13 +83,12 @@ function buildWhere(
 
 function CollectionProductGridSkeleton() {
   return (
-    <div
-      className="mt-4 grid grid-cols-2 gap-x-3 gap-y-5 sm:gap-x-4 sm:gap-y-8 lg:grid-cols-3 xl:grid-cols-4"
-      aria-hidden="true"
-    >
-      {Array.from({ length: 8 }).map((_, i) => (
-        <ProductCardSkeleton key={i} />
-      ))}
+    <div className="flex-1" aria-hidden="true">
+      <div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-5 sm:gap-x-4 sm:gap-y-8 lg:grid-cols-3 xl:grid-cols-4">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <ProductCardSkeleton key={i} />
+        ))}
+      </div>
     </div>
   )
 }

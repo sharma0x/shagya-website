@@ -33,10 +33,7 @@ export function ProductShareButton({
   const [copied, setCopied] = useState(false)
 
   const origin =
-    process.env.NEXT_PUBLIC_SERVER_URL ||
-    (typeof window !== 'undefined'
-      ? window.location.origin
-      : 'https://shayga.in')
+    typeof window !== 'undefined' ? window.location.origin : 'https://shayga.in'
   const shareUrl = `${origin}${getProductUrl(productSlug, productId)}`
 
   // Handle ESC key press to close modal

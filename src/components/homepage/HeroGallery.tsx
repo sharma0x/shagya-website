@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
+import { isUnoptimizedImage } from '@/lib/image-url'
 
 export interface HeroImage {
   src: string
@@ -115,7 +116,7 @@ export function HeroGallery({ images }: HeroGalleryProps) {
               fill
               sizes="(max-width: 1024px) 100vw, 33vw"
               className="object-cover"
-              unoptimized={img.src.startsWith('https://placehold.co')}
+              unoptimized={isUnoptimizedImage(img.src)}
               priority={panelIdx === 0 && i === 0}
             />
             {/* Subtle warp-grain texture overlay */}

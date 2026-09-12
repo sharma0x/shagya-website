@@ -45,6 +45,9 @@ src/payload-types.ts
 # Misc
 *.pem
 
+# Shell scripts (no prettier parser)
+scripts/
+
 
 # opencode
 opencode.json

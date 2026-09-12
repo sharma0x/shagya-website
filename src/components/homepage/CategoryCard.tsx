@@ -1,9 +1,7 @@
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { SkeletonImage } from '@/components/ui/SkeletonImage'
-
-const ph = (w: number, h: number, bg: string, fg: string, text: string) =>
-  `https://placehold.co/${w}x${h}/${bg}/${fg}?text=${encodeURIComponent(text)}&font=lora`
+import { isUnoptimizedImage } from '@/lib/image-url'
 
 interface CategoryCardProps {
   name: string
@@ -20,7 +18,7 @@ export function CategoryCard({
   productCount,
   className,
 }: CategoryCardProps) {
-  const imgSrc = imageUrl || ph(300, 400, '7a3a5d', 'f5e8ee', name)
+  const imgSrc = imageUrl || '/images/products/saree-01.jpg'
 
   return (
     <Link
@@ -30,14 +28,14 @@ export function CategoryCard({
         className,
       )}
     >
-      <div className="aspect-[4/5] w-full sm:aspect-square">
+      <div className="relative aspect-[4/5] w-full sm:aspect-square">
         <SkeletonImage
           src={imgSrc}
           alt={name}
           fill
           sizes="(max-width: 640px) 60vw, 25vw"
           className="object-cover transition-transform duration-500 group-hover:scale-105"
-          unoptimized={imgSrc.startsWith('https://placehold.co')}
+          unoptimized={isUnoptimizedImage(imgSrc)}
         />
       </div>
 

@@ -9,6 +9,9 @@ import { ProductFilters } from '@/components/product/ProductFilters'
 import { ProductCard } from '@/components/product/ProductCard'
 import { ProductCardSkeleton } from '@/components/ui/Skeleton'
 
+// ISR cache for 5 minutes
+export const revalidate = 300
+
 function getCommaParam(
   params: { [key: string]: string | string[] | undefined },
   key: string,
@@ -52,6 +55,7 @@ const WEAVES = [
 
 function buildWhere(sParams: FilterParams, slug: string) {
   const where: Record<string, any> = {
+    _status: { equals: 'published' },
     status: { equals: 'published' },
   }
 
@@ -126,13 +130,12 @@ function buildWhere(sParams: FilterParams, slug: string) {
 
 function CategoryProductGridSkeleton() {
   return (
-    <div
-      className="mt-4 grid grid-cols-2 gap-x-3 gap-y-5 sm:gap-x-4 sm:gap-y-8 lg:grid-cols-3 xl:grid-cols-4"
-      aria-hidden="true"
-    >
-      {Array.from({ length: 8 }).map((_, i) => (
-        <ProductCardSkeleton key={i} />
-      ))}
+    <div className="flex-1" aria-hidden="true">
+      <div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-5 sm:gap-x-4 sm:gap-y-8 lg:grid-cols-3 xl:grid-cols-4">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <ProductCardSkeleton key={i} />
+        ))}
+      </div>
     </div>
   )
 }
@@ -149,26 +152,41 @@ async function CategoryProductsStream({
   const payload = await getPayload({ config })
   const where = buildWhere(sParams, slug)
 
-  if (slug.toLowerCase() === 'bridal') {
-    where.occasion = { like: 'Bridal' }
-  } else if (slug.toLowerCase() === 'festive') {
-    where.occasion = { like: 'Festive' }
-  } else if (
-    !FABRICS.includes(slug.toLowerCase()) &&
-    !WEAVES.includes(slug.toLowerCase()) &&
-    slug.toLowerCase() !== 'all'
-  ) {
-    const catDoc = await payload.find({
-      collection: 'categories',
-      where: { slug: { equals: slug } },
-      limit: 1,
+  const lowerSlug = slug.toLowerCase()
+  const occasionSlugs = getCommaParam(sParams, 'occasion')
+  // Legacy category slugs bridal/festive map to the occasions relationship
+  // (they were formerly filtered via the free-text occasion field).
+  if (lowerSlug === 'bridal' || lowerSlug === 'festive') {
+    occasionSlugs.push(lowerSlug)
+  }
+  if (occasionSlugs.length > 0) {
+    const occRes = await payload.find({
+      collection: 'occasions',
+      where: { slug: { in: occasionSlugs } },
+      limit: 100,
+      depth: 0,
     })
-    if (catDoc.docs.length > 0) {
-      if (slug.toLowerCase() === 'bridal') {
-        where.occasion = { like: 'Bridal' }
-      } else if (slug.toLowerCase() === 'festive') {
-        where.occasion = { like: 'Festive' }
-      }
+    const occasionIds = occRes.docs.map((d) => d.id)
+    if (occasionIds.length === 1) {
+      where.occasions = { contains: occasionIds[0] }
+    } else if (occasionIds.length > 1) {
+      where.occasions = { in: occasionIds }
+    }
+  }
+
+  const brandSlugs = getCommaParam(sParams, 'brand')
+  if (brandSlugs.length > 0) {
+    const brandRes = await payload.find({
+      collection: 'brands',
+      where: { slug: { in: brandSlugs } },
+      limit: 100,
+      depth: 0,
+    })
+    const brandIds = brandRes.docs.map((d) => d.id)
+    if (brandIds.length === 1) {
+      where.brand = { equals: brandIds[0] }
+    } else if (brandIds.length > 1) {
+      where.brand = { in: brandIds }
     }
   }
 

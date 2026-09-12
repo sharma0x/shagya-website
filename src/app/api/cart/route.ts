@@ -3,6 +3,16 @@ import { getPayload } from 'payload'
 import config from '@payload-config'
 import { auth } from '@/lib/auth'
 import { mergeCartItems, normalizeVariant } from '@/lib/cart-merge'
+import {
+  validateCartStock,
+  applyStockClamp,
+  type CartStockItem,
+} from '@/lib/stock'
+import {
+  resolveCurrentPrices,
+  itemProductId,
+  applyCurrentPrice,
+} from '@/lib/cart-prices'
 
 /**
  * GET /api/cart
@@ -48,7 +58,22 @@ export async function GET(request: Request): Promise<NextResponse> {
       return NextResponse.json({ items: [], subtotal: 0 })
     }
 
-    return NextResponse.json(carts.docs[0])
+    // Recompute unit prices and subtotal from the CURRENT product prices so
+    // a price change made in the admin is reflected immediately.
+    const cart = carts.docs[0] as any
+    const storedItems = Array.isArray(cart?.items) ? cart.items : []
+    const priceMap = await resolveCurrentPrices(payload, storedItems)
+    const items = storedItems.map((item: any) => {
+      const { unitPrice } = applyCurrentPrice(item, priceMap)
+      return { ...item, unitPrice }
+    })
+    const subtotal = items.reduce(
+      (acc: number, item: any) =>
+        acc + (item.unitPrice || 0) * (item.quantity || 1),
+      0,
+    )
+
+    return NextResponse.json({ ...cart, items, subtotal })
   } catch (error) {
     console.error('[API] GET /api/cart error:', error)
     return NextResponse.json(
@@ -69,7 +94,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { items, couponId } = await request.json()
+    const { items, couponId, action } = await request.json()
     if (!Array.isArray(items)) {
       return NextResponse.json(
         { error: 'Items must be an array' },
@@ -78,6 +103,23 @@ export async function POST(request: Request): Promise<NextResponse> {
     }
 
     const payload = await getPayload({ config })
+
+    // ── Server-side stock validation ──
+    const stockItems: CartStockItem[] = items.map((item: any) => ({
+      product: item.product,
+      variant: item.variant,
+      quantity: item.quantity || 1,
+    }))
+
+    const stockCheck = await validateCartStock(payload, stockItems)
+
+    if (!stockCheck.ok) {
+      // Clamp quantities to available stock instead of rejecting entirely
+      const clampedItems = applyStockClamp(items, stockCheck)
+      // Replace items array with clamped version for downstream processing
+      items.length = 0
+      items.push(...clampedItems)
+    }
 
     // Find the customer linked to this Better Auth user
     const customers = await payload.find({
@@ -95,8 +137,14 @@ export async function POST(request: Request): Promise<NextResponse> {
 
     const customerId = customers.docs[0].id
 
-    // Calculate subtotal
-    const subtotal = items.reduce(
+    // Calculate subtotal from CURRENT product prices (never trust the
+    // add-time unitPrice snapshot in the client payload)
+    const priceMap = await resolveCurrentPrices(payload, items)
+    const pricedItems = items.map((item: any) => {
+      const { unitPrice } = applyCurrentPrice(item, priceMap)
+      return { ...item, unitPrice }
+    })
+    const subtotal = pricedItems.reduce(
       (acc, item) => acc + (item.unitPrice || 0) * (item.quantity || 1),
       0,
     )
@@ -115,7 +163,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     let cart
     const data: any = {
       customer: customerId,
-      items: items.map((item) => ({
+      items: pricedItems.map((item) => ({
         product:
           typeof item.product === 'object' && item.product !== null
             ? item.product.id
@@ -133,17 +181,19 @@ export async function POST(request: Request): Promise<NextResponse> {
     }
 
     if (carts.docs.length > 0) {
-      // Merge incoming items with existing cart items. Existing items come
-      // back from payload.find with relationships populated (default depth
-      // >= 1), so keys must normalize populated product objects + variants.
-      const existingItems = (carts.docs[0] as any).items || []
+      if (action === 'merge') {
+        // Merge incoming items with existing cart items. Existing items come
+        // back from payload.find with relationships populated (default depth
+        // >= 1), so keys must normalize populated product objects + variants.
+        const existingItems = (carts.docs[0] as any).items || []
 
-      data.items = mergeCartItems(existingItems, data.items)
-      data.subtotal = data.items.reduce(
-        (acc: number, item: any) =>
-          acc + (item.unitPrice || 0) * (item.quantity || 1),
-        0,
-      )
+        data.items = mergeCartItems(existingItems, data.items)
+        data.subtotal = data.items.reduce(
+          (acc: number, item: any) =>
+            acc + (item.unitPrice || 0) * (item.quantity || 1),
+          0,
+        )
+      }
 
       cart = await payload.update({
         collection: 'carts',

@@ -1,0 +1,3 @@
+# Copy to allowed_ips.txt and add one public IP per line.
+# Example:
+# 1.2.3.4

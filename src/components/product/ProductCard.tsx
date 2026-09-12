@@ -8,9 +8,7 @@ import { ProductBadge } from '@/components/ui/ProductBadge'
 import { cn } from '@/lib/utils'
 import { getProductUrl } from '@/lib/product-url'
 import { liftVariantGallery } from '@/lib/product-utils'
-
-const ph = (w: number, h: number, _bg: string, _fg: string, text: string) =>
-  `https://images.placeholders.dev/?width=${w}&height=${h}&text=${encodeURIComponent(text.substring(0, 20))}&bgColor=%2369254e&textColor=%23f5e8ee&fontFamily=lora&fontWeight=600`
+import { isUnoptimizedImage } from '@/lib/image-url'
 
 interface GalleryItem {
   url: string
@@ -94,7 +92,7 @@ function getMultiColorGallery(product: any): GalleryItem[] {
   // Final placeholder fallback if completely empty
   if (items.length === 0) {
     items.push({
-      url: ph(600, 800, '69254e', 'f5e8ee', product.name || 'Saree'),
+      url: '/images/products/saree-01.jpg',
       colorName: product.color?.name,
     })
   }
@@ -137,6 +135,7 @@ interface ProductCardProps {
   product: ProductCardProduct
   variant?: 'grid' | 'compact' | 'row'
   showWishlist?: boolean
+  badge?: 'new' | 'sale' | 'bestseller'
   className?: string
 }
 
@@ -144,6 +143,7 @@ export function ProductCard({
   product,
   variant = 'grid',
   showWishlist = true,
+  badge: badgeOverride,
   className,
 }: ProductCardProps) {
   const adapted = product.color ? product : liftVariantGallery(product)
@@ -188,12 +188,13 @@ export function ProductCard({
     }
   }, [])
 
-  // Auto-detect badge
-  const badge = discountPct
+  // Auto-detect badge unless explicitly overridden
+  const autoBadge = discountPct
     ? ('sale' as const)
     : (product as any).purchaseCount > 5
       ? ('bestseller' as const)
       : undefined
+  const badge = badgeOverride ?? autoBadge
 
   const isCompact = variant === 'compact'
 
@@ -210,9 +211,7 @@ export function ProductCard({
             fill
             sizes="96px"
             className="object-cover"
-            unoptimized={galleryItems[0]?.url.startsWith(
-              'https://placehold.co',
-            )}
+            unoptimized={isUnoptimizedImage(galleryItems[0]?.url)}
           />
         </Link>
         <div className="flex flex-1 flex-col justify-between py-1">
@@ -282,7 +281,7 @@ export function ProductCard({
                   i === activeImage &&
                   'group-hover:scale-105',
               )}
-              unoptimized={item.url.startsWith('https://placehold.co')}
+              unoptimized={isUnoptimizedImage(item.url)}
             />
           ))}
 

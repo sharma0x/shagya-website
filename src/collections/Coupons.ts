@@ -124,9 +124,9 @@ export const Coupons: CollectionConfig = {
       defaultValue: true,
     },
     {
-      name: 'categoriesConditions',
+      name: 'collectionsConditions',
       type: 'relationship',
-      relationTo: 'categories',
+      relationTo: 'collections',
       hasMany: true,
     },
     {

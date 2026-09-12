@@ -103,9 +103,7 @@ import Link from 'next/link'
 import { SkeletonImage } from '@/components/ui/SkeletonImage'
 import { WishlistButton } from '@/components/product/WishlistButton'
 import { ProductBadge } from '@/components/ui/ProductBadge'
-
-const ph = (w: number, h: number, bg: string, fg: string, text: string) =>
-  `https://placehold.co/${w}x${h}/${bg}/${fg}?text=${encodeURIComponent(text)}&font=lora`
+import { isUnoptimizedImage } from '@/lib/image-url'
 
 interface HomepageCardProps {
   product: any
@@ -117,7 +115,7 @@ function HomepageCard({ product, badge }: HomepageCardProps) {
     product.gallery?.[0]?.image && typeof product.gallery[0].image === 'object'
       ? product.gallery[0].image.sizes?.card?.url ||
         product.gallery[0].image.url
-      : ph(600, 800, '69254e', 'f5e8ee', product.name)
+      : '/images/products/saree-01.jpg'
 
   const discount =
     product.compareAtPrice && product.compareAtPrice > product.basePrice
@@ -134,14 +132,14 @@ function HomepageCard({ product, badge }: HomepageCardProps) {
       className="group block w-48 min-w-[192px] shrink-0"
     >
       <div className="relative overflow-hidden rounded-xl bg-neutral-100 transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-md">
-        <div className="aspect-[4/5] w-full">
+        <div className="relative aspect-[4/5] w-full">
           <SkeletonImage
             src={imageUrl || ''}
             alt={product.name}
             fill
             sizes="192px"
             className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-            unoptimized={imageUrl?.startsWith('https://placehold.co')}
+            unoptimized={isUnoptimizedImage(imageUrl)}
           />
         </div>
 

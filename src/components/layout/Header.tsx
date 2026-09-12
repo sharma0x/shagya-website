@@ -12,12 +12,24 @@ import {
   ChevronDown,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import dynamic from 'next/dynamic'
 import { Logo } from '@/components/layout/Logo'
 import { useCart } from '@/lib/store/cart'
 import { useUI } from '@/lib/store/ui'
 import { useWishlistStore } from '@/lib/store/wishlist'
-import { CartDrawer } from '@/components/cart/CartDrawer'
-import { SearchCommand } from '@/components/search/SearchCommand'
+
+const CartDrawer = dynamic(
+  () => import('@/components/cart/CartDrawer').then((mod) => mod.CartDrawer),
+  { ssr: false },
+)
+const SearchCommand = dynamic(
+  () =>
+    import('@/components/search/SearchCommand').then(
+      (mod) => mod.SearchCommand,
+    ),
+  { ssr: false },
+)
+
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -29,36 +41,12 @@ import {
 } from '@/components/ui/navigation-menu'
 import { useSession } from '@/lib/auth-client'
 
-const megaMenu = {
-  fabrics: [
-    { label: 'Silk', value: 'silk' },
-    { label: 'Cotton', value: 'cotton' },
-    { label: 'Linen', value: 'linen' },
-    { label: 'Georgette', value: 'georgette' },
-    { label: 'Chiffon', value: 'chiffon' },
-    { label: 'Crepe', value: 'crepe' },
-    { label: 'Velvet', value: 'velvet' },
-    { label: 'Net', value: 'net' },
-    { label: 'Blend', value: 'blend' },
-  ],
-  weaves: [
-    { label: 'Banarasi', value: 'banarasi' },
-    { label: 'Kanchipuram', value: 'kanchipuram' },
-    { label: 'Bandhani', value: 'bandhani' },
-    { label: 'Patola', value: 'patola' },
-    { label: 'Kalamkari', value: 'kalamkari' },
-    { label: 'Ikat', value: 'ikkat' },
-    { label: 'Paithani', value: 'paithani' },
-    { label: 'Maheshwari', value: 'maheshwari' },
-    { label: 'Chanderi', value: 'chanderi' },
-    { label: 'Tant', value: 'tant' },
-    { label: 'Baluchari', value: 'baluchari' },
-  ],
-}
+// The dynamic taxonomies will be passed as a prop instead of this hardcoded array
 
 const topNav = [
   { label: 'Collections', href: '/collections' },
   { label: 'Journal', href: '/blog' },
+  { label: 'About Us', href: '/about' },
 ]
 
 export function Header() {
@@ -70,6 +58,12 @@ export function Header() {
     announcements: { text: string; link?: string }[]
   } | null>(null)
   const [activeAnnouncement, setActiveAnnouncement] = useState(0)
+  const [taxonomies, setTaxonomies] = useState<{
+    categories?: { name: string; slug: string }[]
+    fabricTypes?: { name: string; slug: string }[]
+    brands?: { name: string; slug: string }[]
+    occasions?: { name: string; slug: string }[]
+  } | null>(null)
   const announcementTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const { items } = useCart()
   const { data: sessionData } = useSession()
@@ -106,6 +100,33 @@ export function Header() {
         if (data?.announcementBar) setAnnouncement(data.announcementBar)
       })
       .catch(() => {})
+
+    // Fetch taxonomy nav menus client-side to keep the layout free of DB reads
+    Promise.all([
+      fetch('/api/categories?limit=100&depth=0').then((r) =>
+        r.ok ? r.json() : null,
+      ),
+      fetch('/api/fabric-types?limit=100&depth=0').then((r) =>
+        r.ok ? r.json() : null,
+      ),
+      fetch('/api/brands?limit=100&depth=0').then((r) =>
+        r.ok ? r.json() : null,
+      ),
+      fetch('/api/occasions?limit=100&depth=0').then((r) =>
+        r.ok ? r.json() : null,
+      ),
+    ])
+      .then(([cats, fabrics, brands, occasions]) => {
+        if (cats || fabrics || brands || occasions) {
+          setTaxonomies({
+            categories: cats?.docs || [],
+            fabricTypes: fabrics?.docs || [],
+            brands: brands?.docs || [],
+            occasions: occasions?.docs || [],
+          })
+        }
+      })
+      .catch(() => {})
   }, [])
 
   // Auto-rotate announcements every 5 seconds
@@ -140,13 +161,37 @@ export function Header() {
     if (sessionData?.user && !prevUserRef.current) {
       const { items, syncWithServer, loadFromServer } = useCart.getState()
       if (items.length > 0) {
-        syncWithServer().then(() => loadFromServer())
+        syncWithServer('merge').then(() => loadFromServer())
+      } else {
+        loadFromServer()
       }
     }
     prevUserRef.current = sessionData?.user
   }, [sessionData?.user])
 
   const cartCount = items.reduce((acc, item) => acc + item.quantity, 0)
+
+  // Use dynamic taxonomies passed from the server component
+  const fabrics =
+    taxonomies?.fabricTypes?.map((f: any) => ({
+      label: f.name || f.title,
+      value: f.slug,
+    })) || []
+  const categories =
+    taxonomies?.categories?.map((c: any) => ({
+      label: c.name || c.title,
+      value: c.slug,
+    })) || []
+  const brands =
+    taxonomies?.brands?.map((b: any) => ({
+      label: b.name || b.title,
+      value: b.slug,
+    })) || []
+  const occasions =
+    taxonomies?.occasions?.map((o: any) => ({
+      label: o.name || o.title,
+      value: o.slug,
+    })) || []
 
   return (
     <>
@@ -262,41 +307,99 @@ export function Header() {
                     </NavigationMenuTrigger>
                     <NavigationMenuContent>
                       <div className="flex divide-x divide-neutral-100">
-                        {/* Fabric column */}
-                        <div className="min-w-max px-8 py-6">
-                          <h4 className="font-display text-gold-500 mb-4 text-[11px] font-semibold tracking-[0.15em] uppercase">
-                            By Fabric
-                          </h4>
-                          <div className="grid grid-cols-2 gap-x-8 gap-y-0.5">
-                            {megaMenu.fabrics.map((f) => (
-                              <NavigationMenuLink
-                                key={f.value}
-                                render={<Link href={`/category/${f.value}`} />}
-                                className="font-body hover:text-brand-700 hover:bg-brand-50/60 block rounded-md px-2.5 py-1.5 text-sm tracking-wide whitespace-nowrap text-neutral-600 transition-colors"
-                              >
-                                {f.label}
-                              </NavigationMenuLink>
-                            ))}
+                        {/* Category column */}
+                        {categories.length > 0 && (
+                          <div className="min-w-max px-8 py-6">
+                            <h4 className="font-display text-gold-500 mb-4 text-[11px] font-semibold tracking-[0.15em] uppercase">
+                              By Category
+                            </h4>
+                            <div className="grid grid-cols-2 gap-x-8 gap-y-0.5">
+                              {categories.map((c: any) => (
+                                <NavigationMenuLink
+                                  key={c.value}
+                                  render={
+                                    <Link href={`/category/${c.value}`} />
+                                  }
+                                  className="font-body hover:text-brand-700 hover:bg-brand-50/60 block rounded-md px-2.5 py-1.5 text-sm tracking-wide whitespace-nowrap text-neutral-600 transition-colors"
+                                >
+                                  {c.label}
+                                </NavigationMenuLink>
+                              ))}
+                            </div>
                           </div>
-                        </div>
+                        )}
 
-                        {/* Weave column */}
-                        <div className="min-w-max px-8 py-6">
-                          <h4 className="font-display text-gold-500 mb-4 text-[11px] font-semibold tracking-[0.15em] uppercase">
-                            By Weave
-                          </h4>
-                          <div className="grid grid-cols-2 gap-x-8 gap-y-0.5">
-                            {megaMenu.weaves.map((w) => (
-                              <NavigationMenuLink
-                                key={w.value}
-                                render={<Link href={`/category/${w.value}`} />}
-                                className="font-body hover:text-brand-700 hover:bg-brand-50/60 block rounded-md px-2.5 py-1.5 text-sm tracking-wide whitespace-nowrap text-neutral-600 transition-colors"
-                              >
-                                {w.label}
-                              </NavigationMenuLink>
-                            ))}
+                        {/* Fabric column */}
+                        {fabrics.length > 0 && (
+                          <div className="min-w-max px-8 py-6">
+                            <h4 className="font-display text-gold-500 mb-4 text-[11px] font-semibold tracking-[0.15em] uppercase">
+                              By Fabric
+                            </h4>
+                            <div className="grid grid-cols-2 gap-x-8 gap-y-0.5">
+                              {fabrics.map((f: any) => (
+                                <NavigationMenuLink
+                                  key={f.value}
+                                  render={
+                                    <Link
+                                      href={`/category/all?fabric=${f.value}`}
+                                    />
+                                  }
+                                  className="font-body hover:text-brand-700 hover:bg-brand-50/60 block rounded-md px-2.5 py-1.5 text-sm tracking-wide whitespace-nowrap text-neutral-600 transition-colors"
+                                >
+                                  {f.label}
+                                </NavigationMenuLink>
+                              ))}
+                            </div>
                           </div>
-                        </div>
+                        )}
+
+                        {/* Brands column */}
+                        {brands.length > 0 && (
+                          <div className="min-w-max px-8 py-6">
+                            <h4 className="font-display text-gold-500 mb-4 text-[11px] font-semibold tracking-[0.15em] uppercase">
+                              By Brand
+                            </h4>
+                            <div className="grid grid-cols-2 gap-x-8 gap-y-0.5">
+                              {brands.map((b: any) => (
+                                <NavigationMenuLink
+                                  key={b.value}
+                                  render={
+                                    <Link
+                                      href={`/category/all?brand=${b.value}`}
+                                    />
+                                  }
+                                  className="font-body hover:text-brand-700 hover:bg-brand-50/60 block rounded-md px-2.5 py-1.5 text-sm tracking-wide whitespace-nowrap text-neutral-600 transition-colors"
+                                >
+                                  {b.label}
+                                </NavigationMenuLink>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Occasions column */}
+                        {occasions.length > 0 && (
+                          <div className="min-w-max px-8 py-6">
+                            <h4 className="font-display text-gold-500 mb-4 text-[11px] font-semibold tracking-[0.15em] uppercase">
+                              By Occasion
+                            </h4>
+                            <div className="grid grid-cols-2 gap-x-8 gap-y-0.5">
+                              {occasions.map((o: any) => (
+                                <NavigationMenuLink
+                                  key={o.value}
+                                  render={
+                                    <Link
+                                      href={`/category/all?occasion=${o.value}`}
+                                    />
+                                  }
+                                  className="font-body hover:text-brand-700 hover:bg-brand-50/60 block rounded-md px-2.5 py-1.5 text-sm tracking-wide whitespace-nowrap text-neutral-600 transition-colors"
+                                >
+                                  {o.label}
+                                </NavigationMenuLink>
+                              ))}
+                            </div>
+                          </div>
+                        )}
 
                         {/* Featured Panel */}
                         <div className="flex w-48 flex-col justify-between bg-neutral-50/80 px-6 py-6">
@@ -469,39 +572,89 @@ export function Header() {
 
             {mobileSareesOpen && (
               <div className="border-b border-neutral-100 pt-1 pb-4">
-                {/* Fabric */}
-                <p className="text-gold-500 font-display mt-2 mb-1 text-[11px] font-semibold tracking-[0.15em] uppercase">
-                  By Fabric
-                </p>
-                <div className="grid grid-cols-2 gap-0.5">
-                  {megaMenu.fabrics.map((f) => (
-                    <Link
-                      key={f.value}
-                      href={`/category/${f.value}`}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="font-body hover:text-brand-700 block rounded-md px-3 py-1.5 text-sm tracking-wide text-neutral-600 transition-colors"
-                    >
-                      {f.label}
-                    </Link>
-                  ))}
-                </div>
+                {/* Category */}
+                {categories.length > 0 && (
+                  <>
+                    <p className="text-gold-500 font-display mt-2 mb-1 text-[11px] font-semibold tracking-[0.15em] uppercase">
+                      By Category
+                    </p>
+                    <div className="grid grid-cols-2 gap-0.5">
+                      {categories.map((c: any) => (
+                        <Link
+                          key={c.value}
+                          href={`/category/${c.value}`}
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="font-body hover:text-brand-700 block rounded-md px-3 py-1.5 text-sm tracking-wide text-neutral-600 transition-colors"
+                        >
+                          {c.label}
+                        </Link>
+                      ))}
+                    </div>
+                  </>
+                )}
 
-                {/* Weave */}
-                <p className="text-gold-500 font-display mt-3 mb-1 text-[11px] font-semibold tracking-[0.15em] uppercase">
-                  By Weave
-                </p>
-                <div className="grid grid-cols-2 gap-0.5">
-                  {megaMenu.weaves.map((w) => (
-                    <Link
-                      key={w.value}
-                      href={`/category/${w.value}`}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="font-body hover:text-brand-700 block rounded-md px-3 py-1.5 text-sm tracking-wide text-neutral-600 transition-colors"
-                    >
-                      {w.label}
-                    </Link>
-                  ))}
-                </div>
+                {/* Fabric */}
+                {fabrics.length > 0 && (
+                  <>
+                    <p className="text-gold-500 font-display mt-3 mb-1 text-[11px] font-semibold tracking-[0.15em] uppercase">
+                      By Fabric
+                    </p>
+                    <div className="grid grid-cols-2 gap-0.5">
+                      {fabrics.map((f: any) => (
+                        <Link
+                          key={f.value}
+                          href={`/category/all?fabric=${f.value}`}
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="font-body hover:text-brand-700 block rounded-md px-3 py-1.5 text-sm tracking-wide text-neutral-600 transition-colors"
+                        >
+                          {f.label}
+                        </Link>
+                      ))}
+                    </div>
+                  </>
+                )}
+
+                {/* Brand */}
+                {brands.length > 0 && (
+                  <>
+                    <p className="text-gold-500 font-display mt-3 mb-1 text-[11px] font-semibold tracking-[0.15em] uppercase">
+                      By Brand
+                    </p>
+                    <div className="grid grid-cols-2 gap-0.5">
+                      {brands.map((b: any) => (
+                        <Link
+                          key={b.value}
+                          href={`/category/all?brand=${b.value}`}
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="font-body hover:text-brand-700 block rounded-md px-3 py-1.5 text-sm tracking-wide text-neutral-600 transition-colors"
+                        >
+                          {b.label}
+                        </Link>
+                      ))}
+                    </div>
+                  </>
+                )}
+
+                {/* Occasion */}
+                {occasions.length > 0 && (
+                  <>
+                    <p className="text-gold-500 font-display mt-3 mb-1 text-[11px] font-semibold tracking-[0.15em] uppercase">
+                      By Occasion
+                    </p>
+                    <div className="grid grid-cols-2 gap-0.5">
+                      {occasions.map((o: any) => (
+                        <Link
+                          key={o.value}
+                          href={`/category/all?occasion=${o.value}`}
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="font-body hover:text-brand-700 block rounded-md px-3 py-1.5 text-sm tracking-wide text-neutral-600 transition-colors"
+                        >
+                          {o.label}
+                        </Link>
+                      ))}
+                    </div>
+                  </>
+                )}
 
                 {/* Shop All */}
                 <Link

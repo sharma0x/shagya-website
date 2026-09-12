@@ -12,7 +12,7 @@ import {
 } from '@/components/address/AddressForm'
 import { GuestCheckout } from '@/components/checkout/GuestCheckout'
 import { OffersSection } from '@/components/coupons/OffersSection'
-import { liftVariantGallery } from '@/lib/product-utils'
+import { galleryForColor } from '@/lib/product-utils'
 import { deduplicateAddresses } from '@/lib/address-utils'
 import {
   ArrowLeft,
@@ -94,7 +94,7 @@ export default function CheckoutPage() {
         weave: i.product.weave,
         fabric: i.product.fabric,
         basePrice: i.unitPrice,
-        gallery: liftVariantGallery(i.product).gallery,
+        gallery: galleryForColor(i.product, i.variant?.color?.slug),
       },
       variant: i.variant,
       quantity: i.quantity,
@@ -167,6 +167,13 @@ export default function CheckoutPage() {
 
   // Load cart, addresses, and coupons — shows skeleton while session hydrates
   const didLoad = useRef(false)
+
+  // Refresh item prices from the current catalog whenever checkout loads, so
+  // an admin price change is reflected in the summary (and not charged at the
+  // old price).
+  useEffect(() => {
+    void zCart.refreshPrices()
+  }, [zCart])
 
   useEffect(() => {
     if (didLoad.current) return
@@ -446,6 +453,7 @@ export default function CheckoutPage() {
             cartItems: !isLoggedIn
               ? effectiveCart?.items.map((i) => ({
                   product: i.product.id,
+                  variant: i.variant ?? null,
                   quantity: i.quantity,
                   unitPrice: i.unitPrice,
                 }))
@@ -460,7 +468,9 @@ export default function CheckoutPage() {
 
         const data = await res.json()
         zCart.clearCart()
-        router.push(`/checkout/success?orderNumber=${data.orderNumber}`)
+        router.push(
+          `/checkout/success?orderNumber=${data.orderNumber}&email=${encodeURIComponent(sessionData?.user?.email || guestData?.email || '')}`,
+        )
       } else {
         // Razorpay checkout
         const isScriptLoaded = await loadRazorpayScript()
@@ -483,6 +493,7 @@ export default function CheckoutPage() {
             cartItems: !isLoggedIn
               ? effectiveCart?.items.map((i) => ({
                   product: i.product.id,
+                  variant: i.variant ?? null,
                   quantity: i.quantity,
                   unitPrice: i.unitPrice,
                 }))
@@ -536,6 +547,7 @@ export default function CheckoutPage() {
                   cartItems: !isLoggedIn
                     ? effectiveCart?.items.map((i) => ({
                         product: i.product.id,
+                        variant: i.variant ?? null,
                         quantity: i.quantity,
                         unitPrice: i.unitPrice,
                       }))
@@ -551,7 +563,9 @@ export default function CheckoutPage() {
 
               const data = await verifyRes.json()
               zCart.clearCart()
-              router.push(`/checkout/success?orderNumber=${data.orderNumber}`)
+              router.push(
+                `/checkout/success?orderNumber=${data.orderNumber}&email=${encodeURIComponent(sessionData?.user?.email || guestData?.email || '')}`,
+              )
             } catch (err: any) {
               setError(err.message || 'Payment verification failed')
               setActionLoading(false)
@@ -584,6 +598,7 @@ export default function CheckoutPage() {
               cartItems: !isLoggedIn
                 ? effectiveCart?.items.map((i) => ({
                     product: i.product.id,
+                    variant: i.variant ?? null,
                     quantity: i.quantity,
                     unitPrice: i.unitPrice,
                   }))
@@ -599,7 +614,9 @@ export default function CheckoutPage() {
 
           const data = await verifyRes.json()
           zCart.clearCart()
-          router.push(`/checkout/success?orderNumber=${data.orderNumber}`)
+          router.push(
+            `/checkout/success?orderNumber=${data.orderNumber}&email=${encodeURIComponent(sessionData?.user?.email || guestData?.email || '')}`,
+          )
           return
         }
 
@@ -1025,7 +1042,7 @@ export default function CheckoutPage() {
               </h3>
 
               {/* Items List */}
-              <div className="mb-6 max-h-[320px] space-y-4 overflow-y-auto pr-2">
+              <div className="mb-6 max-h-[320px] space-y-4 overflow-y-auto pt-2 pr-2">
                 {showSkeleton
                   ? [0, 1].map((i) => (
                       <div key={i} className="flex animate-pulse gap-4">
@@ -1041,8 +1058,11 @@ export default function CheckoutPage() {
                       </div>
                     ))
                   : effectiveCart?.items.map((item) => {
-                      const adapted = liftVariantGallery(item.product)
-                      const firstImage = adapted.gallery?.[0]?.image
+                      const itemGallery = galleryForColor(
+                        item.product,
+                        item.variant?.color?.slug,
+                      )
+                      const firstImage = itemGallery?.[0]?.image
                       const imageUrl =
                         typeof firstImage === 'object' && firstImage !== null
                           ? firstImage.url || firstImage.sizes?.thumbnail?.url

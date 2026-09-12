@@ -5,8 +5,14 @@ import { FormSubmissions } from '../FormSubmissions'
 // Email sending is tested at the structural level since it requires a real
 // Payload request context.
 
+const mockGetAdminEmails = vi.hoisted(() => vi.fn().mockResolvedValue([]))
+
 vi.mock('@/lib/email', () => ({
   sendEmail: vi.fn().mockResolvedValue({ success: true, messageId: 'test-id' }),
+}))
+
+vi.mock('@/email/send', () => ({
+  getAdminEmails: mockGetAdminEmails,
 }))
 
 describe('FormSubmissions collection', () => {
@@ -236,6 +242,7 @@ describe('FormSubmissions collection', () => {
 
       const { sendEmail } = await import('@/lib/email')
       vi.mocked(sendEmail).mockClear()
+      mockGetAdminEmails.mockResolvedValue([])
 
       // Mock req.payload.findByID to return a form with emailTo
       const mockReq = {
@@ -243,7 +250,7 @@ describe('FormSubmissions collection', () => {
           findByID: vi.fn().mockResolvedValue({
             id: 'form-1',
             title: 'Contact Us',
-            emailTo: 'admin@shayga.com',
+            emailTo: 'archana.vaknalli@shayga.com',
           }),
           logger: { error: vi.fn() },
         },
@@ -264,10 +271,84 @@ describe('FormSubmissions collection', () => {
       expect(sendEmail).toHaveBeenCalledTimes(1)
 
       const callArgs = vi.mocked(sendEmail).mock.calls[0][0]
-      expect(callArgs.to).toBe('admin@shayga.com')
+      expect(callArgs.to).toBe('archana.vaknalli@shayga.com')
       expect(callArgs.subject).toContain('Contact Us')
       expect(callArgs.html).toContain('John')
       expect(callArgs.html).toContain('john@test.com')
+    })
+
+    it('afterChange hook resolves an object form relationship value', async () => {
+      const hook = FormSubmissions.hooks?.afterChange?.[0]
+      if (!hook) return
+
+      const { sendEmail } = await import('@/lib/email')
+      vi.mocked(sendEmail).mockClear()
+      mockGetAdminEmails.mockResolvedValue([])
+
+      const mockReq = {
+        payload: {
+          findByID: vi.fn().mockResolvedValue({
+            id: 5,
+            title: 'Contact Us',
+            emailTo: 'archana.vaknalli@shayga.com',
+          }),
+          logger: { error: vi.fn() },
+        },
+      } as any
+
+      await hook({
+        doc: { form: { value: 5 }, data: { name: 'John' } },
+        previousDoc: {},
+        operation: 'create',
+        req: mockReq,
+        collection: { slug: 'form-submissions' } as any,
+      } as any)
+
+      expect(mockReq.payload.findByID).toHaveBeenCalledWith({
+        collection: 'forms',
+        id: 5,
+      })
+      expect(sendEmail).toHaveBeenCalledTimes(1)
+    })
+
+    it('afterChange hook notifies every admin notification email', async () => {
+      const hook = FormSubmissions.hooks?.afterChange?.[0]
+      if (!hook) return
+
+      const { sendEmail } = await import('@/lib/email')
+      vi.mocked(sendEmail).mockClear()
+      mockGetAdminEmails.mockResolvedValue([
+        'admin1@shayga.com',
+        'admin2@shayga.com',
+      ])
+
+      const mockReq = {
+        payload: {
+          findByID: vi.fn().mockResolvedValue({
+            id: 'form-1',
+            title: 'Contact Us',
+            emailTo: 'archana.vaknalli@shayga.com',
+          }),
+          logger: { error: vi.fn() },
+        },
+      } as any
+
+      await hook({
+        doc: { form: 'form-1', data: { name: 'John' } },
+        previousDoc: {},
+        operation: 'create',
+        req: mockReq,
+        collection: { slug: 'form-submissions' } as any,
+      } as any)
+
+      const recipients = vi
+        .mocked(sendEmail)
+        .mock.calls.map(([args]) => args.to)
+      expect(recipients).toEqual([
+        'admin1@shayga.com',
+        'admin2@shayga.com',
+        'archana.vaknalli@shayga.com',
+      ])
     })
 
     it('afterChange hook handles missing form gracefully', async () => {
@@ -295,6 +376,7 @@ describe('FormSubmissions collection', () => {
 
       const { sendEmail } = await import('@/lib/email')
       vi.mocked(sendEmail).mockClear()
+      mockGetAdminEmails.mockResolvedValue([])
 
       const mockReq = {
         payload: {

@@ -7,6 +7,12 @@ import { getServerURL, getAllowedOrigins } from './env'
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
+  ssl:
+    process.env.DATABASE_URL?.includes('sslmode=require') ||
+    process.env.DATABASE_URL?.includes('neon.tech') ||
+    process.env.DATABASE_URL?.includes('rds.amazonaws.com')
+      ? { rejectUnauthorized: false }
+      : undefined,
 })
 
 function runEmailInBackground(label: string, work: () => Promise<void>): void {
@@ -86,6 +92,8 @@ export const auth = betterAuth({
   },
   plugins: [
     emailOTP({
+      resendStrategy: 'reuse',
+      rateLimit: { window: 60, max: 3 },
       sendVerificationOTP: async ({ email, otp }) => {
         runEmailInBackground('sendOTPEmail', async () => {
           const { sendOTPEmail: send } = await import('@/email/send')

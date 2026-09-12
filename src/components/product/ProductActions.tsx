@@ -106,7 +106,12 @@ export function ProductActions({
     addItem(
       { ...product, basePrice: displayPrice, gallery: selectedVariant.gallery },
       1,
-      { color: selectedVariant.color },
+      {
+        color: {
+          ...selectedVariant.color,
+          stock: selectedVariant.stock,
+        },
+      },
     )
     setAddedState('added')
     setTimeout(() => setAddedState('idle'), 2200)
@@ -117,7 +122,12 @@ export function ProductActions({
     addItem(
       { ...product, basePrice: displayPrice, gallery: selectedVariant.gallery },
       1,
-      { color: selectedVariant.color },
+      {
+        color: {
+          ...selectedVariant.color,
+          stock: selectedVariant.stock,
+        },
+      },
     )
     router.push('/checkout')
   }

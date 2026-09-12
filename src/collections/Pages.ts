@@ -97,6 +97,14 @@ export const Pages: CollectionConfig = {
                   relationTo: 'media',
                   required: true,
                 },
+                {
+                  name: 'link',
+                  type: 'text',
+                  admin: {
+                    description:
+                      'Where this slide navigates when clicked (e.g. /category/banarasi)',
+                  },
+                },
               ],
             },
             {
@@ -311,6 +319,34 @@ export const Pages: CollectionConfig = {
               defaultValue: 2,
             },
           ],
+        },
+      ],
+    },
+    {
+      name: 'header',
+      type: 'group',
+      label: 'Page Header',
+      admin: {
+        description:
+          'Override the eyebrow and tagline shown in the page header (About / Contact / FAQ templates).',
+      },
+      fields: [
+        {
+          name: 'eyebrow',
+          type: 'text',
+          label: 'Eyebrow Text',
+          admin: {
+            description:
+              'Small uppercase label above the page title (e.g. "Shayga Heritage").',
+          },
+        },
+        {
+          name: 'tagline',
+          type: 'text',
+          label: 'Tagline',
+          admin: {
+            description: 'Description shown under the page title.',
+          },
         },
       ],
     },

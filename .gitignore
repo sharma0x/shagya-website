@@ -13,6 +13,7 @@ build/
 # Environment
 .env*
 !.env.example
+!.env.staging.example
 
 # IDE
 .vscode/*
@@ -78,5 +79,20 @@ scripts/fix-linear-desc.cjs
 scripts/update-clo-*.cjs
 scripts/update-linear-descriptions.cjs
 scripts/create-linear-tickets.cjs
+
+# Terraform
+# .terraform.lock.hcl is intentionally NOT ignored — commit it for reproducibility
+infra/provision/.terraform/
+infra/provision/*.tfstate
+infra/provision/*.tfstate.*
+infra/provision/*.tfvars
+infra/provision/*.tfvars.json
+infra/provision/*.tfplan
+infra/provision/*.crash.log
+infra/provision/.database_url
+infra/provision/allowed_ips.txt
+
+# Job-local Docker config written by the deploy workflows
+.docker-config/
 
 # Environment files

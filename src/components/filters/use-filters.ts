@@ -8,7 +8,6 @@ const FILTER_LABELS: Record<string, string> = {
   weave: 'Weave',
   fabric: 'Fabric',
   pattern: 'Pattern',
-  occasion: 'Occasion',
   color: 'Color',
   collection: 'Collection',
   priceRange_min: 'Min Price',

@@ -6,20 +6,21 @@ import {
 
 export default function Loading() {
   return (
-    <div className="bg-neutral-50 px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-7xl">
-        {/* Breadcrumb skeleton */}
-        <div className="mb-6 flex gap-2">
-          <Skeleton className="h-4 w-16" />
-          <Skeleton className="h-4 w-4" />
-          <Skeleton className="h-4 w-24" />
-          <Skeleton className="h-4 w-4" />
-          <Skeleton className="h-4 w-32" />
+    <div className="bg-surface min-h-screen py-12 md:py-16">
+      <div className="container-page">
+        {/* Back Link Skeleton */}
+        <div className="mb-6 flex items-center gap-2">
+          <Skeleton className="h-4 w-28" />
         </div>
 
-        <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
-          <ProductGallerySkeleton />
-          <ProductInfoSkeleton />
+        {/* PDP Main Grid */}
+        <div className="mt-8 grid gap-10 lg:grid-cols-12 lg:gap-14">
+          <div className="lg:col-span-7">
+            <ProductGallerySkeleton />
+          </div>
+          <div className="lg:col-span-5">
+            <ProductInfoSkeleton />
+          </div>
         </div>
       </div>
     </div>

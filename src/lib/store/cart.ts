@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { normalizeVariant, dedupeCartItems } from '@/lib/cart-merge'
+import { normalizeVariant, dedupeCartItems, cartQtyCap } from '@/lib/cart-merge'
 
 export interface CartItem {
   product: {
@@ -28,9 +28,12 @@ export interface CartItem {
   }
   variant?: {
     color?: {
+      id?: number | string
       slug: string
       name: string
       hex: string
+      /** Add-time stock snapshot for this color variant */
+      stock?: number
     }
     size?: string
     blouseCustomization?: string
@@ -63,8 +66,9 @@ interface CartState {
   clearCart: () => void
   setItems: (items: CartItem[]) => void
   setCoupon: (coupon: CartState['coupon']) => void
-  syncWithServer: () => Promise<void>
+  syncWithServer: (action?: 'overwrite' | 'merge') => Promise<void>
   loadFromServer: () => Promise<void>
+  refreshPrices: () => Promise<void>
   getSubtotal: () => number
   getTotal: () => number
 }
@@ -92,25 +96,30 @@ export const useCart = create<CartState>()(
         let newItems = [...currentItems]
         if (existingIndex > -1) {
           const existing = currentItems[existingIndex]
+          const capped = cartQtyCap({
+            product: { ...existing.product },
+            variant: normalizedVariant ?? existing.variant,
+          })
           newItems[existingIndex] = {
             ...existing,
-            quantity: Math.min(10, existing.quantity + quantity),
+            quantity: Math.min(capped, existing.quantity + quantity),
             variant: normalizedVariant ?? existing.variant,
           }
         } else {
           if (colorSlug) {
             newItems = newItems.filter(
               (item) =>
-                !(
-                  item.product.id === product.id &&
-                  !item.variant?.color?.slug
-                ),
+                !(item.product.id === product.id && !item.variant?.color?.slug),
             )
           }
+          const capped = cartQtyCap({
+            product: { ...product },
+            variant: normalizedVariant,
+          })
           newItems.push({
             product,
             variant: normalizedVariant,
-            quantity: Math.min(10, quantity),
+            quantity: Math.min(capped, quantity),
             unitPrice: product.basePrice,
           })
         }
@@ -133,17 +142,27 @@ export const useCart = create<CartState>()(
       },
 
       updateQuantity: (productId, quantity, colorSlug?) => {
-        const qty = Math.max(1, Math.min(10, quantity))
         const newItems = get().items.map((item) => {
           const sameProduct = item.product.id === productId
           if (colorSlug !== undefined) {
             const itemColorSlug = item.variant?.color?.slug ?? ''
             if (sameProduct && itemColorSlug === colorSlug) {
-              return { ...item, quantity: qty }
+              const capped = cartQtyCap(item)
+              return {
+                ...item,
+                quantity: Math.min(capped, Math.max(1, quantity)),
+              }
             }
             return item
           }
-          return sameProduct ? { ...item, quantity: qty } : item
+          if (sameProduct) {
+            const capped = cartQtyCap(item)
+            return {
+              ...item,
+              quantity: Math.min(capped, Math.max(1, quantity)),
+            }
+          }
+          return item
         })
         set({ items: newItems })
         get().syncWithServer()
@@ -162,7 +181,7 @@ export const useCart = create<CartState>()(
         set({ coupon })
       },
 
-      syncWithServer: async () => {
+      syncWithServer: async (action = 'overwrite') => {
         try {
           // Verify session via fetch rather than Client SDK directly in hooks to avoid circular dependencies
           const res = await fetch('/api/cart', {
@@ -171,6 +190,7 @@ export const useCart = create<CartState>()(
             body: JSON.stringify({
               items: get().items,
               couponId: get().coupon?.id || null,
+              action,
             }),
           })
           if (res.status === 401) {
@@ -196,7 +216,9 @@ export const useCart = create<CartState>()(
                 product: item.product,
                 variant: item.variant,
                 quantity: item.quantity,
-                unitPrice: item.unitPrice || item.product.basePrice,
+                // Prefer the CURRENT product price (the server re-prices
+                // every cart against the products collection)
+                unitPrice: item.product?.basePrice ?? item.unitPrice ?? 0,
               }))
               set({
                 items: dedupeCartItems(formattedItems),
@@ -208,6 +230,38 @@ export const useCart = create<CartState>()(
           console.warn('[Cart Store] Loading from server failed:', error)
         } finally {
           set({ isLoading: false })
+        }
+      },
+
+      refreshPrices: async () => {
+        const items = get().items
+        if (items.length === 0) return
+        const ids = [...new Set(items.map((i) => i.product.id))]
+        try {
+          const res = await fetch(
+            `/api/products?where[id][in]=${ids.join(',')}&limit=${ids.length}&depth=0`,
+          )
+          if (!res.ok) return
+          const data = await res.json()
+          const priceMap = new Map<string, number>()
+          for (const doc of data.docs || []) {
+            if (typeof doc.basePrice === 'number' && doc.basePrice > 0) {
+              priceMap.set(String(doc.id), doc.basePrice)
+            }
+          }
+          const updated = items.map((item) => {
+            const current = priceMap.get(String(item.product.id))
+            if (current == null) return item
+            return {
+              ...item,
+              unitPrice: current,
+              product: { ...item.product, basePrice: current },
+            }
+          })
+          set({ items: dedupeCartItems(updated) })
+          get().syncWithServer()
+        } catch (error) {
+          console.warn('[Cart Store] refreshPrices failed:', error)
         }
       },
 

@@ -6,6 +6,7 @@ import { Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { getProductUrl } from '@/lib/product-url'
 import { SkeletonImage } from '@/components/ui/SkeletonImage'
+import { isUnoptimizedImage } from '@/lib/image-url'
 
 export interface ProductHotspot {
   productName: string
@@ -55,6 +56,7 @@ export function ShopTheLook({
             height={900}
             sizes="(max-width: 768px) 100vw, 896px"
             className="object-cover"
+            unoptimized={isUnoptimizedImage(imageUrl)}
           />
 
           {hotspots.map((hotspot, i) => (

@@ -46,13 +46,20 @@ export const SiteSettings: GlobalConfig = {
 
     // ---- Email Notifications ----
     {
-      name: 'adminNotificationEmail',
-      type: 'email',
-      label: 'Admin Notification Email',
+      name: 'adminNotificationEmails',
+      type: 'array',
+      label: 'Admin Notification Emails',
       admin: {
         description:
-          'All order and system notifications (new orders, cancellations, refunds) are sent to this address. Falls back to the ADMIN_EMAIL env var if not set.',
+          'All order and system notifications (new orders, cancellations, refunds) are sent to these addresses. Falls back to the ADMIN_EMAIL env var if not set.',
       },
+      fields: [
+        {
+          name: 'email',
+          type: 'email',
+          required: true,
+        },
+      ],
     },
 
     // ---- Contact Info ----
@@ -253,6 +260,64 @@ export const SiteSettings: GlobalConfig = {
         description:
           'Select coupons to display on the checkout page under pre-populated offers',
       },
+    },
+
+    // ---- Delhivery Shipping ----
+    {
+      name: 'delhivery',
+      type: 'group',
+      label: 'Delhivery Shipping',
+      admin: {
+        description:
+          'Fulfilment identity used when manifesting orders with Delhivery. Leave a field blank to fall back to its environment variable (DELHIVERY_*).',
+      },
+      fields: [
+        {
+          name: 'pickupLocation',
+          type: 'text',
+          label: 'Pickup Location Name',
+          admin: {
+            description:
+              'Pickup point name registered in the Delhivery One Panel (e.g. SHAYGA B2C).',
+          },
+        },
+        {
+          name: 'pickupPin',
+          type: 'text',
+          label: 'Pickup Pincode',
+          admin: {
+            description: 'Origin pincode used for shipments and return labels.',
+          },
+        },
+        {
+          name: 'clientName',
+          type: 'text',
+          label: 'Client Name',
+          admin: {
+            description: 'Client/account name shown to Delhivery.',
+          },
+        },
+        {
+          name: 'sellerName',
+          type: 'text',
+          label: 'Seller Name',
+        },
+        {
+          name: 'sellerAddress',
+          type: 'textarea',
+          label: 'Seller Address',
+        },
+        {
+          name: 'sellerPhone',
+          type: 'text',
+          label: 'Seller Phone',
+        },
+        {
+          name: 'sellerEmail',
+          type: 'email',
+          label: 'Seller Email',
+        },
+      ],
     },
   ],
 }

@@ -17,6 +17,16 @@ import * as migration_20260807_221534_trust_signals from './20260807_221534_trus
 import * as migration_20260808_000000_coupon_enhancements from './20260808_000000_coupon_enhancements'
 import * as migration_20260808_104707 from './20260808_104707'
 import * as migration_20260808_164034_add_testimonial_rating from './20260808_164034_add_testimonial_rating'
+import * as migration_20260819_120000_add_hero_slide_links from './20260819_120000_add_hero_slide_links'
+import * as migration_20260819_174456_add_order_item_color_fields from './20260819_174456_add_order_item_color_fields'
+import * as migration_20260820_001000_update_coupons_collections from './20260820_001000_update_coupons_collections'
+import * as migration_20260901_222400_convert_product_occasion_to_occasions_relationship from './20260901_222400_convert_product_occasion_to_occasions_relationship'
+import * as migration_20260902_000000_add_smart_collections_rules from './20260902_000000_add_smart_collections_rules'
+import * as migration_20260909_000000_add_order_delhivery_fulfilment_fields from './20260909_000000_add_order_delhivery_fulfilment_fields'
+import * as migration_20260910_000000_add_archived_to_products_status_enums from './20260910_000000_add_archived_to_products_status_enums'
+import * as migration_20260910_235500_admin_notification_emails_array from './20260910_235500_admin_notification_emails_array'
+import * as migration_20260912_000000_add_delhivery_settings_to_site_settings from './20260912_000000_add_delhivery_settings_to_site_settings'
+import * as migration_20260912_010000_add_page_header_fields from './20260912_010000_add_page_header_fields'
 
 export const migrations = [
   {
@@ -113,5 +123,55 @@ export const migrations = [
     up: migration_20260808_164034_add_testimonial_rating.up,
     down: migration_20260808_164034_add_testimonial_rating.down,
     name: '20260808_164034_add_testimonial_rating',
+  },
+  {
+    up: migration_20260819_120000_add_hero_slide_links.up,
+    down: migration_20260819_120000_add_hero_slide_links.down,
+    name: '20260819_120000_add_hero_slide_links',
+  },
+  {
+    up: migration_20260819_174456_add_order_item_color_fields.up,
+    down: migration_20260819_174456_add_order_item_color_fields.down,
+    name: '20260819_174456_add_order_item_color_fields',
+  },
+  {
+    up: migration_20260820_001000_update_coupons_collections.up,
+    down: migration_20260820_001000_update_coupons_collections.down,
+    name: '20260820_001000_update_coupons_collections',
+  },
+  {
+    up: migration_20260901_222400_convert_product_occasion_to_occasions_relationship.up,
+    down: migration_20260901_222400_convert_product_occasion_to_occasions_relationship.down,
+    name: '20260901_222400_convert_product_occasion_to_occasions_relationship',
+  },
+  {
+    up: migration_20260902_000000_add_smart_collections_rules.up,
+    down: migration_20260902_000000_add_smart_collections_rules.down,
+    name: '20260902_000000_add_smart_collections_rules',
+  },
+  {
+    up: migration_20260909_000000_add_order_delhivery_fulfilment_fields.up,
+    down: migration_20260909_000000_add_order_delhivery_fulfilment_fields.down,
+    name: '20260909_000000_add_order_delhivery_fulfilment_fields',
+  },
+  {
+    up: migration_20260910_000000_add_archived_to_products_status_enums.up,
+    down: migration_20260910_000000_add_archived_to_products_status_enums.down,
+    name: '20260910_000000_add_archived_to_products_status_enums',
+  },
+  {
+    up: migration_20260910_235500_admin_notification_emails_array.up,
+    down: migration_20260910_235500_admin_notification_emails_array.down,
+    name: '20260910_235500_admin_notification_emails_array',
+  },
+  {
+    up: migration_20260912_000000_add_delhivery_settings_to_site_settings.up,
+    down: migration_20260912_000000_add_delhivery_settings_to_site_settings.down,
+    name: '20260912_000000_add_delhivery_settings_to_site_settings',
+  },
+  {
+    up: migration_20260912_010000_add_page_header_fields.up,
+    down: migration_20260912_010000_add_page_header_fields.down,
+    name: '20260912_010000_add_page_header_fields',
   },
 ]
