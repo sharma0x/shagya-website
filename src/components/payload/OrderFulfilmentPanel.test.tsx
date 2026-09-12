@@ -147,6 +147,22 @@ describe('OrderFulfilmentPanel', () => {
     expect(mocks.toast.error).toHaveBeenCalled()
   })
 
+  it('disables Schedule Pickup once a pickup is already scheduled', async () => {
+    setOrderState({
+      'delhivery.waybill': 'WB123',
+      'delhivery.pickupRequestId': 'PR-42',
+    })
+    render(<OrderFulfilmentPanel />)
+    const btn = screen.getByRole('button', {
+      name: /pickup scheduled/i,
+    }) as HTMLButtonElement
+    expect(btn.disabled).toBe(true)
+    const dateInput = screen.getByLabelText(/pickup date/i) as HTMLInputElement
+    const timeInput = screen.getByLabelText(/pickup time/i) as HTMLInputElement
+    expect(dateInput.disabled).toBe(true)
+    expect(timeInput.disabled).toBe(true)
+  })
+
   it('offers Label, Pickup and Track once a waybill exists', async () => {
     setOrderState({ 'delhivery.waybill': 'WB123' })
     render(<OrderFulfilmentPanel />)

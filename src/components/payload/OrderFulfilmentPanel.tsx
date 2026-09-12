@@ -64,6 +64,7 @@ export const OrderFulfilmentPanel: React.FC = () => {
   if (!id) return null
 
   const hasWaybill = Boolean(text((waybill as Fieldish)?.value))
+  const hasPickupRequest = Boolean(text((pickupRequestId as Fieldish)?.value))
 
   const eligibility = getShipEligibility({
     status: text((status as Fieldish)?.value),
@@ -289,11 +290,15 @@ export const OrderFulfilmentPanel: React.FC = () => {
             </Button>
             <Button
               onClick={handlePickup}
-              disabled={isSchedulingPickup}
+              disabled={isSchedulingPickup || hasPickupRequest}
               size="small"
               buttonStyle="secondary"
             >
-              {isSchedulingPickup ? 'Scheduling…' : 'Schedule Pickup'}
+              {isSchedulingPickup
+                ? 'Scheduling…'
+                : hasPickupRequest
+                  ? 'Pickup Scheduled'
+                  : 'Schedule Pickup'}
             </Button>
             <Button onClick={handleTrack} size="small" buttonStyle="secondary">
               Track
@@ -321,6 +326,7 @@ export const OrderFulfilmentPanel: React.FC = () => {
                 type="date"
                 value={pickupDate}
                 onChange={(e) => setPickupDate(e.target.value)}
+                disabled={hasPickupRequest}
                 style={{ padding: '0.4rem' }}
               />
             </label>
@@ -338,6 +344,7 @@ export const OrderFulfilmentPanel: React.FC = () => {
                 type="time"
                 value={pickupTime}
                 onChange={(e) => setPickupTime(e.target.value)}
+                disabled={hasPickupRequest}
                 style={{ padding: '0.4rem' }}
               />
             </label>
