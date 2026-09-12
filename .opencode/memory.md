@@ -241,3 +241,31 @@ ENV_FILE=.env IMAGE_TAG=testing DOCKER_IMAGE=ghcr.io/sharma0x/shagya-website doc
 - **Packing slip** `GET /api/p/packing_slip?wbns=...&pdf=true&pdf_size=4R` returns `{ packages: [{ pdf_download_link: <signed S3 URL> }] }` — the URL lives in `packages[].pdf_download_link`, NOT `link`/`pdf_url`/`files[]`. `extractLabelUrl` must check packages first.
 - **Pickup** `POST /fm/request/new/` returns `{ pickup_id, client_name, ... }` (key is `pickup_id`, not `pickup_request_id`). Returns HTTP 201 and is idempotent while a pickup is open for the location.
 - **Timezone bug**: the old pickup default used `new Date().getHours()+1` + `toISOString().slice(0,10)` (UTC). Delhivery interprets pickup_time in **IST**, so the UTC next-hour was already past in India → `400 {"pickup_time":"Pickup time cannot be in past"}`. Fix: compute date+time in `Asia/Kolkata` via `Intl.DateTimeFormat` on `now + 1h` (`nextPickupSlotIST` in `fulfillment.ts`), always future, date-rollover safe.
+
+## Order receipt PDFs with pdfmake 0.3 (2026-09-11)
+
+- **`pdfmake@0.3.11` is a direct dep.** The 0.3 API differs from every old tutorial:
+  - `import pdfmake from 'pdfmake'` returns a **shared singleton** (not `PdfPrinter`). No `PdfPrinter`/`createPdfKitDocument` anymore.
+  - `pdfmake.createPdf(docDefinition).getBuffer()` → `Promise<Buffer>` (server). `.write(path)` also available.
+  - No bundled TS types → `src/types/pdfmake.d.ts` declares the bits used (no `@types/pdfmake`, it's for the 0.2 API).
+- **Fonts**: register bundled fonts by copying into the singleton virtual fs:
+  ```ts
+  import vfsFonts from 'pdfmake/build/vfs_fonts' // { 'Roboto-Regular.ttf': <base64>, ... }
+  pdfmake.virtualfs.writeFileSync(name, new Uint8Array(Buffer.from(b64, 'base64')))
+  pdfmake.setFonts({ Roboto: { normal: 'Roboto-Regular.ttf', bold: 'Roboto-Medium.ttf', ... } })
+  ```
+  Descriptors MUST be strings (vfs paths/URLs) — `Printer.resolveUrls` treats every descriptor as a URL and crashes on raw bytes.
+- **jsdom/vitest gotcha**: store fonts as `new Uint8Array(Buffer...)`, NOT `Buffer` — pdfkit's `src instanceof Uint8Array` fails cross-realm in the jsdom test env and throws "Not a supported font format or standard PDF font".
+- Call `setUrlAccessPolicy(() => false)` + `setLocalAccessPolicy(() => false)` to silence warnings and harden.
+- Verify PDF content without a viewer: `gs -sDEVICE=txtwrite -o - file.pdf` (ghostscript) or render PNGs with `-sDEVICE=png16m`.
+- Receipt auth pattern: `GET /api/orders/receipt?orderNumber=...&email=...` — session owners match via customers lookup; guests prove ownership by supplying the checkout email (case-insensitive compare against `order.customerEmail`). Order docs fetched with `depth: 1` so `item.product.name` resolves.
+
+## Cart price snapshot bug (2026-09-12)
+
+- Carts stored `unitPrice`/`product.basePrice` at add-time (localStorage + server carts + order items). An admin price change left cart, checkout summary AND the created order at the OLD price.
+- Fix: price is now server-authoritative. `src/lib/cart-prices.ts` (`resolveCurrentPrices`) resolves each product's current `basePrice`; applied in `/api/cart` GET+POST, `/api/razorpay/create-order` and `/api/razorpay/verify` (both guest and logged-in). Client `useCart.refreshPrices()` re-prices against `/api/products?where[id][in]=...` when the drawer/checkout loads; `loadFromServer` prefers `product.basePrice`.
+
+## Delhivery operational config moved to Site Settings (2026-09-12)
+
+- Pickup location/pin, client name, seller name/address/phone/email are now CMS-managed (Site Settings → Delhivery Shipping group), NOT env vars. `getDelhiverySettings(payload)` reads them; `getDelhiveryConfig()` keeps only secrets/mode/baseUrl (apiToken, mode, webhookSecret). `migrate:create` hangs on the interactive `occasions_id` prompt — hand-write the migration (`ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS delhivery_* varchar` + `_site_settings_v` version_* cols), then `payload migrate` on deploy/boot applies it (watch the better-auth "No migrations needed" line — the payload Migrated line scrolls above).
+- After removing env fallback, seed the CMS from the old env values (SQL UPDATE on site_settings) so shipping keeps working.
