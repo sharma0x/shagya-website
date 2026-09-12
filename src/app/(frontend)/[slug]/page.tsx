@@ -111,14 +111,14 @@ export default async function CatchAllPage({ params, searchParams }: Props) {
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(105,37,78,0.25),rgba(255,255,255,0))]" />
           <div className="relative z-10 mx-auto max-w-3xl space-y-4">
             <span className="text-gold-300 font-display text-[10px] font-semibold tracking-widest uppercase">
-              Shayga Heritage
+              {(page as any).header?.eyebrow || 'Shayga Heritage'}
             </span>
             <h1 className="font-display text-4xl leading-tight font-bold tracking-tight text-white sm:text-5xl">
               {page.title}
             </h1>
             <p className="font-body mx-auto max-w-xl text-sm text-neutral-300 sm:text-base">
-              Weaving stories of Indian tradition, silk craftsmanship, and
-              timeless drape aesthetics.
+              {(page as any).header?.tagline ||
+                'Weaving stories of Indian tradition, silk craftsmanship, and timeless drape aesthetics.'}
             </p>
           </div>
         </div>

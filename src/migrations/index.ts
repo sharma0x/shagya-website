@@ -26,6 +26,7 @@ import * as migration_20260909_000000_add_order_delhivery_fulfilment_fields from
 import * as migration_20260910_000000_add_archived_to_products_status_enums from './20260910_000000_add_archived_to_products_status_enums'
 import * as migration_20260910_235500_admin_notification_emails_array from './20260910_235500_admin_notification_emails_array'
 import * as migration_20260912_000000_add_delhivery_settings_to_site_settings from './20260912_000000_add_delhivery_settings_to_site_settings'
+import * as migration_20260912_010000_add_page_header_fields from './20260912_010000_add_page_header_fields'
 
 export const migrations = [
   {
@@ -167,5 +168,10 @@ export const migrations = [
     up: migration_20260912_000000_add_delhivery_settings_to_site_settings.up,
     down: migration_20260912_000000_add_delhivery_settings_to_site_settings.down,
     name: '20260912_000000_add_delhivery_settings_to_site_settings',
+  },
+  {
+    up: migration_20260912_010000_add_page_header_fields.up,
+    down: migration_20260912_010000_add_page_header_fields.down,
+    name: '20260912_010000_add_page_header_fields',
   },
 ]

@@ -1958,6 +1958,8 @@ export const pages = pgTable(
     slug: varchar('slug'),
     status: enum_pages_status('status').default('draft'),
     template: enum_pages_template('template').default('default'),
+    header_eyebrow: varchar('header_eyebrow'),
+    header_tagline: varchar('header_tagline'),
     metaTitle: varchar('meta_title'),
     metaDescription: varchar('meta_description'),
     updatedAt: timestamp('updated_at', {
@@ -2358,6 +2360,8 @@ export const _pages_v = pgTable(
       enum__pages_v_version_status('version_status').default('draft'),
     version_template:
       enum__pages_v_version_template('version_template').default('default'),
+    version_header_eyebrow: varchar('version_header_eyebrow'),
+    version_header_tagline: varchar('version_header_tagline'),
     version_metaTitle: varchar('version_meta_title'),
     version_metaDescription: varchar('version_meta_description'),
     version_updatedAt: timestamp('version_updated_at', {

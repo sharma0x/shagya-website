@@ -323,6 +323,34 @@ export const Pages: CollectionConfig = {
       ],
     },
     {
+      name: 'header',
+      type: 'group',
+      label: 'Page Header',
+      admin: {
+        description:
+          'Override the eyebrow and tagline shown in the page header (About / Contact / FAQ templates).',
+      },
+      fields: [
+        {
+          name: 'eyebrow',
+          type: 'text',
+          label: 'Eyebrow Text',
+          admin: {
+            description:
+              'Small uppercase label above the page title (e.g. "Shayga Heritage").',
+          },
+        },
+        {
+          name: 'tagline',
+          type: 'text',
+          label: 'Tagline',
+          admin: {
+            description: 'Description shown under the page title.',
+          },
+        },
+      ],
+    },
+    {
       name: 'metaTitle',
       type: 'text',
     },

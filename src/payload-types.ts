@@ -989,6 +989,19 @@ export interface Page {
           }
       )[]
     | null;
+  /**
+   * Override the eyebrow and tagline shown in the page header (About / Contact / FAQ templates).
+   */
+  header?: {
+    /**
+     * Small uppercase label above the page title (e.g. "Shayga Heritage").
+     */
+    eyebrow?: string | null;
+    /**
+     * Description shown under the page title.
+     */
+    tagline?: string | null;
+  };
   metaTitle?: string | null;
   metaDescription?: string | null;
   meta?: {
@@ -2017,6 +2030,12 @@ export interface PagesSelect<T extends boolean = true> {
               id?: T;
               blockName?: T;
             };
+      };
+  header?:
+    | T
+    | {
+        eyebrow?: T;
+        tagline?: T;
       };
   metaTitle?: T;
   metaDescription?: T;
