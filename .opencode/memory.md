@@ -318,3 +318,16 @@ unneeded: release.config.cjs sets `npmPublish: false`.
   feature commits that added fields didn't update the count assertions. The
   earlier memory note claiming SiteSettings was "22 fields / matches reality"
   is superseded — it is 23 now.
+- **Orphaned release tag breaks semantic-release.** If the `vN.M.P` git tag's
+  target commit is NOT an ancestor of `main` (history was rewritten/rebased
+  after the release), semantic-release reports "There is no previous release",
+  computes `1.0.0` again, then dies with `fatal: tag 'v1.0.0' already exists`
+  — and the failed run can even push a bogus `chore(release): 1.0.0 [skip ci]`
+  commit onto `main`. Fix: `git tag -f vN.M.P <ancestor-tip>` + force-push the
+  tag (`git push --force origin refs/tags/vN.M.P`), and if a bogus release
+  commit was pushed, `git push --force-with-lease origin <merge> :main` to drop
+  it, then re-run the workflow. Diagnose with
+  `pnpm exec semantic-release --dry-run --branches main` in a worktree.
+- `GH_SECRET` PAT can silently expire — symptom: actions/checkout fails with
+  `could not read Username for 'https://github.com': terminal prompts disabled`.
+  Refresh it with the gh CLI token: `gh secret set GH_SECRET --repo <owner>/<repo> --body "$(gh auth token)"`.
