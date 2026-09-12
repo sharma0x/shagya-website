@@ -8,6 +8,11 @@ import {
   applyStockClamp,
   type CartStockItem,
 } from '@/lib/stock'
+import {
+  resolveCurrentPrices,
+  itemProductId,
+  applyCurrentPrice,
+} from '@/lib/cart-prices'
 
 /**
  * GET /api/cart
@@ -53,7 +58,22 @@ export async function GET(request: Request): Promise<NextResponse> {
       return NextResponse.json({ items: [], subtotal: 0 })
     }
 
-    return NextResponse.json(carts.docs[0])
+    // Recompute unit prices and subtotal from the CURRENT product prices so
+    // a price change made in the admin is reflected immediately.
+    const cart = carts.docs[0] as any
+    const storedItems = Array.isArray(cart?.items) ? cart.items : []
+    const priceMap = await resolveCurrentPrices(payload, storedItems)
+    const items = storedItems.map((item: any) => {
+      const { unitPrice } = applyCurrentPrice(item, priceMap)
+      return { ...item, unitPrice }
+    })
+    const subtotal = items.reduce(
+      (acc: number, item: any) =>
+        acc + (item.unitPrice || 0) * (item.quantity || 1),
+      0,
+    )
+
+    return NextResponse.json({ ...cart, items, subtotal })
   } catch (error) {
     console.error('[API] GET /api/cart error:', error)
     return NextResponse.json(
@@ -117,8 +137,14 @@ export async function POST(request: Request): Promise<NextResponse> {
 
     const customerId = customers.docs[0].id
 
-    // Calculate subtotal
-    const subtotal = items.reduce(
+    // Calculate subtotal from CURRENT product prices (never trust the
+    // add-time unitPrice snapshot in the client payload)
+    const priceMap = await resolveCurrentPrices(payload, items)
+    const pricedItems = items.map((item: any) => {
+      const { unitPrice } = applyCurrentPrice(item, priceMap)
+      return { ...item, unitPrice }
+    })
+    const subtotal = pricedItems.reduce(
       (acc, item) => acc + (item.unitPrice || 0) * (item.quantity || 1),
       0,
     )
@@ -137,7 +163,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     let cart
     const data: any = {
       customer: customerId,
-      items: items.map((item) => ({
+      items: pricedItems.map((item) => ({
         product:
           typeof item.product === 'object' && item.product !== null
             ? item.product.id

@@ -68,6 +68,7 @@ interface CartState {
   setCoupon: (coupon: CartState['coupon']) => void
   syncWithServer: (action?: 'overwrite' | 'merge') => Promise<void>
   loadFromServer: () => Promise<void>
+  refreshPrices: () => Promise<void>
   getSubtotal: () => number
   getTotal: () => number
 }
@@ -215,7 +216,9 @@ export const useCart = create<CartState>()(
                 product: item.product,
                 variant: item.variant,
                 quantity: item.quantity,
-                unitPrice: item.unitPrice || item.product.basePrice,
+                // Prefer the CURRENT product price (the server re-prices
+                // every cart against the products collection)
+                unitPrice: item.product?.basePrice ?? item.unitPrice ?? 0,
               }))
               set({
                 items: dedupeCartItems(formattedItems),
@@ -227,6 +230,38 @@ export const useCart = create<CartState>()(
           console.warn('[Cart Store] Loading from server failed:', error)
         } finally {
           set({ isLoading: false })
+        }
+      },
+
+      refreshPrices: async () => {
+        const items = get().items
+        if (items.length === 0) return
+        const ids = [...new Set(items.map((i) => i.product.id))]
+        try {
+          const res = await fetch(
+            `/api/products?where[id][in]=${ids.join(',')}&limit=${ids.length}&depth=0`,
+          )
+          if (!res.ok) return
+          const data = await res.json()
+          const priceMap = new Map<string, number>()
+          for (const doc of data.docs || []) {
+            if (typeof doc.basePrice === 'number' && doc.basePrice > 0) {
+              priceMap.set(String(doc.id), doc.basePrice)
+            }
+          }
+          const updated = items.map((item) => {
+            const current = priceMap.get(String(item.product.id))
+            if (current == null) return item
+            return {
+              ...item,
+              unitPrice: current,
+              product: { ...item.product, basePrice: current },
+            }
+          })
+          set({ items: dedupeCartItems(updated) })
+          get().syncWithServer()
+        } catch (error) {
+          console.warn('[Cart Store] refreshPrices failed:', error)
         }
       },
 

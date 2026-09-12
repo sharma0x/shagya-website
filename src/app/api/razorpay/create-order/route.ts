@@ -4,6 +4,7 @@ import config from '@payload-config'
 import { auth } from '@/lib/auth'
 import Razorpay from 'razorpay'
 import { validateCartStock, type CartStockItem } from '@/lib/stock'
+import { resolveCurrentPrices, applyCurrentPrice } from '@/lib/cart-prices'
 
 export async function POST(request: Request) {
   try {
@@ -28,10 +29,13 @@ export async function POST(request: Request) {
     const payload = await getPayload({ config })
 
     if (isGuest && guestCartItems && guestCartItems.length > 0) {
-      // Guest — calculate from cart items in request
+      // Guest — resolve CURRENT prices so a price change in the admin is
+      // reflected at checkout instead of trusting the stale client snapshot
+      const priceMap = await resolveCurrentPrices(payload, guestCartItems)
       subtotal = guestCartItems.reduce(
         (acc: number, item: any) =>
-          acc + (item.unitPrice || 0) * (item.quantity || 1),
+          acc +
+          applyCurrentPrice(item, priceMap).unitPrice * (item.quantity || 1),
         0,
       )
     } else {
@@ -70,13 +74,16 @@ export async function POST(request: Request) {
 
       const cart = carts.docs[0] as any
       cartId = cart.id
-      subtotal =
-        cart.subtotal ||
-        (cart.items || []).reduce(
-          (acc: number, item: any) =>
-            acc + (item.unitPrice || 0) * (item.quantity || 1),
-          0,
-        )
+      const cartItems = (cart.items || []) as any[]
+      // Resolve CURRENT prices from the DB (the stored unitPrice may be a
+      // stale add-time snapshot)
+      const priceMap = await resolveCurrentPrices(payload, cartItems)
+      subtotal = cartItems.reduce(
+        (acc: number, item: any) =>
+          acc +
+          applyCurrentPrice(item, priceMap).unitPrice * (item.quantity || 1),
+        0,
+      )
     }
 
     // ── Server-side stock validation ──

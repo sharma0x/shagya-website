@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useRef } from 'react'
 import { useCart } from '@/lib/store/cart'
 import { X, Plus, Minus, Trash2, ShoppingBag } from 'lucide-react'
 import Image from 'next/image'
@@ -15,7 +16,19 @@ interface CartDrawerProps {
 }
 
 export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
-  const { items, updateQuantity, removeItem, getSubtotal } = useCart()
+  const { items, updateQuantity, removeItem, getSubtotal, refreshPrices } =
+    useCart()
+
+  // Refresh item prices against the current product catalog each time the
+  // drawer opens, so an admin price change is reflected immediately.
+  const refreshedRef = useRef(false)
+  useEffect(() => {
+    if (isOpen && !refreshedRef.current) {
+      refreshedRef.current = true
+      void refreshPrices()
+    }
+    if (!isOpen) refreshedRef.current = false
+  }, [isOpen, refreshPrices])
 
   return (
     <div

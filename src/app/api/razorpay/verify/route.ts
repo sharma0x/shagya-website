@@ -5,6 +5,7 @@ import { auth } from '@/lib/auth'
 import crypto from 'crypto'
 import { isSameAddress } from '@/lib/address-utils'
 import { validateCartStock, type CartStockItem } from '@/lib/stock'
+import { resolveCurrentPrices, applyCurrentPrice } from '@/lib/cart-prices'
 
 /**
  * Resolves the color identity from a cart item's variant JSON
@@ -138,9 +139,12 @@ export async function POST(request: Request) {
     const resolveOrderItemColor = makeColorResolver(payload)
 
     if (isGuest && guestCartItems && guestCartItems.length > 0) {
-      // Guest — use cart items from request body
+      // Guest — use cart items from request body but price them from the
+      // CURRENT product documents (never trust the stale client snapshot)
+      const priceMap = await resolveCurrentPrices(payload, guestCartItems)
       orderItems = await Promise.all(
         guestCartItems.map(async (item: any) => {
+          const { unitPrice } = applyCurrentPrice(item, priceMap)
           const { colorId, colorName } = await resolveOrderItemColor(
             item.variant,
           )
@@ -149,8 +153,8 @@ export async function POST(request: Request) {
             color: colorId,
             colorName,
             quantity: item.quantity || 1,
-            unitPrice: item.unitPrice || 0,
-            totalPrice: (item.unitPrice || 0) * (item.quantity || 1),
+            unitPrice,
+            totalPrice: unitPrice * (item.quantity || 1),
           }
         }),
       )
@@ -174,20 +178,17 @@ export async function POST(request: Request) {
       }
 
       cartId = cart.id as string | number
-      subtotal =
-        (cart as any).subtotal ||
-        ((cart as any).items || []).reduce(
-          (acc: number, item: any) =>
-            acc + (item.unitPrice || 0) * (item.quantity || 1),
-          0,
-        )
-
+      const cartItems = (cart.items || []) as any[]
+      // Price the order from CURRENT product documents, not the stored
+      // add-time unitPrice snapshot
+      const priceMap = await resolveCurrentPrices(payload, cartItems)
       orderItems = await Promise.all(
-        (cart.items || []).map(async (item: any) => {
+        cartItems.map(async (item: any) => {
           const productId =
             typeof item.product === 'object' && item.product !== null
               ? item.product.id
               : item.product
+          const { unitPrice } = applyCurrentPrice(item, priceMap)
           const { colorId, colorName } = await resolveOrderItemColor(
             item.variant,
           )
@@ -196,11 +197,12 @@ export async function POST(request: Request) {
             color: colorId,
             colorName,
             quantity: item.quantity,
-            unitPrice: item.unitPrice,
-            totalPrice: item.unitPrice * item.quantity,
+            unitPrice,
+            totalPrice: unitPrice * item.quantity,
           }
         }),
       )
+      subtotal = orderItems.reduce((a: number, i: any) => a + i.totalPrice, 0)
     }
 
     // ── Server-side stock validation before order creation ──

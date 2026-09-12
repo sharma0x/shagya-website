@@ -168,6 +168,13 @@ export default function CheckoutPage() {
   // Load cart, addresses, and coupons — shows skeleton while session hydrates
   const didLoad = useRef(false)
 
+  // Refresh item prices from the current catalog whenever checkout loads, so
+  // an admin price change is reflected in the summary (and not charged at the
+  // old price).
+  useEffect(() => {
+    void zCart.refreshPrices()
+  }, [zCart])
+
   useEffect(() => {
     if (didLoad.current) return
 
