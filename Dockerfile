@@ -29,6 +29,10 @@ RUN (pnpm exec payload generate:types || true) && \
     pnpm exec next build
 
 FROM base AS runner
+# Version baked at build time (e.g. v1.1.0 from semantic-release).
+# Read at runtime by GET /api/version.
+ARG APP_VERSION=latest
+ENV APP_VERSION=$APP_VERSION
 RUN apk add --no-cache vips-cpp curl
 COPY --from=builder /app/package.json /app/pnpm-lock.yaml ./
 RUN pnpm install --prod --frozen-lockfile --ignore-scripts && \
