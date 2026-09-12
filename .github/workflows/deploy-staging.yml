@@ -89,10 +89,22 @@ jobs:
           # CLI falls back to osxkeychain on macOS, which is exactly what
           # triggered the Keychain error. A plaintext `auths` entry needs no
           # credential helper.
-          mkdir -p "$DOCKER_CONFIG"
+          #
+          # Setting DOCKER_CONFIG also hides the compose CLI plugin (plugins
+          # are discovered under $DOCKER_CONFIG/cli-plugins, not the system
+          # dirs), so symlink docker-compose there before using `docker
+          # compose` in later steps.
+          mkdir -p "$DOCKER_CONFIG/cli-plugins"
+          if [ -e ~/.docker/cli-plugins/docker-compose ]; then
+            ln -sf ~/.docker/cli-plugins/docker-compose "$DOCKER_CONFIG/cli-plugins/docker-compose"
+          elif [ -e "$(brew --prefix docker 2>/dev/null)/cli-plugins/docker-compose" ]; then
+            ln -sf "$(brew --prefix docker)/cli-plugins/docker-compose" "$DOCKER_CONFIG/cli-plugins/docker-compose"
+          else
+            echo "WARNING: docker-compose plugin not found; docker compose may fail"
+          fi
           AUTH=$(printf '%s:%s' "${{ github.actor }}" "${{ secrets.GITHUB_TOKEN }}" | base64)
           printf '{"auths":{"ghcr.io":{"auth":"%s"}}}' "$AUTH" > "$DOCKER_CONFIG/config.json"
-          echo "Wrote GHCR credentials to $DOCKER_CONFIG/config.json"
+          echo "Wrote GHCR credentials + compose plugin to $DOCKER_CONFIG"
 
       - name: Pull image
         run: docker compose -f docker-compose.staging.yml pull app
