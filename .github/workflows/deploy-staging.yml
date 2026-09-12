@@ -78,19 +78,21 @@ jobs:
       - name: Write staging env
         run: printf '%s\n' "${{ secrets.STAGING_ENV }}" > .env.staging
 
-      - name: Isolate Docker config (bypass macOS Keychain)
+      - name: Authenticate to GitHub Container Registry
         run: |
-          # DOCKER_CONFIG points docker at a job-local directory so that
-          # `docker login` writes a plain-text config here instead of trying
-          # to store the GHCR password in the macOS Keychain, which fails on
-          # non-interactive CI runners with "User interaction is not allowed
-          # (-25308)".
+          # DOCKER_CONFIG points docker at a job-local directory so credentials
+          # never touch the macOS Keychain, which fails on non-interactive CI
+          # runners with "User interaction is not allowed (-25308)".
+          #
+          # Write the GHCR auth entry straight into config.json instead of
+          # using `docker login`: with an empty/absent credsStore the Docker
+          # CLI falls back to osxkeychain on macOS, which is exactly what
+          # triggered the Keychain error. A plaintext `auths` entry needs no
+          # credential helper.
           mkdir -p "$DOCKER_CONFIG"
-          echo '{"auths":{},"credsStore":""}' > "$DOCKER_CONFIG/config.json"
-          echo "Docker config isolated to $DOCKER_CONFIG"
-
-      - name: Log in to GitHub Container Registry
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          AUTH=$(printf '%s:%s' "${{ github.actor }}" "${{ secrets.GITHUB_TOKEN }}" | base64)
+          printf '{"auths":{"ghcr.io":{"auth":"%s"}}}' "$AUTH" > "$DOCKER_CONFIG/config.json"
+          echo "Wrote GHCR credentials to $DOCKER_CONFIG/config.json"
 
       - name: Pull image
         run: docker compose -f docker-compose.staging.yml pull app

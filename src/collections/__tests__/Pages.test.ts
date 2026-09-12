@@ -19,8 +19,8 @@ describe('Pages collection', () => {
       expect(Pages.timestamps).toBe(true)
     })
 
-    it('has exactly 7 top-level fields', () => {
-      expect(Pages.fields).toHaveLength(7)
+    it('has exactly 8 top-level fields', () => {
+      expect(Pages.fields).toHaveLength(8)
     })
   })
 
@@ -91,6 +91,21 @@ describe('Pages collection', () => {
       const values = field?.options?.map((o: any) => o.value)
       expect(values).toHaveLength(4)
       expect(values).toEqual(['default', 'contact', 'about', 'faq'])
+    })
+  })
+
+  describe('Header group field', () => {
+    const field = Pages.fields?.find((f: any) => f.name === 'header') as any
+
+    it('exists and is a group field', () => {
+      expect(field).toBeDefined()
+      expect(field?.type).toBe('group')
+    })
+
+    it('has eyebrow and tagline text fields', () => {
+      const subNames = field?.fields?.map((x: any) => x.name) || []
+      expect(subNames).toContain('eyebrow')
+      expect(subNames).toContain('tagline')
     })
   })
 

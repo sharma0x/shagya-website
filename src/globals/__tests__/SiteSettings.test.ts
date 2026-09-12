@@ -196,8 +196,8 @@ describe('SiteSettings global', () => {
 
   // ---- Count Assertion ----
   describe('Field count', () => {
-    it('has exactly 22 fields', () => {
-      expect(SiteSettings.fields).toHaveLength(22)
+    it('has exactly 23 fields', () => {
+      expect(SiteSettings.fields).toHaveLength(23)
     })
   })
 })

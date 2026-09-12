@@ -92,4 +92,7 @@ infra/provision/*.crash.log
 infra/provision/.database_url
 infra/provision/allowed_ips.txt
 
+# Job-local Docker config written by the deploy workflows
+.docker-config/
+
 # Environment files
