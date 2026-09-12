@@ -26,11 +26,25 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+      - name: Start build-time Postgres
+        run: |
+          docker run -d --name shayga-builddb \
+            -e POSTGRES_USER=shayga \
+            -e POSTGRES_PASSWORD=shayga_dev \
+            -e POSTGRES_DB=shayga \
+            -e PGDATA=/var/lib/postgresql/pgdata \
+            -p 5432:5432 \
+            --health-cmd "pg_isready -U shayga -d shayga" \
+            --health-interval 5s \
+            --health-timeout 3s \
+            --health-retries 20 \
+            postgres:18-alpine
+          for i in $(seq 1 30); do
+            status=$(docker inspect -f '{{.State.Health.Status}}' shayga-builddb 2>/dev/null || echo starting)
+            [ "$status" = "healthy" ] && echo "Build DB healthy" && break
+            sleep 2
+          done
+          docker inspect -f '{{.State.Health.Status}}' shayga-builddb
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v4
@@ -40,20 +54,16 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ./Dockerfile
-          push: true
-          platforms: linux/amd64
-          tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:develop
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:sha-${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          build-args: |
-            NODE_ENV=production
-            NEXT_TELEMETRY_DISABLED=1
+        run: |
+          export IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          docker build \
+            --network=host \
+            --build-arg DATABASE_URL="postgres://shayga:shayga_dev@127.0.0.1:5432/shayga" \
+            --tag "$IMAGE:develop" \
+            --tag "$IMAGE:sha-${{ github.sha }}" \
+            .
+          docker push "$IMAGE:develop"
+          docker push "$IMAGE:sha-${{ github.sha }}"
 
   deploy:
     name: Deploy to Staging

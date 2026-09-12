@@ -3,7 +3,6 @@ name: CI
 on:
   push:
     branches:
-      - main
       - develop
   pull_request:
     branches:
@@ -22,6 +21,24 @@ jobs:
       PAYLOAD_SECRET: ci-secret-placeholder-32-chars-minimum-length
       BETTER_AUTH_SECRET: ci-secret-placeholder-32-chars-minimum-length
       NEXT_PUBLIC_SERVER_URL: http://localhost:3000
+      DATABASE_URL: postgres://shayga:shayga_dev@localhost:5432/shayga
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: shayga
+          POSTGRES_PASSWORD: shayga_dev
+          POSTGRES_DB: shayga
+          PGDATA: /var/lib/postgresql/pgdata
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U shayga -d shayga"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        volumes:
+          - /var/lib/postgresql
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -51,6 +68,11 @@ jobs:
 
       - name: Unit & Component tests
         run: pnpm test
+
+      - name: Apply database migrations
+        run: |
+          pnpm exec payload migrate
+          pnpm exec better-auth migrate --config src/lib/auth.ts -y
 
       - name: Build Next.js & Payload
         run: pnpm build

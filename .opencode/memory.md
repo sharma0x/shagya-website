@@ -269,3 +269,25 @@ ENV_FILE=.env IMAGE_TAG=testing DOCKER_IMAGE=ghcr.io/sharma0x/shagya-website doc
 
 - Pickup location/pin, client name, seller name/address/phone/email are now CMS-managed (Site Settings → Delhivery Shipping group), NOT env vars. `getDelhiverySettings(payload)` reads them; `getDelhiveryConfig()` keeps only secrets/mode/baseUrl (apiToken, mode, webhookSecret). `migrate:create` hangs on the interactive `occasions_id` prompt — hand-write the migration (`ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS delhivery_* varchar` + `_site_settings_v` version_* cols), then `payload migrate` on deploy/boot applies it (watch the better-auth "No migrations needed" line — the payload Migrated line scrolls above).
 - After removing env fallback, seed the CMS from the old env values (SQL UPDATE on site_settings) so shipping keeps working.
+
+## CI/CD: next build needs a migrated Postgres (2026-09-12)
+Root cause of all CI / Deploy-Staging failures: `next build` prerender of
+`/account/addresses` connects to Postgres (`ECONNREFUSED 127.0.0.1:5432`,
+`payloadInitError: true`) and the build fails. Verified locally: starting
+`postgres:18-alpine` (shayga/shayga_dev/shayga), running
+`pnpm exec payload migrate` then
+`pnpm exec better-auth migrate --config src/lib/auth.ts -y` makes `pnpm build`
+pass on an empty DB.
+Pattern for build-time DB (now baked into workflows + Dockerfile):
+- CI: GitHub Actions `services: postgres` container + `DATABASE_URL` env + run
+  the two migrate commands before `pnpm build`.
+- Docker build: `docker run -d --name shayga-builddb ... -p 0.0.0.0:5432:5432`
+  then `docker build --network=host --build-arg DATABASE_URL=...`. Host network
+  ONLY works on Linux runners; Docker Desktop Mac (VM) cannot reach host
+  `127.0.0.1` from a build container. Keep image builds on hosted ubuntu runners.
+- Dockerfile: add `ARG DATABASE_URL` + `ENV DATABASE_URL` in the **builder**
+  stage only (never the runner stage — runtime URL comes from compose env_file),
+  and run migrations between `COPY . .` and `next build`.
+Release secret: repo has NO GH_TOKEN/NPM_TOKEN. `GH_SECRET` is the PAT — wire
+release job checkout + semantic-release to `secrets.GH_SECRET`. NPM_TOKEN is
+unneeded: release.config.cjs sets `npmPublish: false`.
