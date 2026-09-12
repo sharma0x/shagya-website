@@ -1,3 +1,9 @@
+## [1.2.0](https://github.com/sharma0x/shagya-website/compare/v1.1.0...v1.2.0) (2026-09-12)
+
+### Features
+
+- **api:** expose running app version via GET /api/version ([e5ca029](https://github.com/sharma0x/shagya-website/commit/e5ca029a4b8f0b8027998cb801d29052cb7a912b))
+
 ## [1.1.0](https://github.com/sharma0x/shagya-website/compare/v1.0.0...v1.1.0) (2026-09-12)
 
 ### ⚠ BREAKING CHANGES
