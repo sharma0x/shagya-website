@@ -9,6 +9,7 @@ import {
   nextPickupSlotIST,
   trackShipment,
 } from '@/lib/delhivery/fulfillment'
+import { getDelhiverySettings } from '@/lib/delhivery/settings'
 import { mapScanToOrderStatus } from '@/lib/delhivery/mapping'
 
 /**
@@ -381,10 +382,12 @@ export const Orders: CollectionConfig = {
         try {
           const body = (await req.json?.()) ?? {}
           const { pickupDate, pickupTime } = nextPickupSlotIST()
+          const settings = await getDelhiverySettings(req.payload)
           const response = await createPickupRequest({
             pickupTime: body.pickupTime ?? pickupTime,
             pickupDate: body.pickupDate ?? pickupDate,
             expectedPackageCount: Number(body.expectedPackageCount ?? 1),
+            pickupLocation: settings.pickupLocation,
           })
           if (response.pickupRequestId) {
             await req.payload.update({

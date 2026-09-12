@@ -49,6 +49,8 @@ export interface PickupRequestInput {
   pickupTime: string
   pickupDate: string
   expectedPackageCount: number
+  /** Pickup location name; defaults to the config / env value. */
+  pickupLocation?: string
 }
 
 export function nextPickupSlotIST(): {
@@ -106,7 +108,7 @@ export async function createPickupRequest(
     body: JSON.stringify({
       pickup_time: input.pickupTime,
       pickup_date: input.pickupDate,
-      pickup_location: config.pickupLocation,
+      pickup_location: input.pickupLocation || config.pickupLocation,
       expected_package_count: input.expectedPackageCount,
     }),
   })

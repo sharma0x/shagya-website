@@ -11,10 +11,16 @@ import type { DelhiveryConfig } from '../config'
 
 const mockFetchWaybill = vi.fn()
 const mockCreateShipment = vi.fn()
+const mockGetDelhiverySettings = vi.fn()
 
 vi.mock('../shipping', () => ({
   fetchWaybill: (...args: unknown[]) => mockFetchWaybill(...args),
   createShipment: (...args: unknown[]) => mockCreateShipment(...args),
+}))
+
+vi.mock('../settings', () => ({
+  getDelhiverySettings: (...args: unknown[]) =>
+    mockGetDelhiverySettings(...args),
 }))
 
 vi.mock('../config', () => ({
@@ -118,6 +124,7 @@ describe('buildShipmentRequest', () => {
 describe('shipOrderWithDelhivery', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockGetDelhiverySettings.mockResolvedValue(config)
   })
 
   it('ships a confirmed prepaid order and stores waybill + tracking', async () => {

@@ -2368,6 +2368,27 @@ export interface SiteSetting {
    * Select coupons to display on the checkout page under pre-populated offers
    */
   activeCoupons?: (number | Coupon)[] | null;
+  /**
+   * Fulfilment identity used when manifesting orders with Delhivery. Leave a field blank to fall back to its environment variable (DELHIVERY_*).
+   */
+  delhivery?: {
+    /**
+     * Pickup point name registered in the Delhivery One Panel (e.g. SHAYGA B2C).
+     */
+    pickupLocation?: string | null;
+    /**
+     * Origin pincode used for shipments and return labels.
+     */
+    pickupPin?: string | null;
+    /**
+     * Client/account name shown to Delhivery.
+     */
+    clientName?: string | null;
+    sellerName?: string | null;
+    sellerAddress?: string | null;
+    sellerPhone?: string | null;
+    sellerEmail?: string | null;
+  };
   _status?: ('draft' | 'published') | null;
   updatedAt?: string | null;
   createdAt?: string | null;
@@ -2422,6 +2443,17 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   expressShippingRate?: T;
   freeShippingThreshold?: T;
   activeCoupons?: T;
+  delhivery?:
+    | T
+    | {
+        pickupLocation?: T;
+        pickupPin?: T;
+        clientName?: T;
+        sellerName?: T;
+        sellerAddress?: T;
+        sellerPhone?: T;
+        sellerEmail?: T;
+      };
   _status?: T;
   updatedAt?: T;
   createdAt?: T;

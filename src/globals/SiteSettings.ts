@@ -261,5 +261,63 @@ export const SiteSettings: GlobalConfig = {
           'Select coupons to display on the checkout page under pre-populated offers',
       },
     },
+
+    // ---- Delhivery Shipping ----
+    {
+      name: 'delhivery',
+      type: 'group',
+      label: 'Delhivery Shipping',
+      admin: {
+        description:
+          'Fulfilment identity used when manifesting orders with Delhivery. Leave a field blank to fall back to its environment variable (DELHIVERY_*).',
+      },
+      fields: [
+        {
+          name: 'pickupLocation',
+          type: 'text',
+          label: 'Pickup Location Name',
+          admin: {
+            description:
+              'Pickup point name registered in the Delhivery One Panel (e.g. SHAYGA B2C).',
+          },
+        },
+        {
+          name: 'pickupPin',
+          type: 'text',
+          label: 'Pickup Pincode',
+          admin: {
+            description: 'Origin pincode used for shipments and return labels.',
+          },
+        },
+        {
+          name: 'clientName',
+          type: 'text',
+          label: 'Client Name',
+          admin: {
+            description: 'Client/account name shown to Delhivery.',
+          },
+        },
+        {
+          name: 'sellerName',
+          type: 'text',
+          label: 'Seller Name',
+        },
+        {
+          name: 'sellerAddress',
+          type: 'textarea',
+          label: 'Seller Address',
+        },
+        {
+          name: 'sellerPhone',
+          type: 'text',
+          label: 'Seller Phone',
+        },
+        {
+          name: 'sellerEmail',
+          type: 'email',
+          label: 'Seller Email',
+        },
+      ],
+    },
   ],
 }

@@ -28,17 +28,20 @@ export function getDelhiveryConfig(): DelhiveryConfig {
   const mode: DelhiveryMode =
     process.env.DELHIVERY_MODE === 'prod' ? 'prod' : 'test'
 
+  // Operational identity fields (pickup location, seller info) are managed in
+  // the CMS (Site Settings → Delhivery Shipping), never env vars. Only the
+  // token, mode, base URL and webhook secret come from the environment.
   return {
     mode,
     baseUrl: BASE_URLS[mode],
     apiToken,
-    pickupLocation: process.env.DELHIVERY_PICKUP_LOCATION ?? 'SHAYGA B2C',
-    pickupPin: process.env.DELHIVERY_PICKUP_PIN ?? '400068',
-    clientName: process.env.DELHIVERY_CLIENT_NAME ?? 'SHAYGA B2C',
-    sellerName: process.env.DELHIVERY_SELLER_NAME ?? 'Shayga',
-    sellerAddress: process.env.DELHIVERY_SELLER_ADDRESS ?? '',
-    sellerPhone: process.env.DELHIVERY_SELLER_PHONE ?? '',
-    sellerEmail: process.env.DELHIVERY_SELLER_EMAIL ?? '',
+    pickupLocation: '',
+    pickupPin: '',
+    clientName: '',
+    sellerName: '',
+    sellerAddress: '',
+    sellerPhone: '',
+    sellerEmail: '',
     webhookSecret: process.env.DELHIVERY_WEBHOOK_SECRET ?? '',
   }
 }

@@ -3778,6 +3778,13 @@ export const site_settings = pgTable(
     freeShippingThreshold: numeric('free_shipping_threshold', {
       mode: 'number',
     }).default(5000),
+    delhivery_pickupLocation: varchar('delhivery_pickup_location'),
+    delhivery_pickupPin: varchar('delhivery_pickup_pin'),
+    delhivery_clientName: varchar('delhivery_client_name'),
+    delhivery_sellerName: varchar('delhivery_seller_name'),
+    delhivery_sellerAddress: varchar('delhivery_seller_address'),
+    delhivery_sellerPhone: varchar('delhivery_seller_phone'),
+    delhivery_sellerEmail: varchar('delhivery_seller_email'),
     _status: enum_site_settings_status('_status').default('draft'),
     updatedAt: timestamp('updated_at', {
       mode: 'string',
@@ -3938,6 +3945,17 @@ export const _site_settings_v = pgTable(
     version_freeShippingThreshold: numeric('version_free_shipping_threshold', {
       mode: 'number',
     }).default(5000),
+    version_delhivery_pickupLocation: varchar(
+      'version_delhivery_pickup_location',
+    ),
+    version_delhivery_pickupPin: varchar('version_delhivery_pickup_pin'),
+    version_delhivery_clientName: varchar('version_delhivery_client_name'),
+    version_delhivery_sellerName: varchar('version_delhivery_seller_name'),
+    version_delhivery_sellerAddress: varchar(
+      'version_delhivery_seller_address',
+    ),
+    version_delhivery_sellerPhone: varchar('version_delhivery_seller_phone'),
+    version_delhivery_sellerEmail: varchar('version_delhivery_seller_email'),
     version__status:
       enum__site_settings_v_version_status('version__status').default('draft'),
     version_updatedAt: timestamp('version_updated_at', {

@@ -1,6 +1,7 @@
 import type { Payload } from 'payload'
 import { DelhiveryError } from './client'
-import { getDelhiveryConfig, type DelhiveryConfig } from './config'
+import type { DelhiveryConfig } from './config'
+import { getDelhiverySettings } from './settings'
 import { createShipment, fetchWaybill } from './shipping'
 import type { ShipmentRequest } from './types'
 
@@ -113,7 +114,7 @@ export async function shipOrderWithDelhivery(
   const guard = validateOrderForShipment(order)
   if (!guard.ok) return guard
 
-  const config = getDelhiveryConfig()
+  const config = await getDelhiverySettings(payload)
   const [waybill] = await fetchWaybill(1)
   if (!waybill) {
     return {
