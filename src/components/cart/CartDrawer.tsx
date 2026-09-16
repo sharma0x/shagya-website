@@ -8,6 +8,7 @@ import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { isUnoptimizedImage } from '@/lib/image-url'
 import { galleryForColor, stockForColor } from '@/lib/product-utils'
+import { weaveLabel } from '@/lib/weaves'
 import { cartQtyCap } from '@/lib/cart-merge'
 import { trackViewCart, cartItemToGA4Item } from '@/lib/analytics'
 
@@ -138,7 +139,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                       </h4>
                       <p className="font-body mt-0.5 text-xs text-neutral-500">
                         {[
-                          item.product.weave,
+                          weaveLabel(item.product.weave),
                           item.product.fabric,
                           item.variant?.color?.name,
                         ]

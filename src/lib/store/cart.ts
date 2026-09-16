@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { normalizeVariant, dedupeCartItems, cartQtyCap } from '@/lib/cart-merge'
+import { weaveLabel } from '@/lib/weaves'
 import {
   suppressCartAnalytics,
   resumeCartAnalytics,
@@ -223,7 +224,13 @@ export const useCart = create<CartState>()(
             const data = await res.json()
             if (data.items) {
               const formattedItems = data.items.map((item: any) => ({
-                product: item.product,
+                product: {
+                  ...item.product,
+                  // The cart API returns products at depth 2, so `weave` is a
+                  // populated relationship object — normalize it to a label
+                  // string for the cart snapshot.
+                  weave: weaveLabel(item.product?.weave),
+                },
                 variant: item.variant,
                 quantity: item.quantity,
                 // Prefer the CURRENT product price (the server re-prices
@@ -268,7 +275,11 @@ export const useCart = create<CartState>()(
             return {
               ...item,
               unitPrice: current,
-              product: { ...item.product, basePrice: current },
+              product: {
+                ...item.product,
+                weave: weaveLabel(item.product.weave),
+                basePrice: current,
+              },
             }
           })
           set({ items: dedupeCartItems(updated) })
