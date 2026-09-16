@@ -1,3 +1,13 @@
+## [1.3.0](https://github.com/sharma0x/shagya-website/compare/v1.2.0...v1.3.0) (2026-09-16)
+
+### Features
+
+- **analytics:** add type-safe GA4 tracking core ([9d799a7](https://github.com/sharma0x/shagya-website/commit/9d799a78bdde09c5d3ffe15714c4f04ef76665e1))
+- **analytics:** bootstrap GA4 loader and page-view tracking ([a437fd5](https://github.com/sharma0x/shagya-website/commit/a437fd5e92610835b8ab7b91fcbd8233eb67734f))
+- **analytics:** track cart, wishlist and checkout funnel ([137813f](https://github.com/sharma0x/shagya-website/commit/137813fd5c200297280d01b3c1b24570aecd8470))
+- **analytics:** track PDP and listing page interactions ([2676595](https://github.com/sharma0x/shagya-website/commit/2676595fb06199b790055b0c3030ca21339526a0))
+- **analytics:** track search, filters and lead capture ([d8ac08a](https://github.com/sharma0x/shagya-website/commit/d8ac08a0a02224ead54ef49be47a451987d93a81))
+
 ## [1.2.0](https://github.com/sharma0x/shagya-website/compare/v1.1.0...v1.2.0) (2026-09-12)
 
 ### Features
