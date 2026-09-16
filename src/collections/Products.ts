@@ -202,21 +202,13 @@ export const Products: CollectionConfig = {
     },
     {
       name: 'weave',
-      type: 'select',
-      required: true,
-      options: [
-        { label: 'Banarasi', value: 'banarasi' },
-        { label: 'Kanchipuram', value: 'kanchipuram' },
-        { label: 'Bandhani', value: 'bandhani' },
-        { label: 'Patola', value: 'patola' },
-        { label: 'Kalamkari', value: 'kalamkari' },
-        { label: 'Ikat', value: 'ikkat' },
-        { label: 'Paithani', value: 'paithani' },
-        { label: 'Maheshwari', value: 'maheshwari' },
-        { label: 'Chanderi', value: 'chanderi' },
-        { label: 'Tant', value: 'tant' },
-        { label: 'Baluchari', value: 'baluchari' },
-      ],
+      type: 'relationship',
+      relationTo: 'weaves',
+      hasMany: false,
+      admin: {
+        description:
+          'Weave technique this saree belongs to (managed in the Weaves collection)',
+      },
     },
     {
       name: 'pattern',

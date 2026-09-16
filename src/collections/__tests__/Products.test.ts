@@ -133,28 +133,12 @@ describe('Products collection', () => {
       (f: any) => f.name === 'weave',
     ) as any
 
-    it('exists and is a select field', () => {
+    it('exists and is an optional relationship to weaves', () => {
       expect(weaveField).toBeDefined()
-      expect(weaveField?.type).toBe('select')
-      expect(weaveField?.required).toBe(true)
-    })
-
-    it('has all 11 weave options', () => {
-      const values = weaveField?.options?.map((o: any) => o.value)
-      expect(values).toHaveLength(11)
-      expect(values).toEqual([
-        'banarasi',
-        'kanchipuram',
-        'bandhani',
-        'patola',
-        'kalamkari',
-        'ikkat',
-        'paithani',
-        'maheshwari',
-        'chanderi',
-        'tant',
-        'baluchari',
-      ])
+      expect(weaveField?.type).toBe('relationship')
+      expect(weaveField?.relationTo).toBe('weaves')
+      expect(weaveField?.hasMany).toBe(false)
+      expect(weaveField?.required).toBeUndefined()
     })
   })
 
