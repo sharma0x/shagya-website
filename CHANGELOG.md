@@ -1,3 +1,11 @@
+## [1.4.1](https://github.com/sharma0x/shagya-website/compare/v1.4.0...v1.4.1) (2026-09-16)
+
+### Bug Fixes
+
+- **db:** add missing weaves column to locked documents rels ([98f930c](https://github.com/sharma0x/shagya-website/commit/98f930c3e28f94589db7db2f258fdc5e3fcb516b))
+- **db:** add missing weaves column to locked documents rels ([606b353](https://github.com/sharma0x/shagya-website/commit/606b353a6f6adc669cfc1a73a8f86388b3819b07))
+- **db:** add missing weaves column to locked documents rels ([e8c58b8](https://github.com/sharma0x/shagya-website/commit/e8c58b86b7b7c406a757a132eb13152d749f9c3a))
+
 ## [1.4.0](https://github.com/sharma0x/shagya-website/compare/v1.3.0...v1.4.0) (2026-09-16)
 
 ### Features
