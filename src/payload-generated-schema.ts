@@ -65,19 +65,6 @@ export const enum_products_fabric = pgEnum('enum_products_fabric', [
   'net',
   'blend',
 ])
-export const enum_products_weave = pgEnum('enum_products_weave', [
-  'banarasi',
-  'kanchipuram',
-  'bandhani',
-  'patola',
-  'kalamkari',
-  'ikkat',
-  'paithani',
-  'maheshwari',
-  'chanderi',
-  'tant',
-  'baluchari',
-])
 export const enum_products_pattern = pgEnum('enum_products_pattern', [
   'solid',
   'printed',
@@ -111,22 +98,6 @@ export const enum__products_v_version_fabric = pgEnum(
     'velvet',
     'net',
     'blend',
-  ],
-)
-export const enum__products_v_version_weave = pgEnum(
-  'enum__products_v_version_weave',
-  [
-    'banarasi',
-    'kanchipuram',
-    'bandhani',
-    'patola',
-    'kalamkari',
-    'ikkat',
-    'paithani',
-    'maheshwari',
-    'chanderi',
-    'tant',
-    'baluchari',
   ],
 )
 export const enum__products_v_version_pattern = pgEnum(
@@ -593,7 +564,9 @@ export const products = pgTable(
     description: jsonb('description'),
     status: enum_products_status('status').default('draft'),
     fabric: enum_products_fabric('fabric'),
-    weave: enum_products_weave('weave'),
+    weave: integer('weave_id').references(() => weaves.id, {
+      onDelete: 'set null',
+    }),
     pattern: enum_products_pattern('pattern'),
     length: numeric('length', { mode: 'number' }),
     blouseType: varchar('blouse_type'),
@@ -638,6 +611,7 @@ export const products = pgTable(
   },
   (columns) => [
     uniqueIndex('products_slug_idx').on(columns.slug),
+    index('products_weave_idx').on(columns.weave),
     index('products_brand_idx').on(columns.brand),
     index('products_updated_at_idx').on(columns.updatedAt),
     index('products_created_at_idx').on(columns.createdAt),
@@ -800,7 +774,9 @@ export const _products_v = pgTable(
     version_status:
       enum__products_v_version_status('version_status').default('draft'),
     version_fabric: enum__products_v_version_fabric('version_fabric'),
-    version_weave: enum__products_v_version_weave('version_weave'),
+    version_weave: integer('version_weave_id').references(() => weaves.id, {
+      onDelete: 'set null',
+    }),
     version_pattern: enum__products_v_version_pattern('version_pattern'),
     version_length: numeric('version_length', { mode: 'number' }),
     version_blouseType: varchar('version_blouse_type'),
@@ -877,6 +853,7 @@ export const _products_v = pgTable(
   (columns) => [
     index('_products_v_parent_idx').on(columns.parent),
     index('_products_v_version_version_slug_idx').on(columns.version_slug),
+    index('_products_v_version_version_weave_idx').on(columns.version_weave),
     index('_products_v_version_version_brand_idx').on(columns.version_brand),
     index('_products_v_version_version_updated_at_idx').on(
       columns.version_updatedAt,
@@ -2632,6 +2609,35 @@ export const occasions = pgTable(
   ],
 )
 
+export const weaves = pgTable(
+  'weaves',
+  {
+    id: serial('id').primaryKey(),
+    name: varchar('name').notNull(),
+    slug: varchar('slug'),
+    description: varchar('description'),
+    updatedAt: timestamp('updated_at', {
+      mode: 'string',
+      withTimezone: true,
+      precision: 3,
+    })
+      .defaultNow()
+      .notNull(),
+    createdAt: timestamp('created_at', {
+      mode: 'string',
+      withTimezone: true,
+      precision: 3,
+    })
+      .defaultNow()
+      .notNull(),
+  },
+  (columns) => [
+    uniqueIndex('weaves_slug_idx').on(columns.slug),
+    index('weaves_updated_at_idx').on(columns.updatedAt),
+    index('weaves_created_at_idx').on(columns.createdAt),
+  ],
+)
+
 export const event_logs = pgTable(
   'event_logs',
   {
@@ -3370,6 +3376,7 @@ export const payload_locked_documents_rels = pgTable(
     brandsID: integer('brands_id'),
     'fabric-typesID': integer('fabric_types_id'),
     occasionsID: integer('occasions_id'),
+    weavesID: integer('weaves_id'),
     'event-logsID': integer('event_logs_id'),
     'email-logsID': integer('email_logs_id'),
     navigationID: integer('navigation_id'),
@@ -3422,6 +3429,7 @@ export const payload_locked_documents_rels = pgTable(
     index('payload_locked_documents_rels_occasions_id_idx').on(
       columns.occasionsID,
     ),
+    index('payload_locked_documents_rels_weaves_id_idx').on(columns.weavesID),
     index('payload_locked_documents_rels_event_logs_id_idx').on(
       columns['event-logsID'],
     ),
@@ -3545,6 +3553,11 @@ export const payload_locked_documents_rels = pgTable(
       columns: [columns['occasionsID']],
       foreignColumns: [occasions.id],
       name: 'payload_locked_documents_rels_occasions_fk',
+    }).onDelete('cascade'),
+    foreignKey({
+      columns: [columns['weavesID']],
+      foreignColumns: [weaves.id],
+      name: 'payload_locked_documents_rels_weaves_fk',
     }).onDelete('cascade'),
     foreignKey({
       columns: [columns['event-logsID']],
@@ -4128,6 +4141,11 @@ export const relations_products_rels = relations(products_rels, ({ one }) => ({
   }),
 }))
 export const relations_products = relations(products, ({ one, many }) => ({
+  weave: one(weaves, {
+    fields: [products.weave],
+    references: [weaves.id],
+    relationName: 'weave',
+  }),
   features: many(products_features, {
     relationName: 'features',
   }),
@@ -4231,6 +4249,11 @@ export const relations__products_v = relations(
       fields: [_products_v.parent],
       references: [products.id],
       relationName: 'parent',
+    }),
+    version_weave: one(weaves, {
+      fields: [_products_v.version_weave],
+      references: [weaves.id],
+      relationName: 'version_weave',
     }),
     version_features: many(_products_v_version_features, {
       relationName: 'version_features',
@@ -4909,6 +4932,7 @@ export const relations_tags = relations(tags, () => ({}))
 export const relations_brands = relations(brands, () => ({}))
 export const relations_fabric_types = relations(fabric_types, () => ({}))
 export const relations_occasions = relations(occasions, () => ({}))
+export const relations_weaves = relations(weaves, () => ({}))
 export const relations_event_logs = relations(event_logs, () => ({}))
 export const relations_email_logs = relations(email_logs, () => ({}))
 export const relations_navigation_items = relations(
@@ -5248,6 +5272,11 @@ export const relations_payload_locked_documents_rels = relations(
       references: [occasions.id],
       relationName: 'occasions',
     }),
+    weavesID: one(weaves, {
+      fields: [payload_locked_documents_rels.weavesID],
+      references: [weaves.id],
+      relationName: 'weaves',
+    }),
     'event-logsID': one(event_logs, {
       fields: [payload_locked_documents_rels['event-logsID']],
       references: [event_logs.id],
@@ -5496,12 +5525,10 @@ type DatabaseSchema = {
   enum_email_templates_slug: typeof enum_email_templates_slug
   enum_products_status: typeof enum_products_status
   enum_products_fabric: typeof enum_products_fabric
-  enum_products_weave: typeof enum_products_weave
   enum_products_pattern: typeof enum_products_pattern
   enum_products_delivery_time: typeof enum_products_delivery_time
   enum__products_v_version_status: typeof enum__products_v_version_status
   enum__products_v_version_fabric: typeof enum__products_v_version_fabric
-  enum__products_v_version_weave: typeof enum__products_v_version_weave
   enum__products_v_version_pattern: typeof enum__products_v_version_pattern
   enum__products_v_version_delivery_time: typeof enum__products_v_version_delivery_time
   enum__products_v_published_locale: typeof enum__products_v_published_locale
@@ -5609,6 +5636,7 @@ type DatabaseSchema = {
   brands: typeof brands
   fabric_types: typeof fabric_types
   occasions: typeof occasions
+  weaves: typeof weaves
   event_logs: typeof event_logs
   email_logs: typeof email_logs
   navigation_items: typeof navigation_items
@@ -5714,6 +5742,7 @@ type DatabaseSchema = {
   relations_brands: typeof relations_brands
   relations_fabric_types: typeof relations_fabric_types
   relations_occasions: typeof relations_occasions
+  relations_weaves: typeof relations_weaves
   relations_event_logs: typeof relations_event_logs
   relations_email_logs: typeof relations_email_logs
   relations_navigation_items: typeof relations_navigation_items

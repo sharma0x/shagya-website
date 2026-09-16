@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { ShoppingBag, Zap, Check } from 'lucide-react'
 import { useCart } from '@/lib/store/cart'
 import { cn } from '@/lib/utils'
+import { weaveLabel } from '@/lib/weaves'
 
 interface ProductCardActionsProps {
   productId: string | number
@@ -54,7 +55,7 @@ export function ProductCardActions({
         compareAtPrice: product.compareAtPrice ?? undefined,
         gallery: product.gallery,
         fabric: (product.fabric as string) || '',
-        weave: (product.weave as string) || '',
+        weave: weaveLabel(product.weave),
       },
       1,
       color ? { color } : defaultVariant,
@@ -78,7 +79,7 @@ export function ProductCardActions({
           compareAtPrice: product.compareAtPrice ?? undefined,
           gallery: product.gallery,
           fabric: (product.fabric as string) || '',
-          weave: (product.weave as string) || '',
+          weave: weaveLabel(product.weave),
         },
         1,
         color ? { color } : defaultVariant,

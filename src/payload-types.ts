@@ -86,6 +86,7 @@ export interface Config {
     brands: Brand;
     'fabric-types': FabricType;
     occasions: Occasion;
+    weaves: Weaf;
     'event-logs': EventLog;
     'email-logs': EmailLog;
     navigation: Navigation;
@@ -122,6 +123,7 @@ export interface Config {
     brands: BrandsSelect<false> | BrandsSelect<true>;
     'fabric-types': FabricTypesSelect<false> | FabricTypesSelect<true>;
     occasions: OccasionsSelect<false> | OccasionsSelect<true>;
+    weaves: WeavesSelect<false> | WeavesSelect<true>;
     'event-logs': EventLogsSelect<false> | EventLogsSelect<true>;
     'email-logs': EmailLogsSelect<false> | EmailLogsSelect<true>;
     navigation: NavigationSelect<false> | NavigationSelect<true>;
@@ -286,18 +288,10 @@ export interface Product {
   } | null;
   status?: ('draft' | 'published' | 'archived') | null;
   fabric: 'silk' | 'cotton' | 'linen' | 'georgette' | 'chiffon' | 'crepe' | 'velvet' | 'net' | 'blend';
-  weave:
-    | 'banarasi'
-    | 'kanchipuram'
-    | 'bandhani'
-    | 'patola'
-    | 'kalamkari'
-    | 'ikkat'
-    | 'paithani'
-    | 'maheshwari'
-    | 'chanderi'
-    | 'tant'
-    | 'baluchari';
+  /**
+   * Weave technique this saree belongs to (managed in the Weaves collection)
+   */
+  weave?: (number | null) | Weaf;
   pattern: 'solid' | 'printed' | 'embroidered' | 'embellished' | 'painted';
   length?: number | null;
   blouseType?: string | null;
@@ -395,6 +389,18 @@ export interface Product {
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "weaves".
+ */
+export interface Weaf {
+  id: number;
+  name: string;
+  slug?: string | null;
+  description?: string | null;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1409,6 +1415,10 @@ export interface PayloadLockedDocument {
         value: number | Occasion;
       } | null)
     | ({
+        relationTo: 'weaves';
+        value: number | Weaf;
+      } | null)
+    | ({
         relationTo: 'event-logs';
         value: number | EventLog;
       } | null)
@@ -2112,6 +2122,17 @@ export interface FabricTypesSelect<T extends boolean = true> {
  * via the `definition` "occasions_select".
  */
 export interface OccasionsSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  description?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "weaves_select".
+ */
+export interface WeavesSelect<T extends boolean = true> {
   name?: T;
   slug?: T;
   description?: T;

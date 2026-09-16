@@ -13,7 +13,9 @@ export function buildWhereClause(
   // Multi-value enum filters (comma-separated)
   // Note: 'occasion' is intentionally absent — products now filter occasions
   // via the 'occasions' relationship (resolved by slug on the category page).
-  const multiFilters = ['weave', 'fabric', 'pattern', 'color'] as const
+  // 'weave' is also absent — the weave relationship is resolved by slug by
+  // callers (see resolveWeaveIds in @/lib/weaves).
+  const multiFilters = ['fabric', 'pattern', 'color'] as const
   for (const key of multiFilters) {
     const value = params.get(key)
     if (value) {

@@ -274,7 +274,7 @@ function SearchPanel({ onClose }: { onClose: () => void }) {
                       renderThumbnail={(doc) => <ProductThumbnail doc={doc} />}
                       renderMeta={(doc) => (
                         <span className="text-neutral-400">
-                          {doc.weave} · {doc.fabric}
+                          {[doc.weave, doc.fabric].filter(Boolean).join(' · ')}
                         </span>
                       )}
                       renderPrice={(doc) =>

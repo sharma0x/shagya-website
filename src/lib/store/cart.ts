@@ -26,7 +26,7 @@ export interface CartItem {
       alt?: string
     }>
     fabric: string
-    weave: string
+    weave?: string
     quantity?: number | null
     trackQuantity?: boolean | null
   }
