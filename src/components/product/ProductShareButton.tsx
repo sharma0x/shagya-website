@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { getProductUrl } from '@/lib/product-url'
+import { trackShare, trackWhatsAppOrderClick } from '@/lib/analytics'
 import {
   Share2,
   X,
@@ -52,6 +53,11 @@ export function ProductShareButton({
       /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
 
     if (isMobile && typeof navigator !== 'undefined' && navigator.share) {
+      trackShare({
+        method: 'native',
+        contentType: 'product',
+        itemId: String(productId),
+      })
       navigator
         .share({
           title: productName,
@@ -67,7 +73,23 @@ export function ProductShareButton({
     } else {
       setIsOpen(true)
     }
-  }, [productName, shareUrl])
+  }, [productName, shareUrl, productId])
+
+  const handleChannelShare = useCallback(
+    (channelName: string) => {
+      trackShare({
+        method: channelName.toLowerCase().replace(/[^a-z0-9]/g, '_'),
+        contentType: 'product',
+        itemId: String(productId),
+      })
+      if (channelName === 'WhatsApp') {
+        trackWhatsAppOrderClick({
+          product: { id: productId, name: productName },
+        })
+      }
+    },
+    [productId, productName],
+  )
 
   const handleCopyLink = useCallback(async () => {
     if (!shareUrl) return
@@ -91,7 +113,12 @@ export function ProductShareButton({
     } catch (error) {
       console.error('Failed to copy URL:', error)
     }
-  }, [shareUrl])
+    trackShare({
+      method: 'copy_link',
+      contentType: 'product',
+      itemId: String(productId),
+    })
+  }, [shareUrl, productId])
 
   const shareText = `Hi! I found this beautiful saree on Shayga: ${productName}`
   const encodedText = encodeURIComponent(shareText)
@@ -228,6 +255,7 @@ export function ProductShareButton({
                       href={channel.href}
                       target="_blank"
                       rel="noopener noreferrer"
+                      onClick={() => handleChannelShare(channel.name)}
                       className={`flex flex-col items-center gap-1.5 rounded-xl p-2.5 text-center transition-all ${channel.bgColor}`}
                       title={`Share on ${channel.name}`}
                     >

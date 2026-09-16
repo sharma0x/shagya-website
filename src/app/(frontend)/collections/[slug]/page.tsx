@@ -9,6 +9,7 @@ import { SortSelect } from '@/components/ui/sort-select'
 import { ProductFilters } from '@/components/product/ProductFilters'
 import { ProductCard } from '@/components/product/ProductCard'
 import { ProductCardSkeleton } from '@/components/ui/Skeleton'
+import { TrackViewItemList } from '@/components/analytics/TrackViewItemList'
 
 // ISR cache for 5 minutes
 export const revalidate = 300
@@ -95,10 +96,12 @@ function CollectionProductGridSkeleton() {
 
 async function CollectionProductsStream({
   collectionId,
+  collectionSlug,
   sParams,
   sortParam,
 }: {
   collectionId: number
+  collectionSlug: string
   sParams: { [key: string]: string | string[] | undefined }
   sortParam: string
 }) {
@@ -155,6 +158,11 @@ async function CollectionProductsStream({
 
   return (
     <div className="flex-1">
+      <TrackViewItemList
+        products={products}
+        listId={`collection/${collectionSlug}`}
+        listName={`collection_${collectionSlug}`}
+      />
       <div className="border-b border-neutral-100 pb-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-4 text-sm text-neutral-500">
@@ -183,7 +191,14 @@ async function CollectionProductsStream({
       ) : (
         <div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-5 sm:gap-x-4 sm:gap-y-8 lg:grid-cols-3 xl:grid-cols-4">
           {products.map((p) => (
-            <ProductCard key={p.id} product={p} variant="grid" showWishlist />
+            <ProductCard
+              key={p.id}
+              product={p}
+              variant="grid"
+              showWishlist
+              analyticsListId={`collection/${collectionSlug}`}
+              analyticsListName={`collection_${collectionSlug}`}
+            />
           ))}
         </div>
       )}
@@ -309,6 +324,7 @@ export default async function CollectionDetailPage({
           <Suspense fallback={<CollectionProductGridSkeleton />}>
             <CollectionProductsStream
               collectionId={collection.id}
+              collectionSlug={slug}
               sParams={sParams}
               sortParam={sortParam}
             />

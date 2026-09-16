@@ -27,6 +27,7 @@ import { getRecentlyViewedIds } from '@/lib/recently-viewed'
 import { getProductUrl } from '@/lib/product-url'
 import { getApplicableCoupons } from '@/lib/coupons'
 import { TrackRecentlyViewed } from '@/components/product/TrackRecentlyViewed'
+import { TrackViewItem } from '@/components/analytics/TrackViewItem'
 import { OffersSection } from '@/components/coupons/OffersSection'
 import {
   OffersSkeleton,
@@ -381,6 +382,7 @@ export default async function ProductDetailPage({
   return (
     <>
       <TrackRecentlyViewed productId={String(product.id)} />
+      <TrackViewItem product={serializableProduct} />
       <div className="bg-surface min-h-screen py-12 md:py-16">
         {isPreview && <RefreshRouteOnSave />}
         <div className="container-page">
