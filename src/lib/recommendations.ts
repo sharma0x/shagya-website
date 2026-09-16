@@ -9,7 +9,7 @@ import { liftVariantGallery } from '@/lib/product-utils'
 export async function getRelatedProducts(
   productId: string | number,
   fabric: string,
-  weave: string,
+  weaveId: string | number | null,
   collectionIds: (string | number)[],
   limit = 6,
 ) {
@@ -34,13 +34,13 @@ export async function getRelatedProducts(
     results.push(...fabricRes.docs.map((d) => ({ product: d, score: 3 })))
   }
 
-  // Query 2: Same weave
-  if (weave) {
+  // Query 2: Same weave (relationship ID)
+  if (weaveId) {
     const weaveRes = await payload.find({
       collection: 'products',
       where: {
         id: { not_equals: productId },
-        weave: { equals: weave },
+        weave: { equals: weaveId },
         _status: { equals: 'published' },
         status: { equals: 'published' },
       },

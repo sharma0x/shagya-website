@@ -11,6 +11,7 @@ import { ActiveFilterChips } from '@/components/filters/ActiveFilterChips'
 import { buildWhereClause } from '@/lib/filters/build-where-clause'
 import { getProductUrl } from '@/lib/product-url'
 import { isUnoptimizedImage } from '@/lib/image-url'
+import { weaveLabel } from '@/lib/weaves'
 import { TrackSearchResults } from '@/components/analytics/TrackSearchResults'
 
 // No DB access at build time — must render dynamically
@@ -123,7 +124,7 @@ export default async function SearchPage({
         basePrice: doc.basePrice || null,
         compareAtPrice: doc.compareAtPrice || null,
         fabric: doc.fabric,
-        weave: doc.weave,
+        weave: weaveLabel(doc.weave) || null,
         rank: 50 - index,
       }))
     } else {
@@ -163,7 +164,7 @@ export default async function SearchPage({
                 typeof docValue.fabric === 'object'
                   ? docValue.fabric?.title
                   : docValue.fabric,
-              weave: docValue.weave,
+              weave: weaveLabel(docValue.weave) || null,
               rank: d.priority || limit - index,
             } as FTSProductResult
           }
@@ -308,7 +309,9 @@ export default async function SearchPage({
                                     {p.name}
                                   </p>
                                   <p className="font-body mt-0.5 text-xs text-neutral-400">
-                                    {p.weave} · {p.fabric}
+                                    {[p.weave, p.fabric]
+                                      .filter(Boolean)
+                                      .join(' · ')}
                                   </p>
                                   {p.basePrice && (
                                     <div className="text-brand-700 font-display mt-2 flex flex-wrap items-baseline gap-2 text-sm font-semibold">

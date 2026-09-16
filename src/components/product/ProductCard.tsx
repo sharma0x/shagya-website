@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils'
 import { getProductUrl } from '@/lib/product-url'
 import { liftVariantGallery } from '@/lib/product-utils'
 import { isUnoptimizedImage } from '@/lib/image-url'
+import { weaveLabel } from '@/lib/weaves'
 import { trackSelectItem, registerWishlistProduct } from '@/lib/analytics'
 
 interface GalleryItem {
@@ -122,7 +123,11 @@ export interface ProductCardProduct {
   slug?: string | null
   basePrice: number | null
   compareAtPrice?: number | null
-  weave?: string | null
+  weave?:
+    | string
+    | number
+    | { name?: string | null; slug?: string | null }
+    | null
   fabric?: string | null
   gallery?: any
   quantity?: number | null
@@ -164,6 +169,7 @@ export function ProductCard({
   const autoTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const discountPct = getDiscountPercent(product)
   const isOOS = product.trackQuantity === true && (product.quantity ?? 0) <= 0
+  const weave = weaveLabel(product.weave)
 
   // Unique color variants for color swatches
   const availableColorVariants = (product.colorVariants || []).filter(
@@ -247,7 +253,7 @@ export function ProductCard({
               {product.name}
             </Link>
             <p className="font-body mt-0.5 text-xs text-neutral-400">
-              {[product.weave, product.fabric, activeColorName]
+              {[weave, product.fabric, activeColorName]
                 .filter(Boolean)
                 .map((s) => (s ?? '').toLowerCase())
                 .join(' · ')}
@@ -413,9 +419,9 @@ export function ProductCard({
             {product.name}
           </p>
 
-          {(product.weave || product.fabric || activeColorName) && (
+          {(weave || product.fabric || activeColorName) && (
             <p className="text-brand-700/60 mt-0.5 truncate text-xs">
-              {[product.weave, product.fabric, activeColorName]
+              {[weave, product.fabric, activeColorName]
                 .filter(Boolean)
                 .map((s) => (s ?? '').toLowerCase())
                 .join(' · ')}
