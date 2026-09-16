@@ -1,3 +1,14 @@
+## [1.4.0](https://github.com/sharma0x/shagya-website/compare/v1.3.0...v1.4.0) (2026-09-16)
+
+### Features
+
+- **cms:** add weaves taxonomy collection ([bed202d](https://github.com/sharma0x/shagya-website/commit/bed202d0f03b624cca6ea251afcf34c1394012e2))
+- **weave:** dynamic admin-managed weave taxonomy ([bd334b3](https://github.com/sharma0x/shagya-website/commit/bd334b3cb1f25c16537bef860281eeb6c9cd9403))
+- **weave:** dynamic admin-managed weave taxonomy ([74764b8](https://github.com/sharma0x/shagya-website/commit/74764b899021026ac190315f1ab67de8e1e38793))
+- **products:** make weave an optional relationship field ([d3eb13a](https://github.com/sharma0x/shagya-website/commit/d3eb13aa5fb05407a29af0936e96cfebb9a7b5bd))
+- **db:** migrate product weave enum to weaves relationship ([e785355](https://github.com/sharma0x/shagya-website/commit/e78535514f9da92202b23d68b76d4b911f2fed69))
+- **weave:** resolve dynamic weave filters by relationship id ([6527f80](https://github.com/sharma0x/shagya-website/commit/6527f801aa750bfdb8eab05f0255797415b64261))
+
 ## [1.3.0](https://github.com/sharma0x/shagya-website/compare/v1.2.0...v1.3.0) (2026-09-16)
 
 ### Features
