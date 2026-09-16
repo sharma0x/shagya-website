@@ -11,6 +11,7 @@ import { ActiveFilterChips } from '@/components/filters/ActiveFilterChips'
 import { buildWhereClause } from '@/lib/filters/build-where-clause'
 import { getProductUrl } from '@/lib/product-url'
 import { isUnoptimizedImage } from '@/lib/image-url'
+import { TrackSearchResults } from '@/components/analytics/TrackSearchResults'
 
 // No DB access at build time — must render dynamically
 export const dynamic = 'force-dynamic'
@@ -187,6 +188,11 @@ export default async function SearchPage({
 
   return (
     <div className="bg-surface min-h-screen py-10">
+      <TrackSearchResults
+        searchTerm={q}
+        productCount={products.length}
+        postCount={posts.length}
+      />
       <div className="container-page">
         {/* Back Link */}
         <Link

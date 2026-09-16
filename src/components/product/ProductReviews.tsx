@@ -16,6 +16,7 @@ import {
   ShieldCheck,
 } from 'lucide-react'
 import { getProductUrl } from '@/lib/product-url'
+import { trackReviewHelpful, trackSubmitReview } from '@/lib/analytics'
 
 export interface ReviewData {
   id: string
@@ -205,6 +206,10 @@ export function ProductReviews({
           })),
         })
       }
+      trackSubmitReview({
+        productId: String(productId),
+        rating,
+      })
       router.refresh()
     } catch (err: any) {
       setFormError(err.message || 'Something went wrong')
@@ -219,6 +224,11 @@ export function ProductReviews({
 
     const wasVoted = votedReviewIds.has(reviewId)
     const currentCount = helpfulCounts[reviewId] ?? 0
+
+    trackReviewHelpful({
+      reviewId,
+      action: wasVoted ? 'remove' : 'add',
+    })
 
     setVotedReviewIds((prev) => {
       const next = new Set(prev)

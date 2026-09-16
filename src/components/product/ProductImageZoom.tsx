@@ -1,13 +1,22 @@
 'use client'
 
-import { useEffect, useRef, useState, type MouseEvent } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type MouseEvent,
+} from 'react'
 import { SkeletonImage } from '@/components/ui/SkeletonImage'
 import { ZoomIn } from 'lucide-react'
 import { isUnoptimizedImage } from '@/lib/image-url'
+import { trackImageZoom } from '@/lib/analytics'
 
 interface ProductImageZoomProps {
   imageUrl: string
   productName: string
+  /** Enables GA4 `image_zoom` events (hover + pinch). Omit to skip tracking. */
+  productId?: string | number
   className?: string
 }
 
@@ -18,12 +27,32 @@ const ZOOM_EASE = 'cubic-bezier(0.22, 1, 0.36, 1)'
 export function ProductImageZoom({
   imageUrl,
   productName,
+  productId,
   className,
 }: ProductImageZoomProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const stageRef = useRef<HTMLDivElement>(null)
   const pinchRef = useRef({ active: false, startDist: 1, startScale: 1 })
+  const lastZoomEventRef = useRef(0)
   const [pinching, setPinching] = useState(false)
+
+  /**
+   * Hover-zoom fires on every mouseenter — throttle so a few hover in/out
+   * cycles don't dominate the event table.
+   */
+  const trackZoom = useCallback(
+    (mode: 'hover' | 'pinch') => {
+      if (!productId) return
+      const now = Date.now()
+      if (now - lastZoomEventRef.current < 1200) return
+      lastZoomEventRef.current = now
+      trackImageZoom({
+        product: { id: productId, name: productName },
+        mode,
+      })
+    },
+    [productId, productName],
+  )
 
   const handleMouseMove = (e: MouseEvent<HTMLDivElement>) => {
     const el = containerRef.current
@@ -35,6 +64,7 @@ export function ProductImageZoom({
 
   const handleMouseEnter = () => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    trackZoom('hover')
     stageRef.current?.style.setProperty('--zoom-scale', String(HOVER_SCALE))
   }
 
@@ -66,6 +96,7 @@ export function ProductImageZoom({
       p.startScale = currentScale()
       stage.style.transition = 'none'
       setPinching(true)
+      trackZoom('pinch')
     }
 
     const onTouchMove = (e: TouchEvent) => {
@@ -113,7 +144,7 @@ export function ProductImageZoom({
       el.removeEventListener('touchend', onTouchEnd)
       el.removeEventListener('touchcancel', onTouchEnd)
     }
-  }, [])
+  }, [trackZoom])
 
   return (
     <div

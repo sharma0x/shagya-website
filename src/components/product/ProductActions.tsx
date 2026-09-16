@@ -6,6 +6,11 @@ import { ShoppingCart, Heart, AlertTriangle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useSession } from '@/lib/auth-client'
 import { useWishlistStore } from '@/lib/store/wishlist'
+import {
+  trackBackInStockNotify,
+  trackSelectColor,
+  registerWishlistProduct,
+} from '@/lib/analytics'
 
 interface ProductActionsProps {
   product: {
@@ -85,6 +90,12 @@ export function ProductActions({
 
   const inWishlist = productIds.includes(String(product.id))
 
+  // Keep the product registered so wishlist toggles from this PDP can emit
+  // rich analytics payloads (the wishlist store itself only tracks IDs).
+  useEffect(() => {
+    registerWishlistProduct(product)
+  }, [product])
+
   useEffect(() => {
     if (session?.user && !isWishlistInitialized) {
       fetchWishlist()
@@ -98,8 +109,12 @@ export function ProductActions({
       )
       return
     }
+    // The OOS CTA doubles as a back-in-stock notification signup.
+    if (effectiveOOS && !inWishlist) {
+      trackBackInStockNotify(product)
+    }
     await toggleWishlist(product.id)
-  }, [session?.user, product.id, router, toggleWishlist])
+  }, [session?.user, router, toggleWishlist, effectiveOOS, inWishlist, product])
 
   const handleAddToCart = () => {
     if (!selectedVariant) return
@@ -150,6 +165,11 @@ export function ProductActions({
                 type="button"
                 onClick={() => {
                   setSelectedVariantIndex(idx)
+                  trackSelectColor({
+                    product,
+                    colorName: v.color.name,
+                    colorSlug: v.color.slug,
+                  })
                   // Keep the URL shareable for this exact color (shallow —
                   // no server refetch).
                   window.history.replaceState(

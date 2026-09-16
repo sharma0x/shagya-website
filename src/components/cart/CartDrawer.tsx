@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils'
 import { isUnoptimizedImage } from '@/lib/image-url'
 import { galleryForColor, stockForColor } from '@/lib/product-utils'
 import { cartQtyCap } from '@/lib/cart-merge'
+import { trackViewCart, cartItemToGA4Item } from '@/lib/analytics'
 
 interface CartDrawerProps {
   isOpen: boolean
@@ -29,6 +30,16 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
     }
     if (!isOpen) refreshedRef.current = false
   }, [isOpen, refreshPrices])
+
+  // GA4 `view_cart` — fired once per drawer open.
+  useEffect(() => {
+    if (!isOpen || items.length === 0) return
+    trackViewCart({
+      items: items.map(cartItemToGA4Item),
+      value: getSubtotal(),
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen])
 
   return (
     <div

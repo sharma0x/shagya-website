@@ -11,6 +11,10 @@ ENV BETTER_AUTH_SECRET=build-placeholder-secret-32-chars-long
 ENV NEXT_PUBLIC_SERVER_URL=http://localhost:3000
 ARG NEXT_PUBLIC_RAZORPAY_KEY_ID
 ENV NEXT_PUBLIC_RAZORPAY_KEY_ID=$NEXT_PUBLIC_RAZORPAY_KEY_ID
+# GA4 measurement ID — inlined into the client bundle at build time. Passed
+# as a build arg by the deploy workflows (from the GitHub Actions variable).
+ARG NEXT_PUBLIC_GA_MEASUREMENT_ID
+ENV NEXT_PUBLIC_GA_MEASUREMENT_ID=$NEXT_PUBLIC_GA_MEASUREMENT_ID
 # Build-only database connection (a throwaway Postgres is started by the
 # workflow and exposed on 127.0.0.1 via `docker build --network=host`).
 # `next build` prerenders pages that query Payload, so a reachable DB is

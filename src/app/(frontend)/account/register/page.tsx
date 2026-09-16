@@ -13,6 +13,7 @@ import {
   Loader2,
 } from 'lucide-react'
 import { PhoneInput } from '@/components/ui/phone-input'
+import { trackSignUp } from '@/lib/analytics'
 
 export default function RegisterPage() {
   const [name, setName] = useState('')
@@ -74,6 +75,7 @@ export default function RegisterPage() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.message || 'Invalid OTP')
+      trackSignUp('email_otp')
       window.location.href = '/account'
     } catch (err: any) {
       setError(err?.message || 'Verification failed')
@@ -84,6 +86,7 @@ export default function RegisterPage() {
 
   const handleGoogleSignIn = async () => {
     try {
+      trackSignUp('google')
       await signIn.social({ provider: 'google', callbackURL: '/account' })
     } catch {
       setError('Google sign in failed')

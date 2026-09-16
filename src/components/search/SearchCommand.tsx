@@ -90,6 +90,11 @@ function SearchPanel({ onClose }: { onClose: () => void }) {
       if (res.ok) {
         const data: SearchResponse = await res.json()
         setResults(data.docs || [])
+        // NOTE: GA4 `search` / `search_no_results` events are deliberately
+        // NOT fired here — this is a debounced preview fetch, not a
+        // committed search. The `/search` results page (TrackSearchResults)
+        // is the single source of truth, so every Enter/submit emits exactly
+        // one event pair and typing never spams zero-result events.
       } else {
         setResults([])
       }

@@ -37,7 +37,11 @@ export function PDPClientSection({
   return (
     <>
       <div className="lg:col-span-7">
-        <ProductGallery imageUrls={imageUrls} productName={product.name} />
+        <ProductGallery
+          imageUrls={imageUrls}
+          productName={product.name}
+          productId={product.id}
+        />
       </div>
       <div className="lg:col-span-5">
         <div className="lg:sticky lg:top-24">

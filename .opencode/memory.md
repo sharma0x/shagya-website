@@ -331,3 +331,28 @@ unneeded: release.config.cjs sets `npmPublish: false`.
 - `GH_SECRET` PAT can silently expire — symptom: actions/checkout fails with
   `could not read Username for 'https://github.com': terminal prompts disabled`.
   Refresh it with the gh CLI token: `gh secret set GH_SECRET --repo <owner>/<repo> --body "$(gh auth token)"`.
+
+## GA4 Analytics Architecture (2026-09-16)
+
+- **Core lib**: `src/lib/analytics/` — `gtag.ts` (SSR-safe window.gtag wrapper + dataLayer queue), `types.ts` (standard + custom event taxonomy), `mappers.ts` (`mapProductToGA4Item` tolerant mapper — category slots map weave→fabric→pattern→city→occasion), `events.ts` (typed track fns), `subscriptions.ts` (Zustand store diffs).
+- **Loader**: `GoogleAnalytics` (`src/components/analytics/`) in `(frontend)/layout.tsx`. Critical Next.js gotcha: **`useSearchParams` in a root-layout client component must be wrapped in `<Suspense>` or static prerender bails out** (`missing-suspense-with-csr-bailout` during `next build`). Split into outer shell + inner `GoogleAnalyticsInner`.
+- **Zero page-speed impact pattern**: `window.dataLayer`/`window.gtag` shim created at module scope (gtag.ts) → events buffer in dataLayer before script load; `gtag.js` injected async via `requestIdleCallback` (2.5s fallback) so it never competes with hydration/LCP; `send_page_view: false` + manual `page_view` per route (pathname+searchParams) avoids double counting; everything no-ops when `NEXT_PUBLIC_GA_MEASUREMENT_ID` is unset.
+- **Cart/wishlist events fire from store subscriptions, not buttons**: `useCart.subscribe` / `useWishlistStore.subscribe` diff consecutive snapshots. Rules: skip transitions touching >1 line-key (hydration/merge/bulk clear); `suppressCartAnalytics()` before purchase `clearCart()`; wishlist needs `registerWishlistProduct()` from components with full product data (ProductCard/ProductActions/wishlist page) since the store only holds IDs.
+- **Env**: `NEXT_PUBLIC_GA_MEASUREMENT_ID` (inlined at build time), `NEXT_PUBLIC_GA_DEBUG=true` for DebugView. Dev-mode console logging (`[ga4]`) works even without an ID.
+- **Consent mode v2**: `consent default` queued before config — analytics_storage granted, ad_storage denied (swap to denied + banner before relying on it).
+- **Purchase event**: fired in `checkout/page.tsx` `firePurchase(orderNumber)` on all 3 success paths (COD, Razorpay verify, mock) BEFORE `clearCart()`; tax=0 (GST included in prices); `user_guest` flag.
+
+## GA4 Review Fixes (2026-09-16, post-review)
+
+Review subagent found 2 P0 + 8 P1. Fixes applied:
+- **Checkout items**: `ga4Items()` must map `item.product` (NOT the line) with overrides price/quantity/variant — line objects have no top-level id/name. Guest line keys (`pid-colorSlug`) must never be used as item_id.
+- **PII**: `trackPageView` runs `sanitizePagePath()` — strips `email|otp|token|signature` query keys (checkout success URL carries the raw email). Never send the success-page location un-sanitized.
+- **gtag.js injection**: guard INSIDE `inject()` with a script element id — both `requestIdleCallback` and its timeout fallback can fire on a busy thread (double script = double-replayed dataLayer).
+- **Search**: ALL `search`/`search_no_results` events come from `TrackSearchResults` on `/search` (single source of truth). SearchCommand's debounced preview emits NOTHING. `TrackSearchResults` ref stores the last fired TERM, not a boolean — the component instance survives client-side `?q=` refinements.
+- **Wishlist**: events moved OUT of diff subscriptions into the store's `toggleWishlist` — fire only after server confirms (`data.message === 'Product added to wishlist'`). Rollback paths can't emit phantom pairs. Rich payloads come from `wishlist-registry.ts` (module Map capped at 200).
+- **Cart diffs**: replaced the `>1 line-key` heuristic with explicit `suppressCartAnalytics()` around programmatic transitions inside cart.ts (clearCart/setItems/loadFromServer). Flags live in `flags.ts` to avoid cart↔subscriptions import cycle. `computeCartLineDiff()` extracted as a PURE function + unit-tested (multi-line removal from one removeItem now emits properly).
+- **select_item attribution**: `ProductCard` takes `analyticsListId/analyticsListName` props; category/collections pages pass them so GA4 can join impressions to clicks.
+- **image_zoom**: 1200ms throttle (useCallback + ref) — mouseenter spam gone.
+- **debug_mode**: hard-capped OFF when `NODE_ENV === 'production'` (prod builds can't be voided into DebugView by an env var).
+- **purchase payload**: dropped non-standard `tax: 0` (GST is included in prices — omission beats mis-model) and `user_guest`.
+- Tests: `src/lib/analytics/__tests__/analytics.test.ts` (14 cases: mapper taxonomy slots, cart line mapping, diff matrix, sanitizer, round).

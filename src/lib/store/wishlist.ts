@@ -1,4 +1,9 @@
 import { create } from 'zustand'
+import {
+  trackAddToWishlist,
+  trackRemoveFromWishlist,
+} from '@/lib/analytics/events'
+import { getWishlistProduct } from '@/lib/analytics/wishlist-registry'
 
 interface WishlistState {
   productIds: string[]
@@ -79,6 +84,17 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
 
       const data = await res.json()
       const added = data.message === 'Product added to wishlist'
+
+      // GA4 wishlist events fire ONLY after server confirmation — the
+      // optimistic update above never emits, so a rollback on failure can't
+      // produce phantom add/remove event pairs.
+      const cachedProduct = getWishlistProduct(pidStr)
+      const fallback = { id: pidStr }
+      if (added) {
+        trackAddToWishlist(cachedProduct ?? fallback)
+      } else {
+        trackRemoveFromWishlist(cachedProduct ?? fallback)
+      }
 
       // Ensure state matches server response
       set((state) => {

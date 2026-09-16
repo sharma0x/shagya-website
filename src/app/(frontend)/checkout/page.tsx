@@ -26,6 +26,17 @@ import {
   ShieldCheck,
   X,
 } from 'lucide-react'
+import {
+  mapProductToGA4Item,
+  trackAddPaymentInfo,
+  trackAddShippingInfo,
+  trackBeginCheckout,
+  trackCheckoutError,
+  trackCoupon,
+  trackPaymentMethodSelect,
+  trackPurchase,
+  trackShippingMethodSelect,
+} from '@/lib/analytics'
 
 interface Address {
   id: string
@@ -288,13 +299,16 @@ export default function CheckoutPage() {
       if (data.valid) {
         setAppliedCoupon(data.coupon)
         setCouponCode('')
+        trackCoupon({ couponCode: data.coupon?.code ?? code, action: 'apply' })
         return true
       } else {
         setCouponError(data.error || 'Invalid coupon')
+        trackCoupon({ couponCode: code, action: 'error' })
         return false
       }
     } catch {
       setCouponError('Could not validate coupon')
+      trackCoupon({ couponCode: code, action: 'error' })
       return false
     } finally {
       setCouponLoading(false)
@@ -325,17 +339,26 @@ export default function CheckoutPage() {
       if (data.valid) {
         setAppliedCoupon(data.coupon)
         setCouponCode('')
+        trackCoupon({
+          couponCode: data.coupon?.code ?? couponCode,
+          action: 'apply',
+        })
       } else {
         setCouponError(data.error || 'Invalid coupon')
+        trackCoupon({ couponCode, action: 'error' })
       }
     } catch {
       setCouponError('Could not validate coupon')
+      trackCoupon({ couponCode, action: 'error' })
     } finally {
       setCouponLoading(false)
     }
   }
 
   const handleRemoveCoupon = () => {
+    if (appliedCoupon?.code) {
+      trackCoupon({ couponCode: appliedCoupon.code, action: 'remove' })
+    }
     setAppliedCoupon(null)
     setCouponError('')
   }
@@ -424,6 +447,73 @@ export default function CheckoutPage() {
   }
   const total = Math.max(0, subtotal + shipping - discount)
 
+  // GA4 item payloads derived from the effective cart. Each checkout line is
+  // `{ product, variant, quantity, unitPrice }` — the mapper must read
+  // `item.product`, NOT the line itself, or item_id/item_name come back empty.
+  const ga4Items = () =>
+    (effectiveCart?.items ?? []).map((item: any) =>
+      mapProductToGA4Item(item.product, {
+        price: item.unitPrice,
+        quantity: item.quantity,
+        item_variant: item.variant?.color?.name,
+      }),
+    )
+
+  // `begin_checkout` — once per checkout visit.
+  const beginCheckoutFired = useRef(false)
+  useEffect(() => {
+    const items = effectiveCart?.items ?? []
+    if (beginCheckoutFired.current || items.length === 0) return
+    beginCheckoutFired.current = true
+    trackBeginCheckout({
+      items: ga4Items(),
+      coupon: effectiveCart?.coupon?.code ?? appliedCoupon?.code,
+      value: effectiveCart?.subtotal,
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [effectiveCart?.items])
+
+  // `add_shipping_info` / `add_payment_info` on step entry.
+  const prevStepRef = useRef<number>(1)
+  useEffect(() => {
+    const prev = prevStepRef.current
+    prevStepRef.current = step
+    if (step === 2 && prev < 2) {
+      trackAddShippingInfo({
+        items: ga4Items(),
+        shippingTier: shippingType,
+        coupon: appliedCoupon?.code,
+        value: total,
+      })
+    } else if (step === 3 && prev < 3) {
+      trackAddPaymentInfo({
+        items: ga4Items(),
+        paymentType: paymentMethod,
+        coupon: appliedCoupon?.code,
+        value: total,
+      })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step])
+
+  /**
+   * GA4 `purchase` — fired once per confirmed order, before the cart is
+   * cleared. Cart analytics are suppressed for this transition so the
+   * programmatic clear does not emit spurious `remove_from_cart` events.
+   */
+  const firePurchase = (orderNumber: string) => {
+    trackPurchase({
+      transactionId: orderNumber,
+      items: ga4Items(),
+      value: total,
+      shipping,
+      discount: discount > 0 ? discount : undefined,
+      coupon: appliedCoupon?.code,
+      paymentType: paymentMethod,
+      shippingTier: shippingType,
+    })
+  }
+
   const handlePlaceOrder = async () => {
     setActionLoading(true)
     setError('')
@@ -467,6 +557,7 @@ export default function CheckoutPage() {
         }
 
         const data = await res.json()
+        firePurchase(data.orderNumber)
         zCart.clearCart()
         router.push(
           `/checkout/success?orderNumber=${data.orderNumber}&email=${encodeURIComponent(sessionData?.user?.email || guestData?.email || '')}`,
@@ -562,12 +653,17 @@ export default function CheckoutPage() {
               }
 
               const data = await verifyRes.json()
+              firePurchase(data.orderNumber)
               zCart.clearCart()
               router.push(
                 `/checkout/success?orderNumber=${data.orderNumber}&email=${encodeURIComponent(sessionData?.user?.email || guestData?.email || '')}`,
               )
             } catch (err: any) {
               setError(err.message || 'Payment verification failed')
+              trackCheckoutError({
+                step: 'payment',
+                error: err.message || 'Payment verification failed',
+              })
               setActionLoading(false)
             }
           },
@@ -613,6 +709,7 @@ export default function CheckoutPage() {
           }
 
           const data = await verifyRes.json()
+          firePurchase(data.orderNumber)
           zCart.clearCart()
           router.push(
             `/checkout/success?orderNumber=${data.orderNumber}&email=${encodeURIComponent(sessionData?.user?.email || guestData?.email || '')}`,
@@ -625,6 +722,10 @@ export default function CheckoutPage() {
       }
     } catch (err: any) {
       setError(err.message || 'Order processing failed')
+      trackCheckoutError({
+        step: 'payment',
+        error: err.message || 'Order processing failed',
+      })
       setActionLoading(false)
     }
   }
@@ -859,7 +960,16 @@ export default function CheckoutPage() {
                 <div className="space-y-4">
                   {/* Standard Delivery */}
                   <div
-                    onClick={() => setShippingType('standard')}
+                    onClick={() => {
+                      setShippingType('standard')
+                      trackShippingMethodSelect({
+                        method: 'standard',
+                        shippingCost:
+                          subtotal >= shippingConfig.freeThreshold
+                            ? 0
+                            : shippingConfig.standard,
+                      })
+                    }}
                     className={`flex cursor-pointer items-start justify-between gap-4 rounded-xl border p-4 transition-all ${
                       shippingType === 'standard'
                         ? 'border-brand-600 bg-brand-50/20'
@@ -895,7 +1005,13 @@ export default function CheckoutPage() {
 
                   {/* Express Delivery */}
                   <div
-                    onClick={() => setShippingType('express')}
+                    onClick={() => {
+                      setShippingType('express')
+                      trackShippingMethodSelect({
+                        method: 'express',
+                        shippingCost: shippingConfig.express,
+                      })
+                    }}
                     className={`flex cursor-pointer items-start justify-between gap-4 rounded-xl border p-4 transition-all ${
                       shippingType === 'express'
                         ? 'border-brand-600 bg-brand-50/20'
@@ -955,7 +1071,10 @@ export default function CheckoutPage() {
 
                 <div className="mb-8 space-y-4">
                   <div
-                    onClick={() => setPaymentMethod('razorpay')}
+                    onClick={() => {
+                      setPaymentMethod('razorpay')
+                      trackPaymentMethodSelect('razorpay')
+                    }}
                     className={`flex cursor-pointer items-center justify-between rounded-xl border p-4 transition-all ${
                       paymentMethod === 'razorpay'
                         ? 'border-brand-600 bg-brand-50/20'
@@ -981,7 +1100,10 @@ export default function CheckoutPage() {
                   </div>
 
                   <div
-                    onClick={() => setPaymentMethod('cod')}
+                    onClick={() => {
+                      setPaymentMethod('cod')
+                      trackPaymentMethodSelect('cod')
+                    }}
                     className={`flex cursor-pointer items-center justify-between rounded-xl border p-4 transition-all ${
                       paymentMethod === 'cod'
                         ? 'border-brand-600 bg-brand-50/20'

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { CheckCircle2, Loader2, AlertCircle } from 'lucide-react'
+import { trackGenerateLead } from '@/lib/analytics'
 
 interface FormField {
   label: string
@@ -62,6 +63,7 @@ export function ContactForm({ form }: { form: FormDoc | null }) {
       setSuccess(true)
       setMessage(result.message || 'Thank you for your message!')
       setFormData({})
+      trackGenerateLead({ formId: form?.id ? String(form.id) : 'contact' })
     } catch (err: any) {
       setError(err.message || 'Something went wrong. Please try again.')
     } finally {
