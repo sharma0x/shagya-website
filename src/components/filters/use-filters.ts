@@ -3,6 +3,7 @@
 import { useCallback, useMemo } from 'react'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import type { ActiveFilter } from './types'
+import { trackFilterApply, trackFilterClear } from '@/lib/analytics'
 
 const FILTER_LABELS: Record<string, string> = {
   weave: 'Weave',
@@ -86,6 +87,7 @@ export function useFilters() {
 
   const setParam = useCallback(
     (name: string, value: string) => {
+      trackFilterApply({ dimension: name, value })
       const params = new URLSearchParams(searchParams.toString())
       params.set(name, value)
       router.replace(`${pathname}?${params.toString()}`, { scroll: false })
@@ -95,6 +97,7 @@ export function useFilters() {
 
   const removeParam = useCallback(
     (name: string) => {
+      trackFilterApply({ dimension: name, value: '' })
       const params = new URLSearchParams(searchParams.toString())
       params.delete(name)
       router.replace(`${pathname}?${params.toString()}`, { scroll: false })
@@ -103,6 +106,12 @@ export function useFilters() {
   )
 
   const clearAll = useCallback(() => {
+    const hasActive = [...searchParams.keys()].some(
+      (key) => key !== 'sort' && key !== 'q' && Boolean(searchParams.get(key)),
+    )
+    if (hasActive) {
+      trackFilterClear()
+    }
     const params = new URLSearchParams()
     const sort = searchParams.get('sort')
     const q = searchParams.get('q')
