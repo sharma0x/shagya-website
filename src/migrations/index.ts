@@ -27,6 +27,7 @@ import * as migration_20260910_000000_add_archived_to_products_status_enums from
 import * as migration_20260910_235500_admin_notification_emails_array from './20260910_235500_admin_notification_emails_array'
 import * as migration_20260912_000000_add_delhivery_settings_to_site_settings from './20260912_000000_add_delhivery_settings_to_site_settings'
 import * as migration_20260912_010000_add_page_header_fields from './20260912_010000_add_page_header_fields'
+import * as migration_20260916_150000_convert_products_weave_to_weaves_relationship from './20260916_150000_convert_products_weave_to_weaves_relationship'
 
 export const migrations = [
   {
@@ -173,5 +174,10 @@ export const migrations = [
     up: migration_20260912_010000_add_page_header_fields.up,
     down: migration_20260912_010000_add_page_header_fields.down,
     name: '20260912_010000_add_page_header_fields',
+  },
+  {
+    up: migration_20260916_150000_convert_products_weave_to_weaves_relationship.up,
+    down: migration_20260916_150000_convert_products_weave_to_weaves_relationship.down,
+    name: '20260916_150000_convert_products_weave_to_weaves_relationship',
   },
 ]
