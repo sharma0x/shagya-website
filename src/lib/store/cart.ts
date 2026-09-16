@@ -1,6 +1,10 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { normalizeVariant, dedupeCartItems, cartQtyCap } from '@/lib/cart-merge'
+import {
+  suppressCartAnalytics,
+  resumeCartAnalytics,
+} from '@/lib/analytics/flags'
 
 export interface CartItem {
   product: {
@@ -169,12 +173,18 @@ export const useCart = create<CartState>()(
       },
 
       clearCart: () => {
+        // Programmatic transition — never emits remove_from_cart events.
+        suppressCartAnalytics()
         set({ items: [], coupon: null })
+        resumeCartAnalytics()
         get().syncWithServer()
       },
 
       setItems: (items) => {
+        // Programmatic transition (used by server syncs) — no events.
+        suppressCartAnalytics()
         set({ items })
+        resumeCartAnalytics()
       },
 
       setCoupon: (coupon) => {
@@ -220,10 +230,13 @@ export const useCart = create<CartState>()(
                 // every cart against the products collection)
                 unitPrice: item.product?.basePrice ?? item.unitPrice ?? 0,
               }))
+              // Programmatic transition (login merge / hydration) — no events.
+              suppressCartAnalytics()
               set({
                 items: dedupeCartItems(formattedItems),
                 coupon: data.coupon || null,
               })
+              resumeCartAnalytics()
             }
           }
         } catch (error) {
