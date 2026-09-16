@@ -21,6 +21,7 @@ jobs:
       PAYLOAD_SECRET: ci-secret-placeholder-32-chars-minimum-length
       BETTER_AUTH_SECRET: ci-secret-placeholder-32-chars-minimum-length
       NEXT_PUBLIC_SERVER_URL: http://localhost:3000
+      NEXT_PUBLIC_GA_MEASUREMENT_ID: ${{ vars.NEXT_PUBLIC_GA_MEASUREMENT_ID }}
       DATABASE_URL: postgres://shayga:shayga_dev@localhost:5432/shayga
     services:
       postgres:

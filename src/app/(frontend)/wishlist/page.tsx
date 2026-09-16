@@ -7,6 +7,7 @@ import { useSession } from '@/lib/auth-client'
 import { useCart } from '@/lib/store/cart'
 import { useWishlistStore } from '@/lib/store/wishlist'
 import { liftVariantGallery } from '@/lib/product-utils'
+import { registerWishlistProduct } from '@/lib/analytics'
 import { ArrowLeft, ShoppingBag, Heart, Loader2, X } from 'lucide-react'
 import {
   ProductCard,
@@ -58,10 +59,13 @@ export default function WishlistPage() {
   }, [sessionData, isPending, router])
 
   const handleRemove = useCallback(
-    async (productId: string | number) => {
+    async (productId: string | number, product?: WishlistItem['product']) => {
       const pidStr = String(productId)
       // Instant optimistic UI update — remove card immediately from view
       setItems((prev) => prev.filter((i) => String(i.product.id) !== pidStr))
+      // Register so the wishlist store subscription can emit a rich
+      // `remove_from_wishlist` payload (the store only tracks IDs).
+      if (product) registerWishlistProduct(product)
       // Sync global store & API in background
       await toggleWishlist(productId)
     },
@@ -176,7 +180,7 @@ export default function WishlistPage() {
                   {/* Top-right floating Cross (X) icon over image container */}
                   <button
                     type="button"
-                    onClick={() => handleRemove(product.id)}
+                    onClick={() => handleRemove(product.id, product)}
                     aria-label="Remove from Wishlist"
                     title="Remove from Wishlist"
                     className="absolute top-2 right-2 z-20 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-white/85 text-neutral-600 shadow-xs backdrop-blur-xs transition-all hover:scale-110 hover:bg-white hover:text-neutral-900 active:scale-95"

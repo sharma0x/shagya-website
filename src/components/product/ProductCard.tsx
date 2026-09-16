@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils'
 import { getProductUrl } from '@/lib/product-url'
 import { liftVariantGallery } from '@/lib/product-utils'
 import { isUnoptimizedImage } from '@/lib/image-url'
+import { trackSelectItem, registerWishlistProduct } from '@/lib/analytics'
 
 interface GalleryItem {
   url: string
@@ -137,6 +138,13 @@ interface ProductCardProps {
   showWishlist?: boolean
   badge?: 'new' | 'sale' | 'bestseller'
   className?: string
+  /**
+   * GA4 list attribution for `select_item` — set these so GA4 can join the
+   * card click with the `view_item_list` impression from the same surface
+   * (e.g. listId "category/silk", listName "category_silk").
+   */
+  analyticsListId?: string
+  analyticsListName?: string
 }
 
 export function ProductCard({
@@ -145,6 +153,8 @@ export function ProductCard({
   showWishlist = true,
   badge: badgeOverride,
   className,
+  analyticsListId,
+  analyticsListName,
 }: ProductCardProps) {
   const adapted = product.color ? product : liftVariantGallery(product)
   const galleryItems = getMultiColorGallery(product)
@@ -163,6 +173,12 @@ export function ProductCard({
   const activeItem = galleryItems[activeImage] || galleryItems[0]
   const activeColorName = activeItem?.colorName || adapted.color?.name
   const activeColorSlug = activeItem?.colorSlug || adapted.color?.slug
+
+  // Keep the product registered so wishlist toggles from this card emit rich
+  // analytics payloads (the wishlist store itself only tracks IDs).
+  useEffect(() => {
+    registerWishlistProduct(product)
+  }, [product])
 
   // Auto-rotate carousel on hover — cycles through images across all color variants
   useEffect(() => {
@@ -198,11 +214,19 @@ export function ProductCard({
 
   const isCompact = variant === 'compact'
 
+  const handleSelect = () =>
+    trackSelectItem({
+      product,
+      listId: analyticsListId,
+      listName: analyticsListName,
+    })
+
   if (variant === 'row') {
     return (
       <div className={cn('flex gap-4', className)}>
         <Link
           href={getProductUrl(product.slug, product.id, activeColorSlug)}
+          onClick={handleSelect}
           className="relative h-32 w-24 shrink-0 overflow-hidden rounded-lg bg-neutral-100"
         >
           <Image
@@ -250,6 +274,7 @@ export function ProductCard({
     >
       <Link
         href={getProductUrl(product.slug, product.id, activeColorSlug)}
+        onClick={handleSelect}
         className={cn(
           'flex flex-1 flex-col transition-all duration-300 ease-out',
           'hover:-translate-y-1 hover:[transform:rotateY(-2deg)_translateZ(8px)]',

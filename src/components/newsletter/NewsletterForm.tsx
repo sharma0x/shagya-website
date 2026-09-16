@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { trackSignUp } from '@/lib/analytics'
 
 type FormState = 'idle' | 'loading' | 'success' | 'error'
 
@@ -19,6 +20,7 @@ export function NewsletterForm() {
         body: JSON.stringify({ email }),
       })
       if (res.ok) {
+        trackSignUp('newsletter')
         setState('success')
       } else {
         const data = await res.json().catch(() => ({}))

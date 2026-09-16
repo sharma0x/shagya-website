@@ -6,6 +6,7 @@ import { useOtpCooldown } from '@/lib/use-otp-cooldown'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Mail, KeyRound, AlertCircle, Loader2 } from 'lucide-react'
+import { trackLogin } from '@/lib/analytics'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -58,6 +59,7 @@ export default function LoginPage() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.message || 'Invalid OTP')
+      trackLogin('email_otp')
       window.location.href = '/account'
     } catch (err: any) {
       setError(err?.message || 'Verification failed')
@@ -68,6 +70,7 @@ export default function LoginPage() {
 
   const handleGoogleSignIn = async () => {
     try {
+      trackLogin('google')
       await signIn.social({ provider: 'google', callbackURL: '/account' })
     } catch {
       setError('Google sign in failed')

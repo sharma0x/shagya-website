@@ -11,6 +11,7 @@ import { INDIAN_STATES } from '@/lib/indian-states'
 import type { CitySearchResult } from '@/lib/india-post'
 import { Button } from '@/components/ui/button'
 import { PhoneInput } from '@/components/ui/phone-input'
+import { trackPincodeCheck } from '@/lib/analytics'
 
 export interface AddressFormData {
   fullName: string
@@ -144,6 +145,7 @@ export function AddressForm({
         setPincodeError('')
         setCitySuggestions([])
         setShowSuggestions(false)
+        trackPincodeCheck({ pincode: trimmed, verified: true })
       } catch {
         if (token !== requestTokenRef.current) return
         setPincodeError('Could not verify pincode. Try again.')

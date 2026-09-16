@@ -2,6 +2,7 @@
 
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { ChevronDown } from 'lucide-react'
+import { trackSortItems } from '@/lib/analytics'
 
 export function SortSelect({ defaultValue }: { defaultValue: string }) {
   const searchParams = useSearchParams()
@@ -13,6 +14,7 @@ export function SortSelect({ defaultValue }: { defaultValue: string }) {
       <select
         defaultValue={defaultValue}
         onChange={(e) => {
+          trackSortItems(e.target.value)
           const params = new URLSearchParams(searchParams.toString())
           params.set('sort', e.target.value)
           router.push(`${pathname}?${params.toString()}`)

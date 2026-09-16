@@ -8,6 +8,7 @@ import { SortSelect } from '@/components/ui/sort-select'
 import { ProductFilters } from '@/components/product/ProductFilters'
 import { ProductCard } from '@/components/product/ProductCard'
 import { ProductCardSkeleton } from '@/components/ui/Skeleton'
+import { TrackViewItemList } from '@/components/analytics/TrackViewItemList'
 
 // ISR cache for 5 minutes
 export const revalidate = 300
@@ -226,6 +227,11 @@ async function CategoryProductsStream({
 
   return (
     <div className="flex-1">
+      <TrackViewItemList
+        products={filteredProducts}
+        listId={`category/${slug}`}
+        listName={`category_${slug}`}
+      />
       <div className="border-b border-neutral-100 pb-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-4 text-sm text-neutral-500">
@@ -310,7 +316,14 @@ async function CategoryProductsStream({
       ) : (
         <div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-5 sm:gap-x-4 sm:gap-y-8 lg:grid-cols-3 xl:grid-cols-4">
           {filteredProducts.map((p: any) => (
-            <ProductCard key={p.id} product={p} variant="grid" showWishlist />
+            <ProductCard
+              key={p.id}
+              product={p}
+              variant="grid"
+              showWishlist
+              analyticsListId={`category/${slug}`}
+              analyticsListName={`category_${slug}`}
+            />
           ))}
         </div>
       )}

@@ -32,6 +32,7 @@ jobs:
       PAYLOAD_SECRET: ci-secret-placeholder-32-chars-minimum-length
       BETTER_AUTH_SECRET: ci-secret-placeholder-32-chars-minimum-length
       NEXT_PUBLIC_SERVER_URL: http://localhost:3000
+      NEXT_PUBLIC_GA_MEASUREMENT_ID: ${{ vars.NEXT_PUBLIC_GA_MEASUREMENT_ID }}
       DATABASE_URL: postgres://shayga:shayga_dev@localhost:5432/shayga
     services:
       postgres:
@@ -192,6 +193,8 @@ jobs:
           docker build \
             --network=host \
             --build-arg DATABASE_URL="postgres://shayga:shayga_dev@127.0.0.1:5432/shayga" \
+            --build-arg NEXT_PUBLIC_GA_MEASUREMENT_ID="${{ vars.NEXT_PUBLIC_GA_MEASUREMENT_ID }}" \
+            --build-arg APP_VERSION="${{ env.VERSION }}" \
             --tag "$IMAGE:latest" \
             --tag "$IMAGE:v$FULL" \
             --tag "$IMAGE:$FULL" \

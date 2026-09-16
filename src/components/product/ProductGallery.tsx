@@ -6,15 +6,19 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { SkeletonImage } from '@/components/ui/SkeletonImage'
 import { ProductImageZoom } from '@/components/product/ProductImageZoom'
 import { isUnoptimizedImage } from '@/lib/image-url'
+import { trackGalleryInteraction } from '@/lib/analytics'
 
 interface ProductGalleryProps {
   imageUrls: string[]
   productName: string
+  /** Used to attach gallery interactions to the right product in GA4. */
+  productId?: string | number
 }
 
 export function ProductGallery({
   imageUrls,
   productName,
+  productId,
 }: ProductGalleryProps) {
   const [activeIdx, setActiveIdx] = useState(0)
   const prevUrlsRef = useRef(imageUrls)
@@ -66,17 +70,30 @@ export function ProductGallery({
 
   const total = imageUrls.length
 
+  function fireGalleryEvent(action: 'next' | 'prev' | 'select', index: number) {
+    if (!productId) return
+    trackGalleryInteraction({
+      product: { id: productId, name: productName },
+      action,
+      index,
+      total,
+    })
+  }
+
   function prev() {
     emblaApi?.scrollPrev()
+    fireGalleryEvent('prev', Math.max(0, activeIdx - 1))
   }
 
   function next() {
     emblaApi?.scrollNext()
+    fireGalleryEvent('next', Math.min(total - 1, activeIdx + 1))
   }
 
   function goTo(idx: number) {
     setActiveIdx(idx)
     emblaApi?.scrollTo(idx)
+    fireGalleryEvent('select', idx)
   }
 
   return (
@@ -96,6 +113,7 @@ export function ProductGallery({
                   <ProductImageZoom
                     imageUrl={url}
                     productName={`${productName} — image ${idx + 1}`}
+                    productId={productId}
                   />
                 ) : (
                   <div className="relative aspect-[3/4] w-full">

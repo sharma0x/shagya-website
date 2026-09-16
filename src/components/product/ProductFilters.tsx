@@ -5,6 +5,7 @@ import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { Filter, X, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { RangeSlider } from '@/components/ui/range-slider'
+import { trackFilterApply, trackFilterClear } from '@/lib/analytics'
 const INITIAL_COLOR_COUNT = 12
 
 // ---------------------------------------------------------------------------
@@ -202,6 +203,8 @@ export function ProductFilters({
   const initialRender = useRef(true)
   const navigateRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [sliderResetKey, setSliderResetKey] = useState(0)
+  /** Last filter snapshot emitted to GA4 — used to detect changed dimensions. */
+  const prevFilterSnapshotRef = useRef<Record<string, string>>({})
 
   // --- Facet fetching ---
   const fetchFacets = useCallback(async () => {
@@ -350,6 +353,28 @@ export function ProductFilters({
     }
     if (navigateRef.current) clearTimeout(navigateRef.current)
     navigateRef.current = setTimeout(() => {
+      // Diff against the last emitted snapshot and fire one GA4
+      // `filter_apply` per changed dimension.
+      const current: Record<string, string> = {
+        fabric: fabric.join(','),
+        weave: weave.join(','),
+        pattern: pattern.join(','),
+        price_min: minPrice || '',
+        price_max: maxPrice || '',
+        onSale: onSale ? 'true' : '',
+        excludeOOS: excludeOOS ? 'true' : '',
+        minDiscount: minDiscount || '',
+        city: city || '',
+        color: color.join(','),
+      }
+      for (const [dimension, value] of Object.entries(current)) {
+        const prev = prevFilterSnapshotRef.current[dimension] ?? ''
+        if (prev !== value) {
+          trackFilterApply({ dimension, value })
+        }
+      }
+      prevFilterSnapshotRef.current = current
+
       const query = buildQuery()
       router.push(query ? `${pathname}?${query}` : pathname)
     }, 300)
@@ -373,6 +398,9 @@ export function ProductFilters({
   ])
 
   const handleClearAll = () => {
+    if (hasActiveFilters) {
+      trackFilterClear()
+    }
     setFabric([])
     setWeave([])
     setPattern([])
