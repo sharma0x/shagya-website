@@ -25,6 +25,7 @@ import { RecommendationRow } from '@/components/product/RecommendationRow'
 import { getRelatedProducts, getProductsByIds } from '@/lib/recommendations'
 import { getRecentlyViewedIds } from '@/lib/recently-viewed'
 import { getProductUrl } from '@/lib/product-url'
+import { weaveIdOf, weaveLabel } from '@/lib/weaves'
 import { getApplicableCoupons } from '@/lib/coupons'
 import { TrackRecentlyViewed } from '@/components/product/TrackRecentlyViewed'
 import { TrackViewItem } from '@/components/analytics/TrackViewItem'
@@ -203,16 +204,16 @@ async function ProductReviewsStream({
 async function ProductRecommendationsStream({
   productId,
   fabric,
-  weave,
+  weaveId,
 }: {
   productId: number
   fabric: string
-  weave: string
+  weaveId: string | number | null
 }) {
   const relatedProducts = await getRelatedProducts(
     productId,
     fabric || '',
-    weave || '',
+    weaveId,
     [],
     8,
   )
@@ -347,8 +348,10 @@ export default async function ProductDetailPage({
         sku: v.sku ?? null,
       })),
     fabric: product.fabric,
-    weave: product.weave,
+    weave: weaveLabel(product.weave),
   }
+
+  const weaveLabelValue = weaveLabel(product.weave)
 
   const occasionNames = (product.occasions || [])
     .map((o: any) => (o && typeof o === 'object' ? o.name : null))
@@ -360,9 +363,9 @@ export default async function ProductDetailPage({
       label: 'Fabric',
       value: product.fabric.charAt(0).toUpperCase() + product.fabric.slice(1),
     },
-    product.weave && {
+    weaveLabelValue && {
       label: 'Weave',
-      value: product.weave.charAt(0).toUpperCase() + product.weave.slice(1),
+      value: weaveLabelValue.charAt(0).toUpperCase() + weaveLabelValue.slice(1),
     },
     product.pattern && {
       label: 'Pattern',
@@ -441,11 +444,13 @@ export default async function ProductDetailPage({
                     {serializableProduct.brand}
                   </span>
                 )}
-                <span className="font-display bg-brand-50 text-brand-700 rounded-md px-2.5 py-1 text-[11px] font-semibold tracking-wide">
-                  {product.weave.charAt(0).toUpperCase() +
-                    product.weave.slice(1)}{' '}
-                  Weave
-                </span>
+                {weaveLabelValue && (
+                  <span className="font-display bg-brand-50 text-brand-700 rounded-md px-2.5 py-1 text-[11px] font-semibold tracking-wide">
+                    {weaveLabelValue.charAt(0).toUpperCase() +
+                      weaveLabelValue.slice(1)}{' '}
+                    Weave
+                  </span>
+                )}
                 {occasionNames && (
                   <span className="font-body text-xs text-neutral-400">
                     {occasionNames}
@@ -595,7 +600,7 @@ export default async function ProductDetailPage({
           <ProductRecommendationsStream
             productId={product.id}
             fabric={product.fabric}
-            weave={product.weave}
+            weaveId={weaveIdOf(product.weave)}
           />
         </Suspense>
 

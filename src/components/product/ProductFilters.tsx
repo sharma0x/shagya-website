@@ -450,6 +450,10 @@ export function ProductFilters({
     return item ? ` (${item.count})` : ''
   }
 
+  // Weave options come from the facets API (admin-managed weaves collection);
+  // fall back to the legacy curated list while facets are loading.
+  const weaveOptions = facets?.weave?.length ? facets.weave : WEAVE_OPTIONS
+
   // --- Render ---
   const filterContent = (
     <div className="space-y-6">
@@ -591,28 +595,30 @@ export function ProductFilters({
         onToggle={() => toggleSection('weave')}
       >
         <div className="space-y-2">
-          {WEAVE_OPTIONS.filter(
-            (opt) =>
-              !facets ||
-              weave.includes(opt.value) ||
-              facets.weave?.some((f) => f.value === opt.value),
-          ).map((opt) => (
-            <label
-              key={opt.value}
-              className="flex cursor-pointer items-center gap-2"
-            >
-              <input
-                type="checkbox"
-                checked={weave.includes(opt.value)}
-                onChange={() => toggleArrayFilter(opt.value, weave, setWeave)}
-                className={checkboxClass}
-              />
-              <span className={labelClass}>
-                {opt.label}
-                {getFacetCount(facets?.weave, opt.value)}
-              </span>
-            </label>
-          ))}
+          {weaveOptions
+            .filter(
+              (opt) =>
+                !facets ||
+                weave.includes(opt.value) ||
+                facets.weave?.some((f) => f.value === opt.value),
+            )
+            .map((opt) => (
+              <label
+                key={opt.value}
+                className="flex cursor-pointer items-center gap-2"
+              >
+                <input
+                  type="checkbox"
+                  checked={weave.includes(opt.value)}
+                  onChange={() => toggleArrayFilter(opt.value, weave, setWeave)}
+                  className={checkboxClass}
+                />
+                <span className={labelClass}>
+                  {opt.label}
+                  {getFacetCount(facets?.weave, opt.value)}
+                </span>
+              </label>
+            ))}
         </div>
       </Section>
 

@@ -5,6 +5,7 @@ import { getPayload } from 'payload'
 import config from '@payload-config'
 import { notFound } from 'next/navigation'
 import { cn } from '@/lib/utils'
+import { resolveWeaveIds } from '@/lib/weaves'
 import { SortSelect } from '@/components/ui/sort-select'
 import { ProductFilters } from '@/components/product/ProductFilters'
 import { ProductCard } from '@/components/product/ProductCard'
@@ -36,9 +37,6 @@ function buildWhere(
 
   const fabricFilter = getCommaParam(sParams, 'fabric')
   if (fabricFilter.length > 0) where.fabric = { in: fabricFilter }
-
-  const weaveFilter = getCommaParam(sParams, 'weave')
-  if (weaveFilter.length > 0) where.weave = { in: weaveFilter }
 
   const patternFilter = getCommaParam(sParams, 'pattern')
   if (patternFilter.length > 0) where.pattern = { in: patternFilter }
@@ -112,6 +110,16 @@ async function CollectionProductsStream({
   else if (sortParam === 'price-desc') sort = '-basePrice'
 
   const where = buildWhere(sParams, collectionId)
+
+  const weaveSlugs = getCommaParam(sParams, 'weave')
+  if (weaveSlugs.length > 0) {
+    const weaveIds = await resolveWeaveIds(payload, weaveSlugs)
+    if (weaveIds.length === 1) {
+      where.weave = { equals: weaveIds[0] }
+    } else if (weaveIds.length > 1) {
+      where.weave = { in: weaveIds }
+    }
+  }
 
   const colorParam = getCommaParam(sParams, 'color')
   const sizeParam = (sParams.size as string) || ''

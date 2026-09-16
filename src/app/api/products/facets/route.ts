@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import config from '@payload-config'
+import { resolveWeaveIds } from '@/lib/weaves'
 
 interface FacetCount {
   value: string
@@ -26,20 +27,6 @@ const FABRIC_LABELS: Record<string, string> = {
   velvet: 'Velvet',
   net: 'Net',
   blend: 'Blend',
-}
-
-const WEAVE_LABELS: Record<string, string> = {
-  banarasi: 'Banarasi',
-  kanchipuram: 'Kanchipuram',
-  bandhani: 'Bandhani',
-  patola: 'Patola',
-  kalamkari: 'Kalamkari',
-  ikkat: 'Ikat',
-  paithani: 'Paithani',
-  maheshwari: 'Maheshwari',
-  chanderi: 'Chanderi',
-  tant: 'Tant',
-  baluchari: 'Baluchari',
 }
 
 const PATTERN_LABELS: Record<string, string> = {
@@ -77,7 +64,6 @@ export async function GET(request: Request): Promise<NextResponse> {
     const city = searchParams.get('city')
 
     if (fabricFilter.length > 0) baseWhere.fabric = { in: fabricFilter }
-    if (weaveFilter.length > 0) baseWhere.weave = { in: weaveFilter }
     if (patternFilter.length > 0) baseWhere.pattern = { in: patternFilter }
     if (minPrice || maxPrice) {
       const basePrice: Record<string, number> = {}
@@ -103,6 +89,12 @@ export async function GET(request: Request): Promise<NextResponse> {
 
     const payload = await getPayload({ config })
 
+    // Weave filter params carry slugs — resolve them to relationship IDs
+    if (weaveFilter.length > 0) {
+      const weaveIds = await resolveWeaveIds(payload, weaveFilter)
+      if (weaveIds.length > 0) baseWhere.weave = { in: weaveIds }
+    }
+
     // Fetch all matching products (need their IDs for variant lookup)
     const productsRes = await payload.find({
       collection: 'products',
@@ -120,7 +112,6 @@ export async function GET(request: Request): Promise<NextResponse> {
     const patternCounts: Record<string, number> = {}
 
     for (const key of Object.keys(FABRIC_LABELS)) fabricCounts[key] = 0
-    for (const key of Object.keys(WEAVE_LABELS)) weaveCounts[key] = 0
     for (const key of Object.keys(PATTERN_LABELS)) patternCounts[key] = 0
 
     // Helper: clone baseWhere, remove specified keys for self-filter-free counting
@@ -176,7 +167,10 @@ export async function GET(request: Request): Promise<NextResponse> {
         fabricCounts[p.fabric]++
     }
     for (const p of weaveProducts.docs as any[]) {
-      if (p.weave && weaveCounts[p.weave] !== undefined) weaveCounts[p.weave]++
+      if (p.weave != null) {
+        const key = String(p.weave)
+        weaveCounts[key] = (weaveCounts[key] || 0) + 1
+      }
     }
     for (const p of patternProducts.docs as any[]) {
       if (p.pattern && patternCounts[p.pattern] !== undefined)
@@ -241,6 +235,22 @@ export async function GET(request: Request): Promise<NextResponse> {
           count: counts[key] || 0,
         }))
 
+    // Weave facets are dynamic — value is the weave slug (used in URL
+    // filter params) and label is the admin-managed weave name.
+    const weavesRes = await payload.find({
+      collection: 'weaves',
+      limit: 500,
+      pagination: false,
+      depth: 0,
+    })
+    const weaveFacets: FacetCount[] = (weavesRes.docs as any[])
+      .map((w) => ({
+        value: w.slug,
+        label: w.name,
+        count: weaveCounts[String(w.id)] || 0,
+      }))
+      .filter((f) => f.count > 0 || weaveFilter.includes(f.value))
+
     const colorFacets: FacetCount[] = Object.entries(colorCounts)
       .filter(([, count]) => count > 0)
       .sort(([, a], [, b]) => b - a)
@@ -250,7 +260,7 @@ export async function GET(request: Request): Promise<NextResponse> {
     return NextResponse.json(
       {
         fabric: buildFacets(FABRIC_LABELS, fabricCounts, fabricFilter),
-        weave: buildFacets(WEAVE_LABELS, weaveCounts, weaveFilter),
+        weave: weaveFacets,
         pattern: buildFacets(PATTERN_LABELS, patternCounts, patternFilter),
         colors: colorFacets,
         cities: cityFacets,

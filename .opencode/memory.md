@@ -356,3 +356,13 @@ Review subagent found 2 P0 + 8 P1. Fixes applied:
 - **debug_mode**: hard-capped OFF when `NODE_ENV === 'production'` (prod builds can't be voided into DebugView by an env var).
 - **purchase payload**: dropped non-standard `tax: 0` (GST is included in prices — omission beats mis-model) and `user_guest`.
 - Tests: `src/lib/analytics/__tests__/analytics.test.ts` (14 cases: mapper taxonomy slots, cart line mapping, diff matrix, sanitizer, round).
+
+## Dynamic Weave Taxonomy (2026-09-16)
+
+- Products `weave` converted from hardcoded `select` enum to optional `relationship` → new `weaves` collection (Taxonomy group, name/slug/description, slug from name hook, public read). Admin manages weave types in CMS.
+- Frontend normalization via `src/lib/weaves.ts`: `weaveLabel()` (string | object | id | null → label), `weaveIdOf()`, `resolveWeaveIds(payload, slugs)` for URL-slug → relationship-id filter resolution (category/collections/search pages, facets API).
+- Facets API now counts weaves by `p.weave` id at depth 0, then maps ids → slugs/labels from the weaves collection; value = slug (URL param), label = admin name. ProductFilters renders weave options from live facets (legacy curated list as fallback); FilterSidebar fetches `/api/weaves`.
+- Cart/wishlist/checkout/PDP snapshots store `weaveLabel()` strings; cart `weave` is now optional.
+- Related products query by `weave: { equals: weaveId }` (relationship id), not string.
+- Migration `20260916_150000_convert_products_weave_to_weaves_relationship`: creates `weaves`, backfills from distinct enum values (`initcap` + `::text` casts REQUIRED — Postgres won't apply initcap to enum type, and varchar = enum comparisons fail without casts), adds `weave_id`/`version_weave_id` with set-null FKs (`products_weave_id_weaves_id_fk`), drops legacy columns + enum types. Down restores enums and casts back only known enum members (admin-created weaves can't round-trip).
+- `migrate:create` still silently no-ops (Payload 3.85/3.86 bug) — write migration `.ts` by hand, derive exact column types/index/FK names from `payload-generated-schema.ts` (regenerate with `pnpm payload generate:db-schema`).

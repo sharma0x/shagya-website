@@ -38,6 +38,7 @@ import { Tags } from './collections/Tags'
 import { Brands } from './collections/Brands'
 import { FabricTypes } from './collections/FabricTypes'
 import { Occasions } from './collections/Occasions'
+import { Weaves } from './collections/Weaves'
 import { Wishlist } from './collections/Wishlist'
 import { Navigation } from './collections/Navigation'
 import { Forms } from './collections/Forms'
@@ -317,6 +318,7 @@ export default buildConfig({
     Brands,
     FabricTypes,
     Occasions,
+    Weaves,
     EventLogs,
     EmailLogs,
 

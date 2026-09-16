@@ -7,6 +7,7 @@ import { useSession } from '@/lib/auth-client'
 import { useCart } from '@/lib/store/cart'
 import { useWishlistStore } from '@/lib/store/wishlist'
 import { liftVariantGallery } from '@/lib/product-utils'
+import { weaveLabel } from '@/lib/weaves'
 import { registerWishlistProduct } from '@/lib/analytics'
 import { ArrowLeft, ShoppingBag, Heart, Loader2, X } from 'lucide-react'
 import {
@@ -97,7 +98,7 @@ export default function WishlistPage() {
           compareAtPrice: product.compareAtPrice ?? undefined,
           gallery: adapted.gallery as any,
           fabric: product.fabric || '',
-          weave: product.weave || '',
+          weave: weaveLabel(product.weave),
         },
         1,
         variantColor ? { color: variantColor } : undefined,

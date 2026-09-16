@@ -34,7 +34,7 @@ interface ProductActionsProps {
       stock: number
     }>
     fabric: string
-    weave: string
+    weave?: string
   }
   isOutOfStock?: boolean
   /** Preselected color variant (from `?color=` deep link). Defaults to 0. */

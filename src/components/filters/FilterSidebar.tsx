@@ -58,6 +58,8 @@ export function FilterSidebar({
   const ctx = useFilterDrawer()
   const [internalOpen, setInternalOpen] = useState(false)
   const [collections, setCollections] = useState<FilterOption[]>([])
+  const [weaveOptions, setWeaveOptions] =
+    useState<FilterOption[]>(WEAVE_OPTIONS)
 
   // If explicit props provided, use those; otherwise fall back to context
   const isOpen = mobileOpen ?? ctx.open ?? internalOpen
@@ -84,6 +86,27 @@ export function FilterSidebar({
     fetchCollections()
   }, [])
 
+  // Fetch admin-managed weaves from Payload API
+  useEffect(() => {
+    async function fetchWeaves() {
+      try {
+        const res = await fetch('/api/weaves?limit=100')
+        const data = await res.json()
+        if (Array.isArray(data.docs) && data.docs.length > 0) {
+          setWeaveOptions(
+            data.docs.map((w: { name: string; slug: string }) => ({
+              label: w.name,
+              value: w.slug,
+            })),
+          )
+        }
+      } catch {
+        // Silently fail — legacy curated list stays
+      }
+    }
+    fetchWeaves()
+  }, [])
+
   const sidebarContent = (
     <>
       <FilterSection title="Price Range" defaultOpen={true}>
@@ -91,7 +114,7 @@ export function FilterSidebar({
       </FilterSection>
 
       <FilterSection title="Weave" defaultOpen={false}>
-        <CheckboxFilter options={WEAVE_OPTIONS} paramName="weave" />
+        <CheckboxFilter options={weaveOptions} paramName="weave" />
       </FilterSection>
 
       <FilterSection title="Fabric" defaultOpen={false}>

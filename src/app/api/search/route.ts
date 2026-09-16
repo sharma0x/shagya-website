@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import config from '@payload-config'
+import { weaveLabel } from '@/lib/weaves'
 
 /**
  * GET /api/search
@@ -93,7 +94,7 @@ export async function GET(request: Request): Promise<NextResponse> {
               typeof docValue.fabric === 'object'
                 ? docValue.fabric?.title
                 : docValue.fabric,
-            weave: docValue.weave,
+            weave: weaveLabel(docValue.weave) || null,
             rank: d.priority || limit - index,
           }
         }

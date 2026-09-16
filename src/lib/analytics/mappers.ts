@@ -18,7 +18,11 @@ export interface AnalyticsProduct {
   slug?: string | null
   basePrice?: number | null
   compareAtPrice?: number | null
-  weave?: string | null
+  weave?:
+    | string
+    | number
+    | { name?: string | null; slug?: string | null }
+    | null
   fabric?: string | null
   pattern?: string | null
   cityOfOrigin?: string | null
@@ -38,6 +42,14 @@ function asString(value: unknown): string {
 
 function firstString(value: unknown): string | undefined {
   if (typeof value === 'string' && value.trim()) return value.trim()
+  return undefined
+}
+
+function weaveLabelValue(weave: unknown): string | undefined {
+  if (typeof weave === 'string') return firstString(weave)
+  if (weave && typeof weave === 'object' && 'name' in weave) {
+    return firstString((weave as { name?: unknown }).name)
+  }
   return undefined
 }
 
@@ -79,7 +91,7 @@ export function mapProductToGA4Item(
   const name = overrides.item_name ?? asString(p.name ?? '')
 
   const categories = [
-    firstString(p.weave),
+    weaveLabelValue(p.weave),
     firstString(p.fabric),
     firstString(p.pattern),
     firstString(p.cityOfOrigin),
