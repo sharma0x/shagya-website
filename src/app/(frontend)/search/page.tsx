@@ -11,7 +11,7 @@ import { ActiveFilterChips } from '@/components/filters/ActiveFilterChips'
 import { buildWhereClause } from '@/lib/filters/build-where-clause'
 import { getProductUrl } from '@/lib/product-url'
 import { isUnoptimizedImage } from '@/lib/image-url'
-import { weaveLabel } from '@/lib/weaves'
+import { resolveWeaveIds, weaveLabel } from '@/lib/weaves'
 import { TrackSearchResults } from '@/components/analytics/TrackSearchResults'
 
 // No DB access at build time — must render dynamically
@@ -107,6 +107,17 @@ export default async function SearchPage({
         name: { like: q },
         status: { equals: 'published' },
       })
+
+      const weaveParam = filterParams.get('weave')
+      if (weaveParam) {
+        const weaveSlugs = weaveParam.split(',').filter(Boolean)
+        const weaveIds = await resolveWeaveIds(payload, weaveSlugs)
+        if (weaveIds.length === 1) {
+          where.weave = { equals: weaveIds[0] }
+        } else if (weaveIds.length > 1) {
+          where.weave = { in: weaveIds }
+        }
+      }
 
       const result = await payload.find({
         collection: 'products',

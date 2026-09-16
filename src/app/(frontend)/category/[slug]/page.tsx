@@ -4,6 +4,7 @@ import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import { cn } from '@/lib/utils'
+import { resolveWeaveIds } from '@/lib/weaves'
 import { SortSelect } from '@/components/ui/sort-select'
 import { ProductFilters } from '@/components/product/ProductFilters'
 import { ProductCard } from '@/components/product/ProductCard'
@@ -38,19 +39,6 @@ const FABRICS = [
   'net',
   'blend',
 ]
-const WEAVES = [
-  'banarasi',
-  'kanchipuram',
-  'bandhani',
-  'patola',
-  'kalamkari',
-  'ikkat',
-  'paithani',
-  'maheshwari',
-  'chanderi',
-  'tant',
-  'baluchari',
-]
 
 // Products are rendered as 1 card per product with hover image flips across all color variants
 
@@ -61,7 +49,6 @@ function buildWhere(sParams: FilterParams, slug: string) {
   }
 
   const hasFabricParam = sParams.fabric !== undefined
-  const hasWeaveParam = sParams.weave !== undefined
 
   if (hasFabricParam) {
     const fabricFilter = getCommaParam(sParams, 'fabric')
@@ -70,15 +57,6 @@ function buildWhere(sParams: FilterParams, slug: string) {
     }
   } else if (FABRICS.includes(slug.toLowerCase())) {
     where.fabric = { equals: slug.toLowerCase() }
-  }
-
-  if (hasWeaveParam) {
-    const weaveFilter = getCommaParam(sParams, 'weave')
-    if (weaveFilter.length > 0) {
-      where.weave = { in: weaveFilter }
-    }
-  } else if (WEAVES.includes(slug.toLowerCase())) {
-    where.weave = { equals: slug.toLowerCase() }
   }
 
   const patternFilter = getCommaParam(sParams, 'pattern')
@@ -145,15 +123,31 @@ async function CategoryProductsStream({
   slug,
   sParams,
   sortParam,
+  weaveSlugSet,
 }: {
   slug: string
   sParams: FilterParams
   sortParam: string
+  weaveSlugSet: Set<string>
 }) {
   const payload = await getPayload({ config })
   const where = buildWhere(sParams, slug)
 
   const lowerSlug = slug.toLowerCase()
+  const hasWeaveParam = sParams.weave !== undefined
+  const weaveSlugs = hasWeaveParam
+    ? getCommaParam(sParams, 'weave')
+    : weaveSlugSet.has(lowerSlug)
+      ? [lowerSlug]
+      : []
+  if (weaveSlugs.length > 0) {
+    const weaveIds = await resolveWeaveIds(payload, weaveSlugs)
+    if (weaveIds.length === 1) {
+      where.weave = { equals: weaveIds[0] }
+    } else if (weaveIds.length > 1) {
+      where.weave = { in: weaveIds }
+    }
+  }
   const occasionSlugs = getCommaParam(sParams, 'occasion')
   // Legacy category slugs bridal/festive map to the occasions relationship
   // (they were formerly filtered via the free-text occasion field).
@@ -403,10 +397,21 @@ export default async function CategoryPage({
   const sParams = await searchParams
   const sortParam = (sParams.sort as string) || 'newest'
 
+  const payload = await getPayload({ config })
+  const weavesRes = await payload.find({
+    collection: 'weaves',
+    limit: 500,
+    pagination: false,
+    depth: 0,
+  })
+  const weaveSlugSet = new Set(
+    (weavesRes.docs as any[]).map((w) => w.slug).filter(Boolean),
+  )
+
   const contextFilter: { fabric?: string; weave?: string } = {}
   if (FABRICS.includes(slug.toLowerCase())) {
     contextFilter.fabric = slug.toLowerCase()
-  } else if (WEAVES.includes(slug.toLowerCase())) {
+  } else if (weaveSlugSet.has(slug.toLowerCase())) {
     contextFilter.weave = slug.toLowerCase()
   }
 
@@ -416,7 +421,7 @@ export default async function CategoryPage({
   if (FABRICS.includes(slug.toLowerCase())) {
     title = `${title} Sarees`
     description = `Premium handwoven pure ${slug} sarees, sourced directly from weaver clusters across India.`
-  } else if (WEAVES.includes(slug.toLowerCase())) {
+  } else if (weaveSlugSet.has(slug.toLowerCase())) {
     title = `${title} Weave`
     description = `Authentic, heritage ${slug} sarees featuring signature regional patterns and pure zari borders.`
   } else if (slug.toLowerCase() === 'all') {
@@ -461,6 +466,7 @@ export default async function CategoryPage({
               slug={slug}
               sParams={sParams}
               sortParam={sortParam}
+              weaveSlugSet={weaveSlugSet}
             />
           </Suspense>
         </div>
