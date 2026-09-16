@@ -13,6 +13,7 @@ import {
 import { GuestCheckout } from '@/components/checkout/GuestCheckout'
 import { OffersSection } from '@/components/coupons/OffersSection'
 import { galleryForColor } from '@/lib/product-utils'
+import { weaveLabel } from '@/lib/weaves'
 import { deduplicateAddresses } from '@/lib/address-utils'
 import {
   ArrowLeft,
@@ -102,7 +103,7 @@ export default function CheckoutPage() {
         id: String(i.product.id),
         name: i.product.name,
         slug: i.product.slug,
-        weave: i.product.weave,
+        weave: weaveLabel(i.product.weave),
         fabric: i.product.fabric,
         basePrice: i.unitPrice,
         gallery: galleryForColor(i.product, i.variant?.color?.slug),
@@ -1220,13 +1221,13 @@ export default function CheckoutPage() {
                             </h4>
 
                             {[
-                              item.product.weave,
+                              weaveLabel(item.product.weave),
                               item.product.fabric,
                               item.variant?.color?.name,
                             ].filter(Boolean).length > 0 && (
                               <p className="font-body mt-0.5 text-xs text-neutral-500">
                                 {[
-                                  item.product.weave,
+                                  weaveLabel(item.product.weave),
                                   item.product.fabric,
                                   item.variant?.color?.name,
                                 ]

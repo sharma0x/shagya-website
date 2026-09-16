@@ -366,3 +366,9 @@ Review subagent found 2 P0 + 8 P1. Fixes applied:
 - Related products query by `weave: { equals: weaveId }` (relationship id), not string.
 - Migration `20260916_150000_convert_products_weave_to_weaves_relationship`: creates `weaves`, backfills from distinct enum values (`initcap` + `::text` casts REQUIRED — Postgres won't apply initcap to enum type, and varchar = enum comparisons fail without casts), adds `weave_id`/`version_weave_id` with set-null FKs (`products_weave_id_weaves_id_fk`), drops legacy columns + enum types. Down restores enums and casts back only known enum members (admin-created weaves can't round-trip).
 - `migrate:create` still silently no-ops (Payload 3.85/3.86 bug) — write migration `.ts` by hand, derive exact column types/index/FK names from `payload-generated-schema.ts` (regenerate with `pnpm payload generate:db-schema`).
+
+## Admin 500 After Adding Collection (2026-09-16, production incident)
+
+- Adding the `weaves` collection broke `shayga.in/admin` with SSR 500. Root cause: Payload's `payload_locked_documents_rels` system table needs ONE id column per collection (`weaves_id` + FK `payload_locked_documents_rels_weaves_fk` ON DELETE cascade + index). The locked-documents query joins every collection column — a missing column throws `column payload_locked_documents__rels.weaves_id does not exist` on every admin page load.
+- Fix migration: `20260916_180000_add_weaves_id_to_payload_locked_documents_rels` (idempotent up/down).
+- **Lesson: when adding a new collection, ALWAYS check `payload-generated-schema.ts` for the `payload_locked_documents_rels` column set** — the enum→relationship migration only covered products/_products_v and missed this system table. Diagnosed via `docker compose logs app` on the VPS (SSH host per deploy-production skill).
