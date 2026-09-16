@@ -28,6 +28,7 @@ import * as migration_20260910_235500_admin_notification_emails_array from './20
 import * as migration_20260912_000000_add_delhivery_settings_to_site_settings from './20260912_000000_add_delhivery_settings_to_site_settings'
 import * as migration_20260912_010000_add_page_header_fields from './20260912_010000_add_page_header_fields'
 import * as migration_20260916_150000_convert_products_weave_to_weaves_relationship from './20260916_150000_convert_products_weave_to_weaves_relationship'
+import * as migration_20260916_180000_add_weaves_id_to_payload_locked_documents_rels from './20260916_180000_add_weaves_id_to_payload_locked_documents_rels'
 
 export const migrations = [
   {
@@ -179,5 +180,10 @@ export const migrations = [
     up: migration_20260916_150000_convert_products_weave_to_weaves_relationship.up,
     down: migration_20260916_150000_convert_products_weave_to_weaves_relationship.down,
     name: '20260916_150000_convert_products_weave_to_weaves_relationship',
+  },
+  {
+    up: migration_20260916_180000_add_weaves_id_to_payload_locked_documents_rels.up,
+    down: migration_20260916_180000_add_weaves_id_to_payload_locked_documents_rels.down,
+    name: '20260916_180000_add_weaves_id_to_payload_locked_documents_rels',
   },
 ]
