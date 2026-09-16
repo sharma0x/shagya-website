@@ -1,3 +1,11 @@
+## [1.4.2](https://github.com/sharma0x/shagya-website/compare/v1.4.1...v1.4.2) (2026-09-16)
+
+### Bug Fixes
+
+- **cart:** normalize weave relationship in cart snapshots ([caaacdf](https://github.com/sharma0x/shagya-website/commit/caaacdfe3789bc6df6b91ce5a077c42f80aa8054))
+- **cart:** normalize weave relationship in cart snapshots ([7c131bd](https://github.com/sharma0x/shagya-website/commit/7c131bd1b0c0db0cdc2550ed474170269c690860))
+- **cart:** normalize weave relationship in cart snapshots ([cbfd782](https://github.com/sharma0x/shagya-website/commit/cbfd78245d775b17ec3d7f4833257e23477e0802))
+
 ## [1.4.1](https://github.com/sharma0x/shagya-website/compare/v1.4.0...v1.4.1) (2026-09-16)
 
 ### Bug Fixes
