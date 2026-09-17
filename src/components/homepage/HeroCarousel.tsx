@@ -74,7 +74,7 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
         role="group"
         aria-roledescription="carousel"
       >
-        <div className="relative aspect-[21/9] md:aspect-[21/8]">
+        <div className="relative aspect-[4/3] md:aspect-[2/1]">
           {safeSlides.map((slide, i) => (
             <Link
               key={i}
