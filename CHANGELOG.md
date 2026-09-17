@@ -1,3 +1,9 @@
+## [1.5.0](https://github.com/sharma0x/shagya-website/compare/v1.4.3...v1.5.0) (2026-09-17)
+
+### Features
+
+- **contact:** render contact details from site-settings global ([868438b](https://github.com/sharma0x/shagya-website/commit/868438bebd2bb6ada1737fa6ccc06ce8fe47a907))
+
 ## [1.4.3](https://github.com/sharma0x/shagya-website/compare/v1.4.2...v1.4.3) (2026-09-17)
 
 ### Bug Fixes
