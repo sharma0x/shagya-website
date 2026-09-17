@@ -104,7 +104,7 @@ export default function CheckoutPage() {
         name: i.product.name,
         slug: i.product.slug,
         weave: weaveLabel(i.product.weave),
-        fabric: i.product.fabric,
+        fabric: weaveLabel(i.product.fabric),
         basePrice: i.unitPrice,
         gallery: galleryForColor(i.product, i.variant?.color?.slug),
       },
@@ -1222,13 +1222,13 @@ export default function CheckoutPage() {
 
                             {[
                               weaveLabel(item.product.weave),
-                              item.product.fabric,
+                              weaveLabel(item.product.fabric),
                               item.variant?.color?.name,
                             ].filter(Boolean).length > 0 && (
                               <p className="font-body mt-0.5 text-xs text-neutral-500">
                                 {[
                                   weaveLabel(item.product.weave),
-                                  item.product.fabric,
+                                  weaveLabel(item.product.fabric),
                                   item.variant?.color?.name,
                                 ]
                                   .filter(Boolean)
