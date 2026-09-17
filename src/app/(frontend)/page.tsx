@@ -521,7 +521,9 @@ async function HomeBestSellersSection({
   }
 }) {
   const payload = await getPayload({ config })
-  const allProductsRes = await payload.find({
+
+  // SSR: Fetch only the first page (8 products) for initial render
+  const initialProductsRes = await payload.find({
     collection: 'products',
     where: {
       and: [
@@ -529,12 +531,13 @@ async function HomeBestSellersSection({
         { status: { equals: 'published' } },
       ],
     },
-    limit: 12,
+    page: 1,
+    limit: 8,
     sort: '-createdAt',
     depth: 2,
   })
 
-  if (allProductsRes.docs.length === 0) return null
+  if (initialProductsRes.docs.length === 0) return null
 
   return (
     <section className="bg-brand-50/20">
@@ -546,9 +549,10 @@ async function HomeBestSellersSection({
           viewAllLabel={productBlock?.ctaText || 'Shop All'}
         />
         <ProductCarousel
-          products={(allProductsRes.docs as Product[]).map(
+          initialProducts={(initialProductsRes.docs as Product[]).map(
             mapProductWithVariant,
           )}
+          initialHasMore={initialProductsRes.hasNextPage}
         />
       </div>
     </section>

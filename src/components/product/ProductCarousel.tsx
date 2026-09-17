@@ -1,47 +1,82 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { cn } from '@/lib/utils'
 import { ProductCard } from '@/components/product/ProductCard'
-import { IconChevronDown } from '@tabler/icons-react'
+import { IconChevronDown, IconLoader2 } from '@tabler/icons-react'
 
 const PAGE_SIZE = 8
 
 interface ProductCarouselProps {
-  products: any[]
+  initialProducts: any[]
+  initialHasMore?: boolean
   badge?: 'new' | 'sale' | 'bestseller'
   className?: string
 }
 
 export function ProductCarousel({
-  products,
+  initialProducts,
+  initialHasMore = false,
   badge,
   className,
 }: ProductCarouselProps) {
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
+  const [products, setProducts] = useState(initialProducts)
+  const [page, setPage] = useState(1)
+  const [hasMore, setHasMore] = useState(initialHasMore)
+  const [loading, setLoading] = useState(false)
 
-  if (!products || products.length === 0) return null
+  const fetchMore = useCallback(async () => {
+    if (loading || !hasMore) return
 
-  const visibleProducts = products.slice(0, visibleCount)
-  const hasMore = visibleCount < products.length
+    setLoading(true)
+    try {
+      const nextPage = page + 1
+      const res = await fetch(
+        `/api/products/list?page=${nextPage}&limit=${PAGE_SIZE}`,
+      )
+      if (!res.ok) throw new Error('Failed to fetch')
+
+      const data = await res.json()
+      setProducts((prev) => [...prev, ...data.products])
+      setPage(nextPage)
+      setHasMore(data.hasMore)
+    } catch (err) {
+      console.error('Error fetching more products:', err)
+    } finally {
+      setLoading(false)
+    }
+  }, [page, hasMore, loading])
 
   return (
     <div className={cn('', className)}>
       {/* Mobile: 2-col grid with paginated Show More */}
       <div className="grid grid-cols-2 gap-3 sm:hidden">
-        {visibleProducts.map((p) => (
+        {products.map((p) => (
           <ProductCard key={p.id} product={p} badge={badge} />
         ))}
       </div>
 
+      {/* Show more button — mobile only */}
       {hasMore && (
         <div className="mt-4 flex justify-center sm:hidden">
           <button
-            onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
-            className="text-brand-700 border-brand-200 hover:bg-brand-50 inline-flex items-center gap-1.5 rounded-full border bg-white px-5 py-2 text-sm font-medium transition-colors active:scale-95"
+            onClick={fetchMore}
+            disabled={loading}
+            className={cn(
+              'border-brand-200 text-brand-700 hover:bg-brand-50 inline-flex items-center gap-1.5 rounded-full border bg-white px-5 py-2 text-sm font-medium transition-colors active:scale-95 disabled:opacity-60',
+            )}
           >
-            Show more
-            <IconChevronDown className="h-4 w-4" />
+            {loading ? (
+              <>
+                <IconLoader2 className="h-4 w-4 animate-spin" />
+                Loading...
+              </>
+            ) : (
+              <>
+                Show more
+                <IconChevronDown className="h-4 w-4" />
+              </>
+            )}
           </button>
         </div>
       )}
