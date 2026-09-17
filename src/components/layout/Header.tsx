@@ -41,12 +41,10 @@ import {
 } from '@/components/ui/navigation-menu'
 import { useSession } from '@/lib/auth-client'
 
-// The dynamic taxonomies will be passed as a prop instead of this hardcoded array
-
 const topNav = [
   { label: 'Collections', href: '/collections' },
   { label: 'Journal', href: '/blog' },
-  { label: 'About Us', href: '/about' },
+  { label: 'About', href: '/about' },
 ]
 
 export function Header() {
@@ -74,7 +72,6 @@ export function Header() {
   const fetchWishlist = useWishlistStore((state) => state.fetchWishlist)
   const clearWishlist = useWishlistStore((state) => state.clearWishlist)
 
-  // Scroll listener for blur-on-scroll
   useEffect(() => {
     function onScroll() {
       setScrolled(window.scrollY > 20)
@@ -101,7 +98,6 @@ export function Header() {
       })
       .catch(() => {})
 
-    // Fetch taxonomy nav menus client-side to keep the layout free of DB reads
     Promise.all([
       fetch('/api/categories?limit=100&depth=0').then((r) =>
         r.ok ? r.json() : null,
@@ -129,7 +125,6 @@ export function Header() {
       .catch(() => {})
   }, [])
 
-  // Auto-rotate announcements every 5 seconds
   useEffect(() => {
     const count = announcement?.announcements?.length || 0
     if (count <= 1) return
@@ -154,7 +149,6 @@ export function Header() {
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [openSearch])
 
-  // Sync guest cart on login — push localStorage items to server and hydrate merged result
   const prevUserRef = useRef<any>(null)
 
   useEffect(() => {
@@ -171,7 +165,6 @@ export function Header() {
 
   const cartCount = items.reduce((acc, item) => acc + item.quantity, 0)
 
-  // Use dynamic taxonomies passed from the server component
   const fabrics =
     taxonomies?.fabricTypes?.map((f: any) => ({
       label: f.name || f.title,
@@ -192,6 +185,13 @@ export function Header() {
       label: o.name || o.title,
       value: o.slug,
     })) || []
+
+  // Limit items per column for compact dropdown
+  const maxItems = 8
+  const catsLimited = categories.slice(0, maxItems)
+  const fabricsLimited = fabrics.slice(0, maxItems)
+  const brandsLimited = brands.slice(0, 6)
+  const occasionsLimited = occasions.slice(0, 6)
 
   return (
     <>
@@ -240,7 +240,6 @@ export function Header() {
                 return textEl
               })}
             </div>
-            {/* Arrow navigation for multiple announcements */}
             {announcement.announcements.length > 1 && (
               <>
                 <button
@@ -293,154 +292,160 @@ export function Header() {
         )}
 
         <div className="container-page">
-          <div className="flex h-15 items-center justify-between gap-6">
+          <div className="flex h-14 items-center justify-between gap-4">
             {/* Logo */}
             <Logo wordmarkClassName="text-neutral-900" />
 
-            {/* Desktop Nav */}
+            {/* Desktop Nav — compact */}
             <div className="hidden items-center lg:flex">
               <NavigationMenu>
-                <NavigationMenuList className="gap-1">
+                <NavigationMenuList className="gap-0.5">
                   <NavigationMenuItem>
-                    <NavigationMenuTrigger className="font-body hover:text-brand-700 after:bg-brand-600 relative h-auto rounded-lg bg-transparent px-3 py-2 text-sm font-medium text-neutral-600 transition-colors after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:transition-transform hover:bg-transparent hover:after:scale-x-100">
+                    <NavigationMenuTrigger className="font-body hover:text-brand-700 relative h-auto rounded-lg bg-transparent px-2.5 py-1.5 text-[13px] font-medium text-neutral-600 transition-colors hover:bg-neutral-50 data-[state=open]:bg-neutral-50">
                       Sarees
                     </NavigationMenuTrigger>
                     <NavigationMenuContent>
-                      <div className="flex divide-x divide-neutral-100">
-                        {/* Category column */}
-                        {categories.length > 0 && (
-                          <div className="min-w-max px-5 py-6">
-                            <h4 className="font-display text-gold-500 mb-4 text-[11px] font-semibold tracking-[0.15em] uppercase">
-                              By Category
-                            </h4>
-                            <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
-                              {categories.map((c: any) => (
-                                <NavigationMenuLink
-                                  key={c.value}
-                                  render={
-                                    <Link href={`/category/${c.value}`} />
-                                  }
-                                  className="font-body hover:text-brand-700 hover:bg-brand-50/60 block rounded-md px-2.5 py-1.5 text-sm tracking-wide whitespace-nowrap text-neutral-600 transition-colors"
-                                >
-                                  {c.label}
-                                </NavigationMenuLink>
-                              ))}
-                            </div>
-                          </div>
-                        )}
+                      {/* Compact 2-column mega menu */}
+                      <div className="flex w-[480px] max-w-[calc(100vw-2rem)] divide-x divide-neutral-100">
+                        {/* Column 1: Categories + Fabrics */}
+                        <div className="flex-1 px-4 py-4">
+                          <div className="grid grid-cols-2 gap-x-4">
+                            {/* Category */}
+                            {catsLimited.length > 0 && (
+                              <div>
+                                <h4 className="font-display text-gold-500 mb-2 text-[10px] font-semibold tracking-[0.12em] uppercase">
+                                  Category
+                                </h4>
+                                <ul className="space-y-0.5">
+                                  {catsLimited.map((c: any) => (
+                                    <li key={c.value}>
+                                      <NavigationMenuLink
+                                        render={
+                                          <Link href={`/category/${c.value}`} />
+                                        }
+                                        className="font-body hover:text-brand-700 hover:bg-brand-50/60 block rounded px-2 py-1 text-[13px] text-neutral-600 transition-colors"
+                                      >
+                                        {c.label}
+                                      </NavigationMenuLink>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
 
-                        {/* Fabric column */}
-                        {fabrics.length > 0 && (
-                          <div className="min-w-max px-5 py-6">
-                            <h4 className="font-display text-gold-500 mb-4 text-[11px] font-semibold tracking-[0.15em] uppercase">
-                              By Fabric
-                            </h4>
-                            <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
-                              {fabrics.map((f: any) => (
-                                <NavigationMenuLink
-                                  key={f.value}
-                                  render={
-                                    <Link
-                                      href={`/category/all?fabric=${f.value}`}
-                                    />
-                                  }
-                                  className="font-body hover:text-brand-700 hover:bg-brand-50/60 block rounded-md px-2.5 py-1.5 text-sm tracking-wide whitespace-nowrap text-neutral-600 transition-colors"
-                                >
-                                  {f.label}
-                                </NavigationMenuLink>
-                              ))}
-                            </div>
+                            {/* Fabric */}
+                            {fabricsLimited.length > 0 && (
+                              <div>
+                                <h4 className="font-display text-gold-500 mb-2 text-[10px] font-semibold tracking-[0.12em] uppercase">
+                                  Fabric
+                                </h4>
+                                <ul className="space-y-0.5">
+                                  {fabricsLimited.map((f: any) => (
+                                    <li key={f.value}>
+                                      <NavigationMenuLink
+                                        render={
+                                          <Link
+                                            href={`/category/all?fabric=${f.value}`}
+                                          />
+                                        }
+                                        className="font-body hover:text-brand-700 hover:bg-brand-50/60 block rounded px-2 py-1 text-[13px] text-neutral-600 transition-colors"
+                                      >
+                                        {f.label}
+                                      </NavigationMenuLink>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
                           </div>
-                        )}
+                        </div>
 
-                        {/* Brands column */}
-                        {brands.length > 0 && (
-                          <div className="min-w-max px-5 py-6">
-                            <h4 className="font-display text-gold-500 mb-4 text-[11px] font-semibold tracking-[0.15em] uppercase">
-                              By Brand
-                            </h4>
-                            <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
-                              {brands.map((b: any) => (
-                                <NavigationMenuLink
-                                  key={b.value}
-                                  render={
-                                    <Link
-                                      href={`/category/all?brand=${b.value}`}
-                                    />
-                                  }
-                                  className="font-body hover:text-brand-700 hover:bg-brand-50/60 block rounded-md px-2.5 py-1.5 text-sm tracking-wide whitespace-nowrap text-neutral-600 transition-colors"
-                                >
-                                  {b.label}
-                                </NavigationMenuLink>
-                              ))}
-                            </div>
+                        {/* Column 2: Brands + Occasions + Quick links */}
+                        <div className="flex-1 px-4 py-4">
+                          <div className="grid grid-cols-2 gap-x-4">
+                            {/* Brand */}
+                            {brandsLimited.length > 0 && (
+                              <div>
+                                <h4 className="font-display text-gold-500 mb-2 text-[10px] font-semibold tracking-[0.12em] uppercase">
+                                  Brand
+                                </h4>
+                                <ul className="space-y-0.5">
+                                  {brandsLimited.map((b: any) => (
+                                    <li key={b.value}>
+                                      <NavigationMenuLink
+                                        render={
+                                          <Link
+                                            href={`/category/all?brand=${b.value}`}
+                                          />
+                                        }
+                                        className="font-body hover:text-brand-700 hover:bg-brand-50/60 block rounded px-2 py-1 text-[13px] text-neutral-600 transition-colors"
+                                      >
+                                        {b.label}
+                                      </NavigationMenuLink>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+
+                            {/* Occasion */}
+                            {occasionsLimited.length > 0 && (
+                              <div>
+                                <h4 className="font-display text-gold-500 mb-2 text-[10px] font-semibold tracking-[0.12em] uppercase">
+                                  Occasion
+                                </h4>
+                                <ul className="space-y-0.5">
+                                  {occasionsLimited.map((o: any) => (
+                                    <li key={o.value}>
+                                      <NavigationMenuLink
+                                        render={
+                                          <Link
+                                            href={`/category/all?occasion=${o.value}`}
+                                          />
+                                        }
+                                        className="font-body hover:text-brand-700 hover:bg-brand-50/60 block rounded px-2 py-1 text-[13px] text-neutral-600 transition-colors"
+                                      >
+                                        {o.label}
+                                      </NavigationMenuLink>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
                           </div>
-                        )}
 
-                        {/* Occasions column */}
-                        {occasions.length > 0 && (
-                          <div className="min-w-max px-5 py-6">
-                            <h4 className="font-display text-gold-500 mb-4 text-[11px] font-semibold tracking-[0.15em] uppercase">
-                              By Occasion
-                            </h4>
-                            <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
-                              {occasions.map((o: any) => (
-                                <NavigationMenuLink
-                                  key={o.value}
-                                  render={
-                                    <Link
-                                      href={`/category/all?occasion=${o.value}`}
-                                    />
-                                  }
-                                  className="font-body hover:text-brand-700 hover:bg-brand-50/60 block rounded-md px-2.5 py-1.5 text-sm tracking-wide whitespace-nowrap text-neutral-600 transition-colors"
-                                >
-                                  {o.label}
-                                </NavigationMenuLink>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Featured Panel */}
-                        <div className="flex w-44 flex-col justify-between bg-neutral-50/80 py-6 pr-6 pl-5">
-                          <div>
-                            <h4 className="font-display text-gold-500 mb-4 text-[11px] font-semibold tracking-[0.15em] uppercase">
-                              Curated
-                            </h4>
+                          {/* Quick links at bottom */}
+                          <div className="mt-4 flex items-center gap-4 border-t border-neutral-100 pt-3">
                             <NavigationMenuLink
-                              render={<Link href="/collections" />}
-                              className="font-display text-brand-600 hover:text-brand-700 block text-sm leading-relaxed font-medium tracking-wide whitespace-nowrap transition-colors"
+                              render={
+                                <Link href="/category/all?sort=-createdAt" />
+                              }
+                              className="font-body text-brand-600 hover:text-brand-700 text-[13px] font-medium transition-colors"
                             >
                               New Arrivals
                             </NavigationMenuLink>
                             <NavigationMenuLink
-                              render={<Link href="/category/silk" />}
-                              className="font-display text-brand-600 hover:text-brand-700 mt-2 block text-sm leading-relaxed font-medium tracking-wide whitespace-nowrap transition-colors"
+                              render={<Link href="/category/all?sale=true" />}
+                              className="font-body text-brand-600 hover:text-brand-700 text-[13px] font-medium transition-colors"
                             >
-                              Pure Silks
+                              On Sale
                             </NavigationMenuLink>
                             <NavigationMenuLink
-                              render={<Link href="/category/banarasi" />}
-                              className="font-display text-brand-600 hover:text-brand-700 mt-2 block text-sm leading-relaxed font-medium tracking-wide whitespace-nowrap transition-colors"
+                              render={<Link href="/category/all" />}
+                              className="font-body text-brand-600 hover:text-brand-700 inline-flex items-center gap-1 text-[13px] font-medium transition-colors"
                             >
-                              Banarasi Heritage
+                              Shop All
+                              <svg
+                                className="h-3 w-3"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2.5"
+                              >
+                                <path d="M5 12h14M12 5l7 7-7 7" />
+                              </svg>
                             </NavigationMenuLink>
                           </div>
-                          <NavigationMenuLink
-                            render={<Link href="/category/all" />}
-                            className="font-display text-brand-600 hover:text-brand-700 inline-flex items-center gap-1 text-xs font-semibold tracking-wider uppercase transition-colors"
-                          >
-                            Shop All
-                            <svg
-                              className="h-3 w-3"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2.5"
-                            >
-                              <path d="M5 12h14M12 5l7 7-7 7" />
-                            </svg>
-                          </NavigationMenuLink>
                         </div>
                       </div>
                     </NavigationMenuContent>
@@ -450,7 +455,7 @@ export function Header() {
                     <NavigationMenuItem key={link.href}>
                       <NavigationMenuLink
                         render={<Link href={link.href} />}
-                        className="font-body hover:text-brand-700 after:bg-brand-600 relative rounded-lg px-3 py-2 text-sm font-medium text-neutral-600 transition-colors after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:transition-transform hover:after:scale-x-100"
+                        className="font-body hover:text-brand-700 relative rounded-lg px-2.5 py-1.5 text-[13px] font-medium text-neutral-600 transition-colors hover:bg-neutral-50"
                       >
                         {link.label}
                       </NavigationMenuLink>
@@ -463,40 +468,40 @@ export function Header() {
             {/* Spacer */}
             <div className="hidden flex-1 lg:block" />
 
-            {/* Actions */}
-            <div className="flex items-center gap-1">
+            {/* Actions — compact */}
+            <div className="flex items-center gap-0.5">
               <button
                 onClick={() => openSearch()}
-                className="hover:text-brand-700 flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg p-2 text-neutral-600 transition-colors hover:bg-neutral-100"
+                className="hover:text-brand-700 flex h-9 w-9 items-center justify-center rounded-lg text-neutral-600 transition-colors hover:bg-neutral-100"
                 aria-label="Search"
               >
-                <Search className="h-5 w-5" />
+                <Search className="h-[18px] w-[18px]" />
               </button>
 
               <Link
                 href="/account"
-                className="hover:text-brand-700 hidden rounded-lg p-2 text-neutral-600 transition-colors hover:bg-neutral-100 sm:inline-flex"
+                className="hover:text-brand-700 hidden h-9 w-9 items-center justify-center rounded-lg text-neutral-600 transition-colors hover:bg-neutral-100 sm:flex"
                 aria-label="Account"
               >
-                <User className="h-5 w-5" />
+                <User className="h-[18px] w-[18px]" />
               </Link>
 
               <Link
                 href="/wishlist"
                 className={cn(
-                  'hover:text-brand-700 relative hidden rounded-lg p-2 text-neutral-600 transition-colors hover:bg-neutral-100 sm:inline-flex',
+                  'hover:text-brand-700 relative hidden h-9 w-9 items-center justify-center rounded-lg text-neutral-600 transition-colors hover:bg-neutral-100 sm:flex',
                   wishlistCount > 0 && 'text-brand-600',
                 )}
                 aria-label="Wishlist"
               >
                 <Heart
                   className={cn(
-                    'h-5 w-5',
+                    'h-[18px] w-[18px]',
                     wishlistCount > 0 && 'fill-brand-600',
                   )}
                 />
                 {wishlistCount > 0 && (
-                  <span className="bg-brand-600 font-body absolute -top-0.5 -right-0.5 flex h-4.5 w-4.5 items-center justify-center rounded-full text-[10px] font-semibold text-white">
+                  <span className="bg-brand-600 font-body absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-semibold text-white">
                     {wishlistCount}
                   </span>
                 )}
@@ -504,19 +509,19 @@ export function Header() {
 
               <button
                 onClick={() => openCart()}
-                className="hover:text-brand-700 relative flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg p-2 text-neutral-600 transition-colors hover:bg-neutral-100"
+                className="hover:text-brand-700 relative flex h-9 w-9 items-center justify-center rounded-lg text-neutral-600 transition-colors hover:bg-neutral-100"
                 aria-label="Cart"
               >
-                <ShoppingCart className="h-5 w-5" />
+                <ShoppingCart className="h-[18px] w-[18px]" />
                 {cartCount > 0 && (
-                  <span className="bg-brand-600 font-body absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-semibold text-white">
+                  <span className="bg-brand-600 font-body absolute top-0 right-0 flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-semibold text-white">
                     {cartCount}
                   </span>
                 )}
               </button>
 
               <button
-                className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg p-2 text-neutral-600 transition-colors hover:bg-neutral-100 lg:hidden"
+                className="flex h-9 w-9 items-center justify-center rounded-lg text-neutral-600 transition-colors hover:bg-neutral-100 lg:hidden"
                 onClick={() => setMobileMenuOpen(true)}
                 aria-label="Open menu"
                 aria-expanded={mobileMenuOpen}
@@ -538,10 +543,10 @@ export function Header() {
             : 'pointer-events-none translate-x-full opacity-0',
         )}
       >
-        <div className="flex h-15 items-center justify-between border-b border-neutral-200 pr-1 pl-4">
+        <div className="flex h-14 items-center justify-between border-b border-neutral-200 pr-1 pl-4">
           <Logo wordmarkClassName="text-neutral-900" />
           <button
-            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg p-2 text-neutral-600 transition-colors hover:bg-neutral-100"
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-neutral-600 transition-colors hover:bg-neutral-100"
             onClick={() => setMobileMenuOpen(false)}
             aria-label="Close menu"
           >
@@ -573,13 +578,13 @@ export function Header() {
             {mobileSareesOpen && (
               <div className="border-b border-neutral-100 pt-1 pb-4">
                 {/* Category */}
-                {categories.length > 0 && (
+                {catsLimited.length > 0 && (
                   <>
                     <p className="text-gold-500 font-display mt-2 mb-1 text-[11px] font-semibold tracking-[0.15em] uppercase">
                       By Category
                     </p>
                     <div className="grid grid-cols-2 gap-0.5">
-                      {categories.map((c: any) => (
+                      {catsLimited.map((c: any) => (
                         <Link
                           key={c.value}
                           href={`/category/${c.value}`}
@@ -594,13 +599,13 @@ export function Header() {
                 )}
 
                 {/* Fabric */}
-                {fabrics.length > 0 && (
+                {fabricsLimited.length > 0 && (
                   <>
                     <p className="text-gold-500 font-display mt-3 mb-1 text-[11px] font-semibold tracking-[0.15em] uppercase">
                       By Fabric
                     </p>
                     <div className="grid grid-cols-2 gap-0.5">
-                      {fabrics.map((f: any) => (
+                      {fabricsLimited.map((f: any) => (
                         <Link
                           key={f.value}
                           href={`/category/all?fabric=${f.value}`}
@@ -615,13 +620,13 @@ export function Header() {
                 )}
 
                 {/* Brand */}
-                {brands.length > 0 && (
+                {brandsLimited.length > 0 && (
                   <>
                     <p className="text-gold-500 font-display mt-3 mb-1 text-[11px] font-semibold tracking-[0.15em] uppercase">
                       By Brand
                     </p>
                     <div className="grid grid-cols-2 gap-0.5">
-                      {brands.map((b: any) => (
+                      {brandsLimited.map((b: any) => (
                         <Link
                           key={b.value}
                           href={`/category/all?brand=${b.value}`}
@@ -636,13 +641,13 @@ export function Header() {
                 )}
 
                 {/* Occasion */}
-                {occasions.length > 0 && (
+                {occasionsLimited.length > 0 && (
                   <>
                     <p className="text-gold-500 font-display mt-3 mb-1 text-[11px] font-semibold tracking-[0.15em] uppercase">
                       By Occasion
                     </p>
                     <div className="grid grid-cols-2 gap-0.5">
-                      {occasions.map((o: any) => (
+                      {occasionsLimited.map((o: any) => (
                         <Link
                           key={o.value}
                           href={`/category/all?occasion=${o.value}`}

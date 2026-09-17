@@ -1,5 +1,10 @@
+'use client'
+
 import Link from 'next/link'
+import { useEffect, useState } from 'react'
 import { Logo } from '@/components/layout/Logo'
+
+type SocialLink = { label: string; href: string }
 
 const footerLinks = {
   shop: {
@@ -31,18 +36,48 @@ const footerLinks = {
       { label: 'Privacy', href: '/privacy' },
     ],
   },
-  connect: {
-    title: 'Connect',
-    links: [
-      { label: 'Instagram', href: 'https://instagram.com/shayga' },
-      { label: 'Facebook', href: 'https://facebook.com/shayga' },
-      { label: 'Pinterest', href: 'https://pinterest.com/shayga' },
-      { label: 'WhatsApp', href: 'https://wa.me/919876543210' },
-    ],
-  },
+}
+
+const defaultSocialLinks: SocialLink[] = [
+  { label: 'Instagram', href: 'https://instagram.com/shayga' },
+  { label: 'Facebook', href: 'https://facebook.com/shayga' },
+  { label: 'WhatsApp', href: 'https://wa.me/91906566511' },
+]
+
+const DEFAULT_WHATSAPP_URL = 'https://wa.me/91906566511'
+
+function socialLinksFromSettings(data: any): SocialLink[] {
+  const links: SocialLink[] = []
+  if (data?.instagramUrl)
+    links.push({ label: 'Instagram', href: data.instagramUrl })
+  if (data?.facebookUrl)
+    links.push({ label: 'Facebook', href: data.facebookUrl })
+  if (data?.youtubeUrl) links.push({ label: 'YouTube', href: data.youtubeUrl })
+  links.push({
+    label: 'WhatsApp',
+    href: data?.whatsappUrl || DEFAULT_WHATSAPP_URL,
+  })
+  return links
 }
 
 export function Footer() {
+  const [socialLinks, setSocialLinks] =
+    useState<SocialLink[]>(defaultSocialLinks)
+
+  useEffect(() => {
+    fetch('/api/globals/site-settings')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data) setSocialLinks(socialLinksFromSettings(data))
+      })
+      .catch(() => {})
+  }, [])
+
+  const sections = [
+    ...Object.values(footerLinks),
+    { title: 'Connect', links: socialLinks },
+  ]
+
   return (
     <footer className="border-t border-neutral-200 bg-neutral-50">
       <div className="container-page py-12 sm:py-16 lg:py-20">
@@ -57,7 +92,7 @@ export function Footer() {
           </div>
 
           {/* Links */}
-          {Object.values(footerLinks).map((section) => (
+          {sections.map((section) => (
             <div key={section.title} className="col-span-1 lg:col-span-2">
               <h3 className="font-display mb-4 text-xs font-semibold tracking-wider text-neutral-400 uppercase">
                 {section.title}

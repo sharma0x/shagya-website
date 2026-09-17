@@ -2377,6 +2377,10 @@ export interface SiteSetting {
   instagramUrl?: string | null;
   facebookUrl?: string | null;
   youtubeUrl?: string | null;
+  /**
+   * WhatsApp chat link, e.g. https://wa.me/91906566511
+   */
+  whatsappUrl?: string | null;
   pinterestUrl?: string | null;
   shippingPolicy?: string | null;
   returnPolicy?: string | null;
@@ -2465,6 +2469,7 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   instagramUrl?: T;
   facebookUrl?: T;
   youtubeUrl?: T;
+  whatsappUrl?: T;
   pinterestUrl?: T;
   shippingPolicy?: T;
   returnPolicy?: T;

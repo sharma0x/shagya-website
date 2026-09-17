@@ -12,6 +12,7 @@ import { buildWhereClause } from '@/lib/filters/build-where-clause'
 import { getProductUrl } from '@/lib/product-url'
 import { isUnoptimizedImage } from '@/lib/image-url'
 import { resolveWeaveIds, weaveLabel } from '@/lib/weaves'
+import { getProductImageUrl } from '@/lib/product-utils'
 import { TrackSearchResults } from '@/components/analytics/TrackSearchResults'
 
 // No DB access at build time — must render dynamically
@@ -51,6 +52,7 @@ interface FTSProductResult {
   slug: string
   basePrice: number | null
   compareAtPrice: number | null
+  image: string | null
   fabric: string | null
   weave: string | null
   rank: number
@@ -124,7 +126,7 @@ export default async function SearchPage({
         where,
         sort,
         limit: 50,
-        depth: 1,
+        depth: 2,
       })
 
       products = result.docs.map((doc: any, index: number) => ({
@@ -134,6 +136,7 @@ export default async function SearchPage({
         slug: doc.slug,
         basePrice: doc.basePrice || null,
         compareAtPrice: doc.compareAtPrice || null,
+        image: getProductImageUrl(doc),
         fabric: weaveLabel(doc.fabric) || null,
         weave: weaveLabel(doc.weave) || null,
         rank: 50 - index,
@@ -149,7 +152,7 @@ export default async function SearchPage({
           },
         },
         limit,
-        depth: 1,
+        depth: 2,
       })
 
       const docs = ftsResult.docs
@@ -171,6 +174,7 @@ export default async function SearchPage({
               slug: docValue.slug,
               basePrice: docValue.basePrice || null,
               compareAtPrice: docValue.compareAtPrice || null,
+              image: getProductImageUrl(docValue),
               fabric: weaveLabel(docValue.fabric) || null,
               weave: weaveLabel(docValue.weave) || null,
               rank: d.priority || limit - index,
@@ -306,7 +310,9 @@ export default async function SearchPage({
                               >
                                 <div className="relative overflow-hidden rounded-xl transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-md">
                                   <ImagePanel
-                                    src={'/images/products/saree-01.jpg'}
+                                    src={
+                                      p.image || '/images/products/saree-01.jpg'
+                                    }
                                     alt={p.name}
                                     className="aspect-[3/4] w-full"
                                     rounded="none"

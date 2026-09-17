@@ -536,10 +536,6 @@ async function HomeBestSellersSection({
 
   if (allProductsRes.docs.length === 0) return null
 
-  // Desktop shows all 8 in a 4-col grid (2 rows).
-  // Mobile shows 4 initially, then reveals the rest via "Show more".
-  const desktopLimit = productBlock?.limit || 8
-
   return (
     <section className="bg-brand-50/20">
       <div className="container-page py-6 sm:py-8 md:py-10">
@@ -550,10 +546,9 @@ async function HomeBestSellersSection({
           viewAllLabel={productBlock?.ctaText || 'Shop All'}
         />
         <ProductCarousel
-          products={(allProductsRes.docs as Product[])
-            .slice(0, desktopLimit)
-            .map(mapProductWithVariant)}
-          mobileInitialCount={4}
+          products={(allProductsRes.docs as Product[]).map(
+            mapProductWithVariant,
+          )}
         />
       </div>
     </section>

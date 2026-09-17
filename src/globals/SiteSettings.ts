@@ -96,6 +96,14 @@ export const SiteSettings: GlobalConfig = {
       label: 'YouTube URL',
     },
     {
+      name: 'whatsappUrl',
+      type: 'text',
+      label: 'WhatsApp URL',
+      admin: {
+        description: 'WhatsApp chat link, e.g. https://wa.me/91906566511',
+      },
+    },
+    {
       name: 'pinterestUrl',
       type: 'text',
       label: 'Pinterest URL',

@@ -166,16 +166,6 @@ export default async function CatchAllPage({ params, searchParams }: Props) {
         <div className="mx-auto grid max-w-5xl grid-cols-1 gap-12 px-4 py-12 sm:px-6 md:grid-cols-12 lg:px-8">
           {/* Contact Details */}
           <div className="font-body space-y-8 md:col-span-5">
-            <div className="space-y-6">
-              <h3 className="font-display text-base font-semibold tracking-wider text-neutral-900 uppercase">
-                Heritage Studio
-              </h3>
-              <p className="text-sm leading-relaxed text-neutral-600">
-                Experience the authentic handloom collection in person. Visits
-                by appointment only.
-              </p>
-            </div>
-
             <div className="space-y-4 text-sm text-neutral-600">
               {siteSettings?.address && (
                 <div className="flex items-start gap-4">
