@@ -5,6 +5,7 @@ import { auth } from '@/lib/auth'
 import Razorpay from 'razorpay'
 import { validateCartStock, type CartStockItem } from '@/lib/stock'
 import { resolveCurrentPrices, applyCurrentPrice } from '@/lib/cart-prices'
+import { validateCouponForCart } from '@/lib/coupons'
 
 export async function POST(request: Request) {
   try {
@@ -25,6 +26,7 @@ export async function POST(request: Request) {
     let shipping = 0
     let discount = 0
     let cartId: string | null = null
+    let cartItems: any[] = []
 
     const payload = await getPayload({ config })
 
@@ -74,8 +76,9 @@ export async function POST(request: Request) {
 
       const cart = carts.docs[0] as any
       cartId = cart.id
-      const cartItems = (cart.items || []) as any[]
+      cartItems = (cart.items || []) as any[]
       // Resolve CURRENT prices from the DB (the stored unitPrice may be a
+
       // stale add-time snapshot)
       const priceMap = await resolveCurrentPrices(payload, cartItems)
       subtotal = cartItems.reduce(
@@ -151,43 +154,42 @@ export async function POST(request: Request) {
           : standardRate
     shipping = shippingBase
 
-    // Find coupon document either from logged-in cart OR from appliedCouponCode
-    let couponDoc: any = null
+    // Validate coupon
+    let appliedCoupon: any = null
 
-    if (!isGuest && cartId) {
-      const carts = await payload.find({
-        collection: 'carts',
-        where: { id: { equals: cartId } },
-        limit: 1,
-      })
-      const cart = carts.docs[0] as any
-      if (cart?.coupon) {
-        const couponId =
-          typeof cart.coupon === 'object' ? cart.coupon.id : cart.coupon
-        couponDoc = await payload.findByID({
-          collection: 'coupons',
-          id: couponId,
-        } as any)
-      }
-    } else if (appliedCouponCode) {
-      const coupons = await payload.find({
-        collection: 'coupons',
-        where: { code: { equals: appliedCouponCode.trim().toUpperCase() } },
-        limit: 1,
-      })
-      if (coupons.docs.length > 0) {
-        couponDoc = coupons.docs[0]
-      }
-    }
+    if (appliedCouponCode) {
+      const cartProductIds = isGuest
+        ? (guestCartItems || []).map((item: any) =>
+            String(
+              typeof item.product === 'object' ? item.product.id : item.product,
+            ),
+          )
+        : (cartItems || []).map((item: any) =>
+            String(
+              typeof item.product === 'object' ? item.product.id : item.product,
+            ),
+          )
 
-    if (couponDoc && couponDoc.isActive) {
-      if (couponDoc.type === 'percentage') {
-        discount = Math.round((subtotal * (couponDoc.value || 0)) / 100)
-        if (couponDoc.maxDiscount && discount > couponDoc.maxDiscount)
-          discount = couponDoc.maxDiscount
-      } else if (couponDoc.type === 'fixed_amount') {
-        discount = couponDoc.value || 0
-      } else if (couponDoc.type === 'free_shipping') {
+      const session = await auth.api.getSession({ headers: request.headers })
+
+      const validation = await validateCouponForCart(
+        payload,
+        appliedCouponCode,
+        subtotal,
+        cartProductIds,
+        session?.user,
+      )
+
+      if (!validation.valid) {
+        return NextResponse.json(
+          { error: validation.error || 'Invalid coupon code' },
+          { status: 400 },
+        )
+      }
+
+      appliedCoupon = validation.coupon
+      discount = validation.coupon.discount || 0
+      if (appliedCoupon.type === 'free_shipping') {
         shipping = 0
       }
     }
