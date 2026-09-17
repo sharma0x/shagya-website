@@ -5,7 +5,7 @@ import { getPayload } from 'payload'
 import config from '@payload-config'
 import { notFound } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { resolveWeaveIds } from '@/lib/weaves'
+import { resolveWeaveIds, resolveFabricIds } from '@/lib/weaves'
 import { SortSelect } from '@/components/ui/sort-select'
 import { ProductFilters } from '@/components/product/ProductFilters'
 import { ProductCard } from '@/components/product/ProductCard'
@@ -34,9 +34,6 @@ function buildWhere(
     collections: { contains: collectionId },
     status: { equals: 'published' },
   }
-
-  const fabricFilter = getCommaParam(sParams, 'fabric')
-  if (fabricFilter.length > 0) where.fabric = { in: fabricFilter }
 
   const patternFilter = getCommaParam(sParams, 'pattern')
   if (patternFilter.length > 0) where.pattern = { in: patternFilter }
@@ -110,6 +107,16 @@ async function CollectionProductsStream({
   else if (sortParam === 'price-desc') sort = '-basePrice'
 
   const where = buildWhere(sParams, collectionId)
+
+  const fabricSlugs = getCommaParam(sParams, 'fabric')
+  if (fabricSlugs.length > 0) {
+    const fabricIds = await resolveFabricIds(payload, fabricSlugs)
+    if (fabricIds.length === 1) {
+      where.fabric = { equals: fabricIds[0] }
+    } else if (fabricIds.length > 1) {
+      where.fabric = { in: fabricIds }
+    }
+  }
 
   const weaveSlugs = getCommaParam(sParams, 'weave')
   if (weaveSlugs.length > 0) {
