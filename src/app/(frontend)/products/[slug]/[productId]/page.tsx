@@ -203,16 +203,16 @@ async function ProductReviewsStream({
 
 async function ProductRecommendationsStream({
   productId,
-  fabric,
+  fabricId,
   weaveId,
 }: {
   productId: number
-  fabric: string
+  fabricId: string | number | null
   weaveId: string | number | null
 }) {
   const relatedProducts = await getRelatedProducts(
     productId,
-    fabric || '',
+    fabricId,
     weaveId,
     [],
     8,
@@ -347,9 +347,19 @@ export default async function ProductDetailPage({
         stock: v.stock ?? 0,
         sku: v.sku ?? null,
       })),
-    fabric: product.fabric,
+    fabric: weaveLabel(product.fabric),
     weave: weaveLabel(product.weave),
   }
+
+  const fabricLabelValue = weaveLabel(product.fabric)
+  const fabricSlug =
+    typeof product.fabric === 'object' &&
+    product.fabric !== null &&
+    (product.fabric as any).slug
+      ? (product.fabric as any).slug
+      : typeof product.fabric === 'string'
+        ? product.fabric
+        : 'all'
 
   const weaveLabelValue = weaveLabel(product.weave)
 
@@ -359,9 +369,10 @@ export default async function ProductDetailPage({
     .join(', ')
 
   const specs: { label: string; value: string }[] = [
-    product.fabric && {
+    fabricLabelValue && {
       label: 'Fabric',
-      value: product.fabric.charAt(0).toUpperCase() + product.fabric.slice(1),
+      value:
+        fabricLabelValue.charAt(0).toUpperCase() + fabricLabelValue.slice(1),
     },
     weaveLabelValue && {
       label: 'Weave',
@@ -391,13 +402,13 @@ export default async function ProductDetailPage({
         <div className="container-page">
           {/* Back link */}
           <Link
-            href={`/category/${product.fabric}`}
+            href={`/category/${fabricSlug}`}
             className="font-display hover:text-brand-700 inline-flex items-center gap-1.5 text-xs font-medium text-neutral-400 transition-colors hover:text-neutral-700"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
-            {product.fabric.charAt(0).toUpperCase() +
-              product.fabric.slice(1)}{' '}
-            Sarees
+            {fabricLabelValue
+              ? `${fabricLabelValue.charAt(0).toUpperCase() + fabricLabelValue.slice(1)} Sarees`
+              : 'All Sarees'}
           </Link>
 
           {/* ── Main PDP Grid ── */}
@@ -599,7 +610,7 @@ export default async function ProductDetailPage({
         <Suspense fallback={<ProductSectionSkeleton count={4} />}>
           <ProductRecommendationsStream
             productId={product.id}
-            fabric={product.fabric}
+            fabricId={weaveIdOf(product.fabric)}
             weaveId={weaveIdOf(product.weave)}
           />
         </Suspense>

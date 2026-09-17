@@ -8,7 +8,7 @@ import { liftVariantGallery } from '@/lib/product-utils'
  */
 export async function getRelatedProducts(
   productId: string | number,
-  fabric: string,
+  fabricId: string | number | null,
   weaveId: string | number | null,
   collectionIds: (string | number)[],
   limit = 6,
@@ -18,12 +18,12 @@ export async function getRelatedProducts(
   const results: any[] = []
 
   // Query 1: Same fabric
-  if (fabric) {
+  if (fabricId) {
     const fabricRes = await payload.find({
       collection: 'products',
       where: {
         id: { not_equals: productId },
-        fabric: { equals: fabric },
+        fabric: { equals: fabricId },
         _status: { equals: 'published' },
         status: { equals: 'published' },
       },
