@@ -134,7 +134,7 @@ export default async function SearchPage({
         slug: doc.slug,
         basePrice: doc.basePrice || null,
         compareAtPrice: doc.compareAtPrice || null,
-        fabric: doc.fabric,
+        fabric: weaveLabel(doc.fabric) || null,
         weave: weaveLabel(doc.weave) || null,
         rank: 50 - index,
       }))
@@ -171,10 +171,7 @@ export default async function SearchPage({
               slug: docValue.slug,
               basePrice: docValue.basePrice || null,
               compareAtPrice: docValue.compareAtPrice || null,
-              fabric:
-                typeof docValue.fabric === 'object'
-                  ? docValue.fabric?.title
-                  : docValue.fabric,
+              fabric: weaveLabel(docValue.fabric) || null,
               weave: weaveLabel(docValue.weave) || null,
               rank: d.priority || limit - index,
             } as FTSProductResult

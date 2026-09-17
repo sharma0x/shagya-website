@@ -53,3 +53,25 @@ export async function resolveWeaveIds(
   })
   return res.docs.map((d) => d.id as string | number)
 }
+
+/**
+ * Resolve fabric slugs (URL filter params) into fabric document IDs so they can
+ * be used in a relationship `where` clause.
+ */
+export async function resolveFabricIds(
+  payload: Payload,
+  slugs: string[],
+): Promise<(string | number)[]> {
+  if (slugs.length === 0) return []
+  const res = await payload.find({
+    collection: 'fabric-types',
+    where: { slug: { in: slugs } },
+    limit: slugs.length,
+    depth: 0,
+    pagination: false,
+  })
+  return res.docs.map((d) => d.id as string | number)
+}
+
+export const fabricLabel = weaveLabel
+export const fabricIdOf = weaveIdOf

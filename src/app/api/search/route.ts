@@ -90,10 +90,7 @@ export async function GET(request: Request): Promise<NextResponse> {
             slug: docValue.slug,
             basePrice: docValue.basePrice || null,
             compareAtPrice: docValue.compareAtPrice || null,
-            fabric:
-              typeof docValue.fabric === 'object'
-                ? docValue.fabric?.title
-                : docValue.fabric,
+            fabric: weaveLabel(docValue.fabric) || null,
             weave: weaveLabel(docValue.weave) || null,
             rank: d.priority || limit - index,
           }
