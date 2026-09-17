@@ -1,3 +1,16 @@
+## [1.9.0](https://github.com/sharma0x/shagya-website/compare/v1.8.0...v1.9.0) (2026-09-17)
+
+### Features
+
+- **settings:** add whatsapp url field to site settings ([5651475](https://github.com/sharma0x/shagya-website/commit/5651475fd3940392ed30402a2af5c9d7c39d8dec))
+- **home:** paginate bestseller grid with show more ([c47d5a6](https://github.com/sharma0x/shagya-website/commit/c47d5a6ba81f177db57b1542af78a113327e1b62))
+- **search:** show real product images in results ([4ec96a6](https://github.com/sharma0x/shagya-website/commit/4ec96a67d79d89542fe0938e0e62784532c8d37b))
+- **footer:** source social links from site settings ([cb08e4d](https://github.com/sharma0x/shagya-website/commit/cb08e4d4de1f82d66445d633752a5e9df127c518))
+
+### Bug Fixes
+
+- **contact:** remove heritage studio block ([23a8d10](https://github.com/sharma0x/shagya-website/commit/23a8d1051073bfae5666580e1ae836c551315e7b))
+
 ## [1.8.0](https://github.com/sharma0x/shagya-website/compare/v1.7.0...v1.8.0) (2026-09-17)
 
 ### Features
