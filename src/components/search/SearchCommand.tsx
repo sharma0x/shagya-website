@@ -7,6 +7,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
 import { getProductUrl } from '@/lib/product-url'
+import { weaveLabel } from '@/lib/weaves'
 
 interface FTSProductResult {
   id: number
@@ -274,7 +275,9 @@ function SearchPanel({ onClose }: { onClose: () => void }) {
                       renderThumbnail={(doc) => <ProductThumbnail doc={doc} />}
                       renderMeta={(doc) => (
                         <span className="text-neutral-400">
-                          {[doc.weave, doc.fabric].filter(Boolean).join(' · ')}
+                          {[weaveLabel(doc.weave), weaveLabel(doc.fabric)]
+                            .filter(Boolean)
+                            .join(' · ')}
                         </span>
                       )}
                       renderPrice={(doc) =>
