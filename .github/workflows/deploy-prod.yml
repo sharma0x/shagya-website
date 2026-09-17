@@ -232,3 +232,8 @@ jobs:
         run: |
           docker compose -f docker-compose.prod.yml ps
           docker compose -f docker-compose.prod.yml ps --status running --quiet app | grep -q . && echo "app running" || { echo "app not running"; exit 1; }
+
+      - name: Prune stale Docker images
+        run: |
+          docker image prune -af
+          docker builder prune -af
