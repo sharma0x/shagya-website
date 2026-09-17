@@ -130,6 +130,13 @@ describe('SiteSettings global', () => {
       expect(field?.type).toBe('text')
     })
 
+    it('has whatsappUrl field (text)', () => {
+      const field = findField('whatsappUrl')
+      expect(field).toBeDefined()
+      expect(field?.type).toBe('text')
+      expect(field?.label).toBe('WhatsApp URL')
+    })
+
     it('has pinterestUrl field (text)', () => {
       const field = findField('pinterestUrl')
       expect(field).toBeDefined()
@@ -196,8 +203,8 @@ describe('SiteSettings global', () => {
 
   // ---- Count Assertion ----
   describe('Field count', () => {
-    it('has exactly 23 fields', () => {
-      expect(SiteSettings.fields).toHaveLength(23)
+    it('has exactly 24 fields', () => {
+      expect(SiteSettings.fields).toHaveLength(24)
     })
   })
 })
