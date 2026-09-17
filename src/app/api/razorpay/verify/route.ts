@@ -6,6 +6,7 @@ import crypto from 'crypto'
 import { isSameAddress } from '@/lib/address-utils'
 import { validateCartStock, type CartStockItem } from '@/lib/stock'
 import { resolveCurrentPrices, applyCurrentPrice } from '@/lib/cart-prices'
+import { validateCouponForCart } from '@/lib/coupons'
 
 /**
  * Resolves the color identity from a cart item's variant JSON
@@ -266,44 +267,30 @@ export async function POST(request: Request) {
     let discount = 0
     let usedCouponId: string | number | null = null
 
-    // For logged-in users with coupon, OR guests with appliedCouponCode
-    let couponDoc: any = null
+    // Validate coupon
+    if (appliedCouponCode) {
+      const cartProductIds = orderItems.map((item: any) => String(item.product))
+      const session = await auth.api.getSession({ headers: request.headers })
 
-    if (!isGuest && cartId) {
-      const cart = (await payload.findByID({
-        collection: 'carts',
-        id: cartId,
-      } as any)) as any
-      if ((cart as any)?.coupon) {
-        const couponId =
-          typeof (cart as any).coupon === 'object'
-            ? (cart as any).coupon.id
-            : (cart as any).coupon
-        couponDoc = (await payload.findByID({
-          collection: 'coupons',
-          id: couponId,
-        } as any)) as any
-      }
-    } else if (appliedCouponCode) {
-      const coupons = await payload.find({
-        collection: 'coupons',
-        where: { code: { equals: appliedCouponCode.trim().toUpperCase() } },
-        limit: 1,
-      })
-      if (coupons.docs.length > 0) {
-        couponDoc = coupons.docs[0]
-      }
-    }
+      const validation = await validateCouponForCart(
+        payload,
+        appliedCouponCode,
+        subtotal,
+        cartProductIds,
+        session?.user,
+      )
 
-    if (couponDoc && couponDoc.isActive) {
-      usedCouponId = couponDoc.id
-      if (couponDoc.type === 'percentage') {
-        discount = Math.round((subtotal * (couponDoc.value || 0)) / 100)
-        if (couponDoc.maxDiscount && discount > couponDoc.maxDiscount)
-          discount = couponDoc.maxDiscount
-      } else if (couponDoc.type === 'fixed_amount') {
-        discount = couponDoc.value || 0
-      } else if (couponDoc.type === 'free_shipping') {
+      if (!validation.valid) {
+        return NextResponse.json(
+          { error: validation.error || 'Invalid coupon code' },
+          { status: 400 },
+        )
+      }
+
+      const appliedCoupon = validation.coupon
+      usedCouponId = appliedCoupon.id
+      discount = appliedCoupon.discount || 0
+      if (appliedCoupon.type === 'free_shipping') {
         shipping = 0 // Actually zero out the shipping cost
       }
 
@@ -311,8 +298,8 @@ export async function POST(request: Request) {
       try {
         await payload.update({
           collection: 'coupons',
-          id: couponDoc.id,
-          data: { usedCount: (couponDoc.usedCount || 0) + 1 },
+          id: usedCouponId as string,
+          data: { usedCount: (appliedCoupon.usedCount || 0) + 1 },
         } as any)
       } catch {
         // Non-critical — don't block order
