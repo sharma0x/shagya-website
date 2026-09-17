@@ -372,3 +372,10 @@ Review subagent found 2 P0 + 8 P1. Fixes applied:
 - Adding the `weaves` collection broke `shayga.in/admin` with SSR 500. Root cause: Payload's `payload_locked_documents_rels` system table needs ONE id column per collection (`weaves_id` + FK `payload_locked_documents_rels_weaves_fk` ON DELETE cascade + index). The locked-documents query joins every collection column — a missing column throws `column payload_locked_documents__rels.weaves_id does not exist` on every admin page load.
 - Fix migration: `20260916_180000_add_weaves_id_to_payload_locked_documents_rels` (idempotent up/down).
 - **Lesson: when adding a new collection, ALWAYS check `payload-generated-schema.ts` for the `payload_locked_documents_rels` column set** — the enum→relationship migration only covered products/_products_v and missed this system table. Diagnosed via `docker compose logs app` on the VPS (SSH host per deploy-production skill).
+
+## Client Crash: cart weave object → .toLowerCase() (2026-09-16, production)
+
+- After making `weave` a relationship, the homepage died with `Uncaught TypeError: (e ?? "").toLowerCase is not a function`.
+- Root cause: the cart API (`/api/cart`) fetches products at `depth: 2`, so `item.product.weave` is a populated OBJECT. `loadFromServer()` stored it raw, and CartDrawer/checkout ran `.map(s => (s ?? '').toLowerCase())` on it → page-wide crash whenever the user's cart had items.
+- Fix: normalize `weaveLabel(item.product.weave)` in `cart.ts` `loadFromServer`/`refreshPrices` AND defensively in CartDrawer + checkout rendering. Added `src/lib/__tests__/weaves.test.ts`.
+- Lesson: every boundary that receives server-shape products (depth ≥ 1 → weave = object, depth 0 → weave = id) must normalize via `weaveLabel()`; never `.toLowerCase()` a weave value directly.

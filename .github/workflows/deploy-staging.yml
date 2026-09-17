@@ -60,6 +60,7 @@ jobs:
             --network=host \
             --build-arg DATABASE_URL="postgres://shayga:shayga_dev@127.0.0.1:5432/shayga" \
             --build-arg NEXT_PUBLIC_GA_MEASUREMENT_ID="${{ vars.NEXT_PUBLIC_GA_MEASUREMENT_ID }}" \
+            --build-arg NEXT_PUBLIC_RAZORPAY_KEY_ID="${{ vars.NEXT_PUBLIC_RAZORPAY_KEY_ID }}" \
             --build-arg APP_VERSION="sha-${{ github.sha }}" \
             --tag "$IMAGE:develop" \
             --tag "$IMAGE:sha-${{ github.sha }}" \
