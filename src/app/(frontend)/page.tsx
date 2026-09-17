@@ -670,6 +670,7 @@ export default async function HomePage() {
         images?:
           | {
               image: { url?: string | null } | number
+              mobileImage?: { url?: string | null } | number | null
               link?: string | null
               id?: string
             }[]
@@ -740,13 +741,21 @@ export default async function HomePage() {
     const imgs = heroBlock?.images
     if (imgs && imgs.length > 0) {
       const slides = imgs
-        .map((entry) => {
+        .map((entry): HeroSlide | null => {
           const url =
             typeof entry.image === 'object' && entry.image?.url
               ? entry.image.url
               : null
+          const mobileUrl =
+            typeof entry.mobileImage === 'object' && entry.mobileImage?.url
+              ? entry.mobileImage.url
+              : null
           return url
-            ? { imageUrl: url, link: entry.link || '/category/all' }
+            ? {
+                imageUrl: url,
+                mobileImageUrl: mobileUrl,
+                link: entry.link || '/category/all',
+              }
             : null
         })
         .filter((s): s is HeroSlide => s !== null)

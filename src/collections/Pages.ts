@@ -90,12 +90,28 @@ export const Pages: CollectionConfig = {
               name: 'images',
               type: 'array',
               maxRows: 5,
+              admin: {
+                description:
+                  'Hero slides. Desktop poster 2000×1000 px (2:1). Optional mobile poster 1200×900 px (4:3) — desktop image is used on phones if omitted.',
+              },
               fields: [
                 {
                   name: 'image',
                   type: 'upload',
                   relationTo: 'media',
                   required: true,
+                  admin: {
+                    description: 'Desktop poster — 2000×1000 px (2:1).',
+                  },
+                },
+                {
+                  name: 'mobileImage',
+                  type: 'upload',
+                  relationTo: 'media',
+                  admin: {
+                    description:
+                      'Mobile poster — 1200×900 px (4:3). Optional; falls back to the desktop poster on phones.',
+                  },
                 },
                 {
                   name: 'link',

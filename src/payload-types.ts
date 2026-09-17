@@ -885,9 +885,19 @@ export interface Page {
         | {
             heading?: string | null;
             subheading?: string | null;
+            /**
+             * Hero slides. Desktop poster 2000×1000 px (2:1). Optional mobile poster 1200×900 px (4:3) — desktop image is used on phones if omitted.
+             */
             images?:
               | {
+                  /**
+                   * Desktop poster — 2000×1000 px (2:1).
+                   */
                   image: number | Media;
+                  /**
+                   * Mobile poster — 1200×900 px (4:3). Optional; falls back to the desktop poster on phones.
+                   */
+                  mobileImage?: (number | null) | Media;
                   /**
                    * Where this slide navigates when clicked (e.g. /category/banarasi)
                    */
@@ -1937,6 +1947,7 @@ export interface PagesSelect<T extends boolean = true> {
                 | T
                 | {
                     image?: T;
+                    mobileImage?: T;
                     link?: T;
                     id?: T;
                   };

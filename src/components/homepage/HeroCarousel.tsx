@@ -8,6 +8,7 @@ import { SkeletonImage } from '@/components/ui/SkeletonImage'
 
 export interface HeroSlide {
   imageUrl: string
+  mobileImageUrl?: string | null
   link: string
 }
 
@@ -20,7 +21,11 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
   // Link with an undefined href (guards against stale/partial props).
   const safeSlides = slides
     .filter((s): s is HeroSlide => Boolean(s?.imageUrl))
-    .map((s) => ({ imageUrl: s.imageUrl, link: s.link || '/' }))
+    .map((s) => ({
+      imageUrl: s.imageUrl,
+      mobileImageUrl: s.mobileImageUrl || null,
+      link: s.link || '/',
+    }))
 
   const [current, setCurrent] = useState(0)
   const [paused, setPaused] = useState(false)
@@ -87,12 +92,27 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
               aria-label={`View featured weave ${i + 1} of ${safeSlides.length}`}
               tabIndex={i === current ? 0 : -1}
             >
+              {slide.mobileImageUrl && (
+                <SkeletonImage
+                  src={slide.mobileImageUrl}
+                  alt=""
+                  fill
+                  sizes="100vw"
+                  className="object-cover md:hidden"
+                  unoptimized={isUnoptimizedImage(slide.mobileImageUrl)}
+                  loading={i === 0 ? 'eager' : 'lazy'}
+                  priority={i === 0}
+                />
+              )}
               <SkeletonImage
                 src={slide.imageUrl}
                 alt=""
                 fill
                 sizes="100vw"
-                className="object-cover"
+                className={cn(
+                  'object-cover',
+                  slide.mobileImageUrl && 'hidden md:block',
+                )}
                 unoptimized={isUnoptimizedImage(slide.imageUrl)}
                 loading={i === 0 ? 'eager' : 'lazy'}
                 priority={i === 0}
