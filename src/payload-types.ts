@@ -287,7 +287,7 @@ export interface Product {
     [k: string]: unknown;
   } | null;
   status?: ('draft' | 'published' | 'archived') | null;
-  fabric: 'silk' | 'cotton' | 'linen' | 'georgette' | 'chiffon' | 'crepe' | 'velvet' | 'net' | 'blend';
+  fabric: number | FabricType;
   /**
    * Weave technique this saree belongs to (managed in the Weaves collection)
    */
@@ -389,6 +389,18 @@ export interface Product {
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "fabric-types".
+ */
+export interface FabricType {
+  id: number;
+  name: string;
+  slug?: string | null;
+  description?: string | null;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -494,7 +506,7 @@ export interface Collection {
           }
         | {
             operator: 'equals' | 'not_equals';
-            value: 'silk' | 'cotton' | 'linen' | 'georgette' | 'chiffon' | 'crepe' | 'velvet' | 'net' | 'blend';
+            value: number | FabricType;
             id?: string | null;
             blockName?: string | null;
             blockType: 'fabricRule';
@@ -1060,18 +1072,6 @@ export interface Review {
  * via the `definition` "tags".
  */
 export interface Tag {
-  id: number;
-  name: string;
-  slug?: string | null;
-  description?: string | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "fabric-types".
- */
-export interface FabricType {
   id: number;
   name: string;
   slug?: string | null;

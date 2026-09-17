@@ -186,19 +186,10 @@ export const Products: CollectionConfig = {
     },
     {
       name: 'fabric',
-      type: 'select',
+      type: 'relationship',
+      relationTo: 'fabric-types',
       required: true,
-      options: [
-        { label: 'Silk', value: 'silk' },
-        { label: 'Cotton', value: 'cotton' },
-        { label: 'Linen', value: 'linen' },
-        { label: 'Georgette', value: 'georgette' },
-        { label: 'Chiffon', value: 'chiffon' },
-        { label: 'Crepe', value: 'crepe' },
-        { label: 'Velvet', value: 'velvet' },
-        { label: 'Net', value: 'net' },
-        { label: 'Blend', value: 'blend' },
-      ],
+      hasMany: false,
     },
     {
       name: 'weave',

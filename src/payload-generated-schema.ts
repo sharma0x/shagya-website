@@ -54,17 +54,6 @@ export const enum_products_status = pgEnum('enum_products_status', [
   'published',
   'archived',
 ])
-export const enum_products_fabric = pgEnum('enum_products_fabric', [
-  'silk',
-  'cotton',
-  'linen',
-  'georgette',
-  'chiffon',
-  'crepe',
-  'velvet',
-  'net',
-  'blend',
-])
 export const enum_products_pattern = pgEnum('enum_products_pattern', [
   'solid',
   'printed',
@@ -85,20 +74,6 @@ export const enum_products_delivery_time = pgEnum(
 export const enum__products_v_version_status = pgEnum(
   'enum__products_v_version_status',
   ['draft', 'published', 'archived'],
-)
-export const enum__products_v_version_fabric = pgEnum(
-  'enum__products_v_version_fabric',
-  [
-    'silk',
-    'cotton',
-    'linen',
-    'georgette',
-    'chiffon',
-    'crepe',
-    'velvet',
-    'net',
-    'blend',
-  ],
 )
 export const enum__products_v_version_pattern = pgEnum(
   'enum__products_v_version_pattern',
@@ -125,20 +100,6 @@ export const enum_collections_blocks_brand_rule_operator = pgEnum(
 export const enum_collections_blocks_fabric_rule_operator = pgEnum(
   'enum_collections_blocks_fabric_rule_operator',
   ['equals', 'not_equals'],
-)
-export const enum_collections_blocks_fabric_rule_value = pgEnum(
-  'enum_collections_blocks_fabric_rule_value',
-  [
-    'silk',
-    'cotton',
-    'linen',
-    'georgette',
-    'chiffon',
-    'crepe',
-    'velvet',
-    'net',
-    'blend',
-  ],
 )
 export const enum_collections_blocks_price_rule_operator = pgEnum(
   'enum_collections_blocks_price_rule_operator',
@@ -563,7 +524,9 @@ export const products = pgTable(
     slug: varchar('slug'),
     description: jsonb('description'),
     status: enum_products_status('status').default('draft'),
-    fabric: enum_products_fabric('fabric'),
+    fabric: integer('fabric_id').references(() => fabric_types.id, {
+      onDelete: 'set null',
+    }),
     weave: integer('weave_id').references(() => weaves.id, {
       onDelete: 'set null',
     }),
@@ -611,6 +574,7 @@ export const products = pgTable(
   },
   (columns) => [
     uniqueIndex('products_slug_idx').on(columns.slug),
+    index('products_fabric_idx').on(columns.fabric),
     index('products_weave_idx').on(columns.weave),
     index('products_brand_idx').on(columns.brand),
     index('products_updated_at_idx').on(columns.updatedAt),
@@ -773,7 +737,12 @@ export const _products_v = pgTable(
     version_description: jsonb('version_description'),
     version_status:
       enum__products_v_version_status('version_status').default('draft'),
-    version_fabric: enum__products_v_version_fabric('version_fabric'),
+    version_fabric: integer('version_fabric_id').references(
+      () => fabric_types.id,
+      {
+        onDelete: 'set null',
+      },
+    ),
     version_weave: integer('version_weave_id').references(() => weaves.id, {
       onDelete: 'set null',
     }),
@@ -853,6 +822,7 @@ export const _products_v = pgTable(
   (columns) => [
     index('_products_v_parent_idx').on(columns.parent),
     index('_products_v_version_version_slug_idx').on(columns.version_slug),
+    index('_products_v_version_version_fabric_idx').on(columns.version_fabric),
     index('_products_v_version_version_weave_idx').on(columns.version_weave),
     index('_products_v_version_version_brand_idx').on(columns.version_brand),
     index('_products_v_version_version_updated_at_idx').on(
@@ -1014,13 +984,16 @@ export const collections_blocks_fabric_rule = pgTable(
       enum_collections_blocks_fabric_rule_operator('operator').default(
         'equals',
       ),
-    value: enum_collections_blocks_fabric_rule_value('value'),
+    value: integer('value_id').references(() => fabric_types.id, {
+      onDelete: 'set null',
+    }),
     blockName: varchar('block_name'),
   },
   (columns) => [
     index('collections_blocks_fabric_rule_order_idx').on(columns._order),
     index('collections_blocks_fabric_rule_parent_id_idx').on(columns._parentID),
     index('collections_blocks_fabric_rule_path_idx').on(columns._path),
+    index('collections_blocks_fabric_rule_value_idx').on(columns.value),
     foreignKey({
       columns: [columns['_parentID']],
       foreignColumns: [collections.id],
@@ -4141,6 +4114,11 @@ export const relations_products_rels = relations(products_rels, ({ one }) => ({
   }),
 }))
 export const relations_products = relations(products, ({ one, many }) => ({
+  fabric: one(fabric_types, {
+    fields: [products.fabric],
+    references: [fabric_types.id],
+    relationName: 'fabric',
+  }),
   weave: one(weaves, {
     fields: [products.weave],
     references: [weaves.id],
@@ -4250,6 +4228,11 @@ export const relations__products_v = relations(
       references: [products.id],
       relationName: 'parent',
     }),
+    version_fabric: one(fabric_types, {
+      fields: [_products_v.version_fabric],
+      references: [fabric_types.id],
+      relationName: 'version_fabric',
+    }),
     version_weave: one(weaves, {
       fields: [_products_v.version_weave],
       references: [weaves.id],
@@ -4308,6 +4291,11 @@ export const relations_collections_blocks_fabric_rule = relations(
       fields: [collections_blocks_fabric_rule._parentID],
       references: [collections.id],
       relationName: '_blocks_fabricRule',
+    }),
+    value: one(fabric_types, {
+      fields: [collections_blocks_fabric_rule.value],
+      references: [fabric_types.id],
+      relationName: 'value',
     }),
   }),
 )
@@ -5524,17 +5512,14 @@ type DatabaseSchema = {
   enum_users_role: typeof enum_users_role
   enum_email_templates_slug: typeof enum_email_templates_slug
   enum_products_status: typeof enum_products_status
-  enum_products_fabric: typeof enum_products_fabric
   enum_products_pattern: typeof enum_products_pattern
   enum_products_delivery_time: typeof enum_products_delivery_time
   enum__products_v_version_status: typeof enum__products_v_version_status
-  enum__products_v_version_fabric: typeof enum__products_v_version_fabric
   enum__products_v_version_pattern: typeof enum__products_v_version_pattern
   enum__products_v_version_delivery_time: typeof enum__products_v_version_delivery_time
   enum__products_v_published_locale: typeof enum__products_v_published_locale
   enum_collections_blocks_brand_rule_operator: typeof enum_collections_blocks_brand_rule_operator
   enum_collections_blocks_fabric_rule_operator: typeof enum_collections_blocks_fabric_rule_operator
-  enum_collections_blocks_fabric_rule_value: typeof enum_collections_blocks_fabric_rule_value
   enum_collections_blocks_price_rule_operator: typeof enum_collections_blocks_price_rule_operator
   enum_collections_blocks_tag_rule_operator: typeof enum_collections_blocks_tag_rule_operator
   enum_collections_blocks_occasion_rule_operator: typeof enum_collections_blocks_occasion_rule_operator
