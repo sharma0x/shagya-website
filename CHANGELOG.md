@@ -1,3 +1,17 @@
+## [1.8.0](https://github.com/sharma0x/shagya-website/compare/v1.7.0...v1.8.0) (2026-09-17)
+
+### Features
+
+- **home:** show bestsellers as responsive grid with show-more ([7b84692](https://github.com/sharma0x/shagya-website/commit/7b84692ab64ca856a5932fe3471f577b601f419b))
+- **media:** standardize hero image size at 2000x1000 ([58a56d9](https://github.com/sharma0x/shagya-website/commit/58a56d9a4970b2036e02824e13683e7cb1968d37))
+- **hero:** support separate mobile poster per slide ([5b9082d](https://github.com/sharma0x/shagya-website/commit/5b9082df50166085c032e0b57357f0f988eec220))
+
+### Bug Fixes
+
+- **hero:** enlarge homepage poster ratio ([ac6267b](https://github.com/sharma0x/shagya-website/commit/ac6267ba3bcc773c5233a0cd9bf8ce648b876788))
+- **cart:** normalize fabric relationship before rendering ([c17ea6e](https://github.com/sharma0x/shagya-website/commit/c17ea6e03571e7659ffa32fb4b8c14bc478fbfeb))
+- **header:** tighten sarees dropdown column spacing ([f698418](https://github.com/sharma0x/shagya-website/commit/f698418c48f6c70a2e2d45ec2dcf3e5441a08228))
+
 ## [1.7.0](https://github.com/sharma0x/shagya-website/compare/v1.6.0...v1.7.0) (2026-09-17)
 
 ### Features
