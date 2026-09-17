@@ -89,17 +89,20 @@ export default async function CatchAllPage({ params, searchParams }: Props) {
 
   const template = page.template || 'default'
 
-  // If page is contact, search for contact form
+  // If page is contact, search for contact form and site settings
   let contactFormDoc = null
+  let siteSettings: any = null
   if (template === 'contact') {
-    const forms = await payload.find({
-      collection: 'forms',
-      where: {
-        slug: { equals: 'contact' },
-      },
-      limit: 1,
-    })
+    const [forms, settings] = await Promise.all([
+      payload.find({
+        collection: 'forms',
+        where: { slug: { equals: 'contact' } },
+        limit: 1,
+      }),
+      payload.findGlobal({ slug: 'site-settings' }),
+    ])
     contactFormDoc = (forms.docs[0] as FormDoc) || null
+    siteSettings = settings
   }
 
   return (
@@ -174,48 +177,53 @@ export default async function CatchAllPage({ params, searchParams }: Props) {
             </div>
 
             <div className="space-y-4 text-sm text-neutral-600">
-              <div className="flex items-start gap-4">
-                <MapPin className="text-brand-600 mt-0.5 h-5 w-5 shrink-0" />
-                <div>
-                  <p className="font-display font-semibold text-neutral-900">
-                    Registered Office
-                  </p>
-                  <p className="mt-1">
-                    D-48/144, Luxa, Godowlia Road, Varanasi, Uttar Pradesh,
-                    221001
-                  </p>
+              {siteSettings?.address && (
+                <div className="flex items-start gap-4">
+                  <MapPin className="text-brand-600 mt-0.5 h-5 w-5 shrink-0" />
+                  <div>
+                    <p className="font-display font-semibold text-neutral-900">
+                      Registered Office
+                    </p>
+                    <p className="mt-1 whitespace-pre-line">
+                      {siteSettings.address}
+                    </p>
+                  </div>
                 </div>
-              </div>
+              )}
 
-              <div className="flex items-start gap-4">
-                <Mail className="text-brand-600 mt-0.5 h-5 w-5 shrink-0" />
-                <div>
-                  <p className="font-display font-semibold text-neutral-900">
-                    Email Address
-                  </p>
-                  <a
-                    href="mailto:care@shayga.in"
-                    className="hover:text-brand-700 transition-colors"
-                  >
-                    care@shayga.in
-                  </a>
+              {siteSettings?.contactEmail && (
+                <div className="flex items-start gap-4">
+                  <Mail className="text-brand-600 mt-0.5 h-5 w-5 shrink-0" />
+                  <div>
+                    <p className="font-display font-semibold text-neutral-900">
+                      Email Address
+                    </p>
+                    <a
+                      href={`mailto:${siteSettings.contactEmail}`}
+                      className="hover:text-brand-700 transition-colors"
+                    >
+                      {siteSettings.contactEmail}
+                    </a>
+                  </div>
                 </div>
-              </div>
+              )}
 
-              <div className="flex items-start gap-4">
-                <Phone className="text-brand-600 mt-0.5 h-5 w-5 shrink-0" />
-                <div>
-                  <p className="font-display font-semibold text-neutral-900">
-                    Phone Support
-                  </p>
-                  <a
-                    href="tel:+919876543210"
-                    className="hover:text-brand-700 transition-colors"
-                  >
-                    +91 98765 43210
-                  </a>
+              {siteSettings?.contactPhone && (
+                <div className="flex items-start gap-4">
+                  <Phone className="text-brand-600 mt-0.5 h-5 w-5 shrink-0" />
+                  <div>
+                    <p className="font-display font-semibold text-neutral-900">
+                      Phone Support
+                    </p>
+                    <a
+                      href={`tel:${siteSettings.contactPhone.replace(/\s+/g, '')}`}
+                      className="hover:text-brand-700 transition-colors"
+                    >
+                      {siteSettings.contactPhone}
+                    </a>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
 
