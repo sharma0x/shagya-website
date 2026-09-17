@@ -1,3 +1,13 @@
+## [1.7.0](https://github.com/sharma0x/shagya-website/compare/v1.6.0...v1.7.0) (2026-09-17)
+
+### Features
+
+- **api:** resolve fabric filter slugs to relationship ids ([9612cd5](https://github.com/sharma0x/shagya-website/commit/9612cd5ed4696738f8de31724688f659055a6338))
+
+### Bug Fixes
+
+- **recommendations:** match related products by fabric id ([c97d4d0](https://github.com/sharma0x/shagya-website/commit/c97d4d04320f4288b5add6d39819cc31fad49dca))
+
 ## [1.6.0](https://github.com/sharma0x/shagya-website/compare/v1.5.0...v1.6.0) (2026-09-17)
 
 ### Features
