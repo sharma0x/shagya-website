@@ -1,3 +1,9 @@
+## [1.4.3](https://github.com/sharma0x/shagya-website/compare/v1.4.2...v1.4.3) (2026-09-17)
+
+### Bug Fixes
+
+- **build:** pass DATABASE_URL to local docker build ([6a8e5d5](https://github.com/sharma0x/shagya-website/commit/6a8e5d56bb7fc418a768e896a83f2e19a235dd31))
+
 ## [1.4.2](https://github.com/sharma0x/shagya-website/compare/v1.4.1...v1.4.2) (2026-09-16)
 
 ### Bug Fixes
