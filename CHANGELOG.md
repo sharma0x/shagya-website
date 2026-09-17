@@ -1,3 +1,10 @@
+## [1.10.0](https://github.com/sharma0x/shagya-website/compare/v1.9.0...v1.10.0) (2026-09-17)
+
+### Features
+
+- **api:** add paginated products list endpoint ([c223ab3](https://github.com/sharma0x/shagya-website/commit/c223ab32c7d306d5a78a7f537dfec267e8f80a19))
+- **home:** load bestsellers incrementally with show more ([fb874f4](https://github.com/sharma0x/shagya-website/commit/fb874f4a37149acd222d4cad062495f447032614))
+
 ## [1.9.0](https://github.com/sharma0x/shagya-website/compare/v1.8.0...v1.9.0) (2026-09-17)
 
 ### Features
