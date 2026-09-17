@@ -74,11 +74,11 @@ describe('Media collection', () => {
       expect(size?.position).toBe('centre')
     })
 
-    it('has hero size (1920×800, centre)', () => {
+    it('has hero size (2000×1000, centre)', () => {
       const size = imageSizes.find((s) => s.name === 'hero')
       expect(size).toBeDefined()
-      expect(size?.width).toBe(1920)
-      expect(size?.height).toBe(800)
+      expect(size?.width).toBe(2000)
+      expect(size?.height).toBe(1000)
       expect(size?.position).toBe('centre')
     })
   })

@@ -28,8 +28,8 @@ export const Media: CollectionConfig = {
       },
       {
         name: 'hero',
-        width: 1920,
-        height: 800,
+        width: 2000,
+        height: 1000,
         position: 'centre',
       },
     ],
