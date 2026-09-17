@@ -105,26 +105,12 @@ describe('Products collection', () => {
       (f: any) => f.name === 'fabric',
     ) as any
 
-    it('exists and is a select field', () => {
+    it('exists and is a required relationship to fabric-types', () => {
       expect(fabricField).toBeDefined()
-      expect(fabricField?.type).toBe('select')
+      expect(fabricField?.type).toBe('relationship')
+      expect(fabricField?.relationTo).toBe('fabric-types')
       expect(fabricField?.required).toBe(true)
-    })
-
-    it('has all 9 fabric options', () => {
-      const values = fabricField?.options?.map((o: any) => o.value)
-      expect(values).toHaveLength(9)
-      expect(values).toEqual([
-        'silk',
-        'cotton',
-        'linen',
-        'georgette',
-        'chiffon',
-        'crepe',
-        'velvet',
-        'net',
-        'blend',
-      ])
+      expect(fabricField?.hasMany).toBe(false)
     })
   })
 
