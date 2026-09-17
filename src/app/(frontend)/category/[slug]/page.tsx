@@ -28,35 +28,12 @@ interface FilterParams {
   [key: string]: string | string[] | undefined
 }
 
-const FABRICS = [
-  'silk',
-  'cotton',
-  'linen',
-  'georgette',
-  'chiffon',
-  'crepe',
-  'velvet',
-  'net',
-  'blend',
-]
-
 // Products are rendered as 1 card per product with hover image flips across all color variants
 
 function buildWhere(sParams: FilterParams, slug: string) {
   const where: Record<string, any> = {
     _status: { equals: 'published' },
     status: { equals: 'published' },
-  }
-
-  const hasFabricParam = sParams.fabric !== undefined
-
-  if (hasFabricParam) {
-    const fabricFilter = getCommaParam(sParams, 'fabric')
-    if (fabricFilter.length > 0) {
-      where.fabric = { in: fabricFilter }
-    }
-  } else if (FABRICS.includes(slug.toLowerCase())) {
-    where.fabric = { equals: slug.toLowerCase() }
   }
 
   const patternFilter = getCommaParam(sParams, 'pattern')
@@ -124,16 +101,39 @@ async function CategoryProductsStream({
   sParams,
   sortParam,
   weaveSlugSet,
+  fabricSlugSet,
 }: {
   slug: string
   sParams: FilterParams
   sortParam: string
   weaveSlugSet: Set<string>
+  fabricSlugSet: Set<string>
 }) {
   const payload = await getPayload({ config })
   const where = buildWhere(sParams, slug)
 
   const lowerSlug = slug.toLowerCase()
+
+  const hasFabricParam = sParams.fabric !== undefined
+  const fabricSlugs = hasFabricParam
+    ? getCommaParam(sParams, 'fabric')
+    : fabricSlugSet.has(lowerSlug)
+      ? [lowerSlug]
+      : []
+  if (fabricSlugs.length > 0) {
+    const fabricRes = await payload.find({
+      collection: 'fabric-types',
+      where: { slug: { in: fabricSlugs } },
+      limit: 100,
+      depth: 0,
+    })
+    const fabricIds = fabricRes.docs.map((d) => d.id)
+    if (fabricIds.length === 1) {
+      where.fabric = { equals: fabricIds[0] }
+    } else if (fabricIds.length > 1) {
+      where.fabric = { in: fabricIds }
+    }
+  }
   const hasWeaveParam = sParams.weave !== undefined
   const weaveSlugs = hasWeaveParam
     ? getCommaParam(sParams, 'weave')
@@ -408,8 +408,18 @@ export default async function CategoryPage({
     (weavesRes.docs as any[]).map((w) => w.slug).filter(Boolean),
   )
 
+  const fabricsRes = await payload.find({
+    collection: 'fabric-types',
+    limit: 500,
+    pagination: false,
+    depth: 0,
+  })
+  const fabricSlugSet = new Set(
+    (fabricsRes.docs as any[]).map((f) => f.slug).filter(Boolean),
+  )
+
   const contextFilter: { fabric?: string; weave?: string } = {}
-  if (FABRICS.includes(slug.toLowerCase())) {
+  if (fabricSlugSet.has(slug.toLowerCase())) {
     contextFilter.fabric = slug.toLowerCase()
   } else if (weaveSlugSet.has(slug.toLowerCase())) {
     contextFilter.weave = slug.toLowerCase()
@@ -418,7 +428,7 @@ export default async function CategoryPage({
   let title = slug.charAt(0).toUpperCase() + slug.slice(1)
   let description = `Discover our curated selection of ${slug} sarees.`
 
-  if (FABRICS.includes(slug.toLowerCase())) {
+  if (fabricSlugSet.has(slug.toLowerCase())) {
     title = `${title} Sarees`
     description = `Premium handwoven pure ${slug} sarees, sourced directly from weaver clusters across India.`
   } else if (weaveSlugSet.has(slug.toLowerCase())) {
@@ -467,6 +477,7 @@ export default async function CategoryPage({
               sParams={sParams}
               sortParam={sortParam}
               weaveSlugSet={weaveSlugSet}
+              fabricSlugSet={fabricSlugSet}
             />
           </Suspense>
         </div>

@@ -23,7 +23,11 @@ export interface AnalyticsProduct {
     | number
     | { name?: string | null; slug?: string | null }
     | null
-  fabric?: string | null
+  fabric?:
+    | string
+    | number
+    | { name?: string | null; slug?: string | null }
+    | null
   pattern?: string | null
   cityOfOrigin?: string | null
   occasions?: Array<string | number | { name?: string | null }> | null
@@ -92,7 +96,7 @@ export function mapProductToGA4Item(
 
   const categories = [
     weaveLabelValue(p.weave),
-    firstString(p.fabric),
+    weaveLabelValue(p.fabric),
     firstString(p.pattern),
     firstString(p.cityOfOrigin),
     occasionLabel(p.occasions),

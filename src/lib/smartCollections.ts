@@ -39,18 +39,8 @@ export const FabricRule: Block = {
     },
     {
       name: 'value',
-      type: 'select',
-      options: [
-        { label: 'Silk', value: 'silk' },
-        { label: 'Cotton', value: 'cotton' },
-        { label: 'Linen', value: 'linen' },
-        { label: 'Georgette', value: 'georgette' },
-        { label: 'Chiffon', value: 'chiffon' },
-        { label: 'Crepe', value: 'crepe' },
-        { label: 'Velvet', value: 'velvet' },
-        { label: 'Net', value: 'net' },
-        { label: 'Blend', value: 'blend' },
-      ],
+      type: 'relationship',
+      relationTo: 'fabric-types',
       required: true,
     },
   ],
@@ -150,11 +140,17 @@ export function evaluateProductAgainstRules(
         break
       }
       case 'fabricRule': {
-        const pFabric = product.fabric
-        const target = rule.value
+        const productFabricId =
+          typeof product.fabric === 'object'
+            ? product.fabric?.id
+            : product.fabric
+        const targetFabricId =
+          typeof rule.value === 'object' ? rule.value?.id : rule.value
 
-        if (rule.operator === 'equals') return pFabric === target
-        if (rule.operator === 'not_equals') return pFabric !== target
+        if (rule.operator === 'equals')
+          return String(productFabricId) === String(targetFabricId)
+        if (rule.operator === 'not_equals')
+          return String(productFabricId) !== String(targetFabricId)
         break
       }
       case 'priceRule': {
