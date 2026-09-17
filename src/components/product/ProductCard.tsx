@@ -128,7 +128,11 @@ export interface ProductCardProduct {
     | number
     | { name?: string | null; slug?: string | null }
     | null
-  fabric?: string | null
+  fabric?:
+    | string
+    | number
+    | { name?: string | null; slug?: string | null }
+    | null
   gallery?: any
   quantity?: number | null
   trackQuantity?: boolean | null
@@ -170,6 +174,7 @@ export function ProductCard({
   const discountPct = getDiscountPercent(product)
   const isOOS = product.trackQuantity === true && (product.quantity ?? 0) <= 0
   const weave = weaveLabel(product.weave)
+  const fabric = weaveLabel(product.fabric)
 
   // Unique color variants for color swatches
   const availableColorVariants = (product.colorVariants || []).filter(
@@ -253,7 +258,7 @@ export function ProductCard({
               {product.name}
             </Link>
             <p className="font-body mt-0.5 text-xs text-neutral-400">
-              {[weave, product.fabric, activeColorName]
+              {[weave, fabric, activeColorName]
                 .filter(Boolean)
                 .map((s) => (s ?? '').toLowerCase())
                 .join(' · ')}
@@ -419,9 +424,9 @@ export function ProductCard({
             {product.name}
           </p>
 
-          {(weave || product.fabric || activeColorName) && (
+          {(weave || fabric || activeColorName) && (
             <p className="text-brand-700/60 mt-0.5 truncate text-xs">
-              {[weave, product.fabric, activeColorName]
+              {[weave, fabric, activeColorName]
                 .filter(Boolean)
                 .map((s) => (s ?? '').toLowerCase())
                 .join(' · ')}

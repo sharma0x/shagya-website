@@ -97,7 +97,7 @@ export default function WishlistPage() {
           basePrice: adapted.basePrice || 0,
           compareAtPrice: product.compareAtPrice ?? undefined,
           gallery: adapted.gallery as any,
-          fabric: product.fabric || '',
+          fabric: weaveLabel(product.fabric),
           weave: weaveLabel(product.weave),
         },
         1,
