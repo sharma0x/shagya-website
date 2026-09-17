@@ -51,6 +51,47 @@ export function galleryForColor(
 }
 
 /**
+ * Primary product image URL for cards and search thumbnails. Prefers the
+ * Payload-resized `card` size of the first image from the first enabled
+ * color variant, then falls back to the top-level gallery and finally any
+ * remaining variant galleries. Returns null when no image is available so
+ * callers can render their own placeholder.
+ */
+export function getProductImageUrl(product: any): string | null {
+  const variants = (product?.colorVariants || []).filter(
+    (v: any) => v?.enabled !== false,
+  )
+
+  const galleries = [
+    ...variants.map((v: any) => v?.gallery || []),
+    product?.gallery || [],
+  ]
+
+  for (const gallery of galleries) {
+    for (const item of gallery) {
+      const img = item?.image
+      const url =
+        typeof img === 'object' && img !== null
+          ? img.sizes?.card?.url || img.url || ''
+          : typeof img === 'string' && isImageUrl(img)
+            ? img
+            : ''
+      if (url) return url
+    }
+  }
+
+  return null
+}
+
+/**
+ * Guards against unpopulated upload relationships (raw numeric IDs) being
+ * mistaken for image URLs.
+ */
+function isImageUrl(value: string): boolean {
+  return value.startsWith('/') || value.startsWith('http')
+}
+
+/**
  * Stock count for a specific color variant. Falls back to the product-level
  * quantity when the variant can't be found (legacy carts, old orders).
  */

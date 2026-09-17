@@ -8,6 +8,7 @@ import Image from 'next/image'
 import { cn } from '@/lib/utils'
 import { getProductUrl } from '@/lib/product-url'
 import { weaveLabel } from '@/lib/weaves'
+import { isUnoptimizedImage } from '@/lib/image-url'
 
 interface FTSProductResult {
   id: number
@@ -16,6 +17,7 @@ interface FTSProductResult {
   slug: string
   basePrice: number | null
   compareAtPrice: number | null
+  image: string | null
   fabric: string | null
   weave: string | null
   rank: number
@@ -55,12 +57,12 @@ function ProductThumbnail({ doc }: { doc: FTSProductResult }) {
   return (
     <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-neutral-100">
       <Image
-        src={'/images/products/saree-01.jpg'}
+        src={doc.image || '/images/products/saree-01.jpg'}
         alt={doc.name}
         fill
         sizes="56px"
         className="object-cover"
-        unoptimized
+        unoptimized={isUnoptimizedImage(doc.image)}
       />
     </div>
   )

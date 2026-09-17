@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import { weaveLabel } from '@/lib/weaves'
+import { getProductImageUrl } from '@/lib/product-utils'
 
 /**
  * GET /api/search
@@ -90,6 +91,7 @@ export async function GET(request: Request): Promise<NextResponse> {
             slug: docValue.slug,
             basePrice: docValue.basePrice || null,
             compareAtPrice: docValue.compareAtPrice || null,
+            image: getProductImageUrl(docValue),
             fabric: weaveLabel(docValue.fabric) || null,
             weave: weaveLabel(docValue.weave) || null,
             rank: d.priority || limit - index,

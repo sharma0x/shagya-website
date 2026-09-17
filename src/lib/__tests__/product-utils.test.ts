@@ -4,6 +4,7 @@ import {
   resolveVariantIndex,
   galleryForColor,
   stockForColor,
+  getProductImageUrl,
 } from '@/lib/product-utils'
 
 const variants = [
@@ -118,6 +119,64 @@ describe('galleryForColor', () => {
 
   it('returns an empty array when nothing matches', () => {
     expect(galleryForColor({ id: 1 }, 'red')).toEqual([])
+  })
+})
+
+describe('getProductImageUrl', () => {
+  it('prefers the card size of the first enabled variant image', () => {
+    const product = {
+      colorVariants: [
+        {
+          enabled: true,
+          gallery: [
+            {
+              image: {
+                url: '/full.jpg',
+                sizes: { card: { url: '/full-600x750.jpg' } },
+              },
+            },
+          ],
+        },
+      ],
+    }
+    expect(getProductImageUrl(product)).toBe('/full-600x750.jpg')
+  })
+
+  it('skips disabled variants', () => {
+    const product = {
+      colorVariants: [
+        {
+          enabled: false,
+          gallery: [{ image: { url: '/disabled.jpg' } }],
+        },
+        {
+          enabled: true,
+          gallery: [{ image: { url: '/enabled.jpg' } }],
+        },
+      ],
+    }
+    expect(getProductImageUrl(product)).toBe('/enabled.jpg')
+  })
+
+  it('falls back to the top-level gallery', () => {
+    const product = {
+      gallery: [{ image: { url: '/legacy.jpg' } }],
+      colorVariants: [],
+    }
+    expect(getProductImageUrl(product)).toBe('/legacy.jpg')
+  })
+
+  it('supports plain string image references', () => {
+    const product = {
+      gallery: [{ image: '/string.jpg' }],
+    }
+    expect(getProductImageUrl(product)).toBe('/string.jpg')
+  })
+
+  it('returns null when no image is available', () => {
+    expect(getProductImageUrl({ colorVariants: [] })).toBeNull()
+    expect(getProductImageUrl({})).toBeNull()
+    expect(getProductImageUrl(null)).toBeNull()
   })
 })
 
