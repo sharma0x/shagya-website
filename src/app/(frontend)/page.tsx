@@ -535,7 +535,10 @@ async function HomeBestSellersSection({
   })
 
   if (allProductsRes.docs.length === 0) return null
-  const limit = productBlock?.limit || 4
+
+  // Desktop shows all 8 in a 4-col grid (2 rows).
+  // Mobile shows 4 initially, then reveals the rest via "Show more".
+  const desktopLimit = productBlock?.limit || 8
 
   return (
     <section className="bg-brand-50/20">
@@ -548,8 +551,9 @@ async function HomeBestSellersSection({
         />
         <ProductCarousel
           products={(allProductsRes.docs as Product[])
-            .slice(0, limit)
+            .slice(0, desktopLimit)
             .map(mapProductWithVariant)}
+          mobileInitialCount={4}
         />
       </div>
     </section>
@@ -670,6 +674,7 @@ export default async function HomePage() {
         images?:
           | {
               image: { url?: string | null } | number
+              mobileImage?: { url?: string | null } | number | null
               link?: string | null
               id?: string
             }[]
@@ -740,13 +745,21 @@ export default async function HomePage() {
     const imgs = heroBlock?.images
     if (imgs && imgs.length > 0) {
       const slides = imgs
-        .map((entry) => {
+        .map((entry): HeroSlide | null => {
           const url =
             typeof entry.image === 'object' && entry.image?.url
               ? entry.image.url
               : null
+          const mobileUrl =
+            typeof entry.mobileImage === 'object' && entry.mobileImage?.url
+              ? entry.mobileImage.url
+              : null
           return url
-            ? { imageUrl: url, link: entry.link || '/category/all' }
+            ? {
+                imageUrl: url,
+                mobileImageUrl: mobileUrl,
+                link: entry.link || '/category/all',
+              }
             : null
         })
         .filter((s): s is HeroSlide => s !== null)

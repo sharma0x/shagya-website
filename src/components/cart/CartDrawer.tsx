@@ -140,7 +140,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                       <p className="font-body mt-0.5 text-xs text-neutral-500">
                         {[
                           weaveLabel(item.product.weave),
-                          item.product.fabric,
+                          weaveLabel(item.product.fabric),
                           item.variant?.color?.name,
                         ]
                           .filter(Boolean)

@@ -309,11 +309,11 @@ export function Header() {
                       <div className="flex divide-x divide-neutral-100">
                         {/* Category column */}
                         {categories.length > 0 && (
-                          <div className="min-w-max px-8 py-6">
+                          <div className="min-w-max px-5 py-6">
                             <h4 className="font-display text-gold-500 mb-4 text-[11px] font-semibold tracking-[0.15em] uppercase">
                               By Category
                             </h4>
-                            <div className="grid grid-cols-2 gap-x-8 gap-y-0.5">
+                            <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
                               {categories.map((c: any) => (
                                 <NavigationMenuLink
                                   key={c.value}
@@ -331,11 +331,11 @@ export function Header() {
 
                         {/* Fabric column */}
                         {fabrics.length > 0 && (
-                          <div className="min-w-max px-8 py-6">
+                          <div className="min-w-max px-5 py-6">
                             <h4 className="font-display text-gold-500 mb-4 text-[11px] font-semibold tracking-[0.15em] uppercase">
                               By Fabric
                             </h4>
-                            <div className="grid grid-cols-2 gap-x-8 gap-y-0.5">
+                            <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
                               {fabrics.map((f: any) => (
                                 <NavigationMenuLink
                                   key={f.value}
@@ -355,11 +355,11 @@ export function Header() {
 
                         {/* Brands column */}
                         {brands.length > 0 && (
-                          <div className="min-w-max px-8 py-6">
+                          <div className="min-w-max px-5 py-6">
                             <h4 className="font-display text-gold-500 mb-4 text-[11px] font-semibold tracking-[0.15em] uppercase">
                               By Brand
                             </h4>
-                            <div className="grid grid-cols-2 gap-x-8 gap-y-0.5">
+                            <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
                               {brands.map((b: any) => (
                                 <NavigationMenuLink
                                   key={b.value}
@@ -379,11 +379,11 @@ export function Header() {
 
                         {/* Occasions column */}
                         {occasions.length > 0 && (
-                          <div className="min-w-max px-8 py-6">
+                          <div className="min-w-max px-5 py-6">
                             <h4 className="font-display text-gold-500 mb-4 text-[11px] font-semibold tracking-[0.15em] uppercase">
                               By Occasion
                             </h4>
-                            <div className="grid grid-cols-2 gap-x-8 gap-y-0.5">
+                            <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
                               {occasions.map((o: any) => (
                                 <NavigationMenuLink
                                   key={o.value}
@@ -402,7 +402,7 @@ export function Header() {
                         )}
 
                         {/* Featured Panel */}
-                        <div className="flex w-48 flex-col justify-between bg-neutral-50/80 px-6 py-6">
+                        <div className="flex w-44 flex-col justify-between bg-neutral-50/80 py-6 pr-6 pl-5">
                           <div>
                             <h4 className="font-display text-gold-500 mb-4 text-[11px] font-semibold tracking-[0.15em] uppercase">
                               Curated

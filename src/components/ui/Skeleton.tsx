@@ -160,7 +160,7 @@ export function HeroSkeleton({ className }: { className?: string }) {
       aria-hidden="true"
     >
       <div className="relative overflow-hidden">
-        <div className="skeleton relative aspect-[21/9] w-full md:aspect-[21/8]" />
+        <div className="skeleton relative aspect-[4/3] w-full md:aspect-[2/1]" />
         {/* Placeholder for carousel indicator dots */}
         <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 gap-2">
           <div className="h-2 w-6 rounded-full bg-white/70 shadow-xs" />

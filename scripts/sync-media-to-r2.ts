@@ -26,7 +26,7 @@ const IMAGE_SIZES = [
   { name: 'thumbnail', width: 400, height: 500 },
   { name: 'card', width: 600, height: 750 },
   { name: 'product', width: 1200, height: 1500 },
-  { name: 'hero', width: 1920, height: 800 },
+  { name: 'hero', width: 2000, height: 1000 },
 ]
 
 const SRC_DIRS = [

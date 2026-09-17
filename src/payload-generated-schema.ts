@@ -1591,12 +1591,16 @@ export const pages_blocks_hero_images = pgTable(
     image: integer('image_id').references(() => media.id, {
       onDelete: 'set null',
     }),
+    mobileImage: integer('mobile_image_id').references(() => media.id, {
+      onDelete: 'set null',
+    }),
     link: varchar('link'),
   },
   (columns) => [
     index('pages_blocks_hero_images_order_idx').on(columns._order),
     index('pages_blocks_hero_images_parent_id_idx').on(columns._parentID),
     index('pages_blocks_hero_images_image_idx').on(columns.image),
+    index('pages_blocks_hero_images_mobile_image_idx').on(columns.mobileImage),
     foreignKey({
       columns: [columns['_parentID']],
       foreignColumns: [pages_blocks_hero.id],
@@ -1971,6 +1975,9 @@ export const _pages_v_blocks_hero_images = pgTable(
     image: integer('image_id').references(() => media.id, {
       onDelete: 'set null',
     }),
+    mobileImage: integer('mobile_image_id').references(() => media.id, {
+      onDelete: 'set null',
+    }),
     link: varchar('link'),
     _uuid: varchar('_uuid'),
   },
@@ -1978,6 +1985,9 @@ export const _pages_v_blocks_hero_images = pgTable(
     index('_pages_v_blocks_hero_images_order_idx').on(columns._order),
     index('_pages_v_blocks_hero_images_parent_id_idx').on(columns._parentID),
     index('_pages_v_blocks_hero_images_image_idx').on(columns.image),
+    index('_pages_v_blocks_hero_images_mobile_image_idx').on(
+      columns.mobileImage,
+    ),
     foreignKey({
       columns: [columns['_parentID']],
       foreignColumns: [_pages_v_blocks_hero.id],
@@ -4474,6 +4484,11 @@ export const relations_pages_blocks_hero_images = relations(
       references: [media.id],
       relationName: 'image',
     }),
+    mobileImage: one(media, {
+      fields: [pages_blocks_hero_images.mobileImage],
+      references: [media.id],
+      relationName: 'mobileImage',
+    }),
   }),
 )
 export const relations_pages_blocks_hero = relations(
@@ -4679,6 +4694,11 @@ export const relations__pages_v_blocks_hero_images = relations(
       fields: [_pages_v_blocks_hero_images.image],
       references: [media.id],
       relationName: 'image',
+    }),
+    mobileImage: one(media, {
+      fields: [_pages_v_blocks_hero_images.mobileImage],
+      references: [media.id],
+      relationName: 'mobileImage',
     }),
   }),
 )
