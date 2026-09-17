@@ -1,3 +1,14 @@
+## [1.6.0](https://github.com/sharma0x/shagya-website/compare/v1.5.0...v1.6.0) (2026-09-17)
+
+### Features
+
+- **fabrics:** model fabric as dynamic fabric-types relationship ([950a352](https://github.com/sharma0x/shagya-website/commit/950a352e98182ec813ee2aba4600e832c5f19baa))
+- **category:** resolve fabric filters from fabric-types collection ([cb76fb4](https://github.com/sharma0x/shagya-website/commit/cb76fb4bc6f464df0043251b0b715f79c425aad8))
+
+### Bug Fixes
+
+- **product:** render fabric label from relationship field ([b35c6ac](https://github.com/sharma0x/shagya-website/commit/b35c6ac2137d49da3088ca34a6dad9ae8328ce75))
+
 ## [1.5.0](https://github.com/sharma0x/shagya-website/compare/v1.4.3...v1.5.0) (2026-09-17)
 
 ### Features
