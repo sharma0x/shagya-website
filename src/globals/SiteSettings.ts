@@ -86,11 +86,12 @@ export const SiteSettings: GlobalConfig = {
         description:
           'Business GST identification number (e.g., 22AAAAA0000A1Z5). Displayed on invoices and receipts.',
       },
-      validate: (val) => {
+      validate: (val: unknown) => {
         if (!val) return true
         // Indian GST format: 2-digit state code + 10-digit PAN + entity code + Z + checksum
         // Example: 22AAAAA0000A1Z5
         if (
+          typeof val === 'string' &&
           !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(val)
         ) {
           return 'Invalid GST format. Expected format: 22AAAAA0000A1Z5 (15 characters)'
