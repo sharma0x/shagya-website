@@ -162,6 +162,18 @@ export const Products: CollectionConfig = {
       required: true,
     },
     {
+      name: 'productCode',
+      type: 'text',
+      label: 'Product Code',
+      unique: true,
+      index: true,
+      required: true,
+      admin: {
+        description:
+          'Unique product identifier (e.g., SHG-00001). Used for inventory tracking and order identification.',
+      },
+    },
+    {
       name: 'slug',
       type: 'text',
       unique: true,
