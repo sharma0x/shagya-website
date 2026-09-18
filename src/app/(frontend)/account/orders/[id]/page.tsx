@@ -154,6 +154,11 @@ export default async function OrderDetailsPage({
                         <h5 className="font-display group-hover:text-brand-700 truncate text-sm font-semibold text-neutral-900 transition-colors">
                           {item.product?.name || 'Handloom Saree'}
                         </h5>
+                        {item.productCode && (
+                          <p className="font-body mt-0.5 text-[10px] text-neutral-400">
+                            Code: {item.productCode}
+                          </p>
+                        )}
                         {item.colorName && (
                           <p className="font-body mt-0.5 text-xs text-neutral-500">
                             Color: {item.colorName}

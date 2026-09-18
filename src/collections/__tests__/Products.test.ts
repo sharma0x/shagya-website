@@ -28,6 +28,17 @@ describe('Products collection', () => {
       expect(field?.required).toBe(true)
     })
 
+    it('has productCode field (text, unique, indexed, required)', () => {
+      const field = Products.fields?.find(
+        (f: any) => f.name === 'productCode',
+      ) as any
+      expect(field).toBeDefined()
+      expect(field?.type).toBe('text')
+      expect(field?.unique).toBe(true)
+      expect(field?.index).toBe(true)
+      expect(field?.required).toBe(true)
+    })
+
     it('has slug field (text, unique, indexed, readOnly)', () => {
       const field = Products.fields?.find((f: any) => f.name === 'slug') as any
       expect(field).toBeDefined()
@@ -205,8 +216,8 @@ describe('Products collection', () => {
       expect(field?.relationTo).toBe('occasions')
       expect(field?.hasMany).toBe(true)
     })
-    it('has exactly 32 fields in total', () => {
-      expect(Products.fields).toHaveLength(32)
+    it('has exactly 33 fields in total', () => {
+      expect(Products.fields).toHaveLength(33)
     })
   })
 

@@ -4,6 +4,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 // Mocks — must be declared before any imports
 // ---------------------------------------------------------------------------
 const mockFind = vi.fn()
+const mockFindGlobal = vi.fn()
 const mockGetSession = vi.fn()
 const mockGeneratePdf = vi.fn()
 
@@ -19,6 +20,7 @@ vi.mock('payload', async (importOriginal) => {
     getPayload: vi.fn(() =>
       Promise.resolve({
         find: mockFind,
+        findGlobal: mockFindGlobal,
       }),
     ),
   }
@@ -34,6 +36,9 @@ vi.mock('@/lib/auth', () => ({
 
 vi.mock('@/lib/receipt', () => ({
   generateOrderReceiptPdf: mockGeneratePdf,
+  DEFAULT_SITE_NAME: 'SHAYGA',
+  DEFAULT_SUPPORT_EMAIL: 'orders@shayga.in',
+  DEFAULT_SITE_URL: 'shayga.in',
 }))
 
 let GET_receipt: (request: Request) => Promise<Response>
@@ -51,6 +56,8 @@ function requestWith(params: Record<string, string>): Request {
 beforeEach(async () => {
   vi.clearAllMocks()
   mockGeneratePdf.mockResolvedValue(PDF_BYTES)
+  // Default: site settings returns empty object (no business info configured)
+  mockFindGlobal.mockResolvedValue({})
   const mod = await import('../receipt/route')
   GET_receipt = mod.GET
 })
@@ -126,7 +133,7 @@ describe('GET /api/orders/receipt', () => {
     expect(response.status).toBe(200)
     expect(response.headers.get('Content-Type')).toBe('application/pdf')
     expect(response.headers.get('Content-Disposition')).toContain(
-      'Shayga-ORD-00042-receipt.pdf',
+      'SHAYGA-ORD-00042-receipt.pdf',
     )
     expect(mockGeneratePdf).toHaveBeenCalledTimes(1)
   })

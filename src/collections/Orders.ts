@@ -736,6 +736,15 @@ export const Orders: CollectionConfig = {
           required: true,
         },
         {
+          name: 'productCode',
+          type: 'text',
+          admin: {
+            readOnly: true,
+            description:
+              'Product code snapshot at purchase time for unique identification',
+          },
+        },
+        {
           name: 'variant',
           type: 'relationship',
           relationTo: 'variants',

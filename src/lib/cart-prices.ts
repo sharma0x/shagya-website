@@ -5,6 +5,11 @@ export interface PriceResolvableItem {
   quantity?: number | null
 }
 
+export interface ResolvedProductInfo {
+  price: number
+  productCode: string | null
+}
+
 /** Extracts the product reference from a cart item. */
 export function itemProductId(
   item: PriceResolvableItem,
@@ -16,17 +21,17 @@ export function itemProductId(
 }
 
 /**
- * Resolves the CURRENT selling price (basePrice) for each product in a set
- * of cart items, so carts, checkout summaries and orders never use a stale
- * add-time price snapshot.
+ * Resolves the CURRENT selling price (basePrice) and productCode for each
+ * product in a set of cart items, so carts, checkout summaries and orders
+ * never use a stale add-time price snapshot.
  *
- * Returns a Map keyed by String(productId) -> current basePrice. Products
+ * Returns a Map keyed by String(productId) -> { price, productCode }. Products
  * that no longer exist or have no valid price are omitted.
  */
 export async function resolveCurrentPrices(
   payload: Payload,
   items: PriceResolvableItem[],
-): Promise<Map<string, number>> {
+): Promise<Map<string, ResolvedProductInfo>> {
   const ids = [
     ...new Set(
       items
@@ -44,11 +49,14 @@ export async function resolveCurrentPrices(
     depth: 0,
   })
 
-  const priceMap = new Map<string, number>()
+  const priceMap = new Map<string, ResolvedProductInfo>()
   for (const doc of products.docs) {
     const price = Number((doc as any).basePrice)
     if (Number.isFinite(price) && price > 0) {
-      priceMap.set(String((doc as any).id), price)
+      priceMap.set(String((doc as any).id), {
+        price,
+        productCode: (doc as any).productCode ?? null,
+      })
     }
   }
   return priceMap
@@ -57,12 +65,12 @@ export async function resolveCurrentPrices(
 /** Overrides an item's unitPrice when a current price is known. */
 export function applyCurrentPrice(
   item: PriceResolvableItem & { unitPrice?: number },
-  priceMap: Map<string, number>,
+  priceMap: Map<string, ResolvedProductInfo>,
 ): { unitPrice: number; productId: string | null } {
   const pid = itemProductId(item)
-  const current = pid != null ? priceMap.get(String(pid)) : undefined
+  const info = pid != null ? priceMap.get(String(pid)) : undefined
   return {
     productId: pid != null ? String(pid) : null,
-    unitPrice: current ?? item.unitPrice ?? 0,
+    unitPrice: info?.price ?? item.unitPrice ?? 0,
   }
 }

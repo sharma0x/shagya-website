@@ -108,6 +108,13 @@ describe('SiteSettings global', () => {
       expect(field?.type).toBe('textarea')
       expect(field?.label).toBe('Address')
     })
+
+    it('has gstNumber field (text)', () => {
+      const field = findField('gstNumber')
+      expect(field).toBeDefined()
+      expect(field?.type).toBe('text')
+      expect(field?.label).toBe('GST Number')
+    })
   })
 
   // ---- Social Media Fields ----
@@ -203,8 +210,8 @@ describe('SiteSettings global', () => {
 
   // ---- Count Assertion ----
   describe('Field count', () => {
-    it('has exactly 24 fields', () => {
-      expect(SiteSettings.fields).toHaveLength(24)
+    it('has exactly 25 fields', () => {
+      expect(SiteSettings.fields).toHaveLength(25)
     })
   })
 })
