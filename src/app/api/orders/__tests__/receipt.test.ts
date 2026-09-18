@@ -36,6 +36,9 @@ vi.mock('@/lib/auth', () => ({
 
 vi.mock('@/lib/receipt', () => ({
   generateOrderReceiptPdf: mockGeneratePdf,
+  DEFAULT_SITE_NAME: 'SHAYGA',
+  DEFAULT_SUPPORT_EMAIL: 'orders@shayga.in',
+  DEFAULT_SITE_URL: 'shayga.in',
 }))
 
 let GET_receipt: (request: Request) => Promise<Response>
@@ -130,7 +133,7 @@ describe('GET /api/orders/receipt', () => {
     expect(response.status).toBe(200)
     expect(response.headers.get('Content-Type')).toBe('application/pdf')
     expect(response.headers.get('Content-Disposition')).toContain(
-      'Shayga-ORD-00042-receipt.pdf',
+      'SHAYGA-ORD-00042-receipt.pdf',
     )
     expect(mockGeneratePdf).toHaveBeenCalledTimes(1)
   })
