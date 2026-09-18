@@ -26,14 +26,28 @@ export interface ReceiptAddress {
 export interface ReceiptItem {
   id?: string | null
   product?:
-    | { name?: string | null; slug?: string | null }
+    | {
+        name?: string | null
+        slug?: string | null
+        productCode?: string | null
+      }
     | string
     | number
     | null
+  productCode?: string | null
   colorName?: string | null
   quantity?: number | null
   unitPrice?: number | null
   totalPrice?: number | null
+}
+
+export interface ReceiptBusinessInfo {
+  siteName?: string | null
+  contactEmail?: string | null
+  contactPhone?: string | null
+  address?: string | null
+  gstNumber?: string | null
+  logoUrl?: string | null
 }
 
 export interface ReceiptOrder {
@@ -52,12 +66,18 @@ export interface ReceiptOrder {
   shippingAddress?: ReceiptAddress | null
   billingAddress?: ReceiptAddress | null
   items?: ReceiptItem[] | null
+  businessInfo?: ReceiptBusinessInfo | null
 }
 
-const TITLE = 'SHAYGA'
+// Default business info values (exported for use in receipt route)
+export const DEFAULT_SITE_NAME = 'SHAYGA'
+export const DEFAULT_SUPPORT_EMAIL = 'orders@shayga.in'
+export const DEFAULT_SITE_URL = 'shayga.in'
+
+const TITLE = DEFAULT_SITE_NAME
 const SUBTITLE = 'ORDER RECEIPT'
-const SUPPORT_EMAIL = 'orders@shayga.in'
-const SITE_URL = 'shayga.in'
+const SUPPORT_EMAIL = DEFAULT_SUPPORT_EMAIL
+const SITE_URL = DEFAULT_SITE_URL
 
 let fontsRegistered = false
 
@@ -127,28 +147,47 @@ function paymentMethodLabel(paymentId?: string | null): string {
   return 'Paid online (Razorpay)'
 }
 
-function fullWidthBand(): unknown {
+function fullWidthBand(logoUrl?: string | null): unknown {
+  const headerContent: unknown[] = []
+
+  // If logo exists, show logo; otherwise show text
+  if (logoUrl) {
+    headerContent.push({
+      image: logoUrl,
+      width: 80,
+      height: 40,
+      fit: [80, 40],
+    })
+    headerContent.push({
+      text: SUBTITLE,
+      color: HAIRLINE,
+      fontSize: 8,
+      characterSpacing: 3,
+      margin: [0, 4, 0, 0],
+    })
+  } else {
+    headerContent.push({
+      text: TITLE,
+      color: '#FFFFFF',
+      fontSize: 24,
+      bold: true,
+      characterSpacing: 1,
+    })
+    headerContent.push({
+      text: SUBTITLE,
+      color: HAIRLINE,
+      fontSize: 8,
+      characterSpacing: 3,
+    })
+  }
+
   return {
     table: {
       widths: ['*'],
       body: [
         [
           {
-            stack: [
-              {
-                text: TITLE,
-                color: '#FFFFFF',
-                fontSize: 24,
-                bold: true,
-                characterSpacing: 1,
-              },
-              {
-                text: SUBTITLE,
-                color: HAIRLINE,
-                fontSize: 8,
-                characterSpacing: 3,
-              },
-            ],
+            stack: headerContent,
             fillColor: WINE,
             margin: [16, 14, 16, 12],
           },
@@ -226,6 +265,20 @@ function itemsTableBody(order: ReceiptOrder): unknown[][] {
     const stack: unknown[] = [
       { text: itemName(item), fontSize: 9.5, bold: true, color: INK },
     ]
+    // Product code as small label
+    const code =
+      item.productCode ??
+      (item.product && typeof item.product === 'object'
+        ? item.product.productCode
+        : null)
+    if (code) {
+      stack.push({
+        text: `Code: ${code}`,
+        fontSize: 7.5,
+        color: FAINT,
+        margin: [0, 1, 0, 0],
+      })
+    }
     if (item.colorName) {
       stack.push({
         text: `Color: ${item.colorName}`,
@@ -359,6 +412,46 @@ function totalsTable(order: ReceiptOrder): unknown {
 }
 
 /**
+ * Builds business info section for the receipt footer.
+ */
+function businessInfoBlock(
+  businessInfo: ReceiptBusinessInfo | null | undefined,
+): unknown {
+  if (!businessInfo) return null
+
+  const lines: string[] = []
+  if (businessInfo.siteName) lines.push(businessInfo.siteName)
+  if (businessInfo.address) lines.push(businessInfo.address.replace(/\n/g, ' '))
+  if (businessInfo.contactPhone)
+    lines.push(`Phone: ${businessInfo.contactPhone}`)
+  if (businessInfo.contactEmail)
+    lines.push(`Email: ${businessInfo.contactEmail}`)
+  if (businessInfo.gstNumber) lines.push(`GSTIN: ${businessInfo.gstNumber}`)
+
+  if (lines.length === 0) return null
+
+  return {
+    stack: [
+      {
+        text: 'BUSINESS DETAILS',
+        fontSize: 7,
+        bold: true,
+        color: FAINT,
+        characterSpacing: 1,
+        margin: [0, 0, 0, 4],
+      },
+      ...lines.map((line) => ({
+        text: line,
+        fontSize: 7,
+        color: MUTED,
+        lineHeight: 1.3,
+      })),
+    ],
+    margin: [0, 0, 0, 8],
+  }
+}
+
+/**
  * Builds the pdfmake document definition for an order receipt.
  * Pure — no side effects — so it can be unit tested in isolation.
  */
@@ -381,12 +474,15 @@ export function buildReceiptDefinition(
       ? order.paymentId
       : paymentLabel
 
+  const siteName = order.businessInfo?.siteName || TITLE
+  const logoUrl = order.businessInfo?.logoUrl
+
   return {
     pageSize: 'A4',
     pageMargins: [40, 40, 40, 60],
     info: {
-      title: `${TITLE} ${order.orderNumber ?? ''} ${SUBTITLE}`.trim(),
-      author: TITLE,
+      title: `${siteName} ${order.orderNumber ?? ''} ${SUBTITLE}`.trim(),
+      author: siteName,
     },
     defaultStyle: {
       font: 'Roboto',
@@ -415,7 +511,7 @@ export function buildReceiptDefinition(
       },
     },
     content: [
-      fullWidthBand(),
+      fullWidthBand(logoUrl),
 
       {
         columns: [
@@ -517,12 +613,23 @@ export function buildReceiptDefinition(
         margin: [0, 0, 0, 8],
       },
 
+      // Business info section
+      businessInfoBlock(order.businessInfo),
+
       {
         text: [
           { text: 'Crafted with heritage. ', fontSize: 8, color: FAINT },
           { text: 'Questions? Write to ', fontSize: 8, color: FAINT },
-          { text: SUPPORT_EMAIL, fontSize: 8, color: WINE_ACCENT },
-          { text: ` • ${SITE_URL}`, fontSize: 8, color: FAINT },
+          {
+            text: order.businessInfo?.contactEmail || SUPPORT_EMAIL,
+            fontSize: 8,
+            color: WINE_ACCENT,
+          },
+          {
+            text: ` • ${order.businessInfo?.siteName || SITE_URL}`,
+            fontSize: 8,
+            color: FAINT,
+          },
         ],
       },
     ],
