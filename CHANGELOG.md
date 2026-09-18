@@ -1,3 +1,22 @@
+## [1.11.0](https://github.com/sharma0x/shagya-website/compare/v1.10.0...v1.11.0) (2026-09-18)
+
+### Features
+
+- **settings:** add GST number format validation ([db2defb](https://github.com/sharma0x/shagya-website/commit/db2defb08ccb84dac22e98804562d0fa996c8cfc))
+- **products:** add product code field and snapshot in orders ([6f80325](https://github.com/sharma0x/shagya-website/commit/6f803253ec1280085a345ee23d8a0e37a66b069b))
+- **orders:** display product code on order details page ([9e6e529](https://github.com/sharma0x/shagya-website/commit/9e6e52949467ffac3e8cda973f554e0c946bcb36))
+- **orders:** integrate product codes in checkout and emails ([cff46ca](https://github.com/sharma0x/shagya-website/commit/cff46ca4057b898f6b58a1df4ada35fa85d11d30))
+- **checkout:** make order summary items editable ([c66fc08](https://github.com/sharma0x/shagya-website/commit/c66fc083a3e36a2586d2981eb28ab08eaae3dac9))
+- **product:** show go-to-cart when item is already in bag ([b3ea457](https://github.com/sharma0x/shagya-website/commit/b3ea457019d1f1d26285413457bccc27f849fbc3))
+
+### Bug Fixes
+
+- **settings:** add type annotation to GST validation ([2348839](https://github.com/sharma0x/shagya-website/commit/2348839be134d7988b34cfee449d8ddf2dcdf77f))
+
+### Performance Improvements
+
+- **migration:** add index on orders_items.product_code ([f4bbd81](https://github.com/sharma0x/shagya-website/commit/f4bbd81e1f5a941c5c3cefebc61f2bd411cb5665))
+
 ## [1.10.0](https://github.com/sharma0x/shagya-website/compare/v1.9.0...v1.10.0) (2026-09-17)
 
 ### Features
