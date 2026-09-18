@@ -12,7 +12,8 @@ import {
 } from '@/components/address/AddressForm'
 import { GuestCheckout } from '@/components/checkout/GuestCheckout'
 import { OffersSection } from '@/components/coupons/OffersSection'
-import { galleryForColor } from '@/lib/product-utils'
+import { galleryForColor, stockForColor } from '@/lib/product-utils'
+import { cartQtyCap, cartMergeKey } from '@/lib/cart-merge'
 import { weaveLabel } from '@/lib/weaves'
 import { deduplicateAddresses } from '@/lib/address-utils'
 import {
@@ -21,6 +22,9 @@ import {
   CreditCard,
   Loader2,
   MapPin,
+  Minus,
+  Plus,
+  Trash2,
   Truck,
   Ticket,
   ShoppingBag,
@@ -98,8 +102,11 @@ export default function CheckoutPage() {
   // Guest cart derived from reactive Zustand hook — never stale
   const guestCart: Cart = {
     items: zCart.items.map((i) => ({
-      id: `${i.product.id}-${i.variant?.color?.slug || 'default'}`,
+      id: cartMergeKey(i),
       product: {
+        // Spread the store product so `trackQuantity`/`quantity`/colorVariants
+        // flow through — `stockForColor` and `cartQtyCap` rely on them.
+        ...i.product,
         id: String(i.product.id),
         name: i.product.name,
         slug: i.product.slug,
@@ -122,6 +129,8 @@ export default function CheckoutPage() {
   const [selectedAddressId, setSelectedAddressId] = useState<string>('')
   const [dataReady, setDataReady] = useState(false)
   const [actionLoading, setActionLoading] = useState(false)
+  const [cartSaving, setCartSaving] = useState(false)
+  const [cartNotice, setCartNotice] = useState('')
   const [error, setError] = useState('')
   const [orderNotes, setOrderNotes] = useState('')
 
@@ -362,6 +371,183 @@ export default function CheckoutPage() {
     }
     setAppliedCoupon(null)
     setCouponError('')
+  }
+
+  // ── Order summary line editing (quantity + remove) ──
+  const lineKey = (item: {
+    product: { id: number | string }
+    variant?: { color?: { slug?: string } | null } | null
+  }) => cartMergeKey(item)
+
+  const recomputeSubtotal = (items: CartItem[]) =>
+    items.reduce((acc, i) => acc + i.unitPrice * i.quantity, 0)
+
+  // Sequencing: only the LATEST persist request may write state back. Without
+  // this, two rapid edits can race and the last-resolved response (not the
+  // last-sent edit) wins.
+  const cartSyncSeq = useRef(0)
+  // Pre-edit snapshot used to roll back if both persist and refetch fail.
+  const cartSnapshotRef = useRef<Cart | null>(null)
+  const noticeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const showCartNotice = (msg: string) => {
+    setCartNotice(msg)
+    if (noticeTimerRef.current) clearTimeout(noticeTimerRef.current)
+    noticeTimerRef.current = setTimeout(() => setCartNotice(''), 4000)
+  }
+
+  // Re-check the applied coupon against the new subtotal after quantity
+  // edits, so the displayed discount stays honest (e.g. min-cart-value).
+  const revalidateAppliedCoupon = async (
+    subtotalValue: number,
+    items: CartItem[],
+  ) => {
+    if (!appliedCoupon?.code) return
+    try {
+      const productIds = items.map((i) => String(i.product.id))
+      const res = await fetch('/api/coupons/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: appliedCoupon.code,
+          subtotal: subtotalValue,
+          productIds,
+        }),
+      })
+      const data = await res.json()
+      if (!data.valid) {
+        setAppliedCoupon(null)
+        showCartNotice(data.error || 'Coupon removed')
+      }
+    } catch {
+      // Non-blocking — leave the coupon as-is if validation itself fails.
+    }
+  }
+
+  // Persist the full updated items back to the server cart for logged-in
+  // users. The server re-prices and clamps to stock, so its response is the
+  // authoritative view; on failure we re-fetch (falling back to the pre-edit
+  // snapshot) so totals stay consistent.
+  const persistCartItems = async (items: CartItem[]) => {
+    const seq = ++cartSyncSeq.current
+    setCartSaving(true)
+    try {
+      const res = await fetch('/api/cart', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items,
+          couponId: appliedCoupon?.id || null,
+        }),
+      })
+      if (res.ok) {
+        if (seq !== cartSyncSeq.current) return
+        const serverCart = (await res.json()) as Cart
+        setCart(serverCart)
+
+        // Surface any server-side stock clamp (quantity snapped down).
+        const clamped: { name: string; qty: number }[] = []
+        for (const opt of items) {
+          const serverItem = serverCart.items.find(
+            (s) => lineKey(s) === lineKey(opt),
+          )
+          if (serverItem && serverItem.quantity !== opt.quantity) {
+            clamped.push({ name: opt.product.name, qty: serverItem.quantity })
+          }
+        }
+        if (clamped.length > 0) {
+          showCartNotice(
+            clamped
+              .map((c) => `${c.name} — only ${c.qty} available`)
+              .join(' · '),
+          )
+        }
+
+        void revalidateAppliedCoupon(
+          serverCart.subtotal ?? recomputeSubtotal(serverCart.items),
+          serverCart.items,
+        )
+      } else {
+        throw new Error('sync failed')
+      }
+    } catch {
+      if (seq !== cartSyncSeq.current) return
+      try {
+        const res = await fetch('/api/cart')
+        if (res.ok && seq === cartSyncSeq.current) {
+          setCart(await res.json())
+          return
+        }
+        throw new Error('refetch failed')
+      } catch {
+        if (seq === cartSyncSeq.current && cartSnapshotRef.current) {
+          setCart(cartSnapshotRef.current)
+          showCartNotice('Could not save cart changes. Please try again.')
+        }
+      }
+    } finally {
+      if (seq === cartSyncSeq.current) setCartSaving(false)
+    }
+  }
+
+  // Guests live in the Zustand store (the derived `guestCart` recomputes
+  // reactively). The derived line only carries a stringified product id, so
+  // resolve the real store line before calling the store mutators.
+  const guestStoreItem = (item: CartItem) =>
+    zCart.items.find((i) => lineKey(i) === lineKey(item))
+
+  const handleUpdateQuantity = (item: CartItem, quantity: number) => {
+    const capped = Math.max(1, Math.min(cartQtyCap(item), quantity))
+    if (capped === item.quantity || cartSaving) return
+
+    if (!isLoggedIn) {
+      const storeItem = guestStoreItem(item)
+      if (storeItem) {
+        zCart.updateQuantity(
+          storeItem.product.id,
+          capped,
+          storeItem.variant?.color?.slug,
+        )
+      }
+      return
+    }
+
+    if (!cart) return
+    cartSnapshotRef.current = cart
+    const nextItems = cart.items.map((i) =>
+      lineKey(i) === lineKey(item) ? { ...i, quantity: capped } : i,
+    )
+    setCart({
+      ...cart,
+      items: nextItems,
+      subtotal: recomputeSubtotal(nextItems),
+    })
+    void persistCartItems(nextItems)
+  }
+
+  const handleRemoveItem = (item: CartItem) => {
+    if (cartSaving) return
+
+    if (!isLoggedIn) {
+      const remaining = zCart.items.length - 1
+      const storeItem = guestStoreItem(item)
+      if (storeItem) {
+        zCart.removeItem(storeItem.product.id, storeItem.variant?.color?.slug)
+      }
+      if (remaining <= 0) router.push('/')
+      return
+    }
+
+    if (!cart) return
+    cartSnapshotRef.current = cart
+    const nextItems = cart.items.filter((i) => lineKey(i) !== lineKey(item))
+    setCart({
+      ...cart,
+      items: nextItems,
+      subtotal: recomputeSubtotal(nextItems),
+    })
+    void persistCartItems(nextItems)
+    if (nextItems.length === 0) router.push('/')
   }
 
   const handleAddNewAddress = async (data: AddressFormData) => {
@@ -1164,6 +1350,12 @@ export default function CheckoutPage() {
                 Order Summary
               </h3>
 
+              {cartNotice && (
+                <p className="font-body mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] font-medium text-amber-800">
+                  {cartNotice}
+                </p>
+              )}
+
               {/* Items List */}
               <div className="mb-6 max-h-[320px] space-y-4 overflow-y-auto pt-2 pr-2">
                 {showSkeleton
@@ -1192,6 +1384,11 @@ export default function CheckoutPage() {
                           : typeof firstImage === 'string'
                             ? firstImage
                             : undefined
+                      const qtyCap = cartQtyCap(item)
+                      const stockLeft = stockForColor(
+                        item.product,
+                        item.variant?.color?.slug,
+                      )
 
                       return (
                         <div key={item.id} className="flex gap-4">
@@ -1237,14 +1434,81 @@ export default function CheckoutPage() {
                               </p>
                             )}
 
-                            <div className="mt-1.5 flex items-center justify-between">
-                              <p className="font-body text-xs font-semibold text-neutral-900">
-                                ₹{item.unitPrice.toLocaleString('en-IN')}
-                              </p>
-                              <p className="font-body text-[10px] font-medium tracking-wider text-neutral-400 uppercase">
-                                Qty: {item.quantity}
-                              </p>
+                            <div className="mt-2 flex items-center justify-between gap-2">
+                              {/* Quantity stepper */}
+                              <div className="flex items-center rounded-lg border border-neutral-200">
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleUpdateQuantity(
+                                      item,
+                                      item.quantity - 1,
+                                    )
+                                  }
+                                  disabled={
+                                    item.quantity <= 1 ||
+                                    cartSaving ||
+                                    actionLoading
+                                  }
+                                  className="p-1.5 text-neutral-500 hover:text-neutral-900 disabled:opacity-30"
+                                  aria-label="Decrease quantity"
+                                >
+                                  <Minus className="h-3 w-3" />
+                                </button>
+                                <span
+                                  aria-live="polite"
+                                  className="font-display w-7 text-center text-xs font-semibold text-neutral-800"
+                                >
+                                  {item.quantity}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleUpdateQuantity(
+                                      item,
+                                      item.quantity + 1,
+                                    )
+                                  }
+                                  disabled={
+                                    item.quantity >= qtyCap ||
+                                    cartSaving ||
+                                    actionLoading
+                                  }
+                                  className="p-1.5 text-neutral-500 hover:text-neutral-900 disabled:opacity-30"
+                                  aria-label="Increase quantity"
+                                >
+                                  <Plus className="h-3 w-3" />
+                                </button>
+                              </div>
+
+                              <div className="flex items-center gap-2">
+                                <p className="font-body text-xs font-semibold text-neutral-900">
+                                  ₹
+                                  {(
+                                    item.unitPrice * item.quantity
+                                  ).toLocaleString('en-IN')}
+                                </p>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveItem(item)}
+                                  disabled={cartSaving || actionLoading}
+                                  className="p-1.5 text-neutral-400 transition-colors hover:text-red-600 disabled:opacity-30"
+                                  aria-label="Remove item"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </button>
+                              </div>
                             </div>
+
+                            {stockLeft !== null &&
+                              stockLeft > 0 &&
+                              stockLeft <= 5 && (
+                                <p className="font-body mt-1.5 text-[10px] font-medium text-red-600">
+                                  {stockLeft === 1
+                                    ? 'Last piece left in this color'
+                                    : `Only ${stockLeft} left in this color`}
+                                </p>
+                              )}
                           </div>
                         </div>
                       )
@@ -1261,7 +1525,11 @@ export default function CheckoutPage() {
                         {appliedCoupon.code} applied
                       </span>
                       <span className="font-body text-success text-[10px]">
-                        -₹{appliedCoupon.discount?.toLocaleString('en-IN') || 0}
+                        {discount > 0
+                          ? `-₹${discount.toLocaleString('en-IN')}`
+                          : appliedCoupon?.type === 'free_shipping'
+                            ? 'FREE shipping'
+                            : ''}
                       </span>
                     </div>
                     <button
