@@ -19,23 +19,26 @@ describe('cart-prices', () => {
   })
 
   describe('resolveCurrentPrices', () => {
-    it('fetches products and maps id -> current basePrice', async () => {
+    it('fetches products and maps id -> { price, productCode }', async () => {
       const payload = {
         find: vi.fn().mockResolvedValue({
           docs: [
-            { id: 1, basePrice: 1299 },
-            { id: 2, basePrice: 2499 },
+            { id: 1, basePrice: 1299, productCode: 'SHG-00001' },
+            { id: 2, basePrice: 2499, productCode: null },
           ],
         }),
       } as any
 
-      const map = await resolveCurrentPrices(payload, [
+      const priceInfoMap = await resolveCurrentPrices(payload, [
         { product: 1, quantity: 2 },
         { product: 2, quantity: 1 },
       ])
 
-      expect(map.get('1')).toBe(1299)
-      expect(map.get('2')).toBe(2499)
+      expect(priceInfoMap.get('1')).toEqual({
+        price: 1299,
+        productCode: 'SHG-00001',
+      })
+      expect(priceInfoMap.get('2')).toEqual({ price: 2499, productCode: null })
       expect(payload.find).toHaveBeenCalledWith(
         expect.objectContaining({
           collection: 'products',
@@ -48,37 +51,39 @@ describe('cart-prices', () => {
     it('ignores products without a valid price', async () => {
       const payload = {
         find: vi.fn().mockResolvedValue({
-          docs: [{ id: 1, basePrice: null }],
+          docs: [{ id: 1, basePrice: null, productCode: 'SHG-00001' }],
         }),
       } as any
 
-      const map = await resolveCurrentPrices(payload, [{ product: 1 }])
-      expect(map.has('1')).toBe(false)
+      const priceInfoMap = await resolveCurrentPrices(payload, [{ product: 1 }])
+      expect(priceInfoMap.has('1')).toBe(false)
     })
 
     it('returns an empty map when there are no items', async () => {
       const payload = { find: vi.fn() } as any
-      const map = await resolveCurrentPrices(payload, [])
-      expect(map.size).toBe(0)
+      const priceInfoMap = await resolveCurrentPrices(payload, [])
+      expect(priceInfoMap.size).toBe(0)
       expect(payload.find).not.toHaveBeenCalled()
     })
   })
 
   describe('applyCurrentPrice', () => {
     it('overrides the unitPrice with the current price when known', () => {
-      const map = new Map([['1', 1599]])
+      const priceInfoMap = new Map([
+        ['1', { price: 1599, productCode: 'SHG-00001' }],
+      ])
       const { unitPrice } = applyCurrentPrice(
         { product: 1, unitPrice: 999 },
-        map,
+        priceInfoMap,
       )
       expect(unitPrice).toBe(1599)
     })
 
     it('keeps the stored unitPrice when the product price is unknown', () => {
-      const map = new Map()
+      const priceInfoMap = new Map()
       const { unitPrice } = applyCurrentPrice(
         { product: 1, unitPrice: 999 },
-        map,
+        priceInfoMap,
       )
       expect(unitPrice).toBe(999)
     })
