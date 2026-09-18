@@ -2,9 +2,28 @@ import { NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import { auth } from '@/lib/auth'
-import { generateOrderReceiptPdf, type ReceiptOrder } from '@/lib/receipt'
+import {
+  generateOrderReceiptPdf,
+  type ReceiptOrder,
+  type ReceiptBusinessInfo,
+  DEFAULT_SITE_NAME,
+} from '@/lib/receipt'
 
 export const dynamic = 'force-dynamic'
+
+interface SiteSettingsResponse {
+  siteName?: string
+  contactEmail?: string
+  contactPhone?: string
+  address?: string
+  gstNumber?: string
+  logo?:
+    | {
+        url?: string
+        [key: string]: any
+      }
+    | string
+}
 
 function normalizeEmail(email: string): string {
   return email.trim().toLowerCase()
@@ -69,7 +88,7 @@ export async function GET(request: Request) {
     const result = await payload.find({
       collection: 'orders',
       where: { orderNumber: { equals: orderNumber } },
-      depth: 1,
+      depth: 2,
       limit: 1,
     })
 
@@ -86,18 +105,43 @@ export async function GET(request: Request) {
       )
     }
 
-    const pdf = await generateOrderReceiptPdf(order)
+    // Fetch business info from site settings
+    const siteSettings = (await payload.findGlobal({
+      slug: 'site-settings',
+    })) as SiteSettingsResponse
+
+    const businessInfo: ReceiptBusinessInfo = {
+      siteName: siteSettings.siteName || null,
+      contactEmail: siteSettings.contactEmail || null,
+      contactPhone: siteSettings.contactPhone || null,
+      address: siteSettings.address || null,
+      gstNumber: siteSettings.gstNumber || null,
+      logoUrl:
+        siteSettings.logo && typeof siteSettings.logo === 'object'
+          ? (siteSettings.logo.url ?? null)
+          : null,
+    }
+
+    // Attach business info to the order for receipt generation
+    const orderWithBusinessInfo: ReceiptOrder = {
+      ...order,
+      businessInfo,
+    }
+
+    const pdf = await generateOrderReceiptPdf(orderWithBusinessInfo)
 
     const body = pdf.buffer.slice(
       pdf.byteOffset,
       pdf.byteOffset + pdf.byteLength,
     ) as ArrayBuffer
 
+    const siteName = businessInfo.siteName || DEFAULT_SITE_NAME
+
     return new NextResponse(body, {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="Shayga-${orderNumber}-receipt.pdf"`,
+        'Content-Disposition': `attachment; filename="${siteName}-${orderNumber}-receipt.pdf"`,
         'Content-Length': String(pdf.byteLength),
       },
     })
