@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useCart } from '@/lib/store/cart'
+import { useUI } from '@/lib/store/ui'
 import { ShoppingCart, Heart, AlertTriangle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useSession } from '@/lib/auth-client'
@@ -60,7 +61,8 @@ export function ProductActions({
   initialVariantIndex = 0,
   onVariantChange,
 }: ProductActionsProps) {
-  const { addItem } = useCart()
+  const { addItem, items } = useCart()
+  const { openCart } = useUI()
   const router = useRouter()
   const { data: session } = useSession()
 
@@ -70,7 +72,6 @@ export function ProductActions({
   */
   const [selectedVariantIndex, setSelectedVariantIndex] =
     useState(initialVariantIndex)
-  const [addedState, setAddedState] = useState<'idle' | 'added'>('idle')
 
   const variants = product.colorVariants || []
   const selectedVariant = variants[selectedVariantIndex] ?? null
@@ -82,6 +83,15 @@ export function ProductActions({
       : product.compareAtPrice
   const isVariantOOS = selectedVariant ? selectedVariant.stock <= 0 : false
   const effectiveOOS = isOutOfStock || isVariantOOS
+
+  // The currently selected product + color is already in the bag — surface
+  // "Go to Cart" instead of re-adding (which would silently bump the count).
+  const selectedColorSlug = selectedVariant?.color?.slug
+  const isInCart = items.some(
+    (i) =>
+      String(i.product.id) === String(product.id) &&
+      (selectedColorSlug ? i.variant?.color?.slug === selectedColorSlug : true),
+  )
 
   const productIds = useWishlistStore((state) => state.productIds)
   const isWishlistInitialized = useWishlistStore((state) => state.isInitialized)
@@ -117,6 +127,12 @@ export function ProductActions({
   }, [session?.user, router, toggleWishlist, effectiveOOS, inWishlist, product])
 
   const handleAddToCart = () => {
+    // Already in the bag (selected product + color) → go to cart, never
+    // silently increment the quantity.
+    if (isInCart) {
+      openCart()
+      return
+    }
     if (!selectedVariant) return
     addItem(
       { ...product, basePrice: displayPrice, gallery: selectedVariant.gallery },
@@ -128,22 +144,27 @@ export function ProductActions({
         },
       },
     )
-    setAddedState('added')
-    setTimeout(() => setAddedState('idle'), 2200)
   }
 
   const handleBuyNow = () => {
     if (!selectedVariant) return
-    addItem(
-      { ...product, basePrice: displayPrice, gallery: selectedVariant.gallery },
-      1,
-      {
-        color: {
-          ...selectedVariant.color,
-          stock: selectedVariant.stock,
+    // Already in the bag → don't silently bump the quantity, just check out.
+    if (!isInCart) {
+      addItem(
+        {
+          ...product,
+          basePrice: displayPrice,
+          gallery: selectedVariant.gallery,
         },
-      },
-    )
+        1,
+        {
+          color: {
+            ...selectedVariant.color,
+            stock: selectedVariant.stock,
+          },
+        },
+      )
+    }
     router.push('/checkout')
   }
 
@@ -251,6 +272,15 @@ export function ProductActions({
       {/* CTAs — Out of Stock or Cart / Buy Now / Wishlist */}
       {effectiveOOS ? (
         <div className="space-y-3">
+          {isInCart && (
+            <button
+              onClick={openCart}
+              className="bg-brand-600 hover:bg-brand-700 font-display flex h-12 w-full items-center justify-center gap-2 rounded-xl text-sm font-semibold text-white shadow-xs transition-all active:scale-[0.97]"
+            >
+              <ShoppingCart className="h-4 w-4 shrink-0" />
+              Go to Cart
+            </button>
+          )}
           <div className="border-brand-200 bg-brand-50 flex items-center gap-2 rounded-lg border px-3 py-2">
             <AlertTriangle className="text-brand-600 h-4 w-4 shrink-0" />
             <span className="font-body text-brand-800 text-xs font-bold">
@@ -284,14 +314,10 @@ export function ProductActions({
         <div className="flex gap-2.5">
           <button
             onClick={handleAddToCart}
-            className={`font-display flex h-13 flex-1 items-center justify-center gap-2 rounded-xl text-sm font-semibold shadow-xs transition-all active:scale-[0.97] ${
-              addedState === 'added'
-                ? 'bg-success text-white'
-                : 'border border-neutral-300 bg-white text-neutral-800 hover:border-neutral-400 hover:bg-neutral-50'
-            }`}
+            className="font-display flex h-13 flex-1 items-center justify-center gap-2 rounded-xl border border-neutral-300 bg-white text-sm font-semibold text-neutral-800 shadow-xs transition-all hover:border-neutral-400 hover:bg-neutral-50 active:scale-[0.97]"
           >
             <ShoppingCart className="h-4 w-4 shrink-0" />
-            {addedState === 'added' ? 'Added!' : 'Add to Cart'}
+            {isInCart ? 'Go to Cart' : 'Add to Cart'}
           </button>
 
           <button
