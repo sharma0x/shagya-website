@@ -13,6 +13,7 @@ export interface OrderAddress {
 
 export interface OrderItem {
   product: unknown
+  productCode?: string | null
   variant?: unknown
   quantity: number
   unitPrice: number
@@ -47,12 +48,17 @@ export function buildItemsTable(items: OrderItem[]): string {
       const product = item.product as Record<string, unknown> | null
       const variant = item.variant as Record<string, unknown> | null
       const name = (product?.name as string) || 'Product'
+      const productCode =
+        item.productCode || (product?.productCode as string | undefined)
       const variantLabel = variant?.name
         ? `<br><span style="font-size:12px;color:#9B8E93;">${variant.name as string}</span>`
         : ''
+      const codeLabel = productCode
+        ? `<br><span style="font-size:11px;color:#9B8E93;">Code: ${productCode}</span>`
+        : ''
 
       return `<tr>
-        <td style="padding:10px 10px 10px 0;border-bottom:1px solid #F0E8EC;font-size:14px;color:#2A1E24;">${name}${variantLabel}</td>
+        <td style="padding:10px 10px 10px 0;border-bottom:1px solid #F0E8EC;font-size:14px;color:#2A1E24;">${name}${codeLabel}${variantLabel}</td>
         <td style="padding:10px;border-bottom:1px solid #F0E8EC;font-size:14px;color:#6B5E63;text-align:center;">${item.quantity}</td>
         <td style="padding:10px 0 10px 10px;border-bottom:1px solid #F0E8EC;font-size:14px;color:#2A1E24;text-align:right;">&#8377;${formatINR(item.totalPrice)}</td>
       </tr>`

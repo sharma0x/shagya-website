@@ -149,8 +149,12 @@ export async function POST(request: Request) {
           const { colorId, colorName } = await resolveOrderItemColor(
             item.variant,
           )
+          // productCode snapshot from the price map (which fetched the product doc)
+          const productCode =
+            priceMap.get(String(item.product))?.productCode ?? null
           return {
             product: Number(item.product),
+            productCode,
             color: colorId,
             colorName,
             quantity: item.quantity || 1,
@@ -193,8 +197,12 @@ export async function POST(request: Request) {
           const { colorId, colorName } = await resolveOrderItemColor(
             item.variant,
           )
+          // productCode snapshot from the price map (which fetched the product doc)
+          const productCode =
+            priceMap.get(String(productId))?.productCode ?? null
           return {
             product: productId,
+            productCode,
             color: colorId,
             colorName,
             quantity: item.quantity,
