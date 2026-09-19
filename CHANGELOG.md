@@ -1,3 +1,9 @@
+## [1.13.0](https://github.com/sharma0x/shagya-website/compare/v1.12.0...v1.13.0) (2026-09-19)
+
+### Features
+
+- **auth:** add phone number login to login page ([ad652cd](https://github.com/sharma0x/shagya-website/commit/ad652cd0a22723178f639c23c50f8ec29a5e9d8e))
+
 ## [1.12.0](https://github.com/sharma0x/shagya-website/compare/v1.11.1...v1.12.0) (2026-09-19)
 
 ### Features
