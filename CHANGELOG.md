@@ -1,3 +1,10 @@
+## [1.17.1](https://github.com/sharma0x/shagya-website/compare/v1.17.0...v1.17.1) (2026-09-19)
+
+### Bug Fixes
+
+- **api:** return verified phone number from phone_identities ([8a60036](https://github.com/sharma0x/shagya-website/commit/8a60036be4037b00dfd9a312a71e33dc202d8531))
+- **api:** return verified phone number from phone_identities ([a9a246f](https://github.com/sharma0x/shagya-website/commit/a9a246f30cd6476e4f0122edae8bea3a676af195))
+
 ## [1.17.0](https://github.com/sharma0x/shagya-website/compare/v1.16.1...v1.17.0) (2026-09-19)
 
 ### Features
