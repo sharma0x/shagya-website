@@ -83,11 +83,20 @@ export default function AccountDashboardPage() {
 
         if (profileRes.ok) {
           const pData = await profileRes.json()
-          setProfileName(pData.name || '')
-          setProfilePhone(pData.phone || '')
-          setProfileEmail(pData.email || sessionData?.user?.email || '')
+          setProfileName(pData.name || sessionData?.user?.name || '')
+          setProfilePhone(pData.phone || sessionData?.user?.phoneNumber || '')
+
+          // Filter out fallback emails (phone users)
+          const email = pData.email || sessionData?.user?.email || ''
+          const isFallbackEmail = email.includes('@phone.shayga.in')
+          setProfileEmail(isFallbackEmail ? '' : email)
         } else {
-          setProfileEmail(sessionData?.user?.email || '')
+          // Use session data but filter fallback emails
+          const email = sessionData?.user?.email || ''
+          const isFallbackEmail = email.includes('@phone.shayga.in')
+          setProfileEmail(isFallbackEmail ? '' : email)
+          setProfileName(sessionData?.user?.name || '')
+          setProfilePhone(sessionData?.user?.phoneNumber || '')
         }
       } catch (err) {
         console.error('Failed to load dashboard data', err)
