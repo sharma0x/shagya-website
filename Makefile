@@ -514,7 +514,7 @@ prod-deploy: ## One-stop deployment: Pull image -> Run migrations -> Start conta
 
 ghcr-build: ## Build production Docker image locally with a custom tag (Usage: make ghcr-build [TAG=latest])
 	@echo "Building Docker image $(DOCKER_IMAGE):$(TAG) (linux/amd64)..."
-	docker build --platform linux/amd64 --network=host --build-arg NODE_ENV=production --build-arg NEXT_TELEMETRY_DISABLED=1 --build-arg NEXT_PUBLIC_GA_MEASUREMENT_ID="$(shell grep -E '^NEXT_PUBLIC_GA_MEASUREMENT_ID=' infra/.env.production 2>/dev/null | head -1 | cut -d= -f2-)" --build-arg NEXT_PUBLIC_RAZORPAY_KEY_ID="$(shell grep -E '^NEXT_PUBLIC_RAZORPAY_KEY_ID=' infra/.env.production 2>/dev/null | head -1 | cut -d= -f2-)" --build-arg DATABASE_URL="$(shell grep -E '^DATABASE_URL=' infra/.env.production 2>/dev/null | head -1 | cut -d= -f2-)" -t $(DOCKER_IMAGE):$(TAG) .
+	docker build --platform linux/amd64 --network=host --build-arg NODE_ENV=production --build-arg NEXT_TELEMETRY_DISABLED=1 --build-arg NEXT_PUBLIC_GA_MEASUREMENT_ID="$(shell grep -E '^NEXT_PUBLIC_GA_MEASUREMENT_ID=' infra/.env.production 2>/dev/null | head -1 | cut -d= -f2-)" --build-arg NEXT_PUBLIC_RAZORPAY_KEY_ID="$(shell grep -E '^NEXT_PUBLIC_RAZORPAY_KEY_ID=' infra/.env.production 2>/dev/null | head -1 | cut -d= -f2-)" --build-arg NEXT_PUBLIC_FIREBASE_API_KEY="$(shell grep -E '^NEXT_PUBLIC_FIREBASE_API_KEY=' infra/.env.production 2>/dev/null | head -1 | cut -d= -f2-)" --build-arg NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="$(shell grep -E '^NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=' infra/.env.production 2>/dev/null | head -1 | cut -d= -f2-)" --build-arg NEXT_PUBLIC_FIREBASE_PROJECT_ID="$(shell grep -E '^NEXT_PUBLIC_FIREBASE_PROJECT_ID=' infra/.env.production 2>/dev/null | head -1 | cut -d= -f2-)" --build-arg DATABASE_URL="$(shell grep -E '^DATABASE_URL=' infra/.env.production 2>/dev/null | head -1 | cut -d= -f2-)" -t $(DOCKER_IMAGE):$(TAG) .
 
 ghcr-push: ## Push locally built Docker image to GHCR (Usage: make ghcr-push [TAG=latest])
 	@echo "Pushing $(DOCKER_IMAGE):$(TAG) to GHCR..."
@@ -598,4 +598,3 @@ docker-test-logs: ## View logs from the local test container
 docker-test-stop: ## Stop and remove the local test container
 	-docker rm -f shayga-test-app 2>/dev/null || true
 	@echo "✓ Test container stopped."
-
