@@ -1,3 +1,10 @@
+## [1.13.1](https://github.com/sharma0x/shagya-website/compare/v1.13.0...v1.13.1) (2026-09-19)
+
+### Bug Fixes
+
+- **auth:** announce phone login errors ([b4d9b7a](https://github.com/sharma0x/shagya-website/commit/b4d9b7a2de6e1b8302e6a2ab231a69c349799c95))
+- **ci:** bake Firebase settings into web builds ([3f161ba](https://github.com/sharma0x/shagya-website/commit/3f161bacd04bb9a2d960ee8651f6ff086dba8eb5))
+
 ## [1.13.0](https://github.com/sharma0x/shagya-website/compare/v1.12.0...v1.13.0) (2026-09-19)
 
 ### Features
