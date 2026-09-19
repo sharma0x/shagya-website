@@ -3,20 +3,47 @@
 import { useState, useCallback } from 'react'
 import { signIn } from '@/lib/auth-client'
 import { useOtpCooldown } from '@/lib/use-otp-cooldown'
+import { usePhoneAuth } from '@/hooks/use-phone-auth'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Mail, KeyRound, AlertCircle, Loader2 } from 'lucide-react'
+import {
+  ArrowLeft,
+  Mail,
+  Phone,
+  KeyRound,
+  AlertCircle,
+  Loader2,
+} from 'lucide-react'
 import { trackLogin } from '@/lib/analytics'
+
+type LoginMethod = 'email' | 'phone'
 
 export default function LoginPage() {
   const router = useRouter()
 
+  const [loginMethod, setLoginMethod] = useState<LoginMethod>('email')
   const [email, setEmail] = useState('')
+  const [phoneNumber, setPhoneNumber] = useState('')
   const [otp, setOtp] = useState('')
   const [otpSent, setOtpSent] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const { cooldown, startCooldown } = useOtpCooldown()
+
+  const {
+    sendOTP: sendPhoneOTP,
+    verifyOTP: verifyPhoneOTP,
+    isSendingOTP: isSendingPhoneOTP,
+    isVerifyingOTP: isVerifyingPhoneOTP,
+    error: phoneError,
+    clearError: clearPhoneError,
+  } = usePhoneAuth({
+    onSuccess: () => {
+      trackLogin('phone_otp')
+      window.location.href = '/account'
+    },
+    onError: (err) => setError(err.message),
+  })
 
   const handleSendOTP = useCallback(async () => {
     setError('')
@@ -68,6 +95,39 @@ export default function LoginPage() {
     }
   }, [email, otp])
 
+  const handleSendPhoneOTP = useCallback(async () => {
+    setError('')
+    clearPhoneError()
+    if (!phoneNumber || phoneNumber.length < 10) {
+      setError('Please enter a valid phone number')
+      return
+    }
+    // Format phone number to E.164 format (+countrycode + number)
+    const formattedPhone = phoneNumber.startsWith('+')
+      ? phoneNumber
+      : `+91${phoneNumber}` // Default to India country code
+    try {
+      await sendPhoneOTP(formattedPhone)
+      setOtpSent(true)
+      startCooldown()
+    } catch (err: any) {
+      setError(err?.message || 'Failed to send OTP')
+    }
+  }, [phoneNumber, sendPhoneOTP, clearPhoneError, startCooldown])
+
+  const handleVerifyPhoneOTP = useCallback(async () => {
+    setError('')
+    if (!otp || otp.length !== 6) {
+      setError('Please enter the 6-digit OTP')
+      return
+    }
+    try {
+      await verifyPhoneOTP(otp)
+    } catch (err: any) {
+      setError(err?.message || 'Verification failed')
+    }
+  }, [otp, verifyPhoneOTP])
+
   const handleGoogleSignIn = async () => {
     try {
       trackLogin('google')
@@ -100,6 +160,46 @@ export default function LoginPage() {
         <div className="mt-8 w-full">
           <div className="border border-neutral-100 bg-white px-4 py-8 shadow-xs sm:rounded-2xl sm:px-10">
             <div className="space-y-5">
+              {/* Login Method Tabs */}
+              <div className="flex gap-2 rounded-xl border border-neutral-100 bg-neutral-50 p-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLoginMethod('email')
+                    setOtpSent(false)
+                    setOtp('')
+                    setError('')
+                  }}
+                  disabled={otpSent}
+                  className={`font-display flex-1 rounded-lg px-4 py-2.5 text-xs font-semibold transition-all ${
+                    loginMethod === 'email'
+                      ? 'bg-white text-neutral-900 shadow-xs'
+                      : 'text-neutral-500 hover:text-neutral-700'
+                  } disabled:cursor-not-allowed disabled:opacity-50`}
+                >
+                  <Mail className="mx-auto mb-1 h-4 w-4" />
+                  Email
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLoginMethod('phone')
+                    setOtpSent(false)
+                    setOtp('')
+                    setError('')
+                  }}
+                  disabled={otpSent}
+                  className={`font-display flex-1 rounded-lg px-4 py-2.5 text-xs font-semibold transition-all ${
+                    loginMethod === 'phone'
+                      ? 'bg-white text-neutral-900 shadow-xs'
+                      : 'text-neutral-500 hover:text-neutral-700'
+                  } disabled:cursor-not-allowed disabled:opacity-50`}
+                >
+                  <Phone className="mx-auto mb-1 h-4 w-4" />
+                  Phone
+                </button>
+              </div>
+
               {error && (
                 <div className="flex items-start gap-2.5 rounded-xl border border-red-100 bg-red-50 p-4 text-xs text-red-700">
                   <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
@@ -107,30 +207,63 @@ export default function LoginPage() {
                 </div>
               )}
 
-              <div>
-                <label className="font-display block text-xs font-semibold tracking-wider text-neutral-500 uppercase">
-                  Email
-                </label>
-                <div className="relative mt-2">
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className={inputClass}
-                    placeholder="you@example.com"
-                    disabled={otpSent}
-                  />
-                  <Mail className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+              {loginMethod === 'email' ? (
+                <div>
+                  <label className="font-display block text-xs font-semibold tracking-wider text-neutral-500 uppercase">
+                    Email
+                  </label>
+                  <div className="relative mt-2">
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className={inputClass}
+                      placeholder="you@example.com"
+                      disabled={otpSent}
+                    />
+                    <Mail className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div>
+                  <label className="font-display block text-xs font-semibold tracking-wider text-neutral-500 uppercase">
+                    Phone Number
+                  </label>
+                  <div className="relative mt-2">
+                    <input
+                      type="tel"
+                      inputMode="numeric"
+                      value={phoneNumber}
+                      onChange={(e) =>
+                        setPhoneNumber(e.target.value.replace(/\D/g, ''))
+                      }
+                      className={inputClass}
+                      placeholder="9876543210"
+                      disabled={otpSent}
+                    />
+                    <Phone className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+                  </div>
+                  <p className="font-body mt-1.5 text-[11px] text-neutral-400">
+                    Enter 10-digit mobile number (India +91)
+                  </p>
+                  {/* Invisible reCAPTCHA container */}
+                  <div id="recaptcha-container" />
+                </div>
+              )}
 
               {!otpSent ? (
                 <button
-                  onClick={handleSendOTP}
-                  disabled={loading || cooldown > 0}
+                  onClick={
+                    loginMethod === 'email' ? handleSendOTP : handleSendPhoneOTP
+                  }
+                  disabled={
+                    loading ||
+                    isSendingPhoneOTP ||
+                    (loginMethod === 'phone' && cooldown > 0)
+                  }
                   className="bg-brand-600 hover:bg-brand-700 font-display flex h-11 w-full items-center justify-center rounded-xl text-sm font-semibold text-white shadow-xs transition-all active:scale-95 disabled:opacity-50"
                 >
-                  {loading ? (
+                  {loading || isSendingPhoneOTP ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
                     'Send OTP'
@@ -157,13 +290,18 @@ export default function LoginPage() {
                       <KeyRound className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-neutral-400" />
                     </div>
                     <p className="font-body mt-1.5 text-[11px] text-neutral-400">
-                      OTP sent to {email}
+                      OTP sent to{' '}
+                      {loginMethod === 'email' ? email : `+91${phoneNumber}`}
                     </p>
                     <div className="mt-1 flex items-center gap-1 text-[11px]">
                       <button
                         type="button"
-                        onClick={handleSendOTP}
-                        disabled={loading || cooldown > 0}
+                        onClick={
+                          loginMethod === 'email'
+                            ? handleSendOTP
+                            : handleSendPhoneOTP
+                        }
+                        disabled={loading || isSendingPhoneOTP || cooldown > 0}
                         className="text-brand-600 font-semibold disabled:cursor-not-allowed disabled:text-neutral-400"
                       >
                         {cooldown > 0 ? `Resend in ${cooldown}s` : 'Resend OTP'}
@@ -177,17 +315,23 @@ export default function LoginPage() {
                         }}
                         className="text-brand-600 font-semibold"
                       >
-                        Change email
+                        Change {loginMethod === 'email' ? 'email' : 'phone'}
                       </button>
                     </div>
                   </div>
 
                   <button
-                    onClick={handleVerifyOTP}
-                    disabled={loading || otp.length !== 6}
+                    onClick={
+                      loginMethod === 'email'
+                        ? handleVerifyOTP
+                        : handleVerifyPhoneOTP
+                    }
+                    disabled={
+                      loading || isVerifyingPhoneOTP || otp.length !== 6
+                    }
                     className="bg-brand-600 hover:bg-brand-700 font-display flex h-11 w-full items-center justify-center rounded-xl text-sm font-semibold text-white shadow-xs transition-all active:scale-95 disabled:opacity-50"
                   >
-                    {loading ? (
+                    {loading || isVerifyingPhoneOTP ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
                       'Verify & Sign In'
