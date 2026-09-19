@@ -1,3 +1,9 @@
+## [1.14.0](https://github.com/sharma0x/shagya-website/compare/v1.13.1...v1.14.0) (2026-09-19)
+
+### Features
+
+- **auth:** implement Firebase phone authentication with Better Auth integration ([7b4a82a](https://github.com/sharma0x/shagya-website/commit/7b4a82ac21643acb61a0e8ecf4085259a47be77b))
+
 ## [1.13.1](https://github.com/sharma0x/shagya-website/compare/v1.13.0...v1.13.1) (2026-09-19)
 
 ### Bug Fixes
