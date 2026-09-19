@@ -1,3 +1,10 @@
+## [1.11.1](https://github.com/sharma0x/shagya-website/compare/v1.11.0...v1.11.1) (2026-09-19)
+
+### Bug Fixes
+
+- **makefile:** add GA measurement ID to local Docker builds ([270c79c](https://github.com/sharma0x/shagya-website/commit/270c79cc922bd4f60517651522c0e48086794e36))
+- **analytics:** switch to official @next/third-parties GoogleAnalytics ([4e3bd64](https://github.com/sharma0x/shagya-website/commit/4e3bd6491b3990aac4cde231f5581480719dabed))
+
 ## [1.11.0](https://github.com/sharma0x/shagya-website/compare/v1.10.0...v1.11.0) (2026-09-18)
 
 ### Features
