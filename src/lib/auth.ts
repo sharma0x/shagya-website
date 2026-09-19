@@ -2,8 +2,30 @@ import { betterAuth } from 'better-auth'
 import { passkey } from '@better-auth/passkey'
 import { twoFactor } from 'better-auth/plugins'
 import { emailOTP } from 'better-auth/plugins/email-otp'
+import { firebaseAuthPlugin } from 'better-auth-firebase-auth/server'
 import { Pool } from 'pg'
 import { getServerURL, getAllowedOrigins } from './env'
+
+// Conditionally import Firebase Admin Auth
+let firebaseAdminAuth:
+  | ReturnType<typeof import('firebase-admin/auth').getAuth>
+  | undefined
+
+// Check if Firebase Admin credentials are available
+const hasFirebaseCredentials =
+  process.env.FIREBASE_ADMIN_PROJECT_ID &&
+  process.env.FIREBASE_ADMIN_PRIVATE_KEY &&
+  process.env.FIREBASE_ADMIN_CLIENT_EMAIL
+
+if (hasFirebaseCredentials) {
+  try {
+    const { firebaseAdminAuth: auth } = await import('./firebase-admin')
+    firebaseAdminAuth = auth
+  } catch (error) {
+    console.error('[Auth] Failed to initialize Firebase Admin Auth:', error)
+    // Continue without Firebase Auth - it's optional
+  }
+}
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -26,6 +48,15 @@ export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET || 'dev-secret-change-in-production',
   baseURL: getServerURL(),
   trustedOrigins: getAllowedOrigins(),
+  user: {
+    additionalFields: {
+      phoneNumber: {
+        type: 'string',
+        required: false,
+        input: false, // Don't allow users to set this directly
+      },
+    },
+  },
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: true,
@@ -110,5 +141,14 @@ export const auth = betterAuth({
       rpID: new URL(getServerURL()).hostname,
       origin: getServerURL(),
     }),
+    ...(firebaseAdminAuth
+      ? [
+          firebaseAuthPlugin({
+            useClientSideTokens: true,
+            firebaseAdminAuth,
+            getPhoneUserFallbackEmail: ({ uid }) => `${uid}@phone.shayga.in`,
+          }),
+        ]
+      : []),
   ],
 })
