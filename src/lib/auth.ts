@@ -146,7 +146,26 @@ export const auth = betterAuth({
           firebaseAuthPlugin({
             useClientSideTokens: true,
             firebaseAdminAuth,
-            getPhoneUserFallbackEmail: ({ uid }) => `${uid}@phone.shayga.in`,
+            getPhoneUserFallbackEmail: ({ uid, phoneNumber }) => {
+              // Don't return fallback email - let it be null for phone-only users
+              // This prevents showing fake email addresses in the UI
+              return null as any
+            },
+            onCreateUser: async ({ user, firebaseUser }) => {
+              // Extract phone number from Firebase user
+              const phoneNumber = firebaseUser.phoneNumber || null
+
+              // Set a friendly name instead of UID
+              const name = phoneNumber
+                ? `User ${phoneNumber.slice(-4)}` // "User 3210" from +919876543210
+                : 'User'
+
+              return {
+                ...user,
+                name,
+                phoneNumber,
+              }
+            },
           }),
         ]
       : []),
