@@ -1,3 +1,13 @@
+## [1.15.0](https://github.com/sharma0x/shagya-website/compare/v1.14.0...v1.15.0) (2026-09-19)
+
+### Features
+
+- **checkout:** add configurable COD fee ([7dd7cae](https://github.com/sharma0x/shagya-website/commit/7dd7cae8bad335a46866fa66762a041cbd580159))
+
+### Bug Fixes
+
+- **delhivery:** support COD order manifesting ([2654b7e](https://github.com/sharma0x/shagya-website/commit/2654b7e683db6e0fc3ba45c5444be1c1492d0172))
+
 ## [1.14.0](https://github.com/sharma0x/shagya-website/compare/v1.13.1...v1.14.0) (2026-09-19)
 
 ### Features
