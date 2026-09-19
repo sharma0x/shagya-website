@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import { auth } from '@/lib/auth'
+import { getPhoneIdentityByUserId } from '@/lib/phone-identity'
 
 export async function GET(request: Request) {
   try {
@@ -24,10 +25,23 @@ export async function GET(request: Request) {
 
     const customer = customers.docs[0] as unknown as Record<string, unknown>
 
+    // Check for verified phone number from phone_identities (login method)
+    // Falls back to customer.phone (editable contact info)
+    let phone = customer.phone || ''
+    try {
+      const phoneIdentity = await getPhoneIdentityByUserId(session.user.id)
+      if (phoneIdentity?.phoneNumber) {
+        phone = phoneIdentity.phoneNumber
+      }
+    } catch (err) {
+      console.error('[customers/me] Failed to get phone identity:', err)
+      // Continue with customer.phone fallback
+    }
+
     return NextResponse.json({
       name: customer.name || '',
       email: customer.email || session.user.email || '',
-      phone: customer.phone || '',
+      phone,
     })
   } catch (err) {
     console.error('[customers/me] GET error:', err)
