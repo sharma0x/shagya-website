@@ -61,8 +61,9 @@ export async function syncCustomer(user: BetterAuthUser): Promise<void> {
 
     if (byAuthId.docs.length > 0) return
 
-    // 3. Check by email
-    if (user.email) {
+    // 3. Check by email (but skip fallback emails)
+    const isFallbackEmail = user.email?.includes('@phone.shayga.in')
+    if (user.email && !isFallbackEmail) {
       const byEmail = await payload.find({
         collection: 'customers',
         where: { email: { equals: user.email } },
@@ -88,8 +89,8 @@ export async function syncCustomer(user: BetterAuthUser): Promise<void> {
     await payload.create({
       collection: 'customers',
       data: {
-        name: user.name || user.email?.split('@')[0] || 'Customer',
-        email: user.email,
+        name: user.name || 'Customer',
+        email: isFallbackEmail ? '' : user.email || '',
         phone: user.phoneNumber || '',
         betterAuthUserId: user.id,
       },
