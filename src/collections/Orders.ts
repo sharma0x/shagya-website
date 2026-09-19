@@ -150,6 +150,7 @@ export const Orders: CollectionConfig = {
     defaultColumns: [
       'orderNumber',
       'customerEmail',
+      'paymentMethod',
       'status',
       'total',
       'fulfilmentPanel',
@@ -609,6 +610,19 @@ export const Orders: CollectionConfig = {
     {
       name: 'paymentId',
       type: 'text',
+      admin: {
+        hidden: true,
+      },
+    },
+    {
+      name: 'paymentMethod',
+      label: 'Payment',
+      type: 'ui',
+      admin: {
+        components: {
+          Cell: '@/components/payload/OrderPaymentMethodCell#OrderPaymentMethodCell',
+        },
+      },
     },
     {
       name: 'notes',
