@@ -270,6 +270,10 @@ export interface EmailTemplate {
 export interface Product {
   id: number;
   name: string;
+  /**
+   * Unique product identifier (e.g., SHG-00001). Used for inventory tracking and order identification.
+   */
+  productCode: string;
   slug?: string | null;
   description?: {
     root: {
@@ -750,6 +754,10 @@ export interface Order {
   items?:
     | {
         product: number | Product;
+        /**
+         * Product code snapshot at purchase time for unique identification
+         */
+        productCode?: string | null;
         /**
          * Legacy — superseded by color/colorName
          */
@@ -1567,6 +1575,7 @@ export interface EmailTemplatesSelect<T extends boolean = true> {
  */
 export interface ProductsSelect<T extends boolean = true> {
   name?: T;
+  productCode?: T;
   slug?: T;
   description?: T;
   status?: T;
@@ -1777,6 +1786,7 @@ export interface OrdersSelect<T extends boolean = true> {
     | T
     | {
         product?: T;
+        productCode?: T;
         variant?: T;
         color?: T;
         colorName?: T;
@@ -2374,6 +2384,10 @@ export interface SiteSetting {
   contactEmail?: string | null;
   contactPhone?: string | null;
   address?: string | null;
+  /**
+   * Business GST identification number (e.g., 22AAAAA0000A1Z5). Displayed on invoices and receipts.
+   */
+  gstNumber?: string | null;
   instagramUrl?: string | null;
   facebookUrl?: string | null;
   youtubeUrl?: string | null;
@@ -2466,6 +2480,7 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   contactEmail?: T;
   contactPhone?: T;
   address?: T;
+  gstNumber?: T;
   instagramUrl?: T;
   facebookUrl?: T;
   youtubeUrl?: T;
