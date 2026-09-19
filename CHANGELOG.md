@@ -1,3 +1,33 @@
+## [1.17.0](https://github.com/sharma0x/shagya-website/compare/v1.16.1...v1.17.0) (2026-09-19)
+
+### Features
+
+- **ui:** add Alert and AlertDescription components ([c313ec2](https://github.com/sharma0x/shagya-website/commit/c313ec22f363ee2af73ceac7c7d56b931dcaf755))
+- **api:** add phone identity management endpoints ([5ecc32d](https://github.com/sharma0x/shagya-website/commit/5ecc32d2c3b1806fcef343bb8ceef797836a54e6))
+- **auth:** add phone identity service with validation and CRUD ([0645fd9](https://github.com/sharma0x/shagya-website/commit/0645fd95656a496bfc3b04f945b1598e7bddee3b))
+- **components:** add phone identity verification component ([8379a2a](https://github.com/sharma0x/shagya-website/commit/8379a2a53d4bf7f0fab2f5448d5c61bf7afe35cc))
+- **hooks:** add phone verification hook for account linking ([770f640](https://github.com/sharma0x/shagya-website/commit/770f6405206ee73195d4f6e53212eb466979e4f1))
+- **auth:** add phone_identities table migration ([6eb5108](https://github.com/sharma0x/shagya-website/commit/6eb5108e9b71d7342aa583886951108ad47f834c))
+- **account:** add security settings page for login methods ([631192c](https://github.com/sharma0x/shagya-website/commit/631192cd88e364647bde5a24bcb8a7eac9bac8e4))
+- **db:** add shared database connection pool ([9905e97](https://github.com/sharma0x/shagya-website/commit/9905e97426c0425bd21590f95bcd8e3f9fe9cbed))
+
+### Bug Fixes
+
+- **types:** add any type to context parameter to resolve type conflict ([7ba95ad](https://github.com/sharma0x/shagya-website/commit/7ba95ad5b6ba901a9874360dffae66a58fc018f1))
+- **types:** add context parameter to database before hook ([adad51d](https://github.com/sharma0x/shagya-website/commit/adad51d3491f5967ba6167d25e3cb1f9110f18a1))
+- **account:** filter fallback emails and show phone for phone users ([3262c1a](https://github.com/sharma0x/shagya-website/commit/3262c1aa30f046419e15cb3ad8b0e5fd9def6d55))
+- **auth:** improve phone user display with friendly defaults ([34472da](https://github.com/sharma0x/shagya-website/commit/34472da6100fbf4369f74aca5d49e02b14e77fe9))
+- **auth:** improve type safety and add phone number validation ([e16c7fe](https://github.com/sharma0x/shagya-website/commit/e16c7febf49251e2591c68a6306a0b2f56045036))
+- **lint:** inline async data fetch in useEffect ([da8d9ed](https://github.com/sharma0x/shagya-website/commit/da8d9ed23ceca40fdb83b57dbbb639096e2cdf31))
+- **lint:** move loadPhoneIdentity declaration before useEffect ([39f7f6e](https://github.com/sharma0x/shagya-website/commit/39f7f6eac0409192bd1b8d2c376b0dc6653bb840))
+- **migrations:** reference correct Better Auth user table ([c39b85a](https://github.com/sharma0x/shagya-website/commit/c39b85a736e8d6427852fd0b62c1a074c55b67f4))
+- **build:** remove explicit import of type declaration file ([a049a7f](https://github.com/sharma0x/shagya-website/commit/a049a7f9bf2524b063b125b17603bb4cbfa854cd))
+- **types:** resolve TypeScript errors in auth and account page ([6ab65ec](https://github.com/sharma0x/shagya-website/commit/6ab65ecc8c19f58b2aec2c0b9b7b7459f775902e))
+- **ci:** run better-auth migrate before payload migrate ([e3a8ade](https://github.com/sharma0x/shagya-website/commit/e3a8ade2e8b9fda39a5a2e91420ddaec72e7f760))
+- **auth:** skip fallback emails in customer sync ([118e202](https://github.com/sharma0x/shagya-website/commit/118e2024b88eb05cff7327976cddfd96a6a45865))
+- **types:** use null | any for context parameter type ([307d999](https://github.com/sharma0x/shagya-website/commit/307d99939f65fb286c4f7488465d6e70741f9ea7))
+- **lint:** wrap loadPhoneIdentity with useCallback ([c86831e](https://github.com/sharma0x/shagya-website/commit/c86831e6a7bf3aec779053a44fc8f8b83b097acd))
+
 ## [1.16.1](https://github.com/sharma0x/shagya-website/compare/v1.16.0...v1.16.1) (2026-09-19)
 
 ### Bug Fixes
