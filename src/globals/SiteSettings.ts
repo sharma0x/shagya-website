@@ -277,6 +277,16 @@ export const SiteSettings: GlobalConfig = {
           'Cart subtotal value required to qualify for free shipping.',
       },
     },
+    {
+      name: 'codFee',
+      type: 'number',
+      label: 'Cash on Delivery Fee',
+      defaultValue: 100,
+      min: 0,
+      admin: {
+        description: 'Additional charge applied when customers choose COD.',
+      },
+    },
 
     // ---- Coupons & Offers ----
     {

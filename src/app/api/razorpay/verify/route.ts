@@ -263,6 +263,7 @@ export async function POST(request: Request) {
     const standardRate = (siteSettings as any).standardShippingRate ?? 150
     const expressRate = (siteSettings as any).expressShippingRate ?? 350
     const freeThreshold = (siteSettings as any).freeShippingThreshold ?? 5000
+    const codFee = isCod ? ((siteSettings as any).codFee ?? 100) : 0
 
     const shippingBase =
       subtotal >= freeThreshold
@@ -314,7 +315,7 @@ export async function POST(request: Request) {
       }
     }
 
-    const total = Math.max(0, subtotal + shipping - discount)
+    const total = Math.max(0, subtotal + shipping - discount + codFee)
 
     // Payment verification
     let finalPaymentId = ''
@@ -351,6 +352,7 @@ export async function POST(request: Request) {
         status: orderStatus,
         subtotal,
         shipping,
+        codFee,
         discount,
         total,
         paymentId: finalPaymentId,

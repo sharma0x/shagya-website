@@ -1199,6 +1199,7 @@ export const orders = pgTable(
     status: enum_orders_status('status').default('pending'),
     subtotal: numeric('subtotal', { mode: 'number' }).notNull(),
     shipping: numeric('shipping', { mode: 'number' }).default(0),
+    codFee: numeric('cod_fee', { mode: 'number' }).default(0),
     tax: numeric('tax', { mode: 'number' }).default(0),
     discount: numeric('discount', { mode: 'number' }).default(0),
     coupon: integer('coupon_id').references(() => coupons.id, {
@@ -3779,6 +3780,7 @@ export const site_settings = pgTable(
     freeShippingThreshold: numeric('free_shipping_threshold', {
       mode: 'number',
     }).default(5000),
+    codFee: numeric('cod_fee', { mode: 'number' }).default(100),
     delhivery_pickupLocation: varchar('delhivery_pickup_location'),
     delhivery_pickupPin: varchar('delhivery_pickup_pin'),
     delhivery_clientName: varchar('delhivery_client_name'),
@@ -3947,6 +3949,7 @@ export const _site_settings_v = pgTable(
     version_freeShippingThreshold: numeric('version_free_shipping_threshold', {
       mode: 'number',
     }).default(5000),
+    version_codFee: numeric('version_cod_fee', { mode: 'number' }).default(100),
     version_delhivery_pickupLocation: varchar(
       'version_delhivery_pickup_location',
     ),
