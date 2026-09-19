@@ -97,3 +97,6 @@ infra/provision/allowed_ips.txt
 
 # Environment files
 /.claude/
+
+# MCP config (contains API keys)
+.mcp.json
