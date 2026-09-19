@@ -34,16 +34,6 @@ export default function SecurityPage() {
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (isPending) return
-    if (!sessionData?.user) {
-      router.push('/account/login')
-      return
-    }
-
-    loadPhoneIdentity()
-  }, [sessionData, isPending, router])
-
   const loadPhoneIdentity = async () => {
     try {
       setLoading(true)
@@ -59,6 +49,16 @@ export default function SecurityPage() {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    if (isPending) return
+    if (!sessionData?.user) {
+      router.push('/account/login')
+      return
+    }
+
+    loadPhoneIdentity()
+  }, [sessionData, isPending, router])
 
   const handleRemovePhone = async () => {
     if (
