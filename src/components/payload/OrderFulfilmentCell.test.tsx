@@ -59,9 +59,9 @@ describe('OrderFulfilmentCell', () => {
     expect(screen.getByRole('button', { name: 'Ship' })).toBeDefined()
   })
 
-  it('hides the button for ineligible rows', () => {
+  it('renders the button for a confirmed COD row', () => {
     render(<OrderFulfilmentCell rowData={order({ paymentId: 'COD' })} />)
-    expect(screen.queryByRole('button')).toBeNull()
+    expect(screen.getByRole('button', { name: 'Ship' })).toBeDefined()
   })
 
   it('shows the waybill once shipped', () => {

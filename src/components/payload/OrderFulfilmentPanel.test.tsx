@@ -97,10 +97,16 @@ describe('OrderFulfilmentPanel', () => {
     ).toBe(true)
   })
 
-  it('blocks COD orders with a prepaid-only reason', () => {
+  it('renders an enabled Ship button for a confirmed COD order', () => {
     setOrderState({ paymentId: 'COD' })
     render(<OrderFulfilmentPanel />)
-    expect(screen.getByText(/Prepaid only/i)).toBeDefined()
+    expect(
+      (
+        screen.getByRole('button', {
+          name: /ship with delhivery/i,
+        }) as HTMLButtonElement
+      ).disabled,
+    ).toBe(false)
   })
 
   it('ships the order, syncs form fields and toasts on success', async () => {

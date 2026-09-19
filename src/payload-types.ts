@@ -658,6 +658,7 @@ export interface Order {
   status?: ('pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'refunded') | null;
   subtotal: number;
   shipping?: number | null;
+  codFee?: number | null;
   tax?: number | null;
   discount?: number | null;
   /**
@@ -1736,6 +1737,7 @@ export interface OrdersSelect<T extends boolean = true> {
   status?: T;
   subtotal?: T;
   shipping?: T;
+  codFee?: T;
   tax?: T;
   discount?: T;
   coupon?: T;
@@ -2433,6 +2435,7 @@ export interface SiteSetting {
    * Cart subtotal value required to qualify for free shipping.
    */
   freeShippingThreshold?: number | null;
+  codFee?: number | null;
   /**
    * Select coupons to display on the checkout page under pre-populated offers
    */

@@ -32,6 +32,7 @@ import * as migration_20260916_180000_add_weaves_id_to_payload_locked_documents_
 import * as migration_20260917_010000_add_hero_mobile_image from './20260917_010000_add_hero_mobile_image'
 import * as migration_20260917_020000_add_whatsapp_url_to_site_settings from './20260917_020000_add_whatsapp_url_to_site_settings'
 import * as migration_20260918_000000_add_product_code_and_gst from './20260918_000000_add_product_code_and_gst'
+import * as migration_20260919_000000_add_cod_fee from './20260919_000000_add_cod_fee'
 
 export const migrations = [
   {
@@ -203,5 +204,10 @@ export const migrations = [
     up: migration_20260918_000000_add_product_code_and_gst.up,
     down: migration_20260918_000000_add_product_code_and_gst.down,
     name: '20260918_000000_add_product_code_and_gst',
+  },
+  {
+    up: migration_20260919_000000_add_cod_fee.up,
+    down: migration_20260919_000000_add_cod_fee.down,
+    name: '20260919_000000_add_cod_fee',
   },
 ]

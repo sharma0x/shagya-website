@@ -570,6 +570,17 @@ export const Orders: CollectionConfig = {
       defaultValue: 0,
     },
     {
+      name: 'codFee',
+      type: 'number',
+      label: 'COD Fee',
+      min: 0,
+      defaultValue: 0,
+      admin: {
+        readOnly: true,
+        description: 'Cash on Delivery fee charged at checkout.',
+      },
+    },
+    {
       name: 'tax',
       type: 'number',
       min: 0,

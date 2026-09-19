@@ -169,6 +169,7 @@ export default function CheckoutPage() {
     standard: 150,
     express: 350,
     freeThreshold: 5000,
+    codFee: 100,
   })
 
   // Fetch Site Settings once
@@ -181,6 +182,7 @@ export default function CheckoutPage() {
             standard: data.standardShippingRate ?? 150,
             express: data.expressShippingRate ?? 350,
             freeThreshold: data.freeShippingThreshold ?? 5000,
+            codFee: data.codFee ?? 100,
           })
         }
       })
@@ -634,6 +636,8 @@ export default function CheckoutPage() {
     }
   }
   const total = Math.max(0, subtotal + shipping - discount)
+  const codFee = paymentMethod === 'cod' ? shippingConfig.codFee : 0
+  const orderTotal = Math.max(0, total + codFee)
 
   // GA4 item payloads derived from the effective cart. Each checkout line is
   // `{ product, variant, quantity, unitPrice }` — the mapper must read
@@ -671,14 +675,14 @@ export default function CheckoutPage() {
         items: ga4Items(),
         shippingTier: shippingType,
         coupon: appliedCoupon?.code,
-        value: total,
+        value: orderTotal,
       })
     } else if (step === 3 && prev < 3) {
       trackAddPaymentInfo({
         items: ga4Items(),
         paymentType: paymentMethod,
         coupon: appliedCoupon?.code,
-        value: total,
+        value: orderTotal,
       })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -693,7 +697,7 @@ export default function CheckoutPage() {
     trackPurchase({
       transactionId: orderNumber,
       items: ga4Items(),
-      value: total,
+      value: orderTotal,
       shipping,
       discount: discount > 0 ? discount : undefined,
       coupon: appliedCoupon?.code,
@@ -1336,7 +1340,7 @@ export default function CheckoutPage() {
                     )}
                     {paymentMethod === 'cod'
                       ? 'Complete Order'
-                      : `Pay ₹${total.toLocaleString('en-IN')}`}
+                      : `Pay ₹${orderTotal.toLocaleString('en-IN')}`}
                   </button>
                 </div>
               </div>
@@ -1631,6 +1635,17 @@ export default function CheckoutPage() {
                         ₹{subtotal.toLocaleString('en-IN')}
                       </span>
                     </div>
+                    {codFee > 0 && (
+                      <div className="flex justify-between">
+                        <span>COD Handling Fee</span>
+                        <span
+                          className="font-semibold text-neutral-900"
+                          suppressHydrationWarning
+                        >
+                          ₹{codFee.toLocaleString('en-IN')}
+                        </span>
+                      </div>
+                    )}
                     <div className="flex justify-between">
                       <span>Shipping & Verification</span>
                       <span
@@ -1654,7 +1669,7 @@ export default function CheckoutPage() {
                     <div className="font-display flex justify-between border-t border-neutral-100 pt-3 text-sm font-semibold text-neutral-900">
                       <span>Order Total</span>
                       <span suppressHydrationWarning>
-                        ₹{total.toLocaleString('en-IN')}
+                        ₹{orderTotal.toLocaleString('en-IN')}
                       </span>
                     </div>
                     <p className="mt-1 text-right text-[10px] font-medium text-red-500">

@@ -22,10 +22,10 @@ describe('getShipEligibility', () => {
     expect(result.reason).toMatch(/must be Confirmed before shipping/i)
   })
 
-  it('rejects COD and missing payment ids', () => {
+  it('allows COD and rejects missing payment ids', () => {
     expect(
       getShipEligibility({ ...COMPLETE_INPUT, paymentId: 'COD' }).canShip,
-    ).toBe(false)
+    ).toBe(true)
     expect(
       getShipEligibility({ ...COMPLETE_INPUT, paymentId: null }).canShip,
     ).toBe(false)
