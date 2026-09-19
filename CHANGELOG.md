@@ -1,3 +1,13 @@
+## [1.19.0](https://github.com/sharma0x/shagya-website/compare/v1.18.0...v1.19.0) (2026-09-19)
+
+### Features
+
+- **auth:** implement phone identity system and rate limiting ([fb6fed7](https://github.com/sharma0x/shagya-website/commit/fb6fed74ff537d10293141f0badbab55dfcf4d05))
+
+### Bug Fixes
+
+- **tests:** update auth-sync tests for new upsert implementation ([c8c33d0](https://github.com/sharma0x/shagya-website/commit/c8c33d074a11f03aecd7174a202babb4b709899c))
+
 ## [1.18.0](https://github.com/sharma0x/shagya-website/compare/v1.17.1...v1.18.0) (2026-09-19)
 
 ### Features
