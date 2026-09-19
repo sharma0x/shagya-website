@@ -4,6 +4,7 @@ import config from '@payload-config'
 import { auth } from '@/lib/auth'
 import { getPhoneIdentityByUserId } from '@/lib/phone-identity'
 import { getDbPool } from '@/lib/db-pool'
+import { rateLimiter, getClientIdentifier, RATE_LIMITS } from '@/lib/rate-limit'
 
 /**
  * Determines how the user originally signed in.
@@ -62,8 +63,17 @@ export async function GET(request: Request) {
 
     const customer = customers.docs[0] as unknown as Record<string, unknown>
 
+    console.log('[customers/me] Customer data:', {
+      id: customer.id,
+      name: customer.name,
+      email: customer.email,
+      phone: customer.phone,
+      betterAuthUserId: customer.betterAuthUserId,
+    })
+
     // Detect login method
     const loginMethod = await detectLoginMethod(session.user.id)
+    console.log('[customers/me] Detected login method:', loginMethod)
 
     // Check for verified phone number from phone_identities (login method)
     // Falls back to customer.phone (editable contact info)
@@ -71,6 +81,7 @@ export async function GET(request: Request) {
     let hasVerifiedPhone = false
     try {
       const phoneIdentity = await getPhoneIdentityByUserId(session.user.id)
+      console.log('[customers/me] Phone identity:', phoneIdentity)
       if (phoneIdentity?.phoneNumber) {
         phone = phoneIdentity.phoneNumber
         hasVerifiedPhone = true
@@ -79,6 +90,7 @@ export async function GET(request: Request) {
       console.error('[customers/me] Failed to get phone identity:', err)
       // Continue with customer.phone fallback
     }
+    console.log('[customers/me] Final phone:', { phone, hasVerifiedPhone })
 
     // Determine email — filter out fallback phone-user emails
     const rawEmail = (customer.email as string) || session.user.email || ''
@@ -86,8 +98,29 @@ export async function GET(request: Request) {
     const email = isFallbackEmail ? '' : rawEmail
     const hasVerifiedEmail = !isFallbackEmail && !!rawEmail
 
+    // Fallback to session data if customer fields are empty
+    const name =
+      customer.name && customer.name !== 'Customer'
+        ? (customer.name as string)
+        : session.user.name || ''
+
+    // If phone is still empty, try to get it from session user
+    if (!phone && (session.user as any)?.phoneNumber) {
+      phone = (session.user as any).phoneNumber
+      console.log('[customers/me] Using phone from session:', phone)
+    }
+
+    console.log('[customers/me] Final response:', {
+      name,
+      email,
+      phone,
+      loginMethod,
+      hasVerifiedPhone,
+      hasVerifiedEmail,
+    })
+
     return NextResponse.json({
-      name: customer.name || '',
+      name,
       email,
       phone,
       loginMethod,
@@ -108,6 +141,24 @@ export async function PATCH(request: Request) {
     const session = await auth.api.getSession({ headers: request.headers })
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Rate limiting for profile updates
+    const identifier = getClientIdentifier(request, session.user.id)
+    const rateLimit = rateLimiter.check(
+      `profile-update:${identifier}`,
+      RATE_LIMITS.PROFILE_UPDATE.maxRequests,
+      RATE_LIMITS.PROFILE_UPDATE.windowMs,
+    )
+
+    if (rateLimit.limited) {
+      return NextResponse.json(
+        {
+          error: RATE_LIMITS.PROFILE_UPDATE.message,
+          retryAfter: Math.ceil((rateLimit.resetAt - Date.now()) / 1000),
+        },
+        { status: 429 },
+      )
     }
 
     const body = await request.json()

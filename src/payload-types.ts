@@ -658,6 +658,9 @@ export interface Order {
   status?: ('pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'refunded') | null;
   subtotal: number;
   shipping?: number | null;
+  /**
+   * Cash on Delivery fee charged at checkout.
+   */
   codFee?: number | null;
   tax?: number | null;
   discount?: number | null;
@@ -2435,6 +2438,9 @@ export interface SiteSetting {
    * Cart subtotal value required to qualify for free shipping.
    */
   freeShippingThreshold?: number | null;
+  /**
+   * Additional charge applied when customers choose COD.
+   */
   codFee?: number | null;
   /**
    * Select coupons to display on the checkout page under pre-populated offers
@@ -2516,6 +2522,7 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   standardShippingRate?: T;
   expressShippingRate?: T;
   freeShippingThreshold?: T;
+  codFee?: T;
   activeCoupons?: T;
   delhivery?:
     | T

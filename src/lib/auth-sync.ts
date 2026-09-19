@@ -5,6 +5,7 @@ import {
   getPhoneIdentityByUserId,
   getUserIdByPhoneNumber,
 } from './phone-identity'
+import { getDbPool } from './db-pool'
 
 interface BetterAuthUser {
   id: string
@@ -16,90 +17,155 @@ interface BetterAuthUser {
 }
 
 /**
+ * Retry a function with exponential backoff
+ */
+async function retryWithBackoff<T>(
+  fn: () => Promise<T>,
+  maxRetries = 3,
+  initialDelay = 100,
+): Promise<T> {
+  let lastError: Error | undefined
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await fn()
+    } catch (error) {
+      lastError = error as Error
+      if (attempt < maxRetries - 1) {
+        const delay = initialDelay * Math.pow(2, attempt)
+        console.log(
+          `[Auth Sync] Retry attempt ${attempt + 1}/${maxRetries} after ${delay}ms`,
+        )
+        await new Promise((resolve) => setTimeout(resolve, delay))
+      }
+    }
+  }
+  throw lastError
+}
+
+/**
  * Sync a Better Auth user to the Payload Customers collection.
  *
- * NEW FLOW (with phone identities):
- * - If user has phoneNumber and firebaseUid → create phone identity entry
- * - If customer exists with betterAuthUserId → skip (already linked)
- * - If customer exists with matching email → link them
- * - Otherwise → create new customer
+ * IMPROVED FLOW:
+ * 1. Create phone identity if user signed up with phone (with retry)
+ * 2. Use database-level upsert to prevent race conditions
+ * 3. Atomic customer creation/update via raw SQL
+ * 4. Sync back to Payload CMS for consistency
  *
- * NOTE: We no longer link by customers.phone because it's editable contact info,
- * not a verified identity. Phone identities are managed separately.
+ * This approach prevents duplicate customers and ensures data consistency
+ * even under high concurrency.
  */
 export async function syncCustomer(user: BetterAuthUser): Promise<void> {
+  const startTime = Date.now()
   try {
-    const payload = await getPayload({ config })
+    console.log('[Auth Sync] Starting customer sync for user:', {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      phoneNumber: user.phoneNumber,
+      firebaseUid: user.firebaseUid,
+    })
 
-    // 1. Create phone identity if user signed up with phone
+    const payload = await getPayload({ config })
+    const pool = getDbPool()
+
+    // 1. Create phone identity if user signed up with phone (with retry)
     if (user.phoneNumber && user.firebaseUid) {
+      console.log('[Auth Sync] Processing phone identity')
       try {
-        // Check if phone identity already exists
-        const existingPhoneIdentity = await getPhoneIdentityByUserId(user.id)
-        if (!existingPhoneIdentity) {
-          await createPhoneIdentity({
-            userId: user.id,
-            phoneNumber: user.phoneNumber,
-            firebaseUid: user.firebaseUid,
-          })
-        }
+        await retryWithBackoff(async () => {
+          const existingPhoneIdentity = await getPhoneIdentityByUserId(user.id)
+          if (!existingPhoneIdentity) {
+            console.log('[Auth Sync] Creating new phone identity')
+            await createPhoneIdentity({
+              userId: user.id,
+              phoneNumber: user.phoneNumber!,
+              firebaseUid: user.firebaseUid!,
+            })
+            console.log('[Auth Sync] Phone identity created successfully')
+          } else {
+            console.log('[Auth Sync] Phone identity already exists')
+          }
+        })
       } catch (error) {
         console.error(
           `[Auth Sync] Failed to create phone identity for user ${user.id}:`,
           error,
         )
-        // Continue with customer sync even if phone identity creation fails
+        // Continue with customer sync - phone identity can be added later
       }
     }
 
-    // 2. Check if already linked by betterAuthUserId
-    const byAuthId = await payload.find({
-      collection: 'customers',
-      where: { betterAuthUserId: { equals: user.id } },
-      limit: 1,
-    })
-
-    if (byAuthId.docs.length > 0) return
-
-    // 3. Check by email (but skip fallback emails)
+    // 2. Determine if email is a fallback (phone user)
     const isFallbackEmail = user.email?.includes('@phone.shayga.in')
-    if (user.email && !isFallbackEmail) {
-      const byEmail = await payload.find({
-        collection: 'customers',
-        where: { email: { equals: user.email } },
-        limit: 1,
-      })
+    const email = isFallbackEmail ? '' : user.email || ''
+    const phone = user.phoneNumber || ''
+    const name = user.name || 'Customer'
 
-      if (byEmail.docs.length > 0) {
-        await payload.update({
-          collection: 'customers',
-          id: byEmail.docs[0].id,
-          data: {
-            betterAuthUserId: user.id,
-            name: user.name || (byEmail.docs[0] as any).name,
-            phone: user.phoneNumber || (byEmail.docs[0] as any).phone || '',
-          },
-          overrideAccess: true,
-        } as any)
-        return
-      }
-    }
+    // 3. Use atomic upsert to prevent race conditions
+    // This ensures only one customer record per betterAuthUserId
+    console.log('[Auth Sync] Performing atomic upsert')
+    const result = await pool.query(
+      `
+      INSERT INTO customers (
+        better_auth_user_id,
+        name,
+        email,
+        phone,
+        created_at,
+        updated_at
+      )
+      VALUES ($1, $2, $3, $4, NOW(), NOW())
+      ON CONFLICT (better_auth_user_id)
+      DO UPDATE SET
+        name = CASE
+          WHEN customers.name = '' OR customers.name IS NULL OR customers.name = 'Customer'
+          THEN EXCLUDED.name
+          ELSE customers.name
+        END,
+        email = CASE
+          WHEN customers.email = '' OR customers.email IS NULL
+          THEN EXCLUDED.email
+          ELSE customers.email
+        END,
+        phone = CASE
+          WHEN customers.phone = '' OR customers.phone IS NULL
+          THEN EXCLUDED.phone
+          ELSE customers.phone
+        END,
+        updated_at = NOW()
+      RETURNING id, name, email, phone
+      `,
+      [user.id, name, email, phone],
+    )
 
-    // 4. Create new customer
-    await payload.create({
-      collection: 'customers',
-      data: {
-        name: user.name || 'Customer',
-        email: isFallbackEmail ? '' : user.email || '',
-        phone: user.phoneNumber || '',
-        betterAuthUserId: user.id,
-      },
-      overrideAccess: true,
+    const customer = result.rows[0]
+    console.log('[Auth Sync] Customer upserted successfully:', {
+      id: customer.id,
+      name: customer.name,
+      email: customer.email,
+      phone: customer.phone,
+      duration: `${Date.now() - startTime}ms`,
     })
+
+    // 4. Verify Payload CMS can read the customer
+    // This ensures Payload's internal cache is updated
+    try {
+      await payload.findByID({
+        collection: 'customers',
+        id: customer.id,
+        overrideAccess: true,
+      })
+    } catch (error) {
+      console.warn(
+        '[Auth Sync] Customer exists in DB but not accessible via Payload:',
+        error,
+      )
+    }
   } catch (error) {
     console.error(
       `[Auth Sync] Failed to sync customer for user ${user.id}:`,
       error,
     )
+    throw error // Re-throw to ensure Better Auth knows the hook failed
   }
 }

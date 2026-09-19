@@ -3,8 +3,8 @@ import { passkey } from '@better-auth/passkey'
 import { twoFactor } from 'better-auth/plugins'
 import { emailOTP } from 'better-auth/plugins/email-otp'
 import { firebaseAuthPlugin } from 'better-auth-firebase-auth/server'
-import { Pool } from 'pg'
 import { getServerURL, getAllowedOrigins } from './env'
+import { getDbPool } from './db-pool'
 
 // Conditionally import Firebase Admin Auth
 let firebaseAdminAuth:
@@ -27,25 +27,59 @@ if (hasFirebaseCredentials) {
   }
 }
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl:
-    process.env.DATABASE_URL?.includes('sslmode=require') ||
-    process.env.DATABASE_URL?.includes('neon.tech') ||
-    process.env.DATABASE_URL?.includes('rds.amazonaws.com')
-      ? { rejectUnauthorized: false }
-      : undefined,
-})
+// Use shared database pool to prevent connection exhaustion
+const pool = getDbPool()
 
+/**
+ * Retry email sending with exponential backoff
+ */
+async function retryEmail(
+  fn: () => Promise<void>,
+  maxRetries = 3,
+): Promise<void> {
+  let lastError: Error | undefined
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      await fn()
+      return // Success
+    } catch (error) {
+      lastError = error as Error
+      if (attempt < maxRetries - 1) {
+        const delay = 1000 * Math.pow(2, attempt) // 1s, 2s, 4s
+        console.log(
+          `[Email] Retry attempt ${attempt + 1}/${maxRetries} after ${delay}ms`,
+        )
+        await new Promise((resolve) => setTimeout(resolve, delay))
+      }
+    }
+  }
+  throw lastError
+}
+
+/**
+ * Run email sending in background with retry logic
+ */
 function runEmailInBackground(label: string, work: () => Promise<void>): void {
-  void work().catch((err) => {
-    console.error(`[Email] ${label} failed: ${err}`)
-  })
+  void retryEmail(work)
+    .then(() => {
+      console.log(`[Email] ${label} sent successfully`)
+    })
+    .catch((err) => {
+      console.error(`[Email] ${label} failed after retries:`, err)
+      // TODO: Add monitoring/alerting here (e.g., Sentry, CloudWatch)
+    })
+}
+
+// Validate critical environment variables at startup
+if (!process.env.BETTER_AUTH_SECRET) {
+  throw new Error(
+    'BETTER_AUTH_SECRET is required. Generate one with: openssl rand -base64 32',
+  )
 }
 
 export const auth = betterAuth({
   database: pool,
-  secret: process.env.BETTER_AUTH_SECRET || 'dev-secret-change-in-production',
+  secret: process.env.BETTER_AUTH_SECRET,
   baseURL: getServerURL(),
   trustedOrigins: getAllowedOrigins(),
   user: {

@@ -7,6 +7,7 @@ import {
   updatePhoneIdentity,
   isPhoneNumberTaken,
 } from '@/lib/phone-identity'
+import { rateLimiter, getClientIdentifier, RATE_LIMITS } from '@/lib/rate-limit'
 
 // Conditionally import Firebase Admin Auth
 let firebaseAdminAuth:
@@ -61,7 +62,7 @@ export async function GET(request: Request) {
 }
 
 /**
- * POST /api/phone-identity/verify
+ * POST /api/phone-identity
  * Verify and add a phone number for authentication
  *
  * Body: { phoneNumber: string, firebaseIdToken: string }
@@ -71,6 +72,33 @@ export async function POST(request: Request) {
     const session = await auth.api.getSession({ headers: request.headers })
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Rate limiting - check before processing
+    const identifier = getClientIdentifier(request, session.user.id)
+    const rateLimit = rateLimiter.check(
+      identifier,
+      RATE_LIMITS.PHONE_VERIFY.maxRequests,
+      RATE_LIMITS.PHONE_VERIFY.windowMs,
+    )
+
+    if (rateLimit.limited) {
+      return NextResponse.json(
+        {
+          error: RATE_LIMITS.PHONE_VERIFY.message,
+          retryAfter: Math.ceil((rateLimit.resetAt - Date.now()) / 1000),
+        },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': Math.ceil(
+              (rateLimit.resetAt - Date.now()) / 1000,
+            ).toString(),
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': new Date(rateLimit.resetAt).toISOString(),
+          },
+        },
+      )
     }
 
     const body = await request.json()
@@ -85,9 +113,24 @@ export async function POST(request: Request) {
 
     // Verify the Firebase ID token
     if (!firebaseAdminAuth) {
+      console.warn('[API] POST /api/phone-identity - Firebase not configured')
       return NextResponse.json(
-        { error: 'Firebase Admin Auth not configured' },
-        { status: 500 },
+        { error: 'Phone authentication is currently unavailable' },
+        { status: 503 }, // Service Unavailable instead of 500
+      )
+    }
+
+    // Rate limit Firebase token verification
+    const tokenRateLimit = rateLimiter.check(
+      `firebase-post:${identifier}`,
+      RATE_LIMITS.FIREBASE_TOKEN.maxRequests,
+      RATE_LIMITS.FIREBASE_TOKEN.windowMs,
+    )
+
+    if (tokenRateLimit.limited) {
+      return NextResponse.json(
+        { error: RATE_LIMITS.FIREBASE_TOKEN.message },
+        { status: 429 },
       )
     }
 
@@ -105,6 +148,10 @@ export async function POST(request: Request) {
     // Verify that the phone number in the token matches the provided phone number
     const tokenPhoneNumber = decodedToken.phone_number
     if (!tokenPhoneNumber || tokenPhoneNumber !== phoneNumber) {
+      console.warn('[API] Phone number mismatch:', {
+        provided: phoneNumber,
+        inToken: tokenPhoneNumber,
+      })
       return NextResponse.json(
         { error: 'Phone number mismatch' },
         { status: 400 },
@@ -160,7 +207,7 @@ export async function POST(request: Request) {
 }
 
 /**
- * PUT /api/phone-identity/update
+ * PUT /api/phone-identity
  * Update phone number (requires re-verification via Firebase OTP)
  *
  * Body: { phoneNumber: string, firebaseIdToken: string }
@@ -170,6 +217,21 @@ export async function PUT(request: Request) {
     const session = await auth.api.getSession({ headers: request.headers })
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Rate limiting
+    const identifier = getClientIdentifier(request, session.user.id)
+    const rateLimit = rateLimiter.check(
+      `phone-update:${identifier}`,
+      RATE_LIMITS.PHONE_VERIFY.maxRequests,
+      RATE_LIMITS.PHONE_VERIFY.windowMs,
+    )
+
+    if (rateLimit.limited) {
+      return NextResponse.json(
+        { error: RATE_LIMITS.PHONE_VERIFY.message },
+        { status: 429 },
+      )
     }
 
     const body = await request.json()
@@ -184,9 +246,24 @@ export async function PUT(request: Request) {
 
     // Verify the Firebase ID token
     if (!firebaseAdminAuth) {
+      console.warn('[API] PUT /api/phone-identity - Firebase not configured')
       return NextResponse.json(
-        { error: 'Firebase Admin Auth not configured' },
-        { status: 500 },
+        { error: 'Phone authentication is currently unavailable' },
+        { status: 503 },
+      )
+    }
+
+    // Rate limit Firebase token verification
+    const tokenRateLimit = rateLimiter.check(
+      `firebase-put:${identifier}`,
+      RATE_LIMITS.FIREBASE_TOKEN.maxRequests,
+      RATE_LIMITS.FIREBASE_TOKEN.windowMs,
+    )
+
+    if (tokenRateLimit.limited) {
+      return NextResponse.json(
+        { error: RATE_LIMITS.FIREBASE_TOKEN.message },
+        { status: 429 },
       )
     }
 
@@ -204,6 +281,10 @@ export async function PUT(request: Request) {
     // Verify that the phone number in the token matches the provided phone number
     const tokenPhoneNumber = decodedToken.phone_number
     if (!tokenPhoneNumber || tokenPhoneNumber !== phoneNumber) {
+      console.warn('[API] Phone number mismatch:', {
+        provided: phoneNumber,
+        inToken: tokenPhoneNumber,
+      })
       return NextResponse.json(
         { error: 'Phone number mismatch' },
         { status: 400 },
