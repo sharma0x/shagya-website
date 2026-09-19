@@ -87,8 +87,8 @@ jobs:
 
       - name: Apply database migrations
         run: |
-          pnpm exec payload migrate
           pnpm exec better-auth migrate --config src/lib/auth.ts -y
+          pnpm exec payload migrate
 
       - name: Build Next.js & Payload
         run: pnpm build

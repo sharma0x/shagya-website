@@ -131,7 +131,7 @@ jobs:
           exit 1
 
       - name: Run migrations
-        run: docker compose -f docker-compose.staging.yml run --rm --no-deps app sh -c "npx payload migrate && npx better-auth migrate --config src/lib/auth.ts -y"
+        run: docker compose -f docker-compose.staging.yml run --rm --no-deps app sh -c "npx better-auth migrate --config src/lib/auth.ts -y && npx payload migrate"
 
       - name: Start app
         run: docker compose -f docker-compose.staging.yml up -d --remove-orphans
