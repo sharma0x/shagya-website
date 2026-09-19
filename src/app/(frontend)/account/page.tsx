@@ -18,6 +18,9 @@ import {
   Check,
   X,
   TicketPercent,
+  Lock,
+  ShieldCheck,
+  Mail,
 } from 'lucide-react'
 import { PhoneInput } from '@/components/ui/phone-input'
 
@@ -39,6 +42,8 @@ interface Address {
   isDefault: boolean
 }
 
+type LoginMethod = 'phone' | 'email' | 'google'
+
 export default function AccountDashboardPage() {
   const router = useRouter()
   const { data: sessionData, isPending } = useSession()
@@ -50,9 +55,13 @@ export default function AccountDashboardPage() {
   const [profileName, setProfileName] = useState('')
   const [profilePhone, setProfilePhone] = useState('')
   const [profileEmail, setProfileEmail] = useState('')
+  const [loginMethod, setLoginMethod] = useState<LoginMethod>('email')
+  const [hasVerifiedPhone, setHasVerifiedPhone] = useState(false)
+  const [hasVerifiedEmail, setHasVerifiedEmail] = useState(false)
   const [editing, setEditing] = useState(false)
   const [editName, setEditName] = useState('')
   const [editPhone, setEditPhone] = useState('')
+  const [editEmail, setEditEmail] = useState('')
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
@@ -84,16 +93,13 @@ export default function AccountDashboardPage() {
         if (profileRes.ok) {
           const pData = await profileRes.json()
           setProfileName(pData.name || sessionData?.user?.name || '')
-          setProfilePhone(
-            pData.phone || (sessionData?.user as any)?.phoneNumber || '',
-          )
-
-          // Filter out fallback emails (phone users)
-          const email = pData.email || sessionData?.user?.email || ''
-          const isFallbackEmail = email.includes('@phone.shayga.in')
-          setProfileEmail(isFallbackEmail ? '' : email)
+          setProfilePhone(pData.phone || '')
+          setProfileEmail(pData.email || '')
+          setLoginMethod(pData.loginMethod || 'email')
+          setHasVerifiedPhone(pData.hasVerifiedPhone || false)
+          setHasVerifiedEmail(pData.hasVerifiedEmail || false)
         } else {
-          // Use session data but filter fallback emails
+          // Fallback to session data
           const email = sessionData?.user?.email || ''
           const isFallbackEmail = email.includes('@phone.shayga.in')
           setProfileEmail(isFallbackEmail ? '' : email)
@@ -118,6 +124,7 @@ export default function AccountDashboardPage() {
   const handleStartEdit = () => {
     setEditName(profileName)
     setEditPhone(profilePhone)
+    setEditEmail(profileEmail)
     setEditing(true)
   }
 
@@ -128,14 +135,30 @@ export default function AccountDashboardPage() {
   const handleSave = async () => {
     setSaving(true)
     try {
+      const patchBody: Record<string, string> = { name: editName }
+
+      // Only include editable fields based on login method
+      if (loginMethod === 'phone') {
+        // Phone users can edit email (contact info)
+        patchBody.email = editEmail
+      } else {
+        // Email/Google users can edit phone (contact info)
+        patchBody.phone = editPhone
+      }
+
       const res = await fetch('/api/customers/me', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: editName, phone: editPhone }),
+        body: JSON.stringify(patchBody),
       })
       if (!res.ok) throw new Error('Failed to update profile')
+
       setProfileName(editName)
-      setProfilePhone(editPhone)
+      if (loginMethod === 'phone') {
+        setProfileEmail(editEmail)
+      } else {
+        setProfilePhone(editPhone)
+      }
       setEditing(false)
     } catch (err) {
       console.error('Failed to update profile', err)
@@ -143,6 +166,10 @@ export default function AccountDashboardPage() {
       setSaving(false)
     }
   }
+
+  // Determine which fields are editable vs locked
+  const isPhoneReadOnly = loginMethod === 'phone'
+  const isEmailReadOnly = loginMethod === 'email' || loginMethod === 'google'
 
   if (isPending || loadingData) {
     return (
@@ -156,6 +183,47 @@ export default function AccountDashboardPage() {
   }
 
   const user = sessionData?.user
+
+  /** Renders a read-only (locked) field in edit mode */
+  const renderLockedField = (label: string, value: string) => (
+    <div>
+      <label className="font-display block text-[10px] font-semibold tracking-wider text-neutral-400 uppercase">
+        {label}
+      </label>
+      <div className="mt-1 flex h-10 items-center gap-2 rounded-lg border border-neutral-100 bg-neutral-50 px-3">
+        <Lock className="h-3.5 w-3.5 text-neutral-300" />
+        <span className="font-body text-sm text-neutral-400">
+          {value || '\u2014'}
+        </span>
+      </div>
+      <p className="font-body mt-1 text-[10px] text-neutral-400">
+        Logged in with this — cannot be changed
+      </p>
+    </div>
+  )
+
+  /** Renders a "Verify" badge or link next to a field value */
+  const renderVerifyBadge = (
+    isVerified: boolean,
+    fieldType: 'email' | 'phone',
+  ) => {
+    if (!isVerified) {
+      return (
+        <Link
+          href="/account/security"
+          className="font-display text-brand-600 hover:text-brand-700 ml-2 inline-flex items-center gap-1 text-[10px] font-semibold transition-colors"
+        >
+          Verify
+        </Link>
+      )
+    }
+    return (
+      <span className="ml-2 inline-flex items-center gap-1 text-[10px] font-semibold text-green-600">
+        <ShieldCheck className="h-3 w-3" />
+        Verified
+      </span>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-neutral-50 px-4 py-10 sm:px-6 lg:px-8">
@@ -220,6 +288,7 @@ export default function AccountDashboardPage() {
           </div>
 
           {!editing ? (
+            /* ── View Mode ── */
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <div>
                 <span className="font-display text-[10px] font-semibold tracking-wider text-neutral-400 uppercase">
@@ -233,21 +302,29 @@ export default function AccountDashboardPage() {
                 <span className="font-display text-[10px] font-semibold tracking-wider text-neutral-400 uppercase">
                   Email
                 </span>
-                <p className="font-body mt-0.5 text-sm text-neutral-500">
-                  {profileEmail || '\u2014'}
-                </p>
+                <div className="mt-0.5 flex items-center">
+                  <p className="font-body text-sm text-neutral-900">
+                    {profileEmail || '\u2014'}
+                  </p>
+                  {profileEmail && renderVerifyBadge(hasVerifiedEmail, 'email')}
+                </div>
               </div>
               <div>
                 <span className="font-display text-[10px] font-semibold tracking-wider text-neutral-400 uppercase">
                   Phone
                 </span>
-                <p className="font-body mt-0.5 text-sm text-neutral-900">
-                  {profilePhone || '\u2014'}
-                </p>
+                <div className="mt-0.5 flex items-center">
+                  <p className="font-body text-sm text-neutral-900">
+                    {profilePhone || '\u2014'}
+                  </p>
+                  {profilePhone && renderVerifyBadge(hasVerifiedPhone, 'phone')}
+                </div>
               </div>
             </div>
           ) : (
+            /* ── Edit Mode ── */
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              {/* Name — always editable */}
               <div>
                 <label className="font-display block text-[10px] font-semibold tracking-wider text-neutral-400 uppercase">
                   Name
@@ -260,27 +337,64 @@ export default function AccountDashboardPage() {
                   placeholder="Your name"
                 />
               </div>
-              <div>
-                <label className="font-display block text-[10px] font-semibold tracking-wider text-neutral-400 uppercase">
-                  Email
-                </label>
-                <p className="font-body mt-2 text-sm text-neutral-400">
-                  {profileEmail}
-                </p>
-              </div>
-              <div>
-                <label className="font-display block text-[10px] font-semibold tracking-wider text-neutral-400 uppercase">
-                  Phone
-                </label>
-                <div className="mt-1">
-                  <PhoneInput
-                    value={editPhone}
-                    onChange={setEditPhone}
-                    placeholder="98765 43210"
-                    className="h-10"
-                  />
+
+              {/* Email — locked for email/Google login, editable for phone login */}
+              {isEmailReadOnly ? (
+                renderLockedField('Email', profileEmail)
+              ) : (
+                <div>
+                  <label className="font-display block text-[10px] font-semibold tracking-wider text-neutral-400 uppercase">
+                    Email
+                  </label>
+                  <div className="relative mt-1">
+                    <input
+                      type="email"
+                      value={editEmail}
+                      onChange={(e) => setEditEmail(e.target.value)}
+                      className="font-body focus:border-brand-500 h-10 w-full rounded-lg border border-neutral-200 bg-white pr-3 pl-9 text-sm text-neutral-900 transition-colors outline-none"
+                      placeholder="you@example.com"
+                    />
+                    <Mail className="pointer-events-none absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 text-neutral-300" />
+                  </div>
+                  {profileEmail && !hasVerifiedEmail && (
+                    <Link
+                      href="/account/security"
+                      className="font-display text-brand-600 hover:text-brand-700 mt-1 inline-flex items-center gap-1 text-[10px] font-semibold transition-colors"
+                    >
+                      <ShieldCheck className="h-3 w-3" />
+                      Verify email
+                    </Link>
+                  )}
                 </div>
-              </div>
+              )}
+
+              {/* Phone — locked for phone login, editable for email/Google login */}
+              {isPhoneReadOnly ? (
+                renderLockedField('Phone', profilePhone)
+              ) : (
+                <div>
+                  <label className="font-display block text-[10px] font-semibold tracking-wider text-neutral-400 uppercase">
+                    Phone
+                  </label>
+                  <div className="mt-1">
+                    <PhoneInput
+                      value={editPhone}
+                      onChange={setEditPhone}
+                      placeholder="98765 43210"
+                      className="h-10"
+                    />
+                  </div>
+                  {profilePhone && !hasVerifiedPhone && (
+                    <Link
+                      href="/account/security"
+                      className="font-display text-brand-600 hover:text-brand-700 mt-1 inline-flex items-center gap-1 text-[10px] font-semibold transition-colors"
+                    >
+                      <ShieldCheck className="h-3 w-3" />
+                      Verify phone
+                    </Link>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>
