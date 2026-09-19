@@ -96,3 +96,4 @@ infra/provision/allowed_ips.txt
 .docker-config/
 
 # Environment files
+/.claude/
