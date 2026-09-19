@@ -1,3 +1,9 @@
+## [1.18.0](https://github.com/sharma0x/shagya-website/compare/v1.17.1...v1.18.0) (2026-09-19)
+
+### Features
+
+- **account:** add login method detection and verification UI ([f3dbd08](https://github.com/sharma0x/shagya-website/commit/f3dbd0803c707aedf002b0fc2a17c9d9a9c16052))
+
 ## [1.17.1](https://github.com/sharma0x/shagya-website/compare/v1.17.0...v1.17.1) (2026-09-19)
 
 ### Bug Fixes
