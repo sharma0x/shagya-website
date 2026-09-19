@@ -57,8 +57,25 @@ export default function SecurityPage() {
       return
     }
 
-    loadPhoneIdentity()
-  }, [sessionData, isPending, router, loadPhoneIdentity])
+    // Load phone identity on mount
+    async function fetchPhoneIdentity() {
+      try {
+        setLoading(true)
+        const response = await fetch('/api/phone-identity')
+
+        if (response.ok) {
+          const data = await response.json()
+          setPhoneIdentity(data.phoneIdentity)
+        }
+      } catch (err) {
+        console.error('Failed to load phone identity:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchPhoneIdentity()
+  }, [sessionData, isPending, router])
 
   const handleRemovePhone = async () => {
     if (
