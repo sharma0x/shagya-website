@@ -96,3 +96,7 @@ infra/provision/allowed_ips.txt
 .docker-config/
 
 # Environment files
+/.claude/
+
+# MCP config (contains API keys)
+.mcp.json

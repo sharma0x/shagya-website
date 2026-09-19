@@ -16,6 +16,7 @@ import { galleryForColor, stockForColor } from '@/lib/product-utils'
 import { cartQtyCap, cartMergeKey } from '@/lib/cart-merge'
 import { weaveLabel } from '@/lib/weaves'
 import { deduplicateAddresses } from '@/lib/address-utils'
+import { getProductUrl } from '@/lib/product-url'
 import {
   ArrowLeft,
   Check,
@@ -1389,11 +1390,19 @@ export default function CheckoutPage() {
                         item.product,
                         item.variant?.color?.slug,
                       )
+                      const productUrl = getProductUrl(
+                        item.product.slug,
+                        item.product.id,
+                        item.variant?.color?.slug,
+                      )
 
                       return (
                         <div key={item.id} className="flex gap-4">
                           <div className="relative h-20 w-16 shrink-0">
-                            <div className="h-full w-full overflow-hidden rounded-lg border border-neutral-100 bg-neutral-100">
+                            <Link
+                              href={productUrl}
+                              className="block h-full w-full overflow-hidden rounded-lg border border-neutral-100 bg-neutral-100 transition-opacity hover:opacity-75"
+                            >
                               {imageUrl ? (
                                 <img
                                   src={imageUrl}
@@ -1406,16 +1415,18 @@ export default function CheckoutPage() {
                                   No Image
                                 </div>
                               )}
-                            </div>
+                            </Link>
                             <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-neutral-900 text-[10px] font-bold text-white shadow-xs">
                               {item.quantity}
                             </span>
                           </div>
 
                           <div className="flex min-w-0 flex-1 flex-col justify-center py-1">
-                            <h4 className="font-display truncate text-sm font-semibold text-neutral-900">
-                              {item.product.name}
-                            </h4>
+                            <Link href={productUrl}>
+                              <h4 className="font-display hover:text-brand-700 truncate text-sm font-semibold text-neutral-900 transition-colors">
+                                {item.product.name}
+                              </h4>
+                            </Link>
 
                             {[
                               weaveLabel(item.product.weave),

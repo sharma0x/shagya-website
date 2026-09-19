@@ -11,6 +11,7 @@ import { galleryForColor, stockForColor } from '@/lib/product-utils'
 import { weaveLabel } from '@/lib/weaves'
 import { cartQtyCap } from '@/lib/cart-merge'
 import { trackViewCart, cartItemToGA4Item } from '@/lib/analytics'
+import { getProductUrl } from '@/lib/product-url'
 
 interface CartDrawerProps {
   isOpen: boolean
@@ -114,6 +115,11 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                     : '/images/placeholder.jpg'
                 const qtyCap = cartQtyCap(item)
                 const stockLeft = stockForColor(item.product, itemColorSlug)
+                const productUrl = getProductUrl(
+                  item.product.slug,
+                  item.product.id,
+                  item.variant?.color?.slug,
+                )
 
                 return (
                   <div
@@ -121,7 +127,10 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                     className="flex items-start gap-4 border-b border-neutral-100 pb-6 last:border-0"
                   >
                     {/* Image */}
-                    <div className="relative aspect-[3/4] w-20 shrink-0 overflow-hidden rounded-lg bg-neutral-50">
+                    <Link
+                      href={productUrl}
+                      className="relative aspect-[3/4] w-20 shrink-0 overflow-hidden rounded-lg bg-neutral-50 transition-opacity hover:opacity-75"
+                    >
                       <Image
                         src={imageUrl}
                         alt={item.product.name}
@@ -130,13 +139,15 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                         sizes="80px"
                         unoptimized={isUnoptimizedImage(imageUrl)}
                       />
-                    </div>
+                    </Link>
 
                     {/* Meta */}
                     <div className="min-w-0 flex-1">
-                      <h4 className="font-display truncate text-sm font-semibold text-neutral-900">
-                        {item.product.name}
-                      </h4>
+                      <Link href={productUrl}>
+                        <h4 className="font-display hover:text-brand-700 truncate text-sm font-semibold text-neutral-900 transition-colors">
+                          {item.product.name}
+                        </h4>
+                      </Link>
                       <p className="font-body mt-0.5 text-xs text-neutral-500">
                         {[
                           weaveLabel(item.product.weave),
