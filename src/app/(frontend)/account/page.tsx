@@ -84,7 +84,9 @@ export default function AccountDashboardPage() {
         if (profileRes.ok) {
           const pData = await profileRes.json()
           setProfileName(pData.name || sessionData?.user?.name || '')
-          setProfilePhone(pData.phone || sessionData?.user?.phoneNumber || '')
+          setProfilePhone(
+            pData.phone || (sessionData?.user as any)?.phoneNumber || '',
+          )
 
           // Filter out fallback emails (phone users)
           const email = pData.email || sessionData?.user?.email || ''
@@ -96,7 +98,7 @@ export default function AccountDashboardPage() {
           const isFallbackEmail = email.includes('@phone.shayga.in')
           setProfileEmail(isFallbackEmail ? '' : email)
           setProfileName(sessionData?.user?.name || '')
-          setProfilePhone(sessionData?.user?.phoneNumber || '')
+          setProfilePhone((sessionData?.user as any)?.phoneNumber || '')
         }
       } catch (err) {
         console.error('Failed to load dashboard data', err)

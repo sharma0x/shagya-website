@@ -114,6 +114,17 @@ export const auth = betterAuth({
   databaseHooks: {
     user: {
       create: {
+        before: async (user) => {
+          // Set friendly name for phone users
+          if (!user.name || user.name === user.id) {
+            // If no name or name is the Firebase UID, set a friendly name
+            const phoneNumber = (user as any).phoneNumber
+            if (phoneNumber && typeof phoneNumber === 'string') {
+              user.name = `User ${phoneNumber.slice(-4)}`
+            }
+          }
+          return user
+        },
         after: async (user) => {
           const { syncCustomer } = await import('./auth-sync')
           await syncCustomer(user)
@@ -146,25 +157,16 @@ export const auth = betterAuth({
           firebaseAuthPlugin({
             useClientSideTokens: true,
             firebaseAdminAuth,
-            getPhoneUserFallbackEmail: ({ uid, phoneNumber }) => {
+            getPhoneUserFallbackEmail: ({
+              uid,
+              phoneNumber,
+            }: {
+              uid: string
+              phoneNumber?: string
+            }) => {
               // Don't return fallback email - let it be null for phone-only users
               // This prevents showing fake email addresses in the UI
               return null as any
-            },
-            onCreateUser: async ({ user, firebaseUser }) => {
-              // Extract phone number from Firebase user
-              const phoneNumber = firebaseUser.phoneNumber || null
-
-              // Set a friendly name instead of UID
-              const name = phoneNumber
-                ? `User ${phoneNumber.slice(-4)}` // "User 3210" from +919876543210
-                : 'User'
-
-              return {
-                ...user,
-                name,
-                phoneNumber,
-              }
             },
           }),
         ]
