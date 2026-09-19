@@ -1,3 +1,13 @@
+## [1.16.0](https://github.com/sharma0x/shagya-website/compare/v1.15.0...v1.16.0) (2026-09-19)
+
+### Features
+
+- **receipts:** gate downloads until delivery ([60b161c](https://github.com/sharma0x/shagya-website/commit/60b161cc2de7609dcbe5a4a09beb7f97e0820d89))
+
+### Bug Fixes
+
+- **checkout:** normalize COD fee totals ([b1d032b](https://github.com/sharma0x/shagya-website/commit/b1d032bbafd43d1a1dbdd65859d0401446d164f2))
+
 ## [1.15.0](https://github.com/sharma0x/shagya-website/compare/v1.14.0...v1.15.0) (2026-09-19)
 
 ### Features
