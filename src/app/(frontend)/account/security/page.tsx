@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useSession } from '@/lib/auth-client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -34,7 +34,7 @@ export default function SecurityPage() {
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
-  const loadPhoneIdentity = async () => {
+  const loadPhoneIdentity = useCallback(async () => {
     try {
       setLoading(true)
       const response = await fetch('/api/phone-identity')
@@ -48,7 +48,7 @@ export default function SecurityPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
     if (isPending) return
@@ -58,7 +58,7 @@ export default function SecurityPage() {
     }
 
     loadPhoneIdentity()
-  }, [sessionData, isPending, router])
+  }, [sessionData, isPending, router, loadPhoneIdentity])
 
   const handleRemovePhone = async () => {
     if (
