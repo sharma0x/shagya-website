@@ -114,7 +114,7 @@ export const auth = betterAuth({
   databaseHooks: {
     user: {
       create: {
-        before: async (user, context) => {
+        before: async (user, _context: any) => {
           // Set friendly name for phone users
           if (!user.name || user.name === user.id) {
             // If no name or name is the Firebase UID, set a friendly name
