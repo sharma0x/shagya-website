@@ -34,8 +34,8 @@ COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 COPY . .
 RUN (pnpm exec payload generate:types || true) && \
-    pnpm exec payload migrate && \
     pnpm exec better-auth migrate --config src/lib/auth.ts -y && \
+    pnpm exec payload migrate && \
     pnpm exec next build
 
 FROM base AS runner

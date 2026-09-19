@@ -5,7 +5,7 @@ export async function up({ payload }: MigrateUpArgs): Promise<void> {
     -- Create phone_identities table for verified phone authentication
     CREATE TABLE IF NOT EXISTS "phone_identities" (
       "id" SERIAL PRIMARY KEY,
-      "user_id" VARCHAR NOT NULL,
+      "user_id" TEXT NOT NULL,
       "phone_number" VARCHAR NOT NULL,
       "firebase_uid" VARCHAR NOT NULL,
       "verified_at" TIMESTAMP NOT NULL DEFAULT NOW(),
@@ -17,7 +17,7 @@ export async function up({ payload }: MigrateUpArgs): Promise<void> {
       CONSTRAINT "phone_identities_firebase_uid_unique" UNIQUE ("firebase_uid"),
       CONSTRAINT "phone_identities_user_id_unique" UNIQUE ("user_id"),
       CONSTRAINT "phone_identities_user_id_fkey" FOREIGN KEY ("user_id")
-        REFERENCES "users" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+        REFERENCES "user" ("id") ON DELETE CASCADE ON UPDATE CASCADE
     );
 
     -- Create indexes for better query performance
