@@ -1,3 +1,9 @@
+## [1.16.1](https://github.com/sharma0x/shagya-website/compare/v1.16.0...v1.16.1) (2026-09-19)
+
+### Bug Fixes
+
+- **delhivery:** support COD fulfilment in admin ([d778a58](https://github.com/sharma0x/shagya-website/commit/d778a58367eb6ee333516142efef7c6bee23db0e))
+
 ## [1.16.0](https://github.com/sharma0x/shagya-website/compare/v1.15.0...v1.16.0) (2026-09-19)
 
 ### Features
