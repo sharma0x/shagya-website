@@ -263,7 +263,7 @@ export async function POST(request: Request) {
     const standardRate = (siteSettings as any).standardShippingRate ?? 150
     const expressRate = (siteSettings as any).expressShippingRate ?? 350
     const freeThreshold = (siteSettings as any).freeShippingThreshold ?? 5000
-    const codFee = isCod ? ((siteSettings as any).codFee ?? 100) : 0
+    const codFee = isCod ? Number((siteSettings as any).codFee ?? 100) : 0
 
     const shippingBase =
       subtotal >= freeThreshold

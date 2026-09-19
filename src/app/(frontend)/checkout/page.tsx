@@ -182,7 +182,7 @@ export default function CheckoutPage() {
             standard: data.standardShippingRate ?? 150,
             express: data.expressShippingRate ?? 350,
             freeThreshold: data.freeShippingThreshold ?? 5000,
-            codFee: data.codFee ?? 100,
+            codFee: Number(data.codFee ?? 100),
           })
         }
       })
@@ -636,7 +636,7 @@ export default function CheckoutPage() {
     }
   }
   const total = Math.max(0, subtotal + shipping - discount)
-  const codFee = paymentMethod === 'cod' ? shippingConfig.codFee : 0
+  const codFee = paymentMethod === 'cod' ? Number(shippingConfig.codFee) : 0
   const orderTotal = Math.max(0, total + codFee)
 
   // GA4 item payloads derived from the effective cart. Each checkout line is
@@ -1313,7 +1313,9 @@ export default function CheckoutPage() {
                           Cash on Delivery (COD)
                         </p>
                         <p className="font-body text-xs text-neutral-500">
-                          Pay in cash or UPI when your saree arrives
+                          Pay ₹{orderTotal.toLocaleString('en-IN')} on delivery
+                          {codFee > 0 &&
+                            ` (includes ₹${codFee.toLocaleString('en-IN')} COD fee)`}
                         </p>
                       </div>
                     </div>
@@ -1339,7 +1341,7 @@ export default function CheckoutPage() {
                       <Loader2 className="h-3.5 w-3.5 animate-spin" />
                     )}
                     {paymentMethod === 'cod'
-                      ? 'Complete Order'
+                      ? `Place COD Order · Pay ₹${orderTotal.toLocaleString('en-IN')}`
                       : `Pay ₹${orderTotal.toLocaleString('en-IN')}`}
                   </button>
                 </div>
