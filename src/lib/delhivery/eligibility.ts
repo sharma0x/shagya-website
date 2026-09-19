@@ -26,11 +26,10 @@ export function getShipEligibility(
       reason: `Order must be Confirmed before shipping (current: ${status || '—'}). Save the status change, then ship.`,
     }
   }
-  if (!paymentId || paymentId === 'COD') {
+  if (!paymentId) {
     return {
       canShip: false,
-      reason:
-        'Prepaid only — Delhivery shipping is unavailable for COD orders.',
+      reason: 'Payment method is missing — save the order before shipping.',
     }
   }
   if (total >= EWAYBILL_THRESHOLD_RUPEES) {

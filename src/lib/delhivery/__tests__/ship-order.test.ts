@@ -168,6 +168,30 @@ describe('shipOrderWithDelhivery', () => {
     )
   })
 
+  it('ships a confirmed COD order with the cash collection amount', async () => {
+    mockFetchWaybill.mockResolvedValueOnce(['70351234567'])
+    mockCreateShipment.mockResolvedValueOnce({
+      success: true,
+      packages: [{ status: 'Success', waybill: '70351234567' }],
+    })
+
+    const payload = mockPayload({
+      findByID: vi
+        .fn()
+        .mockResolvedValue(baseOrder({ paymentId: 'COD', total: 5099 })),
+    })
+    const result = await shipOrderWithDelhivery(payload, 'order-1')
+
+    expect(result.ok).toBe(true)
+    expect(mockCreateShipment).toHaveBeenCalledWith(
+      expect.objectContaining({
+        payment_mode: 'COD',
+        total_amount: 5099,
+        cod_amount: 5099,
+      }),
+    )
+  })
+
   it('reads waybill from the packages array on success', async () => {
     mockFetchWaybill.mockResolvedValueOnce(['70351234567'])
     mockCreateShipment.mockResolvedValueOnce({
@@ -220,24 +244,6 @@ describe('shipOrderWithDelhivery', () => {
         overrideAccess: true,
       }),
     )
-  })
-
-  it('rejects COD orders', async () => {
-    const payload = mockPayload({
-      findByID: vi
-        .fn()
-        .mockResolvedValue(
-          baseOrder({ paymentId: 'COD', status: 'confirmed' }),
-        ),
-    })
-    const result = await shipOrderWithDelhivery(payload, 'order-1')
-
-    expect(result).toMatchObject({
-      ok: false,
-      status: 400,
-      reason: expect.stringContaining('prepaid'),
-    })
-    expect(mockFetchWaybill).not.toHaveBeenCalled()
   })
 
   it('rejects non-confirmed orders', async () => {

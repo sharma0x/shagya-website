@@ -67,6 +67,7 @@ export function buildShipmentRequest(
     })
     .join(', ')
   const productsDesc = descriptions.slice(0, MAX_PRODUCTS_DESC_LENGTH)
+  const isCod = order.paymentId?.trim().toUpperCase() === 'COD'
 
   return {
     name: address?.fullName?.trim() ?? '',
@@ -77,7 +78,7 @@ export function buildShipmentRequest(
     city: address?.city?.trim() ?? '',
     state: address?.state?.trim() ?? '',
     country: address?.country?.trim() || 'India',
-    payment_mode: 'Prepaid',
+    payment_mode: isCod ? 'COD' : 'Prepaid',
     pickup_location: config.pickupLocation,
     weight,
     quantity,
@@ -94,7 +95,7 @@ export function buildShipmentRequest(
     return_pin: config.pickupPin,
     return_phone: config.sellerPhone,
     waybill,
-    cod_amount: 0,
+    cod_amount: isCod ? order.total : 0,
   }
 }
 
@@ -205,10 +206,10 @@ function validateOrderForShipment(
       status: 400,
     }
   }
-  if (!order.paymentId || order.paymentId === 'COD') {
+  if (!order.paymentId) {
     return {
       ok: false,
-      reason: 'Only prepaid orders can be shipped with Delhivery',
+      reason: 'Payment method is missing — save the order before shipping',
       status: 400,
     }
   }
