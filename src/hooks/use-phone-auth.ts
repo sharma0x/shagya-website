@@ -6,6 +6,7 @@ import {
 } from 'firebase/auth'
 import { getFirebaseAuth } from '@/lib/firebase-client'
 import { signInWithPhone } from '@/lib/auth-client'
+import { phoneAuthErrorMessage } from '@/lib/firebase-auth-errors'
 
 interface UsePhoneAuthOptions {
   /**
@@ -100,6 +101,12 @@ export function usePhoneAuth(
   const confirmationResultRef = useRef<ConfirmationResult | null>(null)
   const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null)
 
+  const clearRecaptcha = useCallback(() => {
+    recaptchaVerifierRef.current?.clear()
+    recaptchaVerifierRef.current = null
+    document.getElementById(recaptchaContainerId)?.replaceChildren()
+  }, [recaptchaContainerId])
+
   const clearError = useCallback(() => {
     setError(null)
   }, [])
@@ -109,11 +116,8 @@ export function usePhoneAuth(
     setIsSendingOTP(false)
     setIsVerifyingOTP(false)
     confirmationResultRef.current = null
-    if (recaptchaVerifierRef.current) {
-      recaptchaVerifierRef.current.clear()
-      recaptchaVerifierRef.current = null
-    }
-  }, [])
+    clearRecaptcha()
+  }, [clearRecaptcha])
 
   const sendOTP = useCallback(
     async (phoneNumber: string) => {
@@ -125,6 +129,8 @@ export function usePhoneAuth(
 
         // Initialize reCAPTCHA verifier if not already done
         if (!recaptchaVerifierRef.current) {
+          // Firebase can leave an iframe behind after a failed request.
+          clearRecaptcha()
           recaptchaVerifierRef.current = new RecaptchaVerifier(
             auth,
             recaptchaContainerId,
@@ -134,11 +140,7 @@ export function usePhoneAuth(
                 // reCAPTCHA solved
               },
               'expired-callback': () => {
-                // Reset reCAPTCHA when it expires
-                if (recaptchaVerifierRef.current) {
-                  recaptchaVerifierRef.current.clear()
-                  recaptchaVerifierRef.current = null
-                }
+                clearRecaptcha()
               },
             },
           )
@@ -151,21 +153,17 @@ export function usePhoneAuth(
           recaptchaVerifierRef.current,
         )
       } catch (err) {
-        const error =
-          err instanceof Error ? err : new Error('Failed to send OTP')
+        console.error('[Phone auth] Failed to send OTP:', err)
+        const error = new Error(phoneAuthErrorMessage(err, 'send'))
         setError(error)
         onError?.(error)
-        // Clean up reCAPTCHA on error
-        if (recaptchaVerifierRef.current) {
-          recaptchaVerifierRef.current.clear()
-          recaptchaVerifierRef.current = null
-        }
+        clearRecaptcha()
         throw error
       } finally {
         setIsSendingOTP(false)
       }
     },
-    [recaptchaContainerId, onError],
+    [clearRecaptcha, onError, recaptchaContainerId],
   )
 
   const verifyOTP = useCallback(
@@ -196,8 +194,8 @@ export function usePhoneAuth(
 
         onSuccess?.()
       } catch (err) {
-        const error =
-          err instanceof Error ? err : new Error('Failed to verify OTP')
+        console.error('[Phone auth] Failed to verify OTP:', err)
+        const error = new Error(phoneAuthErrorMessage(err, 'verify'))
         setError(error)
         onError?.(error)
         throw error
