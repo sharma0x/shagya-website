@@ -114,16 +114,15 @@ export const auth = betterAuth({
   databaseHooks: {
     user: {
       create: {
-        before: async (user, _context: null | any) => {
+        before: async (user) => {
           // Set friendly name for phone users
           if (!user.name || user.name === user.id) {
             // If no name or name is the Firebase UID, set a friendly name
-            const phoneNumber = (user as any).phoneNumber
-            if (phoneNumber && typeof phoneNumber === 'string') {
-              user.name = `User ${phoneNumber.slice(-4)}`
+            if (user.phoneNumber && typeof user.phoneNumber === 'string') {
+              user.name = `User ${user.phoneNumber.slice(-4)}`
             }
           }
-          return user
+          return { data: user }
         },
         after: async (user) => {
           const { syncCustomer } = await import('./auth-sync')
@@ -164,9 +163,9 @@ export const auth = betterAuth({
               uid: string
               phoneNumber?: string
             }) => {
-              // Don't return fallback email - let it be null for phone-only users
-              // This prevents showing fake email addresses in the UI
-              return null as any
+              // Return a fallback email that will be filtered out in the UI
+              // This is required by the Firebase plugin but won't be displayed
+              return `${uid}@phone.shayga.in`
             },
           }),
         ]

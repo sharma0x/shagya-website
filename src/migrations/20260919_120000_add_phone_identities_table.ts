@@ -1,12 +1,28 @@
 import { MigrateDownArgs, MigrateUpArgs } from '@payloadcms/db-postgres'
 
 export async function up({ payload }: MigrateUpArgs): Promise<void> {
+  // Safety check: Ensure Better Auth's "user" table exists before creating foreign key
+  const userTableExists = await payload.db.drizzle.execute(`
+    SELECT EXISTS (
+      SELECT FROM information_schema.tables
+      WHERE table_schema = 'public'
+      AND table_name = 'user'
+    );
+  `)
+
+  if (!userTableExists.rows?.[0]?.exists) {
+    throw new Error(
+      'Migration failed: Better Auth "user" table does not exist. ' +
+        'Run "pnpm exec better-auth migrate" before running Payload migrations.',
+    )
+  }
+
   await payload.db.drizzle.execute(`
     -- Create phone_identities table for verified phone authentication
     CREATE TABLE IF NOT EXISTS "phone_identities" (
       "id" SERIAL PRIMARY KEY,
       "user_id" TEXT NOT NULL,
-      "phone_number" VARCHAR NOT NULL,
+      "phone_number" VARCHAR NOT NULL CHECK (phone_number ~ '^\+[1-9]\d{1,14}$'),
       "firebase_uid" VARCHAR NOT NULL,
       "verified_at" TIMESTAMP NOT NULL DEFAULT NOW(),
       "created_at" TIMESTAMP NOT NULL DEFAULT NOW(),
