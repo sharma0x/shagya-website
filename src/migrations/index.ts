@@ -33,6 +33,7 @@ import * as migration_20260917_010000_add_hero_mobile_image from './20260917_010
 import * as migration_20260917_020000_add_whatsapp_url_to_site_settings from './20260917_020000_add_whatsapp_url_to_site_settings'
 import * as migration_20260918_000000_add_product_code_and_gst from './20260918_000000_add_product_code_and_gst'
 import * as migration_20260919_000000_add_cod_fee from './20260919_000000_add_cod_fee'
+import * as migration_20260919_120000_add_phone_identities_table from './20260919_120000_add_phone_identities_table'
 
 export const migrations = [
   {
@@ -209,5 +210,10 @@ export const migrations = [
     up: migration_20260919_000000_add_cod_fee.up,
     down: migration_20260919_000000_add_cod_fee.down,
     name: '20260919_000000_add_cod_fee',
+  },
+  {
+    up: migration_20260919_120000_add_phone_identities_table.up,
+    down: migration_20260919_120000_add_phone_identities_table.down,
+    name: '20260919_120000_add_phone_identities_table',
   },
 ]
