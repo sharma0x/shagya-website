@@ -151,7 +151,9 @@ export async function shipOrderWithDelhivery(
       order,
       `Delhivery manifest failed: ${reason}`,
     )
-    return { ok: false, reason, status: 502 }
+    // This is a valid upstream response, not a gateway failure. Returning 422
+    // keeps the provider's COD/prepaid rejection visible through Cloudflare.
+    return { ok: false, reason, status: 422 }
   }
 
   const returnedWaybill =

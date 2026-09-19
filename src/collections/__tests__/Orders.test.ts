@@ -136,6 +136,17 @@ describe('Orders collection', () => {
       expect(field).toBeDefined()
       expect(field?.type).toBe('text')
     })
+
+    it('has a payment method column for the order list', () => {
+      expect((Orders.admin as any)?.defaultColumns).toContain('paymentMethod')
+
+      const field = Orders.fields?.find(
+        (f: any) => f.name === 'paymentMethod',
+      ) as any
+      expect(field?.type).toBe('ui')
+      expect(field?.label).toBe('Payment')
+      expect(field?.admin?.components?.Cell).toContain('OrderPaymentMethodCell')
+    })
   })
 
   describe('Shipping Address group field', () => {
@@ -478,8 +489,8 @@ describe('Orders collection', () => {
   })
 
   describe('Total field count', () => {
-    it('has exactly 24 top-level fields', () => {
-      expect(Orders.fields).toHaveLength(24)
+    it('has exactly 25 top-level fields', () => {
+      expect(Orders.fields).toHaveLength(25)
     })
   })
 })

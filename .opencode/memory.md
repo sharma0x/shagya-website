@@ -181,6 +181,12 @@ ENV_FILE=.env IMAGE_TAG=testing DOCKER_IMAGE=ghcr.io/sharma0x/shagya-website doc
 - Payload `payload.update`/`event-logs` `json` fields need `as unknown as Record<string, unknown>` casts — `ShipmentResponse` has no string index signature.
 - Orders collection endpoints precedent (`src/collections/Orders.ts`): register in `fields`-independent `endpoints` array using `req.routeParams?.id` + `req.payload`; enforce `Boolean(req.user)`. Webhook writes to `orders`/`event-logs` need `overrideAccess: true` (both collections require sessions to write).
 
+## Delhivery COD Requirements (2026-09-19)
+
+- Official Delhivery help article `https://help.delhivery.com/docs/cod-vs-prepaid-assignment` describes payment tags only for channel imports such as Shopify: Shopify `Pending` and `Partially Paid` map to Delhivery `COD`; unknown financial statuses leave payment mode blank and must be assigned manually before shipping.
+- Shayga is a direct custom integration using `/api/cmu/create.json`, not Shopify/WooCommerce. Channel tags such as `cash_on_delivery` are therefore irrelevant to Shayga's request; the request must explicitly send `payment_mode: 'COD'` and the exact `cod_amount`.
+- COD operational prerequisites include completed bank details for remittance, an active pickup location, positive wallet balance, and COD serviceability/account activation. The authenticated Delhivery dashboard showed `SHAYGA B2C` and wallet balance ₹1,000; Bank Details and Delhivery account-level COD activation still need confirmation.
+
 ## Deploy gotchas (2026-09-09, live prod deploy of Delhivery + live Razorpay)
 
 - **Frontend root layout hits Payload (DB) at render** (`src/app/(frontend)/layout.tsx` fetches categories/fabric-types/brands/occasions). Any statically-prerendered route under it fails `next build` with `cannot connect to Postgres` during prerender IF the build stage has no `DATABASE_URL`. Fix: `export const dynamic = 'force-dynamic'` in the layout forces all child routes to render at request-time. This regressed in commit `5ea85ad` (drove mega menu from taxonomies) — the prior `:latest` image (2026-09-01) predates it, so its build worked.

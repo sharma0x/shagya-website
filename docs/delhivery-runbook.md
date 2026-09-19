@@ -1,11 +1,13 @@
 # Delhivery Integration Runbook
 
-Integration scope: **Delhivery One API** (prepaid only) for Shayga order fulfilment —
+Integration scope: **Delhivery One API** (prepaid and COD) for Shayga order fulfilment —
 waybill generation, shipment creation, label generation, pickup request, and webhook status sync.
 
 ## Architecture
 
-- **Prepaid only.** COD orders (`paymentId === 'COD'`) are rejected at ship time.
+- Payment mode is derived from `paymentId`: `COD` orders are sent with
+  `payment_mode: 'COD'` and `cod_amount` equal to the order total; all other
+  payment IDs are sent as prepaid.
 - Waybill & shipment requests are issued from the order "ship" endpoint; fulfilment and
   tracking endpoints are closed-loop (not exposed publicly).
 - Delhivery pushes delivery updates to our webhook; we translate scans to order statuses
@@ -53,7 +55,8 @@ Pickup location name is `SHAYGA B2C` (configured in the One Panel under
 All under `/api/orders/:id/delhivery/...` (collection endpoints — user session required):
 
 - `POST …/ship` — validate order, fetch waybill, create shipment, set `shipped`,
-  store `delhivery.waybill`. Guards: status `confirmed`, prepaid only, total < ₹50,000
+  store `delhivery.waybill`. Guards: status `confirmed`, payment method present,
+  total < ₹50,000
   (ewaybill exemption; higher amounts must be manifested in One Panel), no existing waybill,
   complete address. Unit weight fallback **500 g** (products have no weight field).
 - `GET …/label` — 4R PDF packing-slip URL.
@@ -90,7 +93,7 @@ All under `/api/orders/:id/delhivery/...` (collection endpoints — user session
 | Symptom                                      | Cause / action                                                                                                                                |
 | -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
 | Ship returns `401 Login or API Key Required` | Token missing/wrong, or using test base with a prod token (staging base rejects direct token calls; test E2E only via `DELHIVERY_MODE=prod`). |
-| Ship fails validation                        | Check `payments.status`, `paymentId` (**`COD` is rejected**), total < ₹50,000, complete `shippingAddress`.                                    |
+| Ship fails validation                        | Check order status, `paymentId`, total < ₹50,000, and complete `shippingAddress`.                                                             |
 | Order stuck `pending` / no waybill           | `delhivery.ship_failed` row in `event-logs` — read `payload.response`.                                                                        |
 | Webhook `401`                                | Verify `DELHIVERY_WEBHOOK_SECRET` matches the token registered with Delhivery.                                                                |
 | Webhook returns `200` but order unchanged    | Scan mapped to audit-only (`/RTO`, unknown type) or status already current — check `event-logs`.                                              |

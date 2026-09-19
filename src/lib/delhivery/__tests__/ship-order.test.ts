@@ -233,7 +233,7 @@ describe('shipOrderWithDelhivery', () => {
 
     expect(result).toMatchObject({
       ok: false,
-      status: 502,
+      status: 422,
       reason: expect.stringContaining('insufficient balance'),
     })
     expect(payload.update).not.toHaveBeenCalled()

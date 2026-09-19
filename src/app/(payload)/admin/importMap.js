@@ -32,6 +32,7 @@ import { PreviewComponent as PreviewComponent_a8a977ebc872c5d5ea7ee689724c0860 }
 import { SyncSmartCollectionButton as SyncSmartCollectionButton_ce5f763b3bf1c95f1af1ffe9941171e0 } from '@/components/SyncSmartCollectionButton'
 import { OrderFulfilmentPanel as OrderFulfilmentPanel_c1e0c9c0b9d50b68e8889b7a9837e470 } from '@/components/payload/OrderFulfilmentPanel'
 import { OrderFulfilmentCell as OrderFulfilmentCell_912ec4747082c15f95cd89d3f6866969 } from '@/components/payload/OrderFulfilmentCell'
+import { OrderPaymentMethodCell as OrderPaymentMethodCell_1ed2d25f3e86312da48ed0fa8242d18a } from '@/components/payload/OrderPaymentMethodCell'
 import { LinkToDoc as LinkToDoc_aead06e4cbf6b2620c5c51c9ab283634 } from '@payloadcms/plugin-search/client'
 import { ReindexButton as ReindexButton_aead06e4cbf6b2620c5c51c9ab283634 } from '@payloadcms/plugin-search/client'
 import { AdminIcon as AdminIcon_7a969c861589af9322f5d573a708d2fb } from '@/components/payload/AdminIcon'
@@ -112,6 +113,8 @@ export const importMap = {
     OrderFulfilmentPanel_c1e0c9c0b9d50b68e8889b7a9837e470,
   '@/components/payload/OrderFulfilmentCell#OrderFulfilmentCell':
     OrderFulfilmentCell_912ec4747082c15f95cd89d3f6866969,
+  '@/components/payload/OrderPaymentMethodCell#OrderPaymentMethodCell':
+    OrderPaymentMethodCell_1ed2d25f3e86312da48ed0fa8242d18a,
   '@payloadcms/plugin-search/client#LinkToDoc':
     LinkToDoc_aead06e4cbf6b2620c5c51c9ab283634,
   '@payloadcms/plugin-search/client#ReindexButton':
