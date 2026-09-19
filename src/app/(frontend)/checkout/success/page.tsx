@@ -83,11 +83,9 @@ function CheckoutSuccessContent() {
             Track in My Orders
             <ArrowRight className="h-4 w-4" />
           </Link>
-          <DownloadReceiptButton
-            orderNumber={orderNumber}
-            email={email}
-            variant="outline"
-          />
+          <p className="font-body text-xs text-neutral-400">
+            Your receipt will be available after delivery.
+          </p>
           <Link
             href="/"
             className="font-display flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-neutral-200 bg-white text-sm font-semibold text-neutral-700 transition-colors hover:bg-neutral-50"

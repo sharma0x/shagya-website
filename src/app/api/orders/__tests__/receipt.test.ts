@@ -122,6 +122,7 @@ describe('GET /api/orders/receipt', () => {
         {
           orderNumber: 'ORD-00042',
           customerEmail: 'Owner@Example.com',
+          status: 'delivered',
         },
       ],
     })
@@ -151,6 +152,7 @@ describe('GET /api/orders/receipt', () => {
         {
           orderNumber: 'ORD-00042',
           customerEmail: 'owner@example.com',
+          status: 'delivered',
         },
       ],
     })
@@ -177,6 +179,7 @@ describe('GET /api/orders/receipt', () => {
         {
           orderNumber: 'ORD-00042',
           customerEmail: 'owner@example.com',
+          status: 'delivered',
           items: [],
         },
       ],
@@ -202,5 +205,25 @@ describe('GET /api/orders/receipt', () => {
     )
 
     expect(response.status).toBe(403)
+  })
+
+  it('does not return a receipt before delivery', async () => {
+    mockGetSession.mockResolvedValueOnce(null)
+    mockFind.mockResolvedValueOnce({
+      docs: [
+        {
+          orderNumber: 'ORD-00042',
+          customerEmail: 'owner@example.com',
+          status: 'confirmed',
+        },
+      ],
+    })
+
+    const response = await GET_receipt(
+      requestWith({ orderNumber: 'ORD-00042', email: 'owner@example.com' }),
+    )
+
+    expect(response.status).toBe(409)
+    expect(mockGeneratePdf).not.toHaveBeenCalled()
   })
 })

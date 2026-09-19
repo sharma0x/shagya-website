@@ -12,6 +12,7 @@ const baseOrder: ReceiptOrder = {
   status: 'confirmed',
   subtotal: 4000,
   shipping: 0,
+  codFee: 0,
   tax: 0,
   discount: 500,
   total: 3500,
@@ -100,6 +101,20 @@ describe('buildReceiptDefinition', () => {
     })
     const json = JSON.stringify(def.content)
     expect(json).toContain('Cash on Delivery')
+  })
+
+  it('shows the COD fee in receipt totals', () => {
+    const def = buildReceiptDefinition({
+      ...baseOrder,
+      codFee: 100,
+      total: 3600,
+    })
+    expect(JSON.stringify(def.content)).toContain('COD Handling Fee')
+  })
+
+  it('uses the public Shayga logo when no uploaded logo is configured', () => {
+    const def = buildReceiptDefinition(baseOrder)
+    expect(JSON.stringify(def.content)).toContain('<svg')
   })
 
   it('attaches a footer with page numbers', () => {

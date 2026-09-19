@@ -86,7 +86,7 @@ export default async function OrderDetailsPage({
                 })}
               </p>
             </div>
-            {session?.user && (
+            {session?.user && order.status === 'delivered' && (
               <DownloadReceiptButton
                 orderNumber={order.orderNumber as string}
                 variant="solid"
@@ -237,8 +237,18 @@ export default async function OrderDetailsPage({
                     </span>
                   </div>
                 )}
+                {(order.codFee as number) > 0 && (
+                  <div className="flex justify-between">
+                    <span>COD Handling Fee</span>
+                    <span className="font-semibold text-neutral-900">
+                      ₹{(order.codFee as number).toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                )}
                 <div className="font-display flex justify-between border-t border-neutral-100 pt-4 text-base font-bold text-neutral-900">
-                  <span>Total Paid</span>
+                  <span>
+                    {order.paymentId === 'COD' ? 'Amount Due' : 'Total Paid'}
+                  </span>
                   <span>₹{order.total?.toLocaleString('en-IN')}</span>
                 </div>
                 <div className="flex justify-between border-t border-dotted border-neutral-100 pt-3 text-xs text-neutral-400">

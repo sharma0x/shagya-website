@@ -105,6 +105,13 @@ export async function GET(request: Request) {
       )
     }
 
+    if (order.status !== 'delivered') {
+      return NextResponse.json(
+        { error: 'Receipt is available after the order is delivered' },
+        { status: 409 },
+      )
+    }
+
     // Fetch business info from site settings
     const siteSettings = (await payload.findGlobal({
       slug: 'site-settings',

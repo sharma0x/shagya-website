@@ -126,6 +126,7 @@ interface PopulatedOrder {
   paymentId?: string | null
   subtotal: number
   shipping: number
+  codFee: number
   tax: number
   discount: number
   total: number
@@ -186,6 +187,7 @@ function buildOrderVars(
   const totals: OrderTotals = {
     subtotal: order.subtotal,
     shipping: order.shipping,
+    codFee: order.codFee || 0,
     tax: order.tax,
     discount: order.discount,
     total: order.total,
@@ -238,6 +240,7 @@ export async function sendOrderPlacedEmails(
       paymentId: (orderDoc.paymentId as string) || null,
       subtotal: (orderDoc.subtotal as number) || 0,
       shipping: (orderDoc.shipping as number) || 0,
+      codFee: (orderDoc.codFee as number) || 0,
       tax: (orderDoc.tax as number) || 0,
       discount: (orderDoc.discount as number) || 0,
       total: (orderDoc.total as number) || 0,

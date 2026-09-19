@@ -2,6 +2,8 @@ import pdfmake from 'pdfmake'
 import type { TDocumentDefinitions } from 'pdfmake'
 import vfsFonts from 'pdfmake/build/vfs_fonts'
 import { formatINR } from '@/email/builders'
+import { readFileSync } from 'node:fs'
+import path from 'node:path'
 
 // ─── Brand palette (hex approximations of the OKLCH tokens in globals.css) ──
 const WINE = '#42112E'
@@ -57,6 +59,7 @@ export interface ReceiptOrder {
   status?: string | null
   subtotal?: number | null
   shipping?: number | null
+  codFee?: number | null
   tax?: number | null
   discount?: number | null
   total?: number | null
@@ -78,6 +81,17 @@ const TITLE = DEFAULT_SITE_NAME
 const SUBTITLE = 'ORDER RECEIPT'
 const SUPPORT_EMAIL = DEFAULT_SUPPORT_EMAIL
 const SITE_URL = DEFAULT_SITE_URL
+
+const DEFAULT_LOGO_SVG = (() => {
+  try {
+    return readFileSync(
+      path.join(process.cwd(), 'public', 'shayga-logo.svg'),
+      'utf8',
+    )
+  } catch {
+    return null
+  }
+})()
 
 let fontsRegistered = false
 
@@ -153,7 +167,7 @@ function fullWidthBand(logoUrl?: string | null): unknown {
   // If logo exists, show logo; otherwise show text
   if (logoUrl) {
     headerContent.push({
-      image: logoUrl,
+      svg: logoUrl,
       width: 80,
       height: 40,
       fit: [80, 40],
@@ -373,10 +387,13 @@ function totalsTable(order: ReceiptOrder): unknown {
   if (order.discount && order.discount > 0) {
     pushRow('Coupon Discount', `−₹${formatINR(order.discount)}`)
   }
+  if (order.codFee && order.codFee > 0) {
+    pushRow('COD Handling Fee', `₹${formatINR(order.codFee)}`)
+  }
 
   rows.push([
     {
-      text: 'Total Paid',
+      text: order.paymentId === 'COD' ? 'Amount Due' : 'Total Paid',
       fontSize: 11,
       bold: true,
       color: INK,
@@ -475,7 +492,7 @@ export function buildReceiptDefinition(
       : paymentLabel
 
   const siteName = order.businessInfo?.siteName || TITLE
-  const logoUrl = order.businessInfo?.logoUrl
+  const logoUrl = DEFAULT_LOGO_SVG
 
   return {
     pageSize: 'A4',

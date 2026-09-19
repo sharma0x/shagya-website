@@ -23,6 +23,7 @@ export interface OrderItem {
 export interface OrderTotals {
   subtotal: number
   shipping: number
+  codFee: number
   tax: number
   discount: number
   total: number
@@ -90,6 +91,8 @@ export function buildPricingTable(totals: OrderTotals): string {
   if (totals.tax > 0) rows.push(row('GST', `&#8377;${formatINR(totals.tax)}`))
   if (totals.discount > 0)
     rows.push(row('Discount', `-&#8377;${formatINR(totals.discount)}`))
+  if (totals.codFee > 0)
+    rows.push(row('COD Handling Fee', `&#8377;${formatINR(totals.codFee)}`))
 
   const totalRow = `<tr>
     <td style="padding:10px 0 2px;font-size:15px;font-weight:600;color:#2A1E24;border-top:1px solid #E8DDE2;">Total</td>
