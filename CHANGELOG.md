@@ -1,3 +1,21 @@
+## [1.12.0](https://github.com/sharma0x/shagya-website/compare/v1.11.1...v1.12.0) (2026-09-19)
+
+### Features
+
+- **auth:** add complete phone login example component ([a092020](https://github.com/sharma0x/shagya-website/commit/a092020c00be740ad272ab147cd83b82da31cb4d))
+- **auth:** add Firebase Admin and client initialization ([2e17eeb](https://github.com/sharma0x/shagya-website/commit/2e17eeb12d3e39b66807529aaf4e500d696f64f3))
+- **auth:** add Firebase client plugin and TypeScript types ([a961743](https://github.com/sharma0x/shagya-website/commit/a96174315382b2be24cf2870fb34d2129941b57c))
+- **auth:** add usePhoneAuth React hook for phone OTP flow ([0dace64](https://github.com/sharma0x/shagya-website/commit/0dace64eefff2ae339533fecac1ba0096ef66877))
+- **auth:** install Firebase packages and Better Auth bridge ([aee9690](https://github.com/sharma0x/shagya-website/commit/aee9690df8430b739fd83f87e4481912485ce396))
+- **auth:** integrate Firebase Phone Auth with Better Auth backend ([b384e3f](https://github.com/sharma0x/shagya-website/commit/b384e3f0d465ae7d02ad5d763614b2bf48cbb3ca))
+- **ux:** make products clickable in cart sidebar and checkout order summary ([89112a3](https://github.com/sharma0x/shagya-website/commit/89112a382b10fbcf0610b6361abfc05aaf52bd97))
+
+### Bug Fixes
+
+- **makefile:** add GA measurement ID to local Docker builds ([223bfa6](https://github.com/sharma0x/shagya-website/commit/223bfa61dcc48ea1da5383cfe6bb9cffecc26f92))
+- **analytics:** switch to official @next/third-parties GoogleAnalytics ([058cedd](https://github.com/sharma0x/shagya-website/commit/058cedd21b85527456fa6e588ac423d761bcc46a))
+- **auth:** workaround firebaseAuthClientPlugin type inference issue ([8655f59](https://github.com/sharma0x/shagya-website/commit/8655f59484f9c12652beab5cd56793ff8e58d917)), closes [better-auth/better-auth#10513](https://github.com/better-auth/better-auth/issues/10513)
+
 ## [1.11.1](https://github.com/sharma0x/shagya-website/compare/v1.11.0...v1.11.1) (2026-09-19)
 
 ### Bug Fixes
