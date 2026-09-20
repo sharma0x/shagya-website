@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useSession } from '@/lib/auth-client'
@@ -31,6 +31,8 @@ import {
   ShoppingBag,
   ShieldCheck,
   X,
+  UserPlus,
+  UserCheck,
 } from 'lucide-react'
 import {
   mapProductToGA4Item,
@@ -139,12 +141,22 @@ export default function CheckoutPage() {
   const [guestData, setGuestData] = useState<{
     name: string
     email: string
+    phone?: string
+    isExisting: boolean
   } | null>(null)
 
   const isLoggedIn = !!sessionData?.user
 
+  // Pin the guest flow once it starts. OTP verification creates a real session,
+  // and the session hook may later flip `isLoggedIn` to true (e.g. on window
+  // focus). We must keep using the reactive guest cart + guest identity for
+  // the whole checkout, otherwise the DB cart (never loaded for guests) would
+  // swap in and the order summary would go empty mid-checkout.
+  const [guestMode, setGuestMode] = useState(false)
+  const isGuest = guestMode === true
+
   // Effective cart: DB cart for logged-in, reactive hook cart for guests
-  const effectiveCart = isLoggedIn ? cart : guestCart
+  const effectiveCart = isGuest ? guestCart : cart
 
   // New address form state
   const [showNewAddressForm, setShowNewAddressForm] = useState(false)
@@ -201,22 +213,23 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     if (didLoad.current) return
-
-    if (!isLoggedIn && !isPending) {
-      didLoad.current = true
-
-      // Guest checkout: render instantly with the new-address form open.
-      async function applyGuestDefaults() {
-        setDataReady(true)
-        setShowNewAddressForm(true)
-      }
-      void applyGuestDefaults()
-      return
-    }
-
     if (isPending) return
 
     didLoad.current = true
+
+    void (async () => {
+      setGuestMode(!sessionData?.user)
+
+      // Guest checkout: render instantly with the contact step (name/email/
+      // phone + OTP) first. The address comes only after identity is verified.
+      if (!sessionData?.user) {
+        setDataReady(true)
+        setShowNewAddressForm(false)
+        return
+      }
+
+      await loadData()
+    })()
 
     async function loadData() {
       try {
@@ -278,8 +291,6 @@ export default function CheckoutPage() {
         setDataReady(true)
       }
     }
-
-    loadData()
   }, [
     sessionData,
     isPending,
@@ -288,6 +299,50 @@ export default function CheckoutPage() {
     zCart.items,
     zCart.coupon?.id,
   ])
+
+  // After a guest verifies their email/phone OTP, the session is live. Route
+  // them to a saved-address picker (existing account) or a fresh address form
+  // (new account).
+  const handleGuestVerified = useCallback(
+    (data: {
+      name: string
+      email: string
+      phone?: string
+      isExisting: boolean
+    }) => {
+      setGuestData({
+        name: data.name,
+        email: data.email,
+        phone: data.phone || '',
+        isExisting: data.isExisting,
+      })
+      setError('')
+      setDataReady(true)
+
+      if (data.isExisting) {
+        // Session is live — pull this account's saved addresses.
+        fetch('/api/addresses')
+          .then((res) => (res.ok ? res.json() : null))
+          .then((addrData) => {
+            const list = (addrData?.addresses || []) as Address[]
+            setAddresses(list)
+            const defaultAddr = list.find((a) => a.isDefault)
+            setSelectedAddressId(defaultAddr?.id || list[0]?.id || '')
+            setShowNewAddressForm(list.length === 0)
+          })
+          .catch(() => {
+            setAddresses([])
+            setShowNewAddressForm(true)
+          })
+      } else {
+        // New account — prompt for the delivery address.
+        setAddresses([])
+        setSelectedAddressId('')
+        setShowNewAddressForm(true)
+      }
+    },
+    [],
+  )
 
   const handleApplyCouponWithCode = async (code: string): Promise<boolean> => {
     setCouponError('')
@@ -503,7 +558,7 @@ export default function CheckoutPage() {
     const capped = Math.max(1, Math.min(cartQtyCap(item), quantity))
     if (capped === item.quantity || cartSaving) return
 
-    if (!isLoggedIn) {
+    if (isGuest) {
       const storeItem = guestStoreItem(item)
       if (storeItem) {
         zCart.updateQuantity(
@@ -531,7 +586,7 @@ export default function CheckoutPage() {
   const handleRemoveItem = (item: CartItem) => {
     if (cartSaving) return
 
-    if (!isLoggedIn) {
+    if (isGuest) {
       const remaining = zCart.items.length - 1
       const storeItem = guestStoreItem(item)
       if (storeItem) {
@@ -557,8 +612,10 @@ export default function CheckoutPage() {
     setActionLoading(true)
     setError('')
 
-    if (!isLoggedIn) {
-      // Guest — store address locally
+    // Unverified guest fallback — store the address locally only.
+    // Verified guests (and logged-in users) persist to the account below so
+    // the address is reusable on future orders.
+    if (isGuest && !guestData) {
       const tempAddress = {
         id: 'guest-addr',
         fullName: data.fullName,
@@ -729,10 +786,10 @@ export default function CheckoutPage() {
             phone: selectedAddress?.phone,
             notes: orderNotes,
             guestEmail: guestData?.email || '',
-            guestPhone: '',
+            guestPhone: guestData?.phone || '',
             shippingType,
             appliedCouponCode: appliedCoupon?.code,
-            cartItems: !isLoggedIn
+            cartItems: isGuest
               ? effectiveCart?.items.map((i) => ({
                   product: i.product.id,
                   variant: i.variant ?? null,
@@ -770,10 +827,10 @@ export default function CheckoutPage() {
             phone: selectedAddress?.phone,
             isCod: false,
             guestEmail: guestData?.email || '',
-            guestPhone: '',
+            guestPhone: guestData?.phone || '',
             shippingType,
             appliedCouponCode: appliedCoupon?.code,
-            cartItems: !isLoggedIn
+            cartItems: isGuest
               ? effectiveCart?.items.map((i) => ({
                   product: i.product.id,
                   variant: i.variant ?? null,
@@ -824,10 +881,10 @@ export default function CheckoutPage() {
                   phone: selectedAddress.phone,
                   notes: orderNotes,
                   guestEmail: guestData?.email || '',
-                  guestPhone: '',
+                  guestPhone: guestData?.phone || '',
                   shippingType,
                   appliedCouponCode: appliedCoupon?.code,
-                  cartItems: !isLoggedIn
+                  cartItems: isGuest
                     ? effectiveCart?.items.map((i) => ({
                         product: i.product.id,
                         variant: i.variant ?? null,
@@ -880,10 +937,10 @@ export default function CheckoutPage() {
               phone: selectedAddress.phone,
               notes: orderNotes,
               guestEmail: guestData?.email || '',
-              guestPhone: '',
+              guestPhone: guestData?.phone || '',
               shippingType,
               appliedCouponCode: appliedCoupon?.code,
-              cartItems: !isLoggedIn
+              cartItems: isGuest
                 ? effectiveCart?.items.map((i) => ({
                     product: i.product.id,
                     variant: i.variant ?? null,
@@ -1005,138 +1062,158 @@ export default function CheckoutPage() {
               </div>
             )}
 
-            {/* STEP 1: Address Selection */}
+            {/* STEP 1: Contact (guests) then Address Selection */}
             {step === 1 && (
               <div className="rounded-2xl border border-neutral-100 bg-white p-6 shadow-xs">
-                <div className="mb-6 flex items-center justify-between">
-                  <h3 className="font-display flex items-center gap-2 text-lg font-semibold text-neutral-900">
-                    <MapPin className="text-brand-600 h-5 w-5" />
-                    Delivery Address
-                  </h3>
-                  {!showNewAddressForm && dataReady && (
-                    <button
-                      onClick={() => setShowNewAddressForm(true)}
-                      className="text-brand-700 hover:text-brand-800 font-display text-xs font-semibold underline"
-                    >
-                      Add New Address
-                    </button>
-                  )}
-                </div>
-
-                {showNewAddressForm ? (
-                  <AddressForm
-                    onSubmit={handleAddNewAddress}
-                    isSubmitting={actionLoading}
-                    submitLabel="Save & Select"
-                    onCancel={() => setShowNewAddressForm(false)}
-                    error={error}
-                  />
-                ) : !dataReady ? (
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    {[0, 1].map((i) => (
-                      <div
-                        key={i}
-                        className="animate-pulse rounded-xl border border-neutral-100 bg-neutral-50 p-4"
-                      >
-                        <div className="mb-2 h-4 w-24 rounded bg-neutral-200" />
-                        <div className="mb-2 h-3 w-32 rounded bg-neutral-100" />
-                        <div className="h-3 w-48 rounded bg-neutral-100" />
-                      </div>
-                    ))}
+                {isGuest && !guestData ? (
+                  /* ── Guest identity first: name + email/phone + OTP ── */
+                  <div>
+                    <h3 className="font-display mb-6 flex items-center gap-2 text-lg font-semibold text-neutral-900">
+                      <UserPlus className="text-brand-600 h-5 w-5" />
+                      Your Details
+                    </h3>
+                    <GuestCheckout onVerified={handleGuestVerified} />
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    {addresses.length === 0 ? (
+                  /* ── Delivery address: saved-address picker or new form ── */
+                  <>
+                    <div className="mb-6 flex items-center justify-between">
+                      <h3 className="font-display flex items-center gap-2 text-lg font-semibold text-neutral-900">
+                        <MapPin className="text-brand-600 h-5 w-5" />
+                        Delivery Address
+                      </h3>
+                      {!showNewAddressForm && dataReady && (
+                        <button
+                          onClick={() => setShowNewAddressForm(true)}
+                          className="text-brand-700 hover:text-brand-800 font-display text-xs font-semibold underline"
+                        >
+                          Add New Address
+                        </button>
+                      )}
+                    </div>
+
+                    {showNewAddressForm ? (
+                      <AddressForm
+                        onSubmit={handleAddNewAddress}
+                        isSubmitting={actionLoading}
+                        submitLabel="Save & Select"
+                        onCancel={() => setShowNewAddressForm(false)}
+                        error={error}
+                      />
+                    ) : !dataReady ? (
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        {[0, 1].map((i) => (
+                          <div
+                            key={i}
+                            className="animate-pulse rounded-xl border border-neutral-100 bg-neutral-50 p-4"
+                          >
+                            <div className="mb-2 h-4 w-24 rounded bg-neutral-200" />
+                            <div className="mb-2 h-3 w-32 rounded bg-neutral-100" />
+                            <div className="h-3 w-48 rounded bg-neutral-100" />
+                          </div>
+                        ))}
+                      </div>
+                    ) : addresses.length === 0 ? (
                       <div className="rounded-xl border-2 border-dashed border-neutral-200 py-8 text-center">
                         <MapPin className="mx-auto mb-2 h-6 w-6 text-neutral-400" />
                         <p className="font-body text-sm text-neutral-500">
                           No addresses saved. Please add a shipping address.
                         </p>
+                        <button
+                          onClick={() => setShowNewAddressForm(true)}
+                          className="text-brand-700 hover:text-brand-800 font-display mt-3 text-xs font-semibold underline"
+                        >
+                          Add Address
+                        </button>
                       </div>
                     ) : (
-                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        {addresses.map((addr) => (
-                          <div
-                            key={addr.id}
-                            onClick={() => setSelectedAddressId(addr.id)}
-                            className={`relative cursor-pointer rounded-xl border p-4 transition-all ${
-                              selectedAddressId === addr.id
-                                ? 'border-brand-600 bg-brand-50/20'
-                                : 'border-neutral-200 hover:border-neutral-300'
-                            }`}
-                          >
-                            {addr.isDefault && (
-                              <span className="absolute top-3 right-3 rounded bg-neutral-100 px-1.5 py-0.5 text-[10px] font-semibold tracking-wider text-neutral-600 uppercase">
-                                Default
-                              </span>
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                          {addresses.map((addr) => (
+                            <div
+                              key={addr.id}
+                              onClick={() => setSelectedAddressId(addr.id)}
+                              className={`relative cursor-pointer rounded-xl border p-4 transition-all ${
+                                selectedAddressId === addr.id
+                                  ? 'border-brand-600 bg-brand-50/20'
+                                  : 'border-neutral-200 hover:border-neutral-300'
+                              }`}
+                            >
+                              {addr.isDefault && (
+                                <span className="absolute top-3 right-3 rounded bg-neutral-100 px-1.5 py-0.5 text-[10px] font-semibold tracking-wider text-neutral-600 uppercase">
+                                  Default
+                                </span>
+                              )}
+                              <p className="font-display text-sm font-semibold text-neutral-900">
+                                {addr.fullName}
+                              </p>
+                              <p className="font-body mt-1 text-xs text-neutral-500">
+                                {addr.phone}
+                              </p>
+                              <p className="font-body mt-2 line-clamp-2 text-xs text-neutral-600">
+                                {addr.line1},{' '}
+                                {addr.line2 ? `${addr.line2}, ` : ''}
+                                {addr.city}, {addr.state} - {addr.pincode}
+                              </p>
+                              {selectedAddressId === addr.id && (
+                                <span className="bg-brand-600 absolute right-3 bottom-3 flex h-5 w-5 items-center justify-center rounded-full text-white">
+                                  <Check className="h-3 w-3" />
+                                </span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+
+                        {selectedAddressId && (
+                          <>
+                            {/* Guest verified — account status */}
+                            {isGuest && guestData && (
+                              <div className="mt-6 border-t border-neutral-100 pt-6">
+                                <div className="rounded-xl border border-green-100 bg-green-50 p-4">
+                                  <div className="flex items-center gap-2">
+                                    {guestData.isExisting ? (
+                                      <UserCheck className="text-brand-600 h-4 w-4 shrink-0" />
+                                    ) : (
+                                      <UserPlus className="text-brand-600 h-4 w-4 shrink-0" />
+                                    )}
+                                    <span className="font-display text-xs font-semibold text-green-700">
+                                      {guestData.isExisting
+                                        ? `Welcome back — ${guestData.name} · ${guestData.email}`
+                                        : `Account created — ${guestData.name} · ${guestData.email}`}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
                             )}
-                            <p className="font-display text-sm font-semibold text-neutral-900">
-                              {addr.fullName}
-                            </p>
-                            <p className="font-body mt-1 text-xs text-neutral-500">
-                              {addr.phone}
-                            </p>
-                            <p className="font-body mt-2 line-clamp-2 text-xs text-neutral-600">
-                              {addr.line1},{' '}
-                              {addr.line2 ? `${addr.line2}, ` : ''}
-                              {addr.city}, {addr.state} - {addr.pincode}
-                            </p>
-                            {selectedAddressId === addr.id && (
-                              <span className="bg-brand-600 absolute right-3 bottom-3 flex h-5 w-5 items-center justify-center rounded-full text-white">
-                                <Check className="h-3 w-3" />
-                              </span>
-                            )}
-                          </div>
-                        ))}
+
+                            {/* Order notes */}
+                            <div className="mt-6 border-t border-neutral-100 pt-6">
+                              <h4 className="font-display mb-3 text-xs font-semibold tracking-wider text-neutral-500 uppercase">
+                                Delivery Instructions (Optional)
+                              </h4>
+                              <textarea
+                                value={orderNotes}
+                                onChange={(e) => setOrderNotes(e.target.value)}
+                                rows={2}
+                                placeholder="Landmark, gate code, or special instructions"
+                                className="font-body focus:border-brand-500 w-full resize-none rounded-xl border border-neutral-200 px-3 py-2 text-sm outline-none"
+                              />
+                            </div>
+
+                            <div className="flex justify-end pt-4">
+                              <button
+                                onClick={() => setStep(2)}
+                                disabled={isGuest && !guestData}
+                                className="font-display bg-brand-600 hover:bg-brand-700 h-11 rounded-xl px-6 text-xs font-semibold text-white transition-all disabled:bg-neutral-200 disabled:text-neutral-400"
+                              >
+                                Proceed to Shipping
+                              </button>
+                            </div>
+                          </>
+                        )}
                       </div>
                     )}
-
-                    {selectedAddressId && (
-                      <>
-                        {/* Guest checkout — email OTP verification */}
-                        {!isLoggedIn && !guestData && (
-                          <div className="mt-6 border-t border-neutral-100 pt-6">
-                            <GuestCheckout onVerified={setGuestData} />
-                          </div>
-                        )}
-
-                        {/* Guest verified */}
-                        {guestData && (
-                          <div className="mt-6 border-t border-neutral-100 pt-6">
-                            <div className="rounded-xl border border-green-100 bg-green-50 p-4">
-                              <p className="font-display text-xs font-semibold text-green-700">
-                                Verified — {guestData.name} · {guestData.email}
-                              </p>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Order notes */}
-                        <div className="mt-6 border-t border-neutral-100 pt-6">
-                          <h4 className="font-display mb-3 text-xs font-semibold tracking-wider text-neutral-500 uppercase">
-                            Delivery Instructions (Optional)
-                          </h4>
-                          <textarea
-                            value={orderNotes}
-                            onChange={(e) => setOrderNotes(e.target.value)}
-                            rows={2}
-                            placeholder="Landmark, gate code, or special instructions"
-                            className="font-body focus:border-brand-500 w-full resize-none rounded-xl border border-neutral-200 px-3 py-2 text-sm outline-none"
-                          />
-                        </div>
-
-                        <div className="flex justify-end pt-4">
-                          <button
-                            onClick={() => setStep(2)}
-                            disabled={!isLoggedIn && !guestData}
-                            className="font-display bg-brand-600 hover:bg-brand-700 h-11 rounded-xl px-6 text-xs font-semibold text-white transition-all disabled:bg-neutral-200 disabled:text-neutral-400"
-                          >
-                            Proceed to Shipping
-                          </button>
-                        </div>
-                      </>
-                    )}
-                  </div>
+                  </>
                 )}
               </div>
             )}
