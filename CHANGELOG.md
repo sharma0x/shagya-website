@@ -1,3 +1,15 @@
+## [1.20.0](https://github.com/sharma0x/shagya-website/compare/v1.19.0...v1.20.0) (2026-09-20)
+
+### Features
+
+- **scripts:** add customer backfill script ([d20e607](https://github.com/sharma0x/shagya-website/commit/d20e6077e923531a0cf39cbef8b33e9b895d5db4))
+
+### Bug Fixes
+
+- **auth:** backfill customers and recover phone number on login ([d116927](https://github.com/sharma0x/shagya-website/commit/d116927477a873d313239ddf2848fa944c4dd94f))
+- **db:** correct phone_identities E.164 check constraint ([aca4e5a](https://github.com/sharma0x/shagya-website/commit/aca4e5a4054567cd7019aa1fa3fad8bf57f13cd0))
+- **api:** lazily repair missing customer records in account routes ([d9201d4](https://github.com/sharma0x/shagya-website/commit/d9201d407922437d48caf4fe50769131bbd1c6c1))
+
 ## [1.19.0](https://github.com/sharma0x/shagya-website/compare/v1.18.0...v1.19.0) (2026-09-19)
 
 ### Features
