@@ -53,6 +53,7 @@ function groupItemsByProduct(
 
 async function writeStockMovement(
   payload: any,
+  req: any,
   data: {
     product: string | number
     variant?: StockOrderItem['color'] | null
@@ -74,6 +75,9 @@ async function writeStockMovement(
         quantityAfter: data.quantityAfter,
       },
       overrideAccess: true,
+      // Join the caller's transaction so ledger writes never block on the
+      // order row lock held by the outer save (avoids a self-deadlock).
+      req,
     })
   } catch (err) {
     payload.logger.error(`[Stock] Ledger write failed: ${err}`)
@@ -97,6 +101,7 @@ function invalidateProductPages(payload: any, product: any): void {
 
 async function deductStockForOrder(
   payload: any,
+  req: any,
   doc: any,
   ledgerType: 'committed' | 'reserved',
 ): Promise<void> {
@@ -111,6 +116,7 @@ async function deductStockForOrder(
         id: pid,
         overrideAccess: true,
         depth: 0,
+        req,
       })
       if (!product) {
         payload.logger.error(
@@ -148,6 +154,7 @@ async function deductStockForOrder(
         data: update,
         limit: 1,
         overrideAccess: true,
+        req,
       })
 
       if (!res.docs || res.docs.length === 0) {
@@ -161,7 +168,7 @@ async function deductStockForOrder(
       const variant =
         productItems.length === 1 ? (productItems[0].color ?? null) : null
 
-      await writeStockMovement(payload, {
+      await writeStockMovement(payload, req, {
         product: pid,
         variant,
         order: orderId,
@@ -180,6 +187,7 @@ async function deductStockForOrder(
 
 async function restoreStockForOrder(
   payload: any,
+  req: any,
   doc: any,
   ledgerType: 'restored' | 'released',
 ): Promise<void> {
@@ -194,6 +202,7 @@ async function restoreStockForOrder(
         id: pid,
         overrideAccess: true,
         depth: 0,
+        req,
       })
       if (!product) continue
 
@@ -211,6 +220,7 @@ async function restoreStockForOrder(
         data: update,
         limit: 1,
         overrideAccess: true,
+        req,
       })
 
       if (!res.docs || res.docs.length === 0) continue
@@ -219,7 +229,7 @@ async function restoreStockForOrder(
       const variant =
         productItems.length === 1 ? (productItems[0].color ?? null) : null
 
-      await writeStockMovement(payload, {
+      await writeStockMovement(payload, req, {
         product: pid,
         variant,
         order: orderId,
@@ -243,6 +253,7 @@ async function restoreStockForOrder(
  */
 async function runStockTransactions(
   payload: any,
+  req: any,
   doc: any,
   prevStatus: string | null,
   newStatus: string,
@@ -254,24 +265,26 @@ async function runStockTransactions(
     // Commit on confirmation (prepaid orders are created confirmed; legacy COD
     // orders are committed the first time they are confirmed).
     if (newStatus === 'confirmed' && prevStatus !== 'confirmed' && !wasHeld) {
-      await deductStockForOrder(payload, doc, 'committed')
+      await deductStockForOrder(payload, req, doc, 'committed')
       await payload.update({
         collection: 'orders',
         id: String(doc.id),
         data: { stockDeducted: true },
         overrideAccess: true,
+        req,
       })
     }
     // Reserve on order creation for COD (status `pending`) — closes the
     // oversell window between checkout and admin confirmation. Stock is held
     // here and released if the order is cancelled before confirmation.
     else if (isCreate && newStatus === 'pending' && !wasHeld) {
-      await deductStockForOrder(payload, doc, 'reserved')
+      await deductStockForOrder(payload, req, doc, 'reserved')
       await payload.update({
         collection: 'orders',
         id: String(doc.id),
         data: { stockDeducted: true },
         overrideAccess: true,
+        req,
       })
     }
     // Release / restore on cancellation or refund. Works for both reserved
@@ -284,6 +297,7 @@ async function runStockTransactions(
       const wasConfirmed = Boolean(doc?.confirmedAt)
       await restoreStockForOrder(
         payload,
+        req,
         doc,
         wasConfirmed ? 'restored' : 'released',
       )
@@ -292,6 +306,7 @@ async function runStockTransactions(
         id: String(doc.id),
         data: { stockRestored: true },
         overrideAccess: true,
+        req,
       })
     }
   } catch (err) {
@@ -481,6 +496,7 @@ export const Orders: CollectionConfig = {
           ) {
             await runStockTransactions(
               payload,
+              req,
               doc,
               null,
               initialStatus as string,
@@ -536,7 +552,13 @@ export const Orders: CollectionConfig = {
         const orderId = (doc as Record<string, unknown>).orderNumber as string
 
         // Synchronous inventory commit/restore — awaited so failures are visible.
-        await runStockTransactions(payload, doc, prevStatus ?? null, newStatus)
+        await runStockTransactions(
+          payload,
+          req,
+          doc,
+          prevStatus ?? null,
+          newStatus,
+        )
 
         const backgroundTask = async () => {
           await runOrderNotifications(
