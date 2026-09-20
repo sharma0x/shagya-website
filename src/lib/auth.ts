@@ -159,8 +159,21 @@ export const auth = betterAuth({
           return { data: user }
         },
         after: async (user) => {
-          const { syncCustomer } = await import('./auth-sync')
-          await syncCustomer(user)
+          const { runSessionSyncSafely } = await import('./auth-sync')
+          // Wrap in try/catch — never let a sync failure break user creation.
+          await runSessionSyncSafely(user.id)
+        },
+      },
+    },
+    session: {
+      create: {
+        after: async (session) => {
+          // Re-sync the customer on every login. This heals users whose
+          // customer record was never created (e.g. the broken window where
+          // phone users synced with an empty email) and backfills the phone
+          // number from the stored Firebase ID token.
+          const { runSessionSyncSafely } = await import('./auth-sync')
+          await runSessionSyncSafely(session.userId)
         },
       },
     },
