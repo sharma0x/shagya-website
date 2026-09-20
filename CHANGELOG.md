@@ -1,3 +1,9 @@
+## [1.20.1](https://github.com/sharma0x/shagya-website/compare/v1.20.0...v1.20.1) (2026-09-20)
+
+### Bug Fixes
+
+- **api:** only report email as verified when Better Auth verified it ([374c60b](https://github.com/sharma0x/shagya-website/commit/374c60b5623c542c73946410d693d1d62f9f755d))
+
 ## [1.20.0](https://github.com/sharma0x/shagya-website/compare/v1.19.0...v1.20.0) (2026-09-20)
 
 ### Features
