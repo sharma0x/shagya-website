@@ -92,6 +92,25 @@ function isImageUrl(value: string): boolean {
 }
 
 /**
+ * Whether a product should be treated as out of stock.
+ *
+ * Variant products always derive their top-level `quantity` from the sum of
+ * enabled color-variant stocks (see Products.beforeChange), so the derived
+ * quantity is authoritative regardless of `trackQuantity`. Variant-less
+ * products only track quantity when `trackQuantity` is enabled.
+ */
+export function isProductOutOfStock(product: {
+  trackQuantity?: boolean | null
+  quantity?: number | null
+  colorVariants?: unknown[] | null
+}): boolean {
+  const hasVariants =
+    Array.isArray(product?.colorVariants) && product.colorVariants.length > 0
+  const tracks = product?.trackQuantity === true || hasVariants
+  return tracks && (product?.quantity ?? 0) <= 0
+}
+
+/**
  * Stock count for a specific color variant. Falls back to the product-level
  * quantity when the variant can't be found (legacy carts, old orders).
  */
@@ -99,8 +118,10 @@ export function stockForColor(
   product: any,
   colorSlug?: string | null,
 ): number | null {
-  if (product?.trackQuantity !== true) return null
   const variants = product?.colorVariants || []
+  // Variant products always track per-color stock; variant-less products only
+  // when trackQuantity is enabled.
+  if (product?.trackQuantity !== true && variants.length === 0) return null
   if (variants.length === 0) return product?.quantity ?? null
   if (!colorSlug) return null
   const variant = variants.find(

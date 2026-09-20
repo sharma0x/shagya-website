@@ -689,11 +689,11 @@ export interface Order {
    */
   deliveredAt?: string | null;
   /**
-   * Idempotency guard — true once inventory has been deducted for a confirmed order.
+   * Idempotency guard — true once inventory has been held for this order (reserved on COD creation, committed on confirmation).
    */
   stockDeducted?: boolean | null;
   /**
-   * Idempotency guard — true once inventory has been restored after cancellation/refund.
+   * Idempotency guard — true once held inventory has been released/restored after cancellation/refund.
    */
   stockRestored?: boolean | null;
   /**

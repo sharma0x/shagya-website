@@ -4,6 +4,7 @@ import {
   resolveVariantIndex,
   galleryForColor,
   stockForColor,
+  isProductOutOfStock,
   getProductImageUrl,
 } from '@/lib/product-utils'
 
@@ -210,5 +211,48 @@ describe('stockForColor', () => {
         'red',
       ),
     ).toBeNull()
+  })
+
+  it('returns variant stock even when trackQuantity is off (variant product)', () => {
+    expect(
+      stockForColor(
+        {
+          trackQuantity: false,
+          quantity: 5,
+          colorVariants: [{ enabled: true, color: { slug: 'red' }, stock: 2 }],
+        },
+        'red',
+      ),
+    ).toBe(2)
+  })
+})
+
+describe('isProductOutOfStock', () => {
+  it('is out of stock when a tracked variant-less product hits zero', () => {
+    expect(isProductOutOfStock({ trackQuantity: true, quantity: 0 })).toBe(true)
+    expect(isProductOutOfStock({ trackQuantity: true, quantity: 1 })).toBe(
+      false,
+    )
+  })
+
+  it('is never out of stock for non-tracked variant-less products', () => {
+    expect(isProductOutOfStock({ trackQuantity: false, quantity: 0 })).toBe(
+      false,
+    )
+  })
+
+  it('treats variant products as tracked regardless of trackQuantity', () => {
+    const oos = {
+      trackQuantity: false,
+      quantity: 0,
+      colorVariants: [{ enabled: true, color: { slug: 'red' }, stock: 0 }],
+    }
+    const available = {
+      trackQuantity: false,
+      quantity: 2,
+      colorVariants: [{ enabled: true, color: { slug: 'red' }, stock: 2 }],
+    }
+    expect(isProductOutOfStock(oos)).toBe(true)
+    expect(isProductOutOfStock(available)).toBe(false)
   })
 })

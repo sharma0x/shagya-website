@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { useSession } from '@/lib/auth-client'
 import { useCart } from '@/lib/store/cart'
 import { useWishlistStore } from '@/lib/store/wishlist'
-import { liftVariantGallery } from '@/lib/product-utils'
+import { liftVariantGallery, isProductOutOfStock } from '@/lib/product-utils'
 import { weaveLabel } from '@/lib/weaves'
 import { registerWishlistProduct } from '@/lib/analytics'
 import { ArrowLeft, ShoppingBag, Heart, Loader2, X } from 'lucide-react'
@@ -174,8 +174,7 @@ export default function WishlistPage() {
             {items.map((item) => {
               const product = liftVariantGallery(item.product)
               const isMoving = movingId === String(product.id)
-              const isOOS =
-                product.trackQuantity === true && (product.quantity ?? 0) <= 0
+              const isOOS = isProductOutOfStock(product)
               return (
                 <div key={item.id} className="relative flex flex-col">
                   {/* Top-right floating Cross (X) icon over image container */}
