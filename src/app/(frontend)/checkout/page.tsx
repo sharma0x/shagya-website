@@ -1178,8 +1178,8 @@ export default function CheckoutPage() {
                                     )}
                                     <span className="font-display text-xs font-semibold text-green-700">
                                       {guestData.isExisting
-                                        ? `Welcome back — ${guestData.name} · ${guestData.email}`
-                                        : `Account created — ${guestData.name} · ${guestData.email}`}
+                                        ? `Welcome back — ${guestData.name}${guestData.email ? ` · ${guestData.email}` : guestData.phone ? ` · ${guestData.phone}` : ''}`
+                                        : `Account created — ${guestData.name}${guestData.email ? ` · ${guestData.email}` : guestData.phone ? ` · ${guestData.phone}` : ''}`}
                                     </span>
                                   </div>
                                 </div>
