@@ -6,6 +6,7 @@ import Razorpay from 'razorpay'
 import { validateCartStock, type CartStockItem } from '@/lib/stock'
 import { resolveCurrentPrices, applyCurrentPrice } from '@/lib/cart-prices'
 import { validateCouponForCart } from '@/lib/coupons'
+import { toUserFacingError } from '@/lib/api-error'
 
 export async function POST(request: Request) {
   try {
@@ -269,7 +270,7 @@ export async function POST(request: Request) {
   } catch (error: any) {
     console.error('[Razorpay Create Order API Error]:', error)
     return NextResponse.json(
-      { error: error.message || 'Internal Server Error' },
+      { error: toUserFacingError(error) },
       { status: 500 },
     )
   }
