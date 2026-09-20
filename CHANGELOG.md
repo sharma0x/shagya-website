@@ -1,3 +1,25 @@
+## [1.22.1](https://github.com/sharma0x/shagya-website/compare/v1.22.0...v1.22.1) (2026-09-20)
+
+### Bug Fixes
+
+- **products:** show out of stock for variant products regardless of trackQuantity ([7536f3d](https://github.com/sharma0x/shagya-website/commit/7536f3dfe193b0ad9ca1b9510d527d02b5836804))
+
+## [1.22.0](https://github.com/sharma0x/shagya-website/compare/v1.21.0...v1.22.0) (2026-09-20)
+
+### Features
+
+- **checkout:** contact-first guest checkout with saved-address picker ([da8e622](https://github.com/sharma0x/shagya-website/commit/da8e622fc41ab806a4d9cb73cd2f94e1754f6057))
+
+### Bug Fixes
+
+- **orders:** join stock transactions to the save transaction ([0dfd384](https://github.com/sharma0x/shagya-website/commit/0dfd38481f0140f7dad69b23df66c2fbebdd9f82))
+
+## [1.21.0](https://github.com/sharma0x/shagya-website/compare/v1.20.1...v1.21.0) (2026-09-20)
+
+### Features
+
+- **orders:** reliable stock commit, reserve, and restore ([06d1993](https://github.com/sharma0x/shagya-website/commit/06d19934c95b1726e5efed50dba88dd661a1f6cc))
+
 ## [1.20.1](https://github.com/sharma0x/shagya-website/compare/v1.20.0...v1.20.1) (2026-09-20)
 
 ### Bug Fixes
