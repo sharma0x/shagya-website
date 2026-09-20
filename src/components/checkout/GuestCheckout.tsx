@@ -44,15 +44,18 @@ export function GuestCheckout({ onVerified }: GuestCheckoutProps) {
   const phoneAuth = usePhoneAuth({
     onSuccess: async () => {
       try {
-        // Phone sign-in links a Better Auth account. Grab the session email
-        // (a stable fallback for phone-only accounts) so the downstream order
-        // flow still sees a guest identity.
-        const sessionRes: any = await authClient.$fetch('/get-session')
-        const sessionEmail = sessionRes?.data?.user?.email || ''
+        // Fetch the actual customer data from the API which filters out
+        // fallback emails and returns real user information
+        const customerRes = await fetch('/api/customers/me')
+        if (!customerRes.ok) {
+          throw new Error('Failed to fetch customer data')
+        }
+        const customerData = await customerRes.json()
+
         onVerified({
-          name: name.trim(),
-          email: sessionEmail,
-          phone: formattedPhoneRef.current,
+          name: customerData.name || name.trim(),
+          email: customerData.email || '',
+          phone: customerData.phone || formattedPhoneRef.current,
           isExisting,
         })
       } catch (err: any) {

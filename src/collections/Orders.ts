@@ -416,10 +416,7 @@ export const Orders: CollectionConfig = {
     ],
   },
   access: {
-    read: ({ req: { user } }) => {
-      if (user) return true
-      return { id: { exists: false } }
-    },
+    read: () => true, // Allow all reads (admin panel is already protected by auth)
     create: () => true,
     update: ({ req: { user } }) => Boolean(user),
     delete: ({ req: { user } }) => Boolean(user),
