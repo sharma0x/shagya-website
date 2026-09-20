@@ -1,3 +1,9 @@
+## [1.22.4](https://github.com/sharma0x/shagya-website/compare/v1.22.3...v1.22.4) (2026-09-20)
+
+### Bug Fixes
+
+- **auth:** add delay for session cookie synchronization after phone OTP ([39601d8](https://github.com/sharma0x/shagya-website/commit/39601d88f05d83011e22e89b523e6b62e63e7c93))
+
 ## [1.22.3](https://github.com/sharma0x/shagya-website/compare/v1.22.2...v1.22.3) (2026-09-20)
 
 ### Bug Fixes
