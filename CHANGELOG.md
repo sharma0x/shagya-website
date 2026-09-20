@@ -1,3 +1,13 @@
+## [1.22.0](https://github.com/sharma0x/shagya-website/compare/v1.21.0...v1.22.0) (2026-09-20)
+
+### Features
+
+- **checkout:** contact-first guest checkout with saved-address picker ([da8e622](https://github.com/sharma0x/shagya-website/commit/da8e622fc41ab806a4d9cb73cd2f94e1754f6057))
+
+### Bug Fixes
+
+- **orders:** join stock transactions to the save transaction ([0dfd384](https://github.com/sharma0x/shagya-website/commit/0dfd38481f0140f7dad69b23df66c2fbebdd9f82))
+
 ## [1.21.0](https://github.com/sharma0x/shagya-website/compare/v1.20.1...v1.21.0) (2026-09-20)
 
 ### Features
