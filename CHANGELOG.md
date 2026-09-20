@@ -1,3 +1,9 @@
+## [1.22.1](https://github.com/sharma0x/shagya-website/compare/v1.22.0...v1.22.1) (2026-09-20)
+
+### Bug Fixes
+
+- **products:** show out of stock for variant products regardless of trackQuantity ([7536f3d](https://github.com/sharma0x/shagya-website/commit/7536f3dfe193b0ad9ca1b9510d527d02b5836804))
+
 ## [1.22.0](https://github.com/sharma0x/shagya-website/compare/v1.21.0...v1.22.0) (2026-09-20)
 
 ### Features
