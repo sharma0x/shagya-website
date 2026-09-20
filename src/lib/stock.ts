@@ -114,6 +114,73 @@ export function applyStockDecrement(
   return { colorVariants: newVariants, quantity, purchaseCount }
 }
 
+/**
+ * Computes the product fields to write when an order is cancelled/refunded.
+ * Returns `null` when there is nothing to change (no items / no product).
+ *
+ * Mirrors `applyStockDecrement` in reverse:
+ * - Variant-less products: adds the full ordered quantity back to the
+ *   top-level `quantity` (only when `trackQuantity` is on).
+ * - Variant products: adds the ordered quantity back to each matched
+ *   variant's `stock` and recomputes `quantity` as the sum of enabled
+ *   variants. Items whose color cannot be matched are skipped.
+ * - `purchaseCount` is intentionally left untouched (it tracks popularity).
+ */
+export function applyStockRestore(
+  product: any,
+  items: StockOrderItem[],
+): StockRestoreUpdate | null {
+  const relevant = (items || []).filter(
+    (i) => i && i.quantity && i.quantity > 0,
+  )
+  if (relevant.length === 0) return null
+
+  const totalQty = relevant.reduce((sum, i) => sum + (i.quantity || 0), 0)
+
+  const variants = Array.isArray(product?.colorVariants)
+    ? product.colorVariants
+    : null
+
+  // ── Legacy / variant-less products: top-level quantity ──
+  if (!variants || variants.length === 0) {
+    if (product?.trackQuantity !== true) return null
+    return {
+      quantity: (Number(product?.quantity) || 0) + totalQty,
+    }
+  }
+
+  // ── Variant products: per-color restore ──
+  const newVariants: Array<Record<string, any>> = variants.map((v: any) => ({
+    ...v,
+  }))
+  let matched = false
+
+  for (const item of relevant) {
+    const variant = newVariants.find((v: Record<string, any>) =>
+      variantsMatchColor(v, item.color),
+    )
+    if (!variant) continue
+    variant.stock = (Number(variant.stock) || 0) + (item.quantity || 0)
+    matched = true
+  }
+
+  if (!matched) return null
+
+  const quantity = newVariants
+    .filter((v: Record<string, any>) => v.enabled !== false)
+    .reduce(
+      (sum: number, v: Record<string, any>) => sum + (Number(v.stock) || 0),
+      0,
+    )
+
+  return { colorVariants: newVariants, quantity }
+}
+
+export interface StockRestoreUpdate {
+  colorVariants?: Array<Record<string, unknown>>
+  quantity?: number
+}
+
 // ── Server-side stock validation ──────────────────────────────────────
 
 export interface CartStockItem {

@@ -89,6 +89,7 @@ export interface Config {
     weaves: Weaf;
     'event-logs': EventLog;
     'email-logs': EmailLog;
+    'stock-movements': StockMovement;
     navigation: Navigation;
     wishlist: Wishlist;
     posts: Post;
@@ -126,6 +127,7 @@ export interface Config {
     weaves: WeavesSelect<false> | WeavesSelect<true>;
     'event-logs': EventLogsSelect<false> | EventLogsSelect<true>;
     'email-logs': EmailLogsSelect<false> | EmailLogsSelect<true>;
+    'stock-movements': StockMovementsSelect<false> | StockMovementsSelect<true>;
     navigation: NavigationSelect<false> | NavigationSelect<true>;
     wishlist: WishlistSelect<false> | WishlistSelect<true>;
     posts: PostsSelect<false> | PostsSelect<true>;
@@ -687,6 +689,14 @@ export interface Order {
    */
   deliveredAt?: string | null;
   /**
+   * Idempotency guard — true once inventory has been deducted for a confirmed order.
+   */
+  stockDeducted?: boolean | null;
+  /**
+   * Idempotency guard — true once inventory has been restored after cancellation/refund.
+   */
+  stockRestored?: boolean | null;
+  /**
    * Enter tracking ID from shipping provider (e.g. Shiprocket, Delhivery, India Post)
    */
   trackingId?: string | null;
@@ -1147,6 +1157,35 @@ export interface EmailLog {
   createdAt: string;
 }
 /**
+ * Append-only inventory movement ledger. Entries are written automatically on order confirmation and cancellation.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "stock-movements".
+ */
+export interface StockMovement {
+  id: number;
+  product: number | Product;
+  /**
+   * Color variant the movement applies to (variant products)
+   */
+  variant?: (number | null) | Color;
+  /**
+   * Order that caused this movement
+   */
+  order?: (number | null) | Order;
+  type: 'committed' | 'restored' | 'reserved' | 'released' | 'manual';
+  /**
+   * Signed change to tracked stock (negative = removed)
+   */
+  delta: number;
+  /**
+   * Product-level tracked quantity after the movement
+   */
+  quantityAfter?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "navigation".
  */
@@ -1447,6 +1486,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'email-logs';
         value: number | EmailLog;
+      } | null)
+    | ({
+        relationTo: 'stock-movements';
+        value: number | StockMovement;
       } | null)
     | ({
         relationTo: 'navigation';
@@ -1750,6 +1793,8 @@ export interface OrdersSelect<T extends boolean = true> {
   confirmedAt?: T;
   shippedAt?: T;
   deliveredAt?: T;
+  stockDeducted?: T;
+  stockRestored?: T;
   trackingId?: T;
   trackingUrl?: T;
   shippingType?: T;
@@ -2189,6 +2234,20 @@ export interface EmailLogsSelect<T extends boolean = true> {
   label?: T;
   error?: T;
   html?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "stock-movements_select".
+ */
+export interface StockMovementsSelect<T extends boolean = true> {
+  product?: T;
+  variant?: T;
+  order?: T;
+  type?: T;
+  delta?: T;
+  quantityAfter?: T;
   updatedAt?: T;
   createdAt?: T;
 }

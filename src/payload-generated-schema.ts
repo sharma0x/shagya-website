@@ -249,6 +249,13 @@ export const enum_email_logs_status = pgEnum('enum_email_logs_status', [
   'sent',
   'failed',
 ])
+export const enum_stock_movements_type = pgEnum('enum_stock_movements_type', [
+  'committed',
+  'restored',
+  'reserved',
+  'released',
+  'manual',
+])
 export const enum_navigation_items_type = pgEnum('enum_navigation_items_type', [
   'page',
   'category',
@@ -521,6 +528,7 @@ export const products = pgTable(
   {
     id: serial('id').primaryKey(),
     name: varchar('name'),
+    productCode: varchar('product_code'),
     slug: varchar('slug'),
     description: jsonb('description'),
     status: enum_products_status('status').default('draft'),
@@ -573,6 +581,7 @@ export const products = pgTable(
     _status: enum_products_status('_status').default('draft'),
   },
   (columns) => [
+    uniqueIndex('products_product_code_idx').on(columns.productCode),
     uniqueIndex('products_slug_idx').on(columns.slug),
     index('products_fabric_idx').on(columns.fabric),
     index('products_weave_idx').on(columns.weave),
@@ -733,6 +742,7 @@ export const _products_v = pgTable(
       onDelete: 'set null',
     }),
     version_name: varchar('version_name'),
+    version_productCode: varchar('version_product_code'),
     version_slug: varchar('version_slug'),
     version_description: jsonb('version_description'),
     version_status:
@@ -821,6 +831,9 @@ export const _products_v = pgTable(
   },
   (columns) => [
     index('_products_v_parent_idx').on(columns.parent),
+    index('_products_v_version_version_product_code_idx').on(
+      columns.version_productCode,
+    ),
     index('_products_v_version_version_slug_idx').on(columns.version_slug),
     index('_products_v_version_version_fabric_idx').on(columns.version_fabric),
     index('_products_v_version_version_weave_idx').on(columns.version_weave),
@@ -1164,6 +1177,7 @@ export const orders_items = pgTable(
       .references(() => products.id, {
         onDelete: 'set null',
       }),
+    productCode: varchar('product_code'),
     variant: integer('variant_id').references(() => variants.id, {
       onDelete: 'set null',
     }),
@@ -1223,6 +1237,8 @@ export const orders = pgTable(
       withTimezone: true,
       precision: 3,
     }),
+    stockDeducted: boolean('stock_deducted').default(false),
+    stockRestored: boolean('stock_restored').default(false),
     trackingId: varchar('tracking_id'),
     trackingUrl: varchar('tracking_url'),
     shippingType: enum_orders_shipping_type('shipping_type')
@@ -2683,6 +2699,48 @@ export const email_logs = pgTable(
   ],
 )
 
+export const stock_movements = pgTable(
+  'stock_movements',
+  {
+    id: serial('id').primaryKey(),
+    product: integer('product_id')
+      .notNull()
+      .references(() => products.id, {
+        onDelete: 'set null',
+      }),
+    variant: integer('variant_id').references(() => colors.id, {
+      onDelete: 'set null',
+    }),
+    order: integer('order_id').references(() => orders.id, {
+      onDelete: 'set null',
+    }),
+    type: enum_stock_movements_type('type').notNull(),
+    delta: numeric('delta', { mode: 'number' }).notNull(),
+    quantityAfter: numeric('quantity_after', { mode: 'number' }),
+    updatedAt: timestamp('updated_at', {
+      mode: 'string',
+      withTimezone: true,
+      precision: 3,
+    })
+      .defaultNow()
+      .notNull(),
+    createdAt: timestamp('created_at', {
+      mode: 'string',
+      withTimezone: true,
+      precision: 3,
+    })
+      .defaultNow()
+      .notNull(),
+  },
+  (columns) => [
+    index('stock_movements_product_idx').on(columns.product),
+    index('stock_movements_variant_idx').on(columns.variant),
+    index('stock_movements_order_idx').on(columns.order),
+    index('stock_movements_updated_at_idx').on(columns.updatedAt),
+    index('stock_movements_created_at_idx').on(columns.createdAt),
+  ],
+)
+
 export const navigation_items = pgTable(
   'navigation_items',
   {
@@ -3363,6 +3421,7 @@ export const payload_locked_documents_rels = pgTable(
     weavesID: integer('weaves_id'),
     'event-logsID': integer('event_logs_id'),
     'email-logsID': integer('email_logs_id'),
+    'stock-movementsID': integer('stock_movements_id'),
     navigationID: integer('navigation_id'),
     wishlistID: integer('wishlist_id'),
     postsID: integer('posts_id'),
@@ -3419,6 +3478,9 @@ export const payload_locked_documents_rels = pgTable(
     ),
     index('payload_locked_documents_rels_email_logs_id_idx').on(
       columns['email-logsID'],
+    ),
+    index('payload_locked_documents_rels_stock_movements_id_idx').on(
+      columns['stock-movementsID'],
     ),
     index('payload_locked_documents_rels_navigation_id_idx').on(
       columns.navigationID,
@@ -3552,6 +3614,11 @@ export const payload_locked_documents_rels = pgTable(
       columns: [columns['email-logsID']],
       foreignColumns: [email_logs.id],
       name: 'payload_locked_documents_rels_email_logs_fk',
+    }).onDelete('cascade'),
+    foreignKey({
+      columns: [columns['stock-movementsID']],
+      foreignColumns: [stock_movements.id],
+      name: 'payload_locked_documents_rels_stock_movements_fk',
     }).onDelete('cascade'),
     foreignKey({
       columns: [columns['navigationID']],
@@ -3761,6 +3828,7 @@ export const site_settings = pgTable(
     contactEmail: varchar('contact_email'),
     contactPhone: varchar('contact_phone'),
     address: varchar('address'),
+    gstNumber: varchar('gst_number'),
     instagramUrl: varchar('instagram_url'),
     facebookUrl: varchar('facebook_url'),
     youtubeUrl: varchar('youtube_url'),
@@ -3926,6 +3994,7 @@ export const _site_settings_v = pgTable(
     version_contactEmail: varchar('version_contact_email'),
     version_contactPhone: varchar('version_contact_phone'),
     version_address: varchar('version_address'),
+    version_gstNumber: varchar('version_gst_number'),
     version_instagramUrl: varchar('version_instagram_url'),
     version_facebookUrl: varchar('version_facebook_url'),
     version_youtubeUrl: varchar('version_youtube_url'),
@@ -4948,6 +5017,26 @@ export const relations_occasions = relations(occasions, () => ({}))
 export const relations_weaves = relations(weaves, () => ({}))
 export const relations_event_logs = relations(event_logs, () => ({}))
 export const relations_email_logs = relations(email_logs, () => ({}))
+export const relations_stock_movements = relations(
+  stock_movements,
+  ({ one }) => ({
+    product: one(products, {
+      fields: [stock_movements.product],
+      references: [products.id],
+      relationName: 'product',
+    }),
+    variant: one(colors, {
+      fields: [stock_movements.variant],
+      references: [colors.id],
+      relationName: 'variant',
+    }),
+    order: one(orders, {
+      fields: [stock_movements.order],
+      references: [orders.id],
+      relationName: 'order',
+    }),
+  }),
+)
 export const relations_navigation_items = relations(
   navigation_items,
   ({ one }) => ({
@@ -5300,6 +5389,11 @@ export const relations_payload_locked_documents_rels = relations(
       references: [email_logs.id],
       relationName: 'email-logs',
     }),
+    'stock-movementsID': one(stock_movements, {
+      fields: [payload_locked_documents_rels['stock-movementsID']],
+      references: [stock_movements.id],
+      relationName: 'stock-movements',
+    }),
     navigationID: one(navigation, {
       fields: [payload_locked_documents_rels.navigationID],
       references: [navigation.id],
@@ -5563,6 +5657,7 @@ type DatabaseSchema = {
   enum__pages_v_published_locale: typeof enum__pages_v_published_locale
   enum_reviews_status: typeof enum_reviews_status
   enum_email_logs_status: typeof enum_email_logs_status
+  enum_stock_movements_type: typeof enum_stock_movements_type
   enum_navigation_items_type: typeof enum_navigation_items_type
   enum_navigation_location: typeof enum_navigation_location
   enum_posts_status: typeof enum_posts_status
@@ -5649,6 +5744,7 @@ type DatabaseSchema = {
   weaves: typeof weaves
   event_logs: typeof event_logs
   email_logs: typeof email_logs
+  stock_movements: typeof stock_movements
   navigation_items: typeof navigation_items
   navigation: typeof navigation
   wishlist_items: typeof wishlist_items
@@ -5755,6 +5851,7 @@ type DatabaseSchema = {
   relations_weaves: typeof relations_weaves
   relations_event_logs: typeof relations_event_logs
   relations_email_logs: typeof relations_email_logs
+  relations_stock_movements: typeof relations_stock_movements
   relations_navigation_items: typeof relations_navigation_items
   relations_navigation: typeof relations_navigation
   relations_wishlist_items: typeof relations_wishlist_items

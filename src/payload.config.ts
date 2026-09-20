@@ -25,6 +25,7 @@ import { Variants } from './collections/Variants'
 import { Orders } from './collections/Orders'
 import { EventLogs } from './collections/EventLogs'
 import { EmailLogs } from './collections/EmailLogs'
+import { StockMovements } from './collections/StockMovements'
 
 import { Customers } from './collections/Customers'
 import { Addresses } from './collections/Addresses'
@@ -321,6 +322,7 @@ export default buildConfig({
     Weaves,
     EventLogs,
     EmailLogs,
+    StockMovements,
 
     Navigation,
     Wishlist,

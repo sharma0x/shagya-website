@@ -10,6 +10,7 @@ import { ProductFilters } from '@/components/product/ProductFilters'
 import { ProductCard } from '@/components/product/ProductCard'
 import { ProductCardSkeleton } from '@/components/ui/Skeleton'
 import { TrackViewItemList } from '@/components/analytics/TrackViewItemList'
+import { cachedFindProducts } from '@/lib/product-cache'
 
 // ISR cache for 5 minutes
 export const revalidate = 300
@@ -195,8 +196,7 @@ async function CategoryProductsStream({
   if (sortParam === 'price-asc') sort = 'basePrice'
   else if (sortParam === 'price-desc') sort = '-basePrice'
 
-  const result = await payload.find({
-    collection: 'products',
+  const result = await cachedFindProducts({
     where,
     sort,
     page,

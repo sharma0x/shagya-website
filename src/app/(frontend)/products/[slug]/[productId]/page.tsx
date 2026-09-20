@@ -25,6 +25,7 @@ import { RecommendationRow } from '@/components/product/RecommendationRow'
 import { getRelatedProducts, getProductsByIds } from '@/lib/recommendations'
 import { getRecentlyViewedIds } from '@/lib/recently-viewed'
 import { getProductUrl } from '@/lib/product-url'
+import { cachedFindProducts } from '@/lib/product-cache'
 import { weaveIdOf, weaveLabel } from '@/lib/weaves'
 import { getApplicableCoupons } from '@/lib/coupons'
 import { TrackRecentlyViewed } from '@/components/product/TrackRecentlyViewed'
@@ -277,8 +278,7 @@ export default async function ProductDetailPage({
         depth: 2,
       })
     : ((
-        await payload.find({
-          collection: 'products',
+        await cachedFindProducts({
           where: {
             and: [
               { _status: { equals: 'published' } },

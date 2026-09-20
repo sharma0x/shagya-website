@@ -489,8 +489,8 @@ describe('Orders collection', () => {
   })
 
   describe('Total field count', () => {
-    it('has exactly 25 top-level fields', () => {
-      expect(Orders.fields).toHaveLength(25)
+    it('has exactly 27 top-level fields', () => {
+      expect(Orders.fields).toHaveLength(27)
     })
   })
 })

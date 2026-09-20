@@ -11,6 +11,7 @@ import { ProductFilters } from '@/components/product/ProductFilters'
 import { ProductCard } from '@/components/product/ProductCard'
 import { ProductCardSkeleton } from '@/components/ui/Skeleton'
 import { TrackViewItemList } from '@/components/analytics/TrackViewItemList'
+import { cachedFindProducts } from '@/lib/product-cache'
 
 // ISR cache for 5 minutes
 export const revalidate = 300
@@ -159,8 +160,7 @@ async function CollectionProductsStream({
     Math.min(50, parseInt((sParams.limit as string) || '20', 10)),
   )
 
-  const productsRes = await payload.find({
-    collection: 'products',
+  const productsRes = await cachedFindProducts({
     where,
     sort,
     page,
