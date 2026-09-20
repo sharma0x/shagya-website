@@ -3,6 +3,12 @@ import { cn } from '@/lib/utils'
 interface StockBadgeProps {
   quantity: number
   trackQuantity: boolean
+  /**
+   * True when the product has color variants — variant products always derive
+   * their quantity from variant stocks, so the badge applies regardless of
+   * `trackQuantity`.
+   */
+  hasVariants?: boolean
   lowStockThreshold?: number
   className?: string
 }
@@ -10,10 +16,12 @@ interface StockBadgeProps {
 export function StockBadge({
   quantity,
   trackQuantity,
+  hasVariants = false,
   lowStockThreshold = 5,
   className,
 }: StockBadgeProps) {
-  if (!trackQuantity) return null
+  const tracked = trackQuantity || hasVariants
+  if (!tracked) return null
 
   const isOutOfStock = quantity <= 0
   const isLowStock = quantity > 0 && quantity <= lowStockThreshold

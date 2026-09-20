@@ -7,7 +7,7 @@ import { WishlistButton } from '@/components/product/WishlistButton'
 import { ProductBadge } from '@/components/ui/ProductBadge'
 import { cn } from '@/lib/utils'
 import { getProductUrl } from '@/lib/product-url'
-import { liftVariantGallery } from '@/lib/product-utils'
+import { isProductOutOfStock, liftVariantGallery } from '@/lib/product-utils'
 import { isUnoptimizedImage } from '@/lib/image-url'
 import { weaveLabel } from '@/lib/weaves'
 import { trackSelectItem, registerWishlistProduct } from '@/lib/analytics'
@@ -172,7 +172,7 @@ export function ProductCard({
   const dotHoveredRef = useRef(false)
   const autoTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const discountPct = getDiscountPercent(product)
-  const isOOS = product.trackQuantity === true && (product.quantity ?? 0) <= 0
+  const isOOS = isProductOutOfStock(product)
   const weave = weaveLabel(product.weave)
   const fabric = weaveLabel(product.fabric)
 

@@ -25,6 +25,7 @@ import { RecommendationRow } from '@/components/product/RecommendationRow'
 import { getRelatedProducts, getProductsByIds } from '@/lib/recommendations'
 import { getRecentlyViewedIds } from '@/lib/recently-viewed'
 import { getProductUrl } from '@/lib/product-url'
+import { isProductOutOfStock } from '@/lib/product-utils'
 import { cachedFindProducts } from '@/lib/product-cache'
 import { weaveIdOf, weaveLabel } from '@/lib/weaves'
 import { getApplicableCoupons } from '@/lib/coupons'
@@ -416,9 +417,7 @@ export default async function ProductDetailPage({
             <PDPClientSection
               product={serializableProduct}
               initialColorSlug={color ?? null}
-              isOutOfStock={
-                product.trackQuantity === true && (product.quantity ?? 0) <= 0
-              }
+              isOutOfStock={isProductOutOfStock(product)}
               belowActions={
                 trustSignals.length > 0 ? (
                   <ul className="mt-8 space-y-4 border-t border-neutral-100 pt-7">
