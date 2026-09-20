@@ -93,7 +93,13 @@ export async function GET(request: Request) {
     const rawEmail = (customer.email as string) || session.user.email || ''
     const isFallbackEmail = rawEmail.includes('@phone.shayga.in')
     const email = isFallbackEmail ? '' : rawEmail
-    const hasVerifiedEmail = !isFallbackEmail && !!rawEmail
+    // An email is only "verified" when Better Auth actually verified it
+    // (email-OTP sign-in sets emailVerified=true). A phone user who saves a
+    // contact email via the profile is NOT email-verified.
+    const hasVerifiedEmail =
+      (session.user as { emailVerified?: boolean }).emailVerified === true
+        ? !isFallbackEmail && !!rawEmail
+        : false
 
     // Fallback to session data if customer fields are empty
     const name =
