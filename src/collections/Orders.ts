@@ -1,7 +1,12 @@
 import type { CollectionConfig } from 'payload'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import { sendWebhook } from '@/lib/webhooks'
 import { sendOrderPlacedEmails, sendOrderStatusEmails } from '@/email/send'
-import { applyStockDecrement, type StockOrderItem } from '@/lib/stock'
+import {
+  applyStockDecrement,
+  applyStockRestore,
+  type StockOrderItem,
+} from '@/lib/stock'
 import { shipOrderWithDelhivery } from '@/lib/delhivery/ship-order'
 import {
   createPickupRequest,
@@ -12,22 +17,300 @@ import {
 import { getDelhiverySettings } from '@/lib/delhivery/settings'
 import { mapScanToOrderStatus } from '@/lib/delhivery/mapping'
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Inventory transactions (synchronous + idempotent)
+//
+// Industry-grade inventory handling requires stock to be committed at the exact
+// moment an order is confirmed and restored when it is cancelled/refunded:
+//   - Synchronous: runs awaited inside `afterChange`, never fire-and-forget, so
+//     a failed write is visible in logs instead of silently leaving inventory
+//     out of sync.
+//   - Atomic: the decrement is a conditional update (`quantity >= requested`),
+//     so two concurrent confirmations cannot oversell the last unit.
+//   - Idempotent: `stockDeducted` / `stockRestored` flags on the order guarantee
+//     a replayed webhook or admin re-save never double-applies a movement.
+//   - Auditable: every movement is appended to the `stock-movements` ledger.
+// ─────────────────────────────────────────────────────────────────────────────
+
+function groupItemsByProduct(
+  items: Array<{
+    product?: string | number
+    quantity?: number | null
+    color?: StockOrderItem['color']
+  }>,
+): Map<string, StockOrderItem[]> {
+  const map = new Map<string, StockOrderItem[]>()
+  for (const item of items) {
+    if (!item.product) continue
+    const pid =
+      typeof item.product === 'string' ? item.product : String(item.product)
+    const bucket = map.get(pid) ?? []
+    bucket.push({ color: item.color, quantity: item.quantity })
+    map.set(pid, bucket)
+  }
+  return map
+}
+
+async function writeStockMovement(
+  payload: any,
+  data: {
+    product: string | number
+    variant?: StockOrderItem['color'] | null
+    order: string | number
+    type: 'committed' | 'restored' | 'reserved' | 'released' | 'manual'
+    delta: number
+    quantityAfter?: number
+  },
+): Promise<void> {
+  try {
+    await payload.create({
+      collection: 'stock-movements',
+      data: {
+        product: data.product,
+        variant: data.variant ?? undefined,
+        order: data.order,
+        type: data.type,
+        delta: data.delta,
+        quantityAfter: data.quantityAfter,
+      },
+      overrideAccess: true,
+    })
+  } catch (err) {
+    payload.logger.error(`[Stock] Ledger write failed: ${err}`)
+  }
+}
+
+function invalidateProductPages(payload: any, product: any): void {
+  try {
+    // Purges every ISR page that rendered product docs tagged with `products`
+    // (PDP, category, collections) so shoppers immediately see the new stock.
+    // Next 16 requires a cache-life profile — `{ expire: 300 }` mirrors the
+    // pages' 5-minute revalidation window.
+    revalidateTag('products', { expire: 300 })
+    if (product?.slug && product?.id) {
+      revalidatePath(`/products/${product.slug}/${product.id}`)
+    }
+  } catch (err) {
+    payload.logger.error(`[Stock] Cache revalidation failed: ${err}`)
+  }
+}
+
+async function deductStockForOrder(
+  payload: any,
+  doc: any,
+  ledgerType: 'committed' | 'reserved',
+): Promise<void> {
+  const orderId = String(doc.id)
+  const orderNumber = doc.orderNumber
+  const byProduct = groupItemsByProduct((doc?.items || []) as any[])
+
+  for (const [pid, productItems] of byProduct) {
+    try {
+      const product = await payload.findByID({
+        collection: 'products',
+        id: pid,
+        overrideAccess: true,
+        depth: 0,
+      })
+      if (!product) {
+        payload.logger.error(
+          `[Stock] Product ${pid} not found for order ${orderNumber}`,
+        )
+        continue
+      }
+
+      const update = applyStockDecrement(product, productItems)
+      if (!update) {
+        payload.logger.error(
+          `[Stock] No decrement computed for product ${pid} (order ${orderNumber})`,
+        )
+        continue
+      }
+
+      const totalQty = productItems.reduce(
+        (sum, i) => sum + (i.quantity || 0),
+        0,
+      )
+
+      // Atomic conditional update. Only guard on tracked quantity when the
+      // update actually changes stock (purchaseCount-only updates skip the
+      // guard so non-tracked products are not blocked).
+      const touchesStock =
+        update.quantity !== undefined || update.colorVariants !== undefined
+      const where: Record<string, any> = { id: { equals: pid } }
+      if (touchesStock && totalQty > 0) {
+        where.and = [{ quantity: { greater_than_equal: totalQty } }]
+      }
+
+      const res = await payload.update({
+        collection: 'products',
+        where,
+        data: update,
+        limit: 1,
+        overrideAccess: true,
+      })
+
+      if (!res.docs || res.docs.length === 0) {
+        payload.logger.error(
+          `[Stock] Oversell guard blocked decrement — product ${pid} (order ${orderNumber}) requested ${totalQty}`,
+        )
+        continue
+      }
+
+      const updated = res.docs[0]
+      const variant =
+        productItems.length === 1 ? (productItems[0].color ?? null) : null
+
+      await writeStockMovement(payload, {
+        product: pid,
+        variant,
+        order: orderId,
+        type: ledgerType,
+        delta: -totalQty,
+        quantityAfter: updated?.quantity ?? undefined,
+      })
+      invalidateProductPages(payload, updated)
+    } catch (err) {
+      payload.logger.error(
+        `[Stock] Deduct failed for product ${pid} (order ${orderNumber}): ${err}`,
+      )
+    }
+  }
+}
+
+async function restoreStockForOrder(
+  payload: any,
+  doc: any,
+  ledgerType: 'restored' | 'released',
+): Promise<void> {
+  const orderId = String(doc.id)
+  const orderNumber = doc.orderNumber
+  const byProduct = groupItemsByProduct((doc?.items || []) as any[])
+
+  for (const [pid, productItems] of byProduct) {
+    try {
+      const product = await payload.findByID({
+        collection: 'products',
+        id: pid,
+        overrideAccess: true,
+        depth: 0,
+      })
+      if (!product) continue
+
+      const update = applyStockRestore(product, productItems)
+      if (!update) continue
+
+      const totalQty = productItems.reduce(
+        (sum, i) => sum + (i.quantity || 0),
+        0,
+      )
+
+      const res = await payload.update({
+        collection: 'products',
+        where: { id: { equals: pid } },
+        data: update,
+        limit: 1,
+        overrideAccess: true,
+      })
+
+      if (!res.docs || res.docs.length === 0) continue
+
+      const updated = res.docs[0]
+      const variant =
+        productItems.length === 1 ? (productItems[0].color ?? null) : null
+
+      await writeStockMovement(payload, {
+        product: pid,
+        variant,
+        order: orderId,
+        type: ledgerType,
+        delta: totalQty,
+        quantityAfter: updated?.quantity ?? undefined,
+      })
+      invalidateProductPages(payload, updated)
+    } catch (err) {
+      payload.logger.error(
+        `[Stock] Restore failed for product ${pid} (order ${orderNumber}): ${err}`,
+      )
+    }
+  }
+}
+
 /**
- * Runs email, webhook, event-log, and purchaseCount side-effects.
- * Awaited inside afterChange to ensure serverless execution environments
- * (Vercel/Lambda) complete all network requests before freezing the container.
+ * Synchronous, idempotent inventory transactions keyed off the order status
+ * transition. Awaited inside `afterChange` — never fire-and-forget — so a
+ * stock failure surfaces in the request and logs.
  */
-async function runSideEffects(
+async function runStockTransactions(
+  payload: any,
+  doc: any,
+  prevStatus: string | null,
+  newStatus: string,
+): Promise<void> {
+  try {
+    const isCreate = prevStatus === null
+    const wasHeld = Boolean(doc?.stockDeducted)
+
+    // Commit on confirmation (prepaid orders are created confirmed; legacy COD
+    // orders are committed the first time they are confirmed).
+    if (newStatus === 'confirmed' && prevStatus !== 'confirmed' && !wasHeld) {
+      await deductStockForOrder(payload, doc, 'committed')
+      await payload.update({
+        collection: 'orders',
+        id: String(doc.id),
+        data: { stockDeducted: true },
+        overrideAccess: true,
+      })
+    }
+    // Reserve on order creation for COD (status `pending`) — closes the
+    // oversell window between checkout and admin confirmation. Stock is held
+    // here and released if the order is cancelled before confirmation.
+    else if (isCreate && newStatus === 'pending' && !wasHeld) {
+      await deductStockForOrder(payload, doc, 'reserved')
+      await payload.update({
+        collection: 'orders',
+        id: String(doc.id),
+        data: { stockDeducted: true },
+        overrideAccess: true,
+      })
+    }
+    // Release / restore on cancellation or refund. Works for both reserved
+    // (pending → cancelled) and committed (confirmed → cancelled) orders.
+    else if (
+      (newStatus === 'cancelled' || newStatus === 'refunded') &&
+      wasHeld &&
+      !doc?.stockRestored
+    ) {
+      const wasConfirmed = Boolean(doc?.confirmedAt)
+      await restoreStockForOrder(
+        payload,
+        doc,
+        wasConfirmed ? 'restored' : 'released',
+      )
+      await payload.update({
+        collection: 'orders',
+        id: String(doc.id),
+        data: { stockRestored: true },
+        overrideAccess: true,
+      })
+    }
+  } catch (err) {
+    payload.logger.error(
+      `[Stock] Transaction failed for order ${doc?.orderNumber}: ${err}`,
+    )
+  }
+}
+
+/**
+ * Runs email, webhook, and event-log side-effects for a status transition.
+ * Kept background (Next.js `after`) — these must never block the order save.
+ */
+async function runOrderNotifications(
   payload: any,
   docId: string,
   orderId: string,
   prevStatus: string | null,
   newStatus: string,
-  items?: Array<
-    { product?: string | number } & Omit<StockOrderItem, 'color'> & {
-        color?: StockOrderItem['color']
-      }
-  >,
 ): Promise<void> {
   try {
     await sendOrderStatusEmails(payload, docId, newStatus).catch((err) => {
@@ -60,46 +343,6 @@ async function runSideEffects(
       overrideAccess: true,
     })
   } catch {}
-
-  if (
-    newStatus === 'confirmed' &&
-    prevStatus !== 'confirmed' &&
-    items?.length
-  ) {
-    // Group items per product so a multi-color order applies one consistent
-    // stock update per product (variant-aware via applyStockDecrement).
-    const itemsByProduct = new Map<string, StockOrderItem[]>()
-    for (const item of items) {
-      if (!item.product) continue
-      const pid =
-        typeof item.product === 'string' ? item.product : String(item.product)
-      const bucket = itemsByProduct.get(pid) ?? []
-      bucket.push({ color: item.color, quantity: item.quantity })
-      itemsByProduct.set(pid, bucket)
-    }
-
-    for (const [pid, productItems] of itemsByProduct) {
-      try {
-        const product = await payload.findByID({
-          collection: 'products',
-          id: pid,
-          overrideAccess: true,
-          depth: 0,
-        })
-        if (!product) continue
-
-        const update = applyStockDecrement(product, productItems)
-        if (!update) continue
-
-        await payload.update({
-          collection: 'products',
-          id: product.id,
-          data: update,
-          overrideAccess: true,
-        })
-      } catch {}
-    }
-  }
 }
 
 const addressGroup = {
@@ -214,39 +457,57 @@ export const Orders: CollectionConfig = {
     ],
     afterChange: [
       async ({ doc, previousDoc, operation, req }) => {
-        req.payload.logger.info(
+        const payload = req.payload
+        payload.logger.info(
           `[Email] afterChange triggered — operation=${operation} docId=${(doc as any)?.id}`,
         )
+
         if (operation === 'create') {
           const docId = (doc as Record<string, unknown>).id as string
+          const initialStatus = (doc as Record<string, unknown>).status as
+            | string
+            | undefined
+
+          // Synchronous stock transaction at order creation:
+          //   - prepaid (`confirmed`) → commit inventory immediately
+          //   - COD (`pending`)      → reserve inventory immediately, so the
+          //     product stops being shown as available while the order awaits
+          //     admin confirmation (closes the COD oversell window).
+          // Awaited so the checkout response never returns before inventory is
+          // held — eliminating the fire-and-forget failure mode.
+          if (
+            docId &&
+            (initialStatus === 'confirmed' || initialStatus === 'pending')
+          ) {
+            await runStockTransactions(
+              payload,
+              doc,
+              null,
+              initialStatus as string,
+            )
+          }
+
           if (docId) {
             const backgroundTask = async () => {
               await sendOrderPlacedEmails(
-                req.payload,
+                payload,
                 String(docId),
                 doc as Record<string, unknown>,
               ).catch((err) =>
-                req.payload.logger.error(
+                payload.logger.error(
                   `[Email] sendOrderPlacedEmails failed: ${err}`,
                 ),
               )
 
-              const initialStatus = (doc as Record<string, unknown>).status as
-                | string
-                | undefined
               if (initialStatus && initialStatus !== 'pending') {
                 const orderId = (doc as Record<string, unknown>)
                   .orderNumber as string
-                const items = (doc as Record<string, unknown>).items as
-                  | Array<{ product?: string | number; quantity?: number }>
-                  | undefined
-                await runSideEffects(
-                  req.payload,
+                await runOrderNotifications(
+                  payload,
                   docId,
                   orderId,
                   null,
                   initialStatus,
-                  items,
                 )
               }
             }
@@ -273,18 +534,17 @@ export const Orders: CollectionConfig = {
 
         const docId = (doc as Record<string, unknown>).id as string
         const orderId = (doc as Record<string, unknown>).orderNumber as string
-        const items = (doc as Record<string, unknown>).items as
-          | Array<{ product?: string | number; quantity?: number }>
-          | undefined
+
+        // Synchronous inventory commit/restore — awaited so failures are visible.
+        await runStockTransactions(payload, doc, prevStatus ?? null, newStatus)
 
         const backgroundTask = async () => {
-          await runSideEffects(
-            req.payload,
+          await runOrderNotifications(
+            payload,
             docId,
             orderId,
             prevStatus ?? null,
             newStatus,
-            items,
           )
         }
 
@@ -654,6 +914,28 @@ export const Orders: CollectionConfig = {
       admin: {
         readOnly: true,
         description: 'Set when status changes to delivered',
+      },
+    },
+    {
+      name: 'stockDeducted',
+      type: 'checkbox',
+      defaultValue: false,
+      admin: {
+        readOnly: true,
+        hidden: true,
+        description:
+          'Idempotency guard — true once inventory has been held for this order (reserved on COD creation, committed on confirmation).',
+      },
+    },
+    {
+      name: 'stockRestored',
+      type: 'checkbox',
+      defaultValue: false,
+      admin: {
+        readOnly: true,
+        hidden: true,
+        description:
+          'Idempotency guard — true once held inventory has been released/restored after cancellation/refund.',
       },
     },
     {

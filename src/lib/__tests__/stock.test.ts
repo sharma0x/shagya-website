@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { applyStockDecrement } from '../stock'
+import { applyStockDecrement, applyStockRestore } from '../stock'
 
 const variantProduct = (overrides: any = {}) => ({
   id: 1,
@@ -135,6 +135,74 @@ describe('applyStockDecrement — edge cases', () => {
   it('returns null when all quantities are zero', () => {
     expect(
       applyStockDecrement(variantProduct(), [{ color: 101, quantity: 0 }]),
+    ).toBeNull()
+  })
+})
+
+describe('applyStockRestore — variant products', () => {
+  it('adds back to the matched variant and recomputes quantity', () => {
+    const update = applyStockRestore(variantProduct(), [
+      { color: 101, quantity: 2 },
+    ])
+
+    expect(update).not.toBeNull()
+    expect(update!.colorVariants!.find((v) => v.color === 101)!.stock).toBe(7)
+    expect(update!.colorVariants!.find((v) => v.color === 102)!.stock).toBe(3)
+    // quantity = 7 + 3 (enabled variants only; disabled variant excluded)
+    expect(update!.quantity).toBe(10)
+  })
+
+  it('matches a populated color doc reference as well as a bare ID', () => {
+    const update = applyStockRestore(variantProduct(), [
+      { color: { id: 102 }, quantity: 1 },
+    ])
+
+    expect(update!.colorVariants!.find((v) => v.color === 102)!.stock).toBe(4)
+  })
+
+  it('returns null for items without a matchable color', () => {
+    const update = applyStockRestore(variantProduct(), [{ quantity: 2 }])
+    expect(update).toBeNull()
+  })
+})
+
+describe('applyStockRestore — variant-less products (legacy)', () => {
+  const legacyProduct = (overrides: any = {}) => ({
+    id: 2,
+    trackQuantity: true,
+    quantity: 3,
+    purchaseCount: 9,
+    colorVariants: [],
+    ...overrides,
+  })
+
+  it('adds the ordered quantity back when tracking is on', () => {
+    const update = applyStockRestore(legacyProduct(), [{ quantity: 3 }])
+    expect(update).toEqual({ quantity: 6 })
+  })
+
+  it('does not touch purchaseCount', () => {
+    const update = applyStockRestore(legacyProduct(), [{ quantity: 3 }])
+    expect(update).not.toHaveProperty('purchaseCount')
+  })
+
+  it('returns null when tracking is off', () => {
+    const update = applyStockRestore(
+      { ...legacyProduct(), trackQuantity: false },
+      [{ quantity: 3 }],
+    )
+    expect(update).toBeNull()
+  })
+})
+
+describe('applyStockRestore — edge cases', () => {
+  it('returns null for empty items', () => {
+    expect(applyStockRestore(variantProduct(), [])).toBeNull()
+  })
+
+  it('returns null when all quantities are zero', () => {
+    expect(
+      applyStockRestore(variantProduct(), [{ color: 101, quantity: 0 }]),
     ).toBeNull()
   })
 })

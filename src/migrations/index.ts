@@ -34,6 +34,9 @@ import * as migration_20260917_020000_add_whatsapp_url_to_site_settings from './
 import * as migration_20260918_000000_add_product_code_and_gst from './20260918_000000_add_product_code_and_gst'
 import * as migration_20260919_000000_add_cod_fee from './20260919_000000_add_cod_fee'
 import * as migration_20260919_120000_add_phone_identities_table from './20260919_120000_add_phone_identities_table'
+import * as migration_20260920_000000_add_customer_unique_constraints from './20260920_000000_add_customer_unique_constraints'
+import * as migration_20260920_000001_fix_phone_identities_constraint from './20260920_000001_fix_phone_identities_constraint'
+import * as migration_20260920_120000_add_stock_movements_and_order_stock_flags from './20260920_120000_add_stock_movements_and_order_stock_flags'
 
 export const migrations = [
   {
@@ -215,5 +218,20 @@ export const migrations = [
     up: migration_20260919_120000_add_phone_identities_table.up,
     down: migration_20260919_120000_add_phone_identities_table.down,
     name: '20260919_120000_add_phone_identities_table',
+  },
+  {
+    up: migration_20260920_000000_add_customer_unique_constraints.up,
+    down: migration_20260920_000000_add_customer_unique_constraints.down,
+    name: '20260920_000000_add_customer_unique_constraints',
+  },
+  {
+    up: migration_20260920_000001_fix_phone_identities_constraint.up,
+    down: migration_20260920_000001_fix_phone_identities_constraint.down,
+    name: '20260920_000001_fix_phone_identities_constraint',
+  },
+  {
+    up: migration_20260920_120000_add_stock_movements_and_order_stock_flags.up,
+    down: migration_20260920_120000_add_stock_movements_and_order_stock_flags.down,
+    name: '20260920_120000_add_stock_movements_and_order_stock_flags',
   },
 ]
