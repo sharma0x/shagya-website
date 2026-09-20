@@ -44,6 +44,9 @@ export function GuestCheckout({ onVerified }: GuestCheckoutProps) {
   const phoneAuth = usePhoneAuth({
     onSuccess: async () => {
       try {
+        // Wait a moment for the Better Auth session cookie to be set
+        await new Promise((resolve) => setTimeout(resolve, 500))
+
         // Fetch the actual customer data from the API which filters out
         // fallback emails and returns real user information
         const customerRes = await fetch('/api/customers/me')
