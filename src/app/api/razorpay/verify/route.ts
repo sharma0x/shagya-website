@@ -7,6 +7,8 @@ import { isSameAddress } from '@/lib/address-utils'
 import { validateCartStock, type CartStockItem } from '@/lib/stock'
 import { resolveCurrentPrices, applyCurrentPrice } from '@/lib/cart-prices'
 import { validateCouponForCart } from '@/lib/coupons'
+import { findOrRepairCustomer } from '@/lib/auth-sync'
+import { toUserFacingError } from '@/lib/api-error'
 
 /**
  * Resolves the color identity from a cart item's variant JSON
@@ -92,46 +94,70 @@ export async function POST(request: Request) {
     let customerPhone = phone || ''
     let customerId: string | number | null = null
 
+    const payload = await getPayload({ config })
+
     if (isGuest) {
       customerEmail = guestEmail
       customerPhone = guestPhone || phone || ''
-    } else {
-      const session = await auth.api.getSession({ headers: request.headers })
-      if (!session?.user) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-      }
-      customerEmail = session.user.email
     }
 
-    const payload = await getPayload({ config })
+    // Every current checkout path verifies identity first (email/phone OTP),
+    // so a session almost always exists here. Prefer the atomic find-or-repair
+    // path (keyed on the Better Auth user): it creates the customer once with
+    // a real name/email and heals stale rows, instead of the old bare
+    // `{ email }` insert that violated the NOT NULL `name` column. The bare
+    // insert remains only as a legacy fallback for unverified guests.
+    const session = await auth.api.getSession({ headers: request.headers })
+    if (!session?.user && !isGuest) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
 
-    // Find or create customer
-    const customers = await payload.find({
-      collection: 'customers',
-      where: isGuest
-        ? { email: { equals: customerEmail } }
-        : {
-            betterAuthUserId: {
-              equals:
-                (await auth.api.getSession({ headers: request.headers }))?.user
-                  ?.id || '',
-            },
-          },
-      limit: 1,
-    } as any)
+    let customer: any = null
 
-    if (isGuest && customers.docs.length === 0) {
-      // Guest customer might have been created by verify-otp, but if not, create now
-      const created = await payload.create({
+    if (session?.user) {
+      customer = await findOrRepairCustomer(session.user.id)
+      customerEmail = customerEmail || session.user.email || ''
+      customerPhone = customerPhone || (session.user as any).phoneNumber || ''
+    }
+
+    if (!customer && isGuest) {
+      const found = await payload.find({
         collection: 'customers',
-        data: { email: customerEmail },
+        where: { email: { equals: customerEmail } },
+        limit: 1,
       } as any)
-      customerId = created.id as string | number
-    } else if (customers.docs.length > 0) {
-      customerId = customers.docs[0].id as string | number
-    } else {
+      customer = found.docs[0] ?? null
+
+      if (!customer) {
+        try {
+          const created = await payload.create({
+            collection: 'customers',
+            overrideAccess: true,
+            data: {
+              email: customerEmail,
+              name: shippingAddress?.fullName || '',
+              phone: customerPhone || '',
+            },
+          } as any)
+          customer = created
+        } catch {
+          // A concurrent creation can race the unique email index — re-find
+          // instead of surfacing the DB error to the client.
+          const refound = await payload.find({
+            collection: 'customers',
+            where: { email: { equals: customerEmail } },
+            limit: 1,
+          } as any)
+          customer = refound.docs[0] ?? null
+        }
+      }
+    }
+
+    if (!customer) {
       return NextResponse.json({ error: 'Customer not found' }, { status: 404 })
     }
+
+    customerId = customer.id as string | number
 
     let orderItems: any[]
     let subtotal = 0
@@ -438,7 +464,7 @@ export async function POST(request: Request) {
   } catch (error: any) {
     console.error('[Razorpay Verify API Error]:', error)
     return NextResponse.json(
-      { error: error.message || 'Internal Server Error' },
+      { error: toUserFacingError(error) },
       { status: 500 },
     )
   }
