@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import { auth } from '@/lib/auth'
+import { findOrRepairCustomer } from '@/lib/auth-sync'
 
 /**
  * GET /api/wishlist
@@ -16,27 +17,18 @@ export async function GET(request: Request) {
 
     const payload = await getPayload({ config })
 
-    // Find the customer
-    const customers = await payload.find({
-      collection: 'customers',
-      where: {
-        betterAuthUserId: { equals: session.user.id },
-      },
-      limit: 1,
-      overrideAccess: true,
-    })
+    // Find the customer (repairing it first if missing)
+    const customer = await findOrRepairCustomer(session.user.id)
 
-    if (customers.docs.length === 0) {
+    if (!customer) {
       return NextResponse.json({ error: 'Customer not found' }, { status: 404 })
     }
-
-    const customer = customers.docs[0]
 
     // Fetch the customer's wishlist with populated product relationships
     const wishlists = await payload.find({
       collection: 'wishlist',
       where: {
-        customer: { equals: customer.id },
+        customer: { equals: customer.id as number },
       },
       limit: 1,
       depth: 2,
@@ -102,25 +94,17 @@ export async function POST(request: Request) {
 
     const payload = await getPayload({ config })
 
-    // Find customer
-    const customers = await payload.find({
-      collection: 'customers',
-      where: {
-        betterAuthUserId: { equals: session.user.id },
-      },
-      limit: 1,
-    })
+    // Find customer (repairing it first if missing)
+    const customer = await findOrRepairCustomer(session.user.id)
 
-    if (customers.docs.length === 0) {
+    if (!customer) {
       return NextResponse.json({ error: 'Customer not found' }, { status: 404 })
     }
-
-    const customer = customers.docs[0]
 
     const wishlists = await payload.find({
       collection: 'wishlist',
       where: {
-        customer: { equals: customer.id },
+        customer: { equals: customer.id as number },
       },
       limit: 1,
       overrideAccess: true,
@@ -173,7 +157,7 @@ export async function POST(request: Request) {
       wishlistDoc = await payload.create({
         collection: 'wishlist',
         data: {
-          customer: customer.id,
+          customer: customer.id as number,
           items: cleanedItems,
         },
         overrideAccess: true,
@@ -216,27 +200,18 @@ export async function DELETE(request: Request) {
 
     const payload = await getPayload({ config })
 
-    // Find customer
-    const customers = await payload.find({
-      collection: 'customers',
-      where: {
-        betterAuthUserId: { equals: session.user.id },
-      },
-      limit: 1,
-      overrideAccess: true,
-    })
+    // Find customer (repairing it first if missing)
+    const customer = await findOrRepairCustomer(session.user.id)
 
-    if (customers.docs.length === 0) {
+    if (!customer) {
       return NextResponse.json({ error: 'Customer not found' }, { status: 404 })
     }
-
-    const customer = customers.docs[0]
 
     // Find customer's wishlist
     const wishlists = await payload.find({
       collection: 'wishlist',
       where: {
-        customer: { equals: customer.id },
+        customer: { equals: customer.id as number },
       },
       limit: 1,
       overrideAccess: true,

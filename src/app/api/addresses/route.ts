@@ -3,6 +3,7 @@ import { getPayload } from 'payload'
 import config from '@payload-config'
 import { auth } from '@/lib/auth'
 import { isSameAddress, deduplicateAddresses } from '@/lib/address-utils'
+import { findOrRepairCustomer } from '@/lib/auth-sync'
 
 /**
  * GET /api/addresses
@@ -17,26 +18,18 @@ export async function GET(request: Request) {
 
     const payload = await getPayload({ config })
 
-    // Find customer
-    const customers = await payload.find({
-      collection: 'customers',
-      where: {
-        betterAuthUserId: { equals: session.user.id },
-      },
-      limit: 1,
-    })
+    // Find customer (repairing it first if missing)
+    const customer = await findOrRepairCustomer(session.user.id)
 
-    if (customers.docs.length === 0) {
+    if (!customer) {
       return NextResponse.json({ error: 'Customer not found' }, { status: 404 })
     }
-
-    const customer = customers.docs[0]
 
     // Fetch addresses
     const addresses = await payload.find({
       collection: 'addresses',
       where: {
-        customer: { equals: customer.id },
+        customer: { equals: customer.id as number },
       },
       sort: '-isDefault', // defaults first
       limit: 100,
@@ -87,26 +80,20 @@ export async function POST(request: Request) {
 
     const payload = await getPayload({ config })
 
-    // Find customer
-    const customers = await payload.find({
-      collection: 'customers',
-      where: {
-        betterAuthUserId: { equals: session.user.id },
-      },
-      limit: 1,
-    })
+    // Find customer (repairing it first if missing)
+    const customer = await findOrRepairCustomer(session.user.id)
 
-    if (customers.docs.length === 0) {
+    if (!customer) {
       return NextResponse.json({ error: 'Customer not found' }, { status: 404 })
     }
 
-    const customer = customers.docs[0]
+    const customerId = customer.id as number
 
     // Check if customer already has this exact address saved
     const existing = await payload.find({
       collection: 'addresses',
       where: {
-        customer: { equals: customer.id },
+        customer: { equals: customerId },
       },
       limit: 100,
     })
@@ -131,7 +118,7 @@ export async function POST(request: Request) {
       const existingDefaults = await payload.find({
         collection: 'addresses',
         where: {
-          customer: { equals: customer.id },
+          customer: { equals: customerId },
           isDefault: { equals: true },
         },
       })
@@ -162,7 +149,7 @@ export async function POST(request: Request) {
     const newAddress = await payload.create({
       collection: 'addresses',
       data: {
-        customer: customer.id,
+        customer: customerId,
         ...newAddrData,
         isDefault: !!isDefault,
       },

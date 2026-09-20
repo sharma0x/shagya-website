@@ -5,6 +5,7 @@ import { auth } from '@/lib/auth'
 import { getPhoneIdentityByUserId } from '@/lib/phone-identity'
 import { getDbPool } from '@/lib/db-pool'
 import { rateLimiter, getClientIdentifier, RATE_LIMITS } from '@/lib/rate-limit'
+import { findOrRepairCustomer } from '@/lib/auth-sync'
 
 /**
  * Determines how the user originally signed in.
@@ -51,17 +52,13 @@ export async function GET(request: Request) {
 
     const payload = await getPayload({ config })
 
-    const customers = await payload.find({
-      collection: 'customers',
-      where: { betterAuthUserId: { equals: session.user.id } },
-      limit: 1,
-    })
+    // Find the customer, creating it first if it is missing. This heals
+    // sessions that predate a successful customer sync.
+    const customer = await findOrRepairCustomer(session.user.id)
 
-    if (customers.docs.length === 0) {
+    if (!customer) {
       return NextResponse.json({ error: 'Customer not found' }, { status: 404 })
     }
-
-    const customer = customers.docs[0] as unknown as Record<string, unknown>
 
     console.log('[customers/me] Customer data:', {
       id: customer.id,
@@ -166,13 +163,9 @@ export async function PATCH(request: Request) {
 
     const payload = await getPayload({ config })
 
-    const customers = await payload.find({
-      collection: 'customers',
-      where: { betterAuthUserId: { equals: session.user.id } },
-      limit: 1,
-    })
+    const customer = await findOrRepairCustomer(session.user.id)
 
-    if (customers.docs.length === 0) {
+    if (!customer) {
       return NextResponse.json({ error: 'Customer not found' }, { status: 404 })
     }
 
@@ -183,9 +176,7 @@ export async function PATCH(request: Request) {
     // Allow setting email only when the customer currently has no real email
     // (phone-login users who have a @phone.shayga.in fallback or empty email)
     if (email !== undefined) {
-      const currentEmail = (
-        customers.docs[0] as unknown as Record<string, unknown>
-      ).email as string
+      const currentEmail = customer.email as string
       const isFallback =
         !currentEmail || currentEmail.includes('@phone.shayga.in')
       if (isFallback) {
@@ -197,7 +188,7 @@ export async function PATCH(request: Request) {
 
     await payload.update({
       collection: 'customers',
-      id: customers.docs[0].id,
+      id: customer.id as number,
       data: updateData,
       overrideAccess: true,
     } as any)

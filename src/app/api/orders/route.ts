@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import { auth } from '@/lib/auth'
+import { findOrRepairCustomer } from '@/lib/auth-sync'
 
 /**
  * GET /api/orders
@@ -16,27 +17,29 @@ export async function GET(request: Request) {
 
     const payload = await getPayload({ config })
 
-    // Find the customer doc
-    const customers = await payload.find({
-      collection: 'customers',
-      where: {
-        betterAuthUserId: { equals: session.user.id },
-      },
-      limit: 1,
-    })
+    // Find the customer doc (repairing it first if missing)
+    const customer = await findOrRepairCustomer(session.user.id)
 
-    if (customers.docs.length === 0) {
+    if (!customer) {
       return NextResponse.json({ error: 'Customer not found' }, { status: 404 })
     }
 
-    const customer = customers.docs[0]
+    const customerEmail = customer.email as string
+
+    // A phone user may later set a real email via their profile, but orders
+    // placed under the verified fallback email (@phone.shayga.in) are stored
+    // with the session email. Query both so order history stays complete.
+    const sessionEmail = session.user.email || ''
+    const orderEmails = Array.from(
+      new Set([customerEmail, sessionEmail].filter(Boolean)),
+    )
 
     // Find orders for this customer by email
     const orders = await payload.find({
       collection: 'orders',
       depth: 2,
       where: {
-        customerEmail: { equals: customer.email },
+        customerEmail: { in: orderEmails },
       },
       sort: '-createdAt', // newest first
     })

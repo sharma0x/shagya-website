@@ -13,6 +13,7 @@ import {
   itemProductId,
   applyCurrentPrice,
 } from '@/lib/cart-prices'
+import { findOrRepairCustomer } from '@/lib/auth-sync'
 
 /**
  * GET /api/cart
@@ -27,21 +28,14 @@ export async function GET(request: Request): Promise<NextResponse> {
 
     const payload = await getPayload({ config })
 
-    // Find the customer linked to this Better Auth user
-    const customers = await payload.find({
-      collection: 'customers',
-      where: {
-        betterAuthUserId: { equals: session.user.id },
-      },
-      limit: 1,
-      overrideAccess: true,
-    })
+    // Find the customer linked to this Better Auth user (repairing first)
+    const customer = await findOrRepairCustomer(session.user.id)
 
-    if (customers.docs.length === 0) {
+    if (!customer) {
       return NextResponse.json({ error: 'Customer not found' }, { status: 404 })
     }
 
-    const customerId = customers.docs[0].id
+    const customerId = customer.id as number
 
     // Find the cart for this customer
     const carts = await payload.find({
@@ -121,21 +115,14 @@ export async function POST(request: Request): Promise<NextResponse> {
       items.push(...clampedItems)
     }
 
-    // Find the customer linked to this Better Auth user
-    const customers = await payload.find({
-      collection: 'customers',
-      where: {
-        betterAuthUserId: { equals: session.user.id },
-      },
-      limit: 1,
-      overrideAccess: true,
-    })
+    // Find the customer linked to this Better Auth user (repairing first)
+    const customer = await findOrRepairCustomer(session.user.id)
 
-    if (customers.docs.length === 0) {
+    if (!customer) {
       return NextResponse.json({ error: 'Customer not found' }, { status: 404 })
     }
 
-    const customerId = customers.docs[0].id
+    const customerId = customer.id as number
 
     // Calculate subtotal from CURRENT product prices (never trust the
     // add-time unitPrice snapshot in the client payload)
