@@ -1,3 +1,9 @@
+## [1.22.6](https://github.com/sharma0x/shagya-website/compare/v1.22.5...v1.22.6) (2026-09-21)
+
+### Bug Fixes
+
+- **orders:** pass numeric ids to stock queries and ledger ([af34db9](https://github.com/sharma0x/shagya-website/commit/af34db97229c889325203a1c513e3202f40359c6))
+
 ## [1.22.5](https://github.com/sharma0x/shagya-website/compare/v1.22.4...v1.22.5) (2026-09-21)
 
 ### Bug Fixes
