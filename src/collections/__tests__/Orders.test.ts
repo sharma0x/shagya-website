@@ -398,6 +398,7 @@ describe('Orders collection', () => {
         req: {
           payload: {
             logger: { error: () => {}, info: () => {} },
+            update: async () => ({ docs: [{}] }),
           },
         },
       } as any)
@@ -448,6 +449,7 @@ describe('Orders collection', () => {
             logger: { error: () => {}, info: () => {} },
             sendEmail: async () => ({ success: true }),
             create: async () => ({}),
+            update: async () => ({ docs: [{}] }),
           },
         },
       } as any)
@@ -479,6 +481,7 @@ describe('Orders collection', () => {
             logger: { error: () => {}, info: () => {} },
             sendEmail: async () => ({ success: true }),
             create: async () => ({}),
+            update: async () => ({ docs: [{}] }),
           },
         },
       } as any)
