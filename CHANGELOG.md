@@ -1,3 +1,15 @@
+## [1.22.3](https://github.com/sharma0x/shagya-website/compare/v1.22.2...v1.22.3) (2026-09-20)
+
+### Bug Fixes
+
+- **checkout:** use real customer data instead of fallback email in phone auth ([7281d92](https://github.com/sharma0x/shagya-website/commit/7281d92c9d9199cced9b42aebcfd6212a4cb4da6))
+
+## [1.22.2](https://github.com/sharma0x/shagya-website/compare/v1.22.1...v1.22.2) (2026-09-20)
+
+### Bug Fixes
+
+- **checkout:** stop leaking DB errors and fix customer creation ([3463e22](https://github.com/sharma0x/shagya-website/commit/3463e227954989556099fea289885ee4cf878023))
+
 ## [1.22.1](https://github.com/sharma0x/shagya-website/compare/v1.22.0...v1.22.1) (2026-09-20)
 
 ### Bug Fixes
