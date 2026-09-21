@@ -1,3 +1,16 @@
+## [1.22.5](https://github.com/sharma0x/shagya-website/compare/v1.22.4...v1.22.5) (2026-09-21)
+
+### Bug Fixes
+
+- **orders:** abort transaction on stock failure and normalize product IDs ([da1e9aa](https://github.com/sharma0x/shagya-website/commit/da1e9aa245213d193e11e7eb0fc3f01378e0b5b7))
+- **orders:** abort transaction on stock failure and normalize product IDs ([949562c](https://github.com/sharma0x/shagya-website/commit/949562c6e3bdae879841f614c8109be822249bc0))
+- **auth:** add delay for session cookie synchronization after phone OTP ([251e8ff](https://github.com/sharma0x/shagya-website/commit/251e8ffb618a6d5b3ebaac4c6fdc393504cfc2ab))
+- **auth:** add delay for session cookie synchronization after phone OTP ([50522fb](https://github.com/sharma0x/shagya-website/commit/50522fb167b299aeaa9be1dbd8420120c01ad57e))
+- **checkout:** remove duplicate onVerified object keys ([75a495c](https://github.com/sharma0x/shagya-website/commit/75a495cd1253d3cd6131aa54aa4e9a9b30735d47))
+- **checkout:** stop leaking DB errors and fix customer creation ([56352e4](https://github.com/sharma0x/shagya-website/commit/56352e4d4939b87e973e3821e1fa02c21f28da84))
+- **checkout:** use real customer data instead of fallback email in phone auth ([bcc2758](https://github.com/sharma0x/shagya-website/commit/bcc27585eedc4ace3860c12592f9515a044207df))
+- **checkout:** use real customer data instead of fallback email in phone auth ([b73f150](https://github.com/sharma0x/shagya-website/commit/b73f150cc9a596cfb3798b3a58a82206d617d118))
+
 ## [1.22.4](https://github.com/sharma0x/shagya-website/compare/v1.22.3...v1.22.4) (2026-09-20)
 
 ### Bug Fixes
