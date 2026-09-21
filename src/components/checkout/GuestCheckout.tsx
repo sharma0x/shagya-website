@@ -59,9 +59,6 @@ export function GuestCheckout({ onVerified }: GuestCheckoutProps) {
           name: customerData.name || name.trim(),
           email: customerData.email || '',
           phone: customerData.phone || formattedPhoneRef.current,
-          name: customerData.name || name.trim(),
-          email: customerData.email || '',
-          phone: customerData.phone || formattedPhoneRef.current,
           isExisting,
         })
       } catch (err: any) {
