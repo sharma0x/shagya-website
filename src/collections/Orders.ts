@@ -105,11 +105,12 @@ async function deductStockForOrder(
   doc: any,
   ledgerType: 'committed' | 'reserved',
 ): Promise<void> {
-  const orderId = String(doc.id)
+  const orderId = doc.id
   const orderNumber = doc.orderNumber
   const byProduct = groupItemsByProduct((doc?.items || []) as any[])
 
-  for (const [pid, productItems] of byProduct) {
+  for (const [pidStr, productItems] of byProduct) {
+    const pid = /^\d+$/.test(pidStr) ? Number(pidStr) : pidStr
     const product = await payload.findByID({
       collection: 'products',
       id: pid,
@@ -177,11 +178,12 @@ async function restoreStockForOrder(
   doc: any,
   ledgerType: 'restored' | 'released',
 ): Promise<void> {
-  const orderId = String(doc.id)
+  const orderId = doc.id
   const orderNumber = doc.orderNumber
   const byProduct = groupItemsByProduct((doc?.items || []) as any[])
 
-  for (const [pid, productItems] of byProduct) {
+  for (const [pidStr, productItems] of byProduct) {
+    const pid = /^\d+$/.test(pidStr) ? Number(pidStr) : pidStr
     const product = await payload.findByID({
       collection: 'products',
       id: pid,
