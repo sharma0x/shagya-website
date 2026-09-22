@@ -1,3 +1,9 @@
+## [1.23.2](https://github.com/sharma0x/shagya-website/compare/v1.23.1...v1.23.2) (2026-09-22)
+
+### Bug Fixes
+
+- **auth:** enhance phone auth debugging and error messages for reCAPTCHA issues ([b703236](https://github.com/sharma0x/shagya-website/commit/b703236274dcf7d4e0f84c29b95b3963b25027ea))
+
 ## [1.23.1](https://github.com/sharma0x/shagya-website/compare/v1.23.0...v1.23.1) (2026-09-22)
 
 ### Bug Fixes
