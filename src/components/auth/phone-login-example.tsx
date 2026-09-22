@@ -177,12 +177,6 @@ export function PhoneLoginExample() {
           rates may apply.
         </p>
       </div>
-
-      {/* Required container for invisible reCAPTCHA - always mounted */}
-      <div
-        id="recaptcha-container"
-        className="pointer-events-none fixed right-4 bottom-4 z-[9999]"
-      />
     </div>
   )
 }

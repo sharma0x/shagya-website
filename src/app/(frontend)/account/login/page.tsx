@@ -386,12 +386,6 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
-
-      {/* Invisible reCAPTCHA container - always mounted to prevent init issues */}
-      <div
-        id="recaptcha-container"
-        className="pointer-events-none fixed right-4 bottom-4 z-[9999]"
-      />
     </div>
   )
 }

@@ -61,6 +61,11 @@ export default async function RootLayout({
         <main className="flex-1">{children}</main>
         <Footer />
         <MobileBottomNav />
+        {/* Invisible reCAPTCHA container - globally mounted to prevent init issues */}
+        <div
+          id="recaptcha-container"
+          className="pointer-events-none fixed right-4 bottom-4 z-[9999]"
+        />
       </body>
       {gaId && <GoogleAnalytics gaId={gaId} />}
     </html>

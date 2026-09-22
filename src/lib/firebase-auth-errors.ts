@@ -7,6 +7,8 @@ const PHONE_AUTH_ERROR_MESSAGES: Record<
   send: {
     'auth/captcha-check-failed':
       "We couldn't verify your request. Please try again.",
+    'auth/invalid-recaptcha-token':
+      'reCAPTCHA verification failed. Please ensure the domain is authorized and try again.',
     'auth/invalid-phone-number': 'Enter a valid mobile number and try again.',
     'auth/network-request-failed':
       'Check your internet connection and try again.',

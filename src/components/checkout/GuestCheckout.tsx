@@ -412,12 +412,6 @@ export function GuestCheckout({ onVerified }: GuestCheckoutProps) {
           )}
         </div>
       )}
-
-      {/* Invisible reCAPTCHA container for Firebase phone auth - always mounted */}
-      <div
-        id="recaptcha-container"
-        className="pointer-events-none fixed right-4 bottom-4 z-[9999]"
-      />
     </div>
   )
 }
