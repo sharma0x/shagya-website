@@ -125,22 +125,34 @@ export function usePhoneAuth(
   useEffect(() => {
     if (typeof window === 'undefined' || recaptchaVerifierRef.current) return
     const el = document.getElementById(recaptchaContainerId)
-    if (!el) return
+    if (!el) {
+      console.error(
+        `[Phone auth] reCAPTCHA container #${recaptchaContainerId} not found`,
+      )
+      return
+    }
 
     const auth = getFirebaseAuth()
+    console.log(
+      '[Phone auth] Initializing reCAPTCHA verifier on',
+      window.location.hostname,
+    )
     recaptchaVerifierRef.current = new RecaptchaVerifier(
       auth,
       recaptchaContainerId,
       {
         size: 'invisible',
-        callback: () => {},
+        callback: () => {
+          console.log('[Phone auth] reCAPTCHA solved successfully')
+        },
         'expired-callback': () => {
+          console.warn('[Phone auth] reCAPTCHA expired, clearing')
           clearRecaptcha()
         },
       },
     )
     recaptchaVerifierRef.current.render().catch((e) => {
-      console.warn('[Phone auth] Lazy render warning:', e)
+      console.error('[Phone auth] Failed to render reCAPTCHA:', e)
     })
   }, [recaptchaContainerId, clearRecaptcha])
 
@@ -151,9 +163,11 @@ export function usePhoneAuth(
         setError(null)
 
         const auth = getFirebaseAuth()
+        console.log('[Phone auth] Sending OTP to', phoneNumber)
 
         // Initialize reCAPTCHA verifier if not already done
         if (!recaptchaVerifierRef.current) {
+          console.log('[Phone auth] Creating new reCAPTCHA verifier')
           // Firebase can leave an iframe behind after a failed request.
           clearRecaptcha()
           recaptchaVerifierRef.current = new RecaptchaVerifier(
@@ -162,9 +176,10 @@ export function usePhoneAuth(
             {
               size: 'invisible',
               callback: () => {
-                // reCAPTCHA solved
+                console.log('[Phone auth] reCAPTCHA callback triggered')
               },
               'expired-callback': () => {
+                console.warn('[Phone auth] reCAPTCHA expired in sendOTP')
                 clearRecaptcha()
               },
             },
@@ -172,18 +187,24 @@ export function usePhoneAuth(
 
           // Pre-render the recaptcha to avoid the Enterprise config fallback warning
           try {
+            console.log('[Phone auth] Pre-rendering reCAPTCHA widget')
             await recaptchaVerifierRef.current.render()
+            console.log('[Phone auth] reCAPTCHA widget rendered successfully')
           } catch (e) {
             console.error('[Phone auth] Failed to pre-render recaptcha', e)
           }
+        } else {
+          console.log('[Phone auth] Reusing existing reCAPTCHA verifier')
         }
 
         // Send OTP via Firebase
+        console.log('[Phone auth] Calling signInWithPhoneNumber')
         confirmationResultRef.current = await signInWithPhoneNumber(
           auth,
           phoneNumber,
           recaptchaVerifierRef.current,
         )
+        console.log('[Phone auth] OTP sent successfully')
       } catch (err) {
         console.error('[Phone auth] Failed to send OTP:', err)
         const error = new Error(phoneAuthErrorMessage(err, 'send'))

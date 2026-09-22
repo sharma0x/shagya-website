@@ -6,9 +6,9 @@ const PHONE_AUTH_ERROR_MESSAGES: Record<
 > = {
   send: {
     'auth/captcha-check-failed':
-      "We couldn't verify your request. Please try again.",
+      "We couldn't verify your request. Please refresh the page and try again.",
     'auth/invalid-recaptcha-token':
-      'reCAPTCHA verification failed. Please ensure the domain is authorized and try again.',
+      'reCAPTCHA verification failed. This might be due to domain authorization or API key issues. Please refresh the page and try again, or contact support if the issue persists.',
     'auth/invalid-phone-number': 'Enter a valid mobile number and try again.',
     'auth/network-request-failed':
       'Check your internet connection and try again.',
@@ -18,6 +18,8 @@ const PHONE_AUTH_ERROR_MESSAGES: Record<
       'We cannot send a verification code right now. Please try again later.',
     'auth/too-many-requests':
       'Too many attempts. Please wait a few minutes and try again.',
+    'auth/invalid-app-credential':
+      'Authentication service configuration error. Please contact support.',
   },
   verify: {
     'auth/code-expired': 'This code has expired. Request a new one.',

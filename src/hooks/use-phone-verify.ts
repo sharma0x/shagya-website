@@ -119,22 +119,34 @@ export function usePhoneVerify(
   useEffect(() => {
     if (typeof window === 'undefined' || recaptchaVerifierRef.current) return
     const el = document.getElementById(recaptchaContainerId)
-    if (!el) return
+    if (!el) {
+      console.error(
+        `[Phone verify] reCAPTCHA container #${recaptchaContainerId} not found`,
+      )
+      return
+    }
 
     const auth = getFirebaseAuth()
+    console.log(
+      '[Phone verify] Initializing reCAPTCHA verifier on',
+      window.location.hostname,
+    )
     recaptchaVerifierRef.current = new RecaptchaVerifier(
       auth,
       recaptchaContainerId,
       {
         size: 'invisible',
-        callback: () => {},
+        callback: () => {
+          console.log('[Phone verify] reCAPTCHA solved successfully')
+        },
         'expired-callback': () => {
+          console.warn('[Phone verify] reCAPTCHA expired, clearing')
           clearRecaptcha()
         },
       },
     )
     recaptchaVerifierRef.current.render().catch((e) => {
-      console.warn('[Phone verify] Lazy render warning:', e)
+      console.error('[Phone verify] Failed to render reCAPTCHA:', e)
     })
   }, [recaptchaContainerId, clearRecaptcha])
 
