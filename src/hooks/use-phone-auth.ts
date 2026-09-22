@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import {
   RecaptchaVerifier,
   signInWithPhoneNumber,
@@ -122,7 +122,7 @@ export function usePhoneAuth(
   // Initialize reCAPTCHA ahead of time to allow Firebase to fetch Enterprise configs
   // and inject the invisible script early, avoiding timeouts and visual challenge fallbacks
   // if the config fetch is too slow on click.
-  useCallback(() => {
+  useEffect(() => {
     if (typeof window === 'undefined' || recaptchaVerifierRef.current) return
     const el = document.getElementById(recaptchaContainerId)
     if (!el) return
@@ -142,7 +142,7 @@ export function usePhoneAuth(
     recaptchaVerifierRef.current.render().catch((e) => {
       console.warn('[Phone auth] Lazy render warning:', e)
     })
-  }, [recaptchaContainerId, clearRecaptcha])() // IIFE to run once if container is present
+  }, [recaptchaContainerId, clearRecaptcha])
 
   const sendOTP = useCallback(
     async (phoneNumber: string) => {
