@@ -1,3 +1,13 @@
+## [1.23.0](https://github.com/sharma0x/shagya-website/compare/v1.22.6...v1.23.0) (2026-09-22)
+
+### Features
+
+- **auth:** implement phone authentication flow ([6cc3f96](https://github.com/sharma0x/shagya-website/commit/6cc3f966a6ba3e97e9a3f2aa225a395c7254f7af))
+
+### Bug Fixes
+
+- **auth:** refine phone auth hooks ([78d9e26](https://github.com/sharma0x/shagya-website/commit/78d9e262e2a8e0167f933542b24eb2eb7b2d78d8))
+
 ## [1.22.6](https://github.com/sharma0x/shagya-website/compare/v1.22.5...v1.22.6) (2026-09-21)
 
 ### Bug Fixes
