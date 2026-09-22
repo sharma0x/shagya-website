@@ -90,8 +90,7 @@ export function PhoneLoginExample() {
         </p>
       </div>
 
-      {/* Required container for invisible reCAPTCHA */}
-      <div id="recaptcha-container" />
+      {/* Removed recaptcha-container from here to place it at root */}
 
       {error && (
         <div className="rounded-md bg-red-50 p-4 text-sm text-red-800">
@@ -178,6 +177,12 @@ export function PhoneLoginExample() {
           rates may apply.
         </p>
       </div>
+
+      {/* Required container for invisible reCAPTCHA - always mounted */}
+      <div
+        id="recaptcha-container"
+        className="pointer-events-none fixed right-4 bottom-4 z-[9999]"
+      />
     </div>
   )
 }

@@ -335,8 +335,6 @@ export function GuestCheckout({ onVerified }: GuestCheckoutProps) {
           <p className="mt-1 text-[10px] text-neutral-400">
             Enter 10-digit mobile number (India +91)
           </p>
-          {/* Invisible reCAPTCHA container for Firebase phone auth */}
-          <div id="recaptcha-container" />
         </div>
       )}
 
@@ -414,6 +412,12 @@ export function GuestCheckout({ onVerified }: GuestCheckoutProps) {
           )}
         </div>
       )}
+
+      {/* Invisible reCAPTCHA container for Firebase phone auth - always mounted */}
+      <div
+        id="recaptcha-container"
+        className="pointer-events-none fixed right-4 bottom-4 z-[9999]"
+      />
     </div>
   )
 }

@@ -5,7 +5,8 @@ export const authClient = createAuthClient({
   baseURL: typeof window !== 'undefined' ? undefined : getServerURL(),
 })
 
-export const { signIn, signUp, useSession, signOut } = authClient
+export const { signIn, signUp, useSession, signOut, sendVerificationEmail } =
+  authClient
 
 // Manual Firebase auth methods (calling endpoints directly due to firebaseAuthClientPlugin type issues)
 export const signInWithPhone = async (data: { idToken: string }) => {

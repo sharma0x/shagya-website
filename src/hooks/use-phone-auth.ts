@@ -119,6 +119,31 @@ export function usePhoneAuth(
     clearRecaptcha()
   }, [clearRecaptcha])
 
+  // Initialize reCAPTCHA ahead of time to allow Firebase to fetch Enterprise configs
+  // and inject the invisible script early, avoiding timeouts and visual challenge fallbacks
+  // if the config fetch is too slow on click.
+  useCallback(() => {
+    if (typeof window === 'undefined' || recaptchaVerifierRef.current) return
+    const el = document.getElementById(recaptchaContainerId)
+    if (!el) return
+
+    const auth = getFirebaseAuth()
+    recaptchaVerifierRef.current = new RecaptchaVerifier(
+      auth,
+      recaptchaContainerId,
+      {
+        size: 'invisible',
+        callback: () => {},
+        'expired-callback': () => {
+          clearRecaptcha()
+        },
+      },
+    )
+    recaptchaVerifierRef.current.render().catch((e) => {
+      console.warn('[Phone auth] Lazy render warning:', e)
+    })
+  }, [recaptchaContainerId, clearRecaptcha])() // IIFE to run once if container is present
+
   const sendOTP = useCallback(
     async (phoneNumber: string) => {
       try {
@@ -144,6 +169,13 @@ export function usePhoneAuth(
               },
             },
           )
+
+          // Pre-render the recaptcha to avoid the Enterprise config fallback warning
+          try {
+            await recaptchaVerifierRef.current.render()
+          } catch (e) {
+            console.error('[Phone auth] Failed to pre-render recaptcha', e)
+          }
         }
 
         // Send OTP via Firebase

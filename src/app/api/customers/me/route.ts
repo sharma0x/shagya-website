@@ -187,6 +187,13 @@ export async function PATCH(request: Request) {
         !currentEmail || currentEmail.includes('@phone.shayga.in')
       if (isFallback) {
         updateData.email = email
+
+        // Also sync to Better Auth user table so session reflects the real email
+        const pool = getDbPool()
+        await pool.query(
+          `UPDATE "user" SET email = $1, "emailVerified" = false WHERE id = $2`,
+          [email, session.user.id],
+        )
       }
       // If user already has a real email, silently ignore the email update
       // (they'd need to use the security flow to change their verified email)

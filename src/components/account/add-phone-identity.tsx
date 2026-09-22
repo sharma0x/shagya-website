@@ -121,8 +121,7 @@ export function AddPhoneIdentity({
         </div>
       </div>
 
-      {/* Required container for invisible reCAPTCHA */}
-      <div id="recaptcha-container" />
+      {/* Removed recaptcha-container from here to place it at root */}
 
       {(error || linkError) && (
         <Alert variant="destructive">
@@ -237,6 +236,12 @@ export function AddPhoneIdentity({
           verification. Standard message rates may apply.
         </p>
       </div>
+
+      {/* Required container for invisible reCAPTCHA - always mounted */}
+      <div
+        id="recaptcha-container"
+        className="pointer-events-none fixed right-4 bottom-4 z-[9999]"
+      />
     </div>
   )
 }

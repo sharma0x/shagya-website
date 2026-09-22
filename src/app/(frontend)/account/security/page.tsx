@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { useSession } from '@/lib/auth-client'
+import { useSession, sendVerificationEmail } from '@/lib/auth-client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -13,6 +13,7 @@ import {
   Trash2,
   CheckCircle,
   ArrowLeft,
+  AlertCircle,
 } from 'lucide-react'
 import { AddPhoneIdentity } from '@/components/account/add-phone-identity'
 import { Button } from '@/components/ui/button'
@@ -33,6 +34,7 @@ export default function SecurityPage() {
   const [removing, setRemoving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [sendingVerification, setSendingVerification] = useState(false)
 
   const loadPhoneIdentity = useCallback(async () => {
     try {
@@ -115,6 +117,29 @@ export default function SecurityPage() {
     await loadPhoneIdentity()
   }
 
+  const handleVerifyEmail = async () => {
+    if (!sessionData?.user?.email) return
+    try {
+      setSendingVerification(true)
+      setError(null)
+      const res = await sendVerificationEmail({
+        email: sessionData.user.email,
+        callbackURL: window.location.origin + '/account',
+      })
+      if (res?.error) {
+        throw new Error(
+          res.error.message || 'Failed to send verification email',
+        )
+      }
+      setSuccessMessage('Verification email sent! Please check your inbox.')
+      setTimeout(() => setSuccessMessage(null), 5000)
+    } catch (err: any) {
+      setError(err.message || 'Failed to send verification email')
+    } finally {
+      setSendingVerification(false)
+    }
+  }
+
   if (isPending || loading) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
@@ -122,6 +147,11 @@ export default function SecurityPage() {
       </div>
     )
   }
+
+  const rawEmail = sessionData?.user?.email || ''
+  const isFallbackEmail = rawEmail.includes('@phone.shayga.in')
+  const emailToDisplay = isFallbackEmail ? null : rawEmail
+  const isEmailVerified = (sessionData?.user as any)?.emailVerified === true
 
   return (
     <div className="mx-auto max-w-4xl space-y-8 p-4 md:p-8">
@@ -174,15 +204,49 @@ export default function SecurityPage() {
               </div>
               <div>
                 <p className="font-medium">Email</p>
-                <p className="text-sm text-gray-600">
-                  {sessionData?.user?.email}
-                </p>
+                {emailToDisplay ? (
+                  <p className="text-sm text-gray-600">{emailToDisplay}</p>
+                ) : (
+                  <p className="text-sm text-gray-500">Not linked</p>
+                )}
               </div>
             </div>
-            <div className="flex items-center gap-2 text-sm text-green-600">
-              <CheckCircle className="h-4 w-4" />
-              <span>Active</span>
-            </div>
+
+            {emailToDisplay ? (
+              isEmailVerified ? (
+                <div className="flex items-center gap-2 text-sm text-green-600">
+                  <CheckCircle className="h-4 w-4" />
+                  <span>Verified</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1.5 text-sm text-amber-600">
+                    <AlertCircle className="h-4 w-4" />
+                    <span>Unverified</span>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleVerifyEmail}
+                    disabled={sendingVerification}
+                  >
+                    {sendingVerification ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : null}
+                    Verify Email
+                  </Button>
+                </div>
+              )
+            ) : (
+              <div className="text-sm text-gray-500">
+                <Link
+                  href="/account"
+                  className="text-brand-600 hover:underline"
+                >
+                  Add in Profile
+                </Link>
+              </div>
+            )}
           </div>
 
           {/* Phone Login */}

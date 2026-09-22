@@ -250,8 +250,6 @@ export default function LoginPage() {
                   <p className="font-body mt-1.5 text-[11px] text-neutral-400">
                     Enter 10-digit mobile number (India +91)
                   </p>
-                  {/* Invisible reCAPTCHA container */}
-                  <div id="recaptcha-container" />
                 </div>
               )}
 
@@ -388,6 +386,12 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
+
+      {/* Invisible reCAPTCHA container - always mounted to prevent init issues */}
+      <div
+        id="recaptcha-container"
+        className="pointer-events-none fixed right-4 bottom-4 z-[9999]"
+      />
     </div>
   )
 }
