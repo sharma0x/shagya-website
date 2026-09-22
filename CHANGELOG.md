@@ -1,3 +1,9 @@
+## [1.23.1](https://github.com/sharma0x/shagya-website/compare/v1.23.0...v1.23.1) (2026-09-22)
+
+### Bug Fixes
+
+- **auth:** centralize recaptcha container and handle invalid token errors ([21b5536](https://github.com/sharma0x/shagya-website/commit/21b5536e21f9fde6c857c4aecd1d29bcac04492a))
+
 ## [1.23.0](https://github.com/sharma0x/shagya-website/compare/v1.22.6...v1.23.0) (2026-09-22)
 
 ### Features
