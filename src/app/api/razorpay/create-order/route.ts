@@ -19,11 +19,12 @@ export async function POST(request: Request) {
       isCod = false,
       shippingType = 'standard',
       appliedCouponCode,
+      checkoutMode = 'account',
     } = body
     const guestEmail = body.guestEmail || ''
     const guestCartItems = body.cartItems
 
-    const isGuest = !!guestEmail
+    const isGuest = checkoutMode === 'guest' || !!guestEmail
 
     let shipping = 0
     let discount = 0
@@ -50,7 +51,7 @@ export async function POST(request: Request) {
 
     const checkoutCart = await resolveCheckoutCart(
       payload,
-      customerId,
+      session?.user && !isGuest ? customerId : null,
       guestCartItems,
     )
 

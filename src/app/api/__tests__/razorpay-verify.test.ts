@@ -8,6 +8,7 @@ const mockCommitTransaction = vi.fn()
 const mockRollbackTransaction = vi.fn()
 const mockGetSession = vi.fn()
 let currentBasePrice = 2500
+let serverBasePrice = 2500
 
 vi.mock('@payload-config', () => ({ default: {} }))
 
@@ -38,7 +39,11 @@ vi.mock('@/lib/cart-prices', () => ({
     return new Map(
       items.map((item) => [
         String(item.product),
-        { basePrice: currentBasePrice, productCode: `SKU-${item.product}` },
+        {
+          basePrice:
+            String(item.product) === '101' ? serverBasePrice : currentBasePrice,
+          productCode: `SKU-${item.product}`,
+        },
       ]),
     )
   }),
@@ -77,23 +82,27 @@ const shippingAddress = {
   country: 'India',
 }
 
-function createRequest(): Request {
+function createRequest(isGuest = true): Request {
   return new Request('http://localhost/api/razorpay/verify', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       isCod: true,
       shippingAddress,
-      guestEmail: 'test@example.com',
-      guestPhone: '9999999999',
-      cartItems: [
-        {
-          product: 202,
-          variant: null,
-          quantity: 1,
-          unitPrice: 9999,
-        },
-      ],
+      ...(isGuest
+        ? {
+            guestEmail: 'test@example.com',
+            guestPhone: '9999999999',
+            cartItems: [
+              {
+                product: 202,
+                variant: null,
+                quantity: 1,
+                unitPrice: 9999,
+              },
+            ],
+          }
+        : {}),
     }),
   })
 }
@@ -101,6 +110,7 @@ function createRequest(): Request {
 beforeEach(async () => {
   vi.clearAllMocks()
   currentBasePrice = 2500
+  serverBasePrice = 2500
   mockGetSession.mockResolvedValue({
     user: { id: 'user-1', email: 'test@example.com' },
   })
@@ -151,7 +161,9 @@ beforeEach(async () => {
 })
 
 describe('POST /api/razorpay/verify', () => {
-  it('uses and atomically consumes the server cart after guest OTP authentication', async () => {
+  it('uses the current guest cart after OTP instead of a stale server cart', async () => {
+    serverBasePrice = 3750.01
+
     const response = await POST(createRequest())
     const body = await response.json()
 
@@ -161,28 +173,15 @@ describe('POST /api/razorpay/verify', () => {
       expect.objectContaining({
         collection: 'orders',
         data: expect.objectContaining({
-          items: [expect.objectContaining({ product: 101 })],
+          items: [expect.objectContaining({ product: 202 })],
+          total: 2750,
+          paymentId: 'COD',
         }),
       }),
     )
-    expect(mockUpdate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        collection: 'carts',
-        where: {
-          and: [
-            { id: { equals: 42 } },
-            {
-              updatedAt: {
-                equals: '2026-09-23T00:00:00.000Z',
-              },
-            },
-          ],
-        },
-        data: { items: [], subtotal: 0, coupon: null },
-        req: { transactionID: 'transaction-1' },
-      }),
+    expect(mockUpdate).not.toHaveBeenCalledWith(
+      expect.objectContaining({ collection: 'carts' }),
     )
-    expect(mockCommitTransaction).toHaveBeenCalledWith('transaction-1')
   })
 
   it('allows COD when the final order total is exactly 4000', async () => {
@@ -217,13 +216,17 @@ describe('POST /api/razorpay/verify', () => {
   })
 
   it('rolls back the order when consuming the cart fails', async () => {
-    mockUpdate.mockRejectedValueOnce(new Error('Cart changed'))
+    mockUpdate.mockRejectedValueOnce(
+      new Error('Cart changed while the order was being placed'),
+    )
 
-    const response = await POST(createRequest())
+    const response = await POST(createRequest(false))
     const body = await response.json()
 
-    expect(response.status).toBe(500)
-    expect(body.error).toBe('Cart changed')
+    expect(response.status).toBe(409)
+    expect(body.error).toBe(
+      'Your cart changed while the order was being placed. Please refresh and try again.',
+    )
     expect(mockRollbackTransaction).toHaveBeenCalledWith('transaction-1')
   })
 })
