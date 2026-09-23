@@ -13,6 +13,16 @@ import { resolveCheckoutCart } from '@/lib/checkout-cart'
 import { COD_LIMIT_ERROR, isCodEligible } from '@/lib/cod-eligibility'
 import { placeOrderAndConsumeCart } from '@/lib/order-placement'
 
+function normalizeProductId(value: unknown): number | null {
+  const rawId =
+    value && typeof value === 'object' && 'id' in value
+      ? (value as { id: unknown }).id
+      : value
+  const parsedId = typeof rawId === 'number' ? rawId : Number(rawId)
+
+  return Number.isInteger(parsedId) && parsedId > 0 ? parsedId : null
+}
+
 /**
  * Resolves the color identity from a cart item's variant JSON
  * (`{ color: { id?, slug, name, hex } }`) into the Colors doc ID + a name
@@ -180,10 +190,8 @@ export async function POST(request: Request) {
     const priceMap = await resolveCurrentPrices(payload, sourceItems)
     orderItems = await Promise.all(
       sourceItems.map(async (item: any) => {
-        const productId =
-          typeof item.product === 'object' && item.product !== null
-            ? item.product.id
-            : item.product
+        const productId = normalizeProductId(item.product)
+        if (!productId) throw new Error('Cart contains an invalid product')
         const { unitPrice } = applyCurrentPrice(item, priceMap)
         const { colorId, colorName } = await resolveOrderItemColor(item.variant)
         const productCode = priceMap.get(String(productId))?.productCode ?? null
@@ -203,10 +211,7 @@ export async function POST(request: Request) {
 
     // ── Server-side stock validation before order creation ──
     const rawStockItems: CartStockItem[] = sourceItems.map((item: any) => ({
-      product:
-        typeof item.product === 'object' && item.product !== null
-          ? item.product.id
-          : item.product,
+      product: normalizeProductId(item.product) ?? item.product,
       variant: item.variant,
       quantity: item.quantity || 1,
     }))
