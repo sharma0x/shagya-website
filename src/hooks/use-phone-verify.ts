@@ -1,18 +1,10 @@
-import { useState, useCallback, useRef, useEffect } from 'react'
-import {
-  RecaptchaVerifier,
-  signInWithPhoneNumber,
-  ConfirmationResult,
-} from 'firebase/auth'
+import { useState, useCallback, useRef } from 'react'
+import { signInWithPhoneNumber } from 'firebase/auth'
+import type { ConfirmationResult } from 'firebase/auth'
 import { getFirebaseAuth } from '@/lib/firebase-client'
 import { phoneAuthErrorMessage } from '@/lib/firebase-auth-errors'
 
 interface UsePhoneVerifyOptions {
-  /**
-   * ID of the HTML element where the invisible reCAPTCHA will be rendered
-   * @default 'recaptcha-container'
-   */
-  recaptchaContainerId?: string
   /**
    * Callback invoked when phone verification is successful
    */
@@ -69,37 +61,19 @@ interface UsePhoneVerifyReturn {
  *       await linkPhoneToAccount(idToken)
  *     },
  *   })
- *
- *   return (
- *     <>
- *       <div id="recaptcha-container" />
- *       {/ * Your form UI * /}
- *     </>
- *   )
  * }
  * ```
  */
 export function usePhoneVerify(
   options: UsePhoneVerifyOptions = {},
 ): UsePhoneVerifyReturn {
-  const {
-    recaptchaContainerId = 'recaptcha-container',
-    onSuccess,
-    onError,
-  } = options
+  const { onSuccess, onError } = options
 
   const [isSendingOTP, setIsSendingOTP] = useState(false)
   const [isVerifyingOTP, setIsVerifyingOTP] = useState(false)
   const [error, setError] = useState<Error | null>(null)
 
   const confirmationResultRef = useRef<ConfirmationResult | null>(null)
-  const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null)
-
-  const clearRecaptcha = useCallback(() => {
-    recaptchaVerifierRef.current?.clear()
-    recaptchaVerifierRef.current = null
-    document.getElementById(recaptchaContainerId)?.replaceChildren()
-  }, [recaptchaContainerId])
 
   const clearError = useCallback(() => {
     setError(null)
@@ -110,45 +84,7 @@ export function usePhoneVerify(
     setIsSendingOTP(false)
     setIsVerifyingOTP(false)
     confirmationResultRef.current = null
-    clearRecaptcha()
-  }, [clearRecaptcha])
-
-  // Initialize reCAPTCHA ahead of time to allow Firebase to fetch Enterprise configs
-  // and inject the invisible script early, avoiding timeouts and visual challenge fallbacks
-  // if the config fetch is too slow on click.
-  useEffect(() => {
-    if (typeof window === 'undefined' || recaptchaVerifierRef.current) return
-    const el = document.getElementById(recaptchaContainerId)
-    if (!el) {
-      console.error(
-        `[Phone verify] reCAPTCHA container #${recaptchaContainerId} not found`,
-      )
-      return
-    }
-
-    const auth = getFirebaseAuth()
-    console.log(
-      '[Phone verify] Initializing reCAPTCHA verifier on',
-      window.location.hostname,
-    )
-    recaptchaVerifierRef.current = new RecaptchaVerifier(
-      auth,
-      recaptchaContainerId,
-      {
-        size: 'invisible',
-        callback: () => {
-          console.log('[Phone verify] reCAPTCHA solved successfully')
-        },
-        'expired-callback': () => {
-          console.warn('[Phone verify] reCAPTCHA expired, clearing')
-          clearRecaptcha()
-        },
-      },
-    )
-    recaptchaVerifierRef.current.render().catch((e) => {
-      console.error('[Phone verify] Failed to render reCAPTCHA:', e)
-    })
-  }, [recaptchaContainerId, clearRecaptcha])
+  }, [])
 
   const sendOTP = useCallback(
     async (phoneNumber: string) => {
@@ -157,51 +93,21 @@ export function usePhoneVerify(
         setError(null)
 
         const auth = getFirebaseAuth()
-
-        // Initialize reCAPTCHA verifier if not already done
-        if (!recaptchaVerifierRef.current) {
-          // Firebase can leave an iframe behind after a failed request.
-          clearRecaptcha()
-          recaptchaVerifierRef.current = new RecaptchaVerifier(
-            auth,
-            recaptchaContainerId,
-            {
-              size: 'invisible',
-              callback: () => {
-                // reCAPTCHA solved
-              },
-              'expired-callback': () => {
-                clearRecaptcha()
-              },
-            },
-          )
-
-          // Pre-render the recaptcha to avoid the Enterprise config fallback warning
-          try {
-            await recaptchaVerifierRef.current.render()
-          } catch (e) {
-            console.error('[Phone verify] Failed to pre-render recaptcha', e)
-          }
-        }
-
-        // Send OTP via Firebase
         confirmationResultRef.current = await signInWithPhoneNumber(
           auth,
           phoneNumber,
-          recaptchaVerifierRef.current,
         )
       } catch (err) {
         console.error('[Phone verify] Failed to send OTP:', err)
         const error = new Error(phoneAuthErrorMessage(err, 'send'))
         setError(error)
         onError?.(error)
-        clearRecaptcha()
         throw error
       } finally {
         setIsSendingOTP(false)
       }
     },
-    [clearRecaptcha, onError, recaptchaContainerId],
+    [onError],
   )
 
   const verifyOTP = useCallback(
@@ -220,12 +126,7 @@ export function usePhoneVerify(
         // Get Firebase ID token
         const idToken = await credential.user.getIdToken()
 
-        // Clean up
         confirmationResultRef.current = null
-        if (recaptchaVerifierRef.current) {
-          recaptchaVerifierRef.current.clear()
-          recaptchaVerifierRef.current = null
-        }
 
         // Call success callback
         await onSuccess?.(idToken)

@@ -90,8 +90,6 @@ export function PhoneLoginExample() {
         </p>
       </div>
 
-      {/* Removed recaptcha-container from here to place it at root */}
-
       {error && (
         <div className="rounded-md bg-red-50 p-4 text-sm text-red-800">
           <p className="font-medium">Error</p>

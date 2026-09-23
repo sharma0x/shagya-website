@@ -121,8 +121,6 @@ export function AddPhoneIdentity({
         </div>
       </div>
 
-      {/* Removed recaptcha-container from here to place it at root */}
-
       {(error || linkError) && (
         <Alert variant="destructive">
           <AlertDescription>{error?.message || linkError}</AlertDescription>
