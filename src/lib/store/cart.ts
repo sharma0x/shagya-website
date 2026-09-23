@@ -174,11 +174,9 @@ export const useCart = create<CartState>()(
       },
 
       clearCart: () => {
-        // Programmatic transition — never emits remove_from_cart events.
         suppressCartAnalytics()
         set({ items: [], coupon: null })
         resumeCartAnalytics()
-        get().syncWithServer()
       },
 
       setItems: (items) => {

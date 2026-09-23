@@ -16,6 +16,7 @@ import { galleryForColor, stockForColor } from '@/lib/product-utils'
 import { cartQtyCap, cartMergeKey } from '@/lib/cart-merge'
 import { weaveLabel } from '@/lib/weaves'
 import { deduplicateAddresses } from '@/lib/address-utils'
+import { COD_LIMIT_ERROR, isCodEligible } from '@/lib/cod-eligibility'
 import { getProductUrl } from '@/lib/product-url'
 import {
   ArrowLeft,
@@ -808,7 +809,8 @@ export default function CheckoutPage() {
         const data = await res.json()
         firePurchase(data.orderNumber)
         zCart.clearCart()
-        router.push(
+        setCart({ items: [], subtotal: 0 })
+        router.replace(
           `/checkout/success?orderNumber=${data.orderNumber}&email=${encodeURIComponent(sessionData?.user?.email || guestData?.email || '')}`,
         )
       } else {
@@ -904,7 +906,8 @@ export default function CheckoutPage() {
               const data = await verifyRes.json()
               firePurchase(data.orderNumber)
               zCart.clearCart()
-              router.push(
+              setCart({ items: [], subtotal: 0 })
+              router.replace(
                 `/checkout/success?orderNumber=${data.orderNumber}&email=${encodeURIComponent(sessionData?.user?.email || guestData?.email || '')}`,
               )
             } catch (err: any) {
@@ -960,7 +963,8 @@ export default function CheckoutPage() {
           const data = await verifyRes.json()
           firePurchase(data.orderNumber)
           zCart.clearCart()
-          router.push(
+          setCart({ items: [], subtotal: 0 })
+          router.replace(
             `/checkout/success?orderNumber=${data.orderNumber}&email=${encodeURIComponent(sessionData?.user?.email || guestData?.email || '')}`,
           )
           return
