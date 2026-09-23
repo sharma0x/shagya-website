@@ -1,3 +1,9 @@
+## [1.23.3](https://github.com/sharma0x/shagya-website/compare/v1.23.2...v1.23.3) (2026-09-23)
+
+### Bug Fixes
+
+- **auth:** initialize reCAPTCHA Enterprise config early in Firebase Auth ([efb3da7](https://github.com/sharma0x/shagya-website/commit/efb3da774b4e1cc4544e031461a7e3ba9aaa707a))
+
 ## [1.23.2](https://github.com/sharma0x/shagya-website/compare/v1.23.1...v1.23.2) (2026-09-22)
 
 ### Bug Fixes
