@@ -1,11 +1,16 @@
 import { useState, useCallback, useRef } from 'react'
-import { signInWithPhoneNumber } from 'firebase/auth'
+import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth'
 import type { ConfirmationResult } from 'firebase/auth'
 import { getFirebaseAuth } from '@/lib/firebase-client'
 import { signInWithPhone } from '@/lib/auth-client'
 import { phoneAuthErrorMessage } from '@/lib/firebase-auth-errors'
 
 interface UsePhoneAuthOptions {
+  /**
+   * ID of the HTML element where the invisible reCAPTCHA will be rendered
+   * @default 'recaptcha-container'
+   */
+  recaptchaContainerId?: string
   /**
    * Callback invoked when phone sign-in is successful
    */
@@ -73,7 +78,11 @@ interface UsePhoneAuthReturn {
 export function usePhoneAuth(
   options: UsePhoneAuthOptions = {},
 ): UsePhoneAuthReturn {
-  const { onSuccess, onError } = options
+  const {
+    recaptchaContainerId = 'recaptcha-container',
+    onSuccess,
+    onError,
+  } = options
 
   const [isSendingOTP, setIsSendingOTP] = useState(false)
   const [isVerifyingOTP, setIsVerifyingOTP] = useState(false)
@@ -99,10 +108,14 @@ export function usePhoneAuth(
         setError(null)
 
         const auth = getFirebaseAuth()
+        const verifier = new RecaptchaVerifier(auth, recaptchaContainerId, {
+          size: 'invisible',
+        })
         console.log('[Phone auth] Sending OTP to', phoneNumber)
         confirmationResultRef.current = await signInWithPhoneNumber(
           auth,
           phoneNumber,
+          verifier,
         )
         console.log('[Phone auth] OTP sent successfully')
       } catch (err) {
@@ -115,7 +128,7 @@ export function usePhoneAuth(
         setIsSendingOTP(false)
       }
     },
-    [onError],
+    [onError, recaptchaContainerId],
   )
 
   const verifyOTP = useCallback(

@@ -9,11 +9,13 @@ const mocks = vi.hoisted(() => {
   return {
     auth,
     getFirebaseAuth: vi.fn(() => auth),
+    RecaptchaVerifier: vi.fn(function RecaptchaVerifier() {}),
     signInWithPhoneNumber: vi.fn(),
   }
 })
 
 vi.mock('firebase/auth', () => ({
+  RecaptchaVerifier: mocks.RecaptchaVerifier,
   signInWithPhoneNumber: mocks.signInWithPhoneNumber,
 }))
 
@@ -33,7 +35,7 @@ beforeEach(() => {
 })
 
 describe('phone authentication reCAPTCHA', () => {
-  it('uses Firebase-managed Enterprise reCAPTCHA for sign-in', async () => {
+  it('uses an explicit reCAPTCHA verifier for sign-in', async () => {
     const { result } = renderHook(() => usePhoneAuth())
 
     await act(async () => {
@@ -43,11 +45,12 @@ describe('phone authentication reCAPTCHA', () => {
     expect(mocks.signInWithPhoneNumber).toHaveBeenCalledWith(
       mocks.auth,
       '+917678228684',
+      expect.anything(),
     )
-    expect(mocks.signInWithPhoneNumber.mock.calls[0]).toHaveLength(2)
+    expect(mocks.signInWithPhoneNumber.mock.calls[0]).toHaveLength(3)
   })
 
-  it('uses Firebase-managed Enterprise reCAPTCHA for phone verification', async () => {
+  it('uses an explicit reCAPTCHA verifier for phone verification', async () => {
     const { result } = renderHook(() => usePhoneVerify())
 
     await act(async () => {
@@ -57,7 +60,8 @@ describe('phone authentication reCAPTCHA', () => {
     expect(mocks.signInWithPhoneNumber).toHaveBeenCalledWith(
       mocks.auth,
       '+917678228684',
+      expect.anything(),
     )
-    expect(mocks.signInWithPhoneNumber.mock.calls[0]).toHaveLength(2)
+    expect(mocks.signInWithPhoneNumber.mock.calls[0]).toHaveLength(3)
   })
 })
