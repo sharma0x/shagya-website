@@ -1341,7 +1341,7 @@ export default function CheckoutPage() {
                           Priority dispatch with fastest available courier.
                         </p>
                         <p className="font-body text-brand-700 mt-2 text-xs font-medium">
-                          Est. Delivery: 1–2 business days to{' '}
+                          Est. Delivery: 2–3 business days to{' '}
                           {selectedAddress?.city || 'your city'} (
                           {selectedAddress?.pincode})
                         </p>
