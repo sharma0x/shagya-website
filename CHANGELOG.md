@@ -1,3 +1,11 @@
+## [1.24.1](https://github.com/sharma0x/shagya-website/compare/v1.24.0...v1.24.1) (2026-09-23)
+
+### Bug Fixes
+
+- **homepage:** show more products on desktop ([22d941d](https://github.com/sharma0x/shagya-website/commit/22d941decfe23008294acd3e4b6162ffaed573fd))
+- **checkout:** synchronize cart before order placement ([846b1a4](https://github.com/sharma0x/shagya-website/commit/846b1a4d0d07f58f95765b62738877f0018f4f17))
+- **checkout:** update express delivery estimate ([efa96e5](https://github.com/sharma0x/shagya-website/commit/efa96e5c350a21f5774dfedac7564952a1c8a129))
+
 ## [1.24.0](https://github.com/sharma0x/shagya-website/compare/v1.23.5...v1.24.0) (2026-09-23)
 
 ### Features
