@@ -16,6 +16,7 @@ import {
 } from '@/lib/delhivery/fulfillment'
 import { getDelhiverySettings } from '@/lib/delhivery/settings'
 import { mapScanToOrderStatus } from '@/lib/delhivery/mapping'
+import { COD_LIMIT_ERROR, isCodEligible } from '@/lib/cod-eligibility'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Inventory transactions (synchronous + idempotent)
@@ -414,6 +415,18 @@ export const Orders: CollectionConfig = {
   hooks: {
     beforeChange: [
       async ({ data, operation, originalDoc, req }) => {
+        const isCodOrder =
+          data?.paymentId === 'COD' ||
+          (typeof data?.total === 'number' &&
+            (originalDoc as any)?.paymentId === 'COD')
+        const effectiveTotal =
+          data?.total ??
+          (data?.paymentId === 'COD' ? (originalDoc as any)?.total : undefined)
+
+        if (isCodOrder && !isCodEligible(Number(effectiveTotal))) {
+          throw new Error(COD_LIMIT_ERROR)
+        }
+
         // Auto-set status timestamps on update
         if (operation === 'update' && originalDoc) {
           const prevStatus = (originalDoc as any)?.status

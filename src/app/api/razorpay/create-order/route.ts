@@ -8,6 +8,7 @@ import { resolveCurrentPrices, applyCurrentPrice } from '@/lib/cart-prices'
 import { validateCouponForCart } from '@/lib/coupons'
 import { toUserFacingError } from '@/lib/api-error'
 import { resolveCheckoutCart } from '@/lib/checkout-cart'
+import { COD_LIMIT_ERROR, isCodEligible } from '@/lib/cod-eligibility'
 
 export async function POST(request: Request) {
   try {
@@ -148,6 +149,10 @@ export async function POST(request: Request) {
     }
 
     const total = Math.max(0, subtotal + shipping - discount + codFee)
+
+    if (isCod && !isCodEligible(total)) {
+      return NextResponse.json({ error: COD_LIMIT_ERROR }, { status: 400 })
+    }
 
     // For COD, no Razorpay order needed
     if (isCod) {

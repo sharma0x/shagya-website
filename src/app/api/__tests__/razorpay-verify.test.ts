@@ -7,6 +7,7 @@ const mockBeginTransaction = vi.fn()
 const mockCommitTransaction = vi.fn()
 const mockRollbackTransaction = vi.fn()
 const mockGetSession = vi.fn()
+let currentBasePrice = 2500
 
 vi.mock('@payload-config', () => ({ default: {} }))
 
@@ -37,7 +38,7 @@ vi.mock('@/lib/cart-prices', () => ({
     return new Map(
       items.map((item) => [
         String(item.product),
-        { basePrice: 2500, productCode: `SKU-${item.product}` },
+        { basePrice: currentBasePrice, productCode: `SKU-${item.product}` },
       ]),
     )
   }),
@@ -99,6 +100,7 @@ function createRequest(): Request {
 
 beforeEach(async () => {
   vi.clearAllMocks()
+  currentBasePrice = 2500
   mockGetSession.mockResolvedValue({
     user: { id: 'user-1', email: 'test@example.com' },
   })
@@ -181,6 +183,37 @@ describe('POST /api/razorpay/verify', () => {
       }),
     )
     expect(mockCommitTransaction).toHaveBeenCalledWith('transaction-1')
+  })
+
+  it('allows COD when the final order total is exactly 4000', async () => {
+    currentBasePrice = 3750
+
+    const response = await POST(createRequest())
+    const body = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(body.success).toBe(true)
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        collection: 'orders',
+        data: expect.objectContaining({ total: 4000, paymentId: 'COD' }),
+      }),
+    )
+  })
+
+  it('rejects COD when the final order total exceeds 4000', async () => {
+    currentBasePrice = 3750.01
+
+    const response = await POST(createRequest())
+    const body = await response.json()
+
+    expect(response.status).toBe(400)
+    expect(body.error).toBe(
+      'Cash on Delivery is available only for orders up to ₹4,000.',
+    )
+    expect(mockCreate).not.toHaveBeenCalled()
+    expect(mockUpdate).not.toHaveBeenCalled()
+    expect(mockBeginTransaction).not.toHaveBeenCalled()
   })
 
   it('rolls back the order when consuming the cart fails', async () => {

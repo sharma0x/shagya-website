@@ -163,9 +163,10 @@ export default function CheckoutPage() {
   const [showNewAddressForm, setShowNewAddressForm] = useState(false)
 
   // Payment State
-  const [paymentMethod, setPaymentMethod] = useState<'razorpay' | 'cod'>(
-    'razorpay',
-  )
+  const [paymentSelection, setPaymentSelection] = useState<{
+    method: 'razorpay' | 'cod'
+    codOrderTotal?: number
+  }>({ method: 'razorpay' })
   const [shippingType, setShippingType] = useState<'standard' | 'express'>(
     'standard',
   )
@@ -672,11 +673,11 @@ export default function CheckoutPage() {
   // Cost calculations
   const subtotal = effectiveCart?.subtotal || 0
 
-  let shippingBase =
-    shippingType === 'express'
-      ? shippingConfig.express
-      : subtotal >= shippingConfig.freeThreshold
-        ? 0
+  const shippingBase =
+    subtotal >= shippingConfig.freeThreshold
+      ? 0
+      : shippingType === 'express'
+        ? shippingConfig.express
         : shippingConfig.standard
   let shipping = shippingBase
   let discount = 0
@@ -694,8 +695,15 @@ export default function CheckoutPage() {
     }
   }
   const total = Math.max(0, subtotal + shipping - discount)
-  const codFee = paymentMethod === 'cod' ? Number(shippingConfig.codFee) : 0
-  const orderTotal = Math.max(0, total + codFee)
+  const codFee = Number(shippingConfig.codFee)
+  const codOrderTotal = Math.max(0, total + codFee)
+  const isCodAvailable = isCodEligible(codOrderTotal)
+  const paymentMethod =
+    paymentSelection.method === 'cod' &&
+    paymentSelection.codOrderTotal === codOrderTotal
+      ? 'cod'
+      : 'razorpay'
+  const orderTotal = paymentMethod === 'cod' ? codOrderTotal : total
 
   // GA4 item payloads derived from the effective cart. Each checkout line is
   // `{ product, variant, quantity, unitPrice }` — the mapper must read
@@ -767,6 +775,12 @@ export default function CheckoutPage() {
   const handlePlaceOrder = async () => {
     setActionLoading(true)
     setError('')
+
+    if (paymentMethod === 'cod' && !isCodAvailable) {
+      setError(COD_LIMIT_ERROR)
+      setActionLoading(false)
+      return
+    }
 
     const selectedAddress = addresses.find((a) => a.id === selectedAddressId)
     if (!selectedAddress) {
@@ -1345,7 +1359,7 @@ export default function CheckoutPage() {
                 <div className="mb-8 space-y-4">
                   <div
                     onClick={() => {
-                      setPaymentMethod('razorpay')
+                      setPaymentSelection({ method: 'razorpay' })
                       trackPaymentMethodSelect('razorpay')
                     }}
                     className={`flex cursor-pointer items-center justify-between rounded-xl border p-4 transition-all ${
@@ -1372,36 +1386,42 @@ export default function CheckoutPage() {
                     <CreditCard className="h-5 w-5 text-neutral-400" />
                   </div>
 
-                  <div
-                    onClick={() => {
-                      setPaymentMethod('cod')
-                      trackPaymentMethodSelect('cod')
-                    }}
-                    className={`flex cursor-pointer items-center justify-between rounded-xl border p-4 transition-all ${
-                      paymentMethod === 'cod'
-                        ? 'border-brand-600 bg-brand-50/20'
-                        : 'border-neutral-200 hover:border-neutral-300'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-5 w-5 items-center justify-center rounded-full border border-neutral-300">
-                        {paymentMethod === 'cod' && (
-                          <div className="bg-brand-600 h-2.5 w-2.5 rounded-full" />
-                        )}
+                  {isCodAvailable && (
+                    <div
+                      onClick={() => {
+                        setPaymentSelection({
+                          method: 'cod',
+                          codOrderTotal,
+                        })
+                        trackPaymentMethodSelect('cod')
+                      }}
+                      className={`flex cursor-pointer items-center justify-between rounded-xl border p-4 transition-all ${
+                        paymentMethod === 'cod'
+                          ? 'border-brand-600 bg-brand-50/20'
+                          : 'border-neutral-200 hover:border-neutral-300'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-5 w-5 items-center justify-center rounded-full border border-neutral-300">
+                          {paymentMethod === 'cod' && (
+                            <div className="bg-brand-600 h-2.5 w-2.5 rounded-full" />
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-display text-sm font-semibold text-neutral-900">
+                            Cash on Delivery (COD)
+                          </p>
+                          <p className="font-body text-xs text-neutral-500">
+                            Pay ₹{codOrderTotal.toLocaleString('en-IN')} on
+                            delivery
+                            {codFee > 0 &&
+                              ` (includes ₹${codFee.toLocaleString('en-IN')} COD fee)`}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-display text-sm font-semibold text-neutral-900">
-                          Cash on Delivery (COD)
-                        </p>
-                        <p className="font-body text-xs text-neutral-500">
-                          Pay ₹{orderTotal.toLocaleString('en-IN')} on delivery
-                          {codFee > 0 &&
-                            ` (includes ₹${codFee.toLocaleString('en-IN')} COD fee)`}
-                        </p>
-                      </div>
+                      <Truck className="h-5 w-5 text-neutral-400" />
                     </div>
-                    <Truck className="h-5 w-5 text-neutral-400" />
-                  </div>
+                  )}
                 </div>
 
                 <div className="flex justify-between border-t border-neutral-100 pt-6">

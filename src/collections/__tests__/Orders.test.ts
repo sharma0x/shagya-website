@@ -361,6 +361,42 @@ describe('Orders collection', () => {
       expect(result.orderNumber).toBe('ORD-00043')
     })
 
+    it('allows COD orders at the order limit', async () => {
+      const hook = Orders.hooks?.beforeChange?.[0]
+      if (!hook) return
+
+      const result = await hook({
+        data: {
+          customerEmail: 'test@example.com',
+          paymentId: 'COD',
+          total: 4000,
+        },
+        operation: 'create',
+        req: { payload: { find: async () => ({ docs: [] }) } },
+      } as any)
+
+      expect(result.total).toBe(4000)
+    })
+
+    it('rejects COD orders above the order limit', async () => {
+      const hook = Orders.hooks?.beforeChange?.[0]
+      if (!hook) return
+
+      await expect(
+        hook({
+          data: {
+            customerEmail: 'test@example.com',
+            paymentId: 'COD',
+            total: 4000.01,
+          },
+          operation: 'create',
+          req: { payload: { find: async () => ({ docs: [] }) } },
+        } as any),
+      ).rejects.toThrow(
+        'Cash on Delivery is available only for orders up to ₹4,000.',
+      )
+    })
+
     it('does not overwrite orderNumber on update operation', async () => {
       const hook = Orders.hooks?.beforeChange?.[0]
       if (!hook) return

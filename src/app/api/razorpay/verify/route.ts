@@ -10,6 +10,7 @@ import { validateCouponForCart } from '@/lib/coupons'
 import { findOrRepairCustomer } from '@/lib/auth-sync'
 import { toUserFacingError } from '@/lib/api-error'
 import { resolveCheckoutCart } from '@/lib/checkout-cart'
+import { COD_LIMIT_ERROR, isCodEligible } from '@/lib/cod-eligibility'
 import { placeOrderAndConsumeCart } from '@/lib/order-placement'
 
 /**
@@ -246,6 +247,7 @@ export async function POST(request: Request) {
 
     let discount = 0
     let usedCouponId: string | number | null = null
+    let usedCoupon: any = null
 
     // Validate coupon
     if (appliedCouponCode) {
@@ -268,25 +270,19 @@ export async function POST(request: Request) {
       }
 
       const appliedCoupon = validation.coupon
+      usedCoupon = appliedCoupon
       usedCouponId = appliedCoupon.id
       discount = appliedCoupon.discount || 0
       if (appliedCoupon.type === 'free_shipping') {
         shipping = 0 // Actually zero out the shipping cost
       }
-
-      // Increment usedCount
-      try {
-        await payload.update({
-          collection: 'coupons',
-          id: usedCouponId as string,
-          data: { usedCount: (appliedCoupon.usedCount || 0) + 1 },
-        } as any)
-      } catch {
-        // Non-critical — don't block order
-      }
     }
 
     const total = Math.max(0, subtotal + shipping - discount + codFee)
+
+    if (isCod && !isCodEligible(total)) {
+      return NextResponse.json({ error: COD_LIMIT_ERROR }, { status: 400 })
+    }
 
     // Payment verification
     let finalPaymentId = ''
@@ -312,6 +308,18 @@ export async function POST(request: Request) {
             { status: 400 },
           )
         }
+      }
+    }
+
+    if (usedCouponId && usedCoupon) {
+      try {
+        await payload.update({
+          collection: 'coupons',
+          id: usedCouponId as string,
+          data: { usedCount: (usedCoupon.usedCount || 0) + 1 },
+        } as any)
+      } catch {
+        // Non-critical — don't block order
       }
     }
 

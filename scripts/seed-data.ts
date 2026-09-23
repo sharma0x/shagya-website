@@ -1831,12 +1831,12 @@ export const pages: SeedPage[] = [
           {
             question: 'What payment methods do you accept?',
             answer:
-              'We accept all major UPI apps (Google Pay, PhonePe, Paytm), credit and debit cards (Visa, Mastercard, RuPay), net banking, and EMI options on select cards. Cash on Delivery is available for orders up to Rs 10,000 within India.',
+              'We accept all major UPI apps (Google Pay, PhonePe, Paytm), credit and debit cards (Visa, Mastercard, RuPay), net banking, and EMI options on select cards. Cash on Delivery is available for orders up to Rs 4,000 within India.',
           },
           {
             question: 'Is Cash on Delivery available?',
             answer:
-              'Yes — COD is available for orders up to Rs 10,000 within India. A COD convenience fee of Rs 40 applies. Please have the exact cash amount ready at the time of delivery.',
+              'Yes. COD is available for orders up to Rs 4,000 within India. The COD fee shown at checkout applies. Please have the exact cash amount ready at the time of delivery.',
           },
           {
             question: 'Can I modify or cancel my order after placing it?',
@@ -2009,7 +2009,7 @@ export const pages: SeedPage[] = [
           {
             title: 'Cash on delivery',
             description:
-              'Available on orders up to Rs 10,000. A Rs 40 COD convenience fee applies. Please have the exact cash amount ready at delivery.',
+              'Available on orders up to Rs 4,000. The COD fee shown at checkout applies. Please have the exact cash amount ready at delivery.',
           },
           {
             title: 'International shipping — 10–14 business days',
