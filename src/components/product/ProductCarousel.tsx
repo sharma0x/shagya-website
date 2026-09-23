@@ -56,9 +56,9 @@ export function ProductCarousel({
         ))}
       </div>
 
-      {/* Show more button — mobile only */}
+      {/* Show more button */}
       {hasMore && (
-        <div className="mt-4 flex justify-center sm:hidden">
+        <div className="mt-4 flex justify-center">
           <button
             onClick={fetchMore}
             disabled={loading}
