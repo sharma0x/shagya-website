@@ -48,18 +48,32 @@ export function getFirebaseAuth(): Auth {
   if (!recaptchaInitialized && typeof window !== 'undefined') {
     recaptchaInitialized = true
     console.log('[Firebase] Initializing reCAPTCHA Enterprise config')
+    console.log('[Firebase] Current hostname:', window.location.hostname)
+    console.log(
+      '[Firebase] API Key:',
+      process.env.NEXT_PUBLIC_FIREBASE_API_KEY?.substring(0, 10) + '...',
+    )
+    console.log(
+      '[Firebase] Project ID:',
+      process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+    )
 
     initializeRecaptchaConfig(firebaseAuthInstance)
       .then(() => {
         console.log(
-          '[Firebase] reCAPTCHA Enterprise config initialized successfully',
+          '[Firebase] ✅ reCAPTCHA Enterprise config initialized successfully',
         )
       })
       .catch((error) => {
         console.error(
-          '[Firebase] Failed to initialize reCAPTCHA config:',
+          '[Firebase] ❌ Failed to initialize reCAPTCHA config:',
           error,
         )
+        console.error('[Firebase] Error details:', {
+          code: error.code,
+          message: error.message,
+          name: error.name,
+        })
       })
   }
 
