@@ -95,7 +95,7 @@ function createRequest(isGuest = true): Request {
             guestPhone: '9999999999',
             cartItems: [
               {
-                product: 202,
+                product: '202',
                 variant: null,
                 quantity: 1,
                 unitPrice: 9999,
