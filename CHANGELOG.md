@@ -1,3 +1,9 @@
+## [1.23.5](https://github.com/sharma0x/shagya-website/compare/v1.23.4...v1.23.5) (2026-09-23)
+
+### Bug Fixes
+
+- **auth:** add reCAPTCHA v2 phone auth fallback ([d8aa4bd](https://github.com/sharma0x/shagya-website/commit/d8aa4bddf63e3e9a12697d57e6325a33b1dca925))
+
 ## [1.23.4](https://github.com/sharma0x/shagya-website/compare/v1.23.3...v1.23.4) (2026-09-23)
 
 ### Bug Fixes
