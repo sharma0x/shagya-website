@@ -1,3 +1,9 @@
+## [1.24.2](https://github.com/sharma0x/shagya-website/compare/v1.24.1...v1.24.2) (2026-09-23)
+
+### Bug Fixes
+
+- **checkout:** normalize COD product IDs ([87c6069](https://github.com/sharma0x/shagya-website/commit/87c606981f13581f04b503bb7ce7d4cea1ccdd5d))
+
 ## [1.24.1](https://github.com/sharma0x/shagya-website/compare/v1.24.0...v1.24.1) (2026-09-23)
 
 ### Bug Fixes
