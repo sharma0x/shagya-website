@@ -1,8 +1,9 @@
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app'
-import { getAuth, Auth } from 'firebase/auth'
+import { getAuth, Auth, initializeRecaptchaConfig } from 'firebase/auth'
 
 let firebaseApp: FirebaseApp | undefined
 let firebaseAuthInstance: Auth | undefined
+let recaptchaInitialized = false
 
 export function getFirebaseApp(): FirebaseApp {
   if (firebaseApp) {
@@ -41,5 +42,26 @@ export function getFirebaseAuth(): Auth {
 
   const app = getFirebaseApp()
   firebaseAuthInstance = getAuth(app)
+
+  // Initialize reCAPTCHA Enterprise configuration
+  // This ensures Firebase fetches the reCAPTCHA Enterprise config early
+  if (!recaptchaInitialized && typeof window !== 'undefined') {
+    recaptchaInitialized = true
+    console.log('[Firebase] Initializing reCAPTCHA Enterprise config')
+
+    initializeRecaptchaConfig(firebaseAuthInstance)
+      .then(() => {
+        console.log(
+          '[Firebase] reCAPTCHA Enterprise config initialized successfully',
+        )
+      })
+      .catch((error) => {
+        console.error(
+          '[Firebase] Failed to initialize reCAPTCHA config:',
+          error,
+        )
+      })
+  }
+
   return firebaseAuthInstance
 }
