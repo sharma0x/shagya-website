@@ -1,23 +1,14 @@
-'use client'
-
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import { getPayload } from 'payload'
+import config from '@payload-config'
+import type { FabricType, SiteSetting } from '@/payload-types'
 import { Logo } from '@/components/layout/Logo'
 
-type SocialLink = { label: string; href: string }
+type FooterLink = { label: string; href: string }
+type FooterSection = { title: string; links: FooterLink[] }
 
-const footerLinks = {
-  shop: {
-    title: 'Shop',
-    links: [
-      { label: 'Silk Sarees', href: '/category/silk' },
-      { label: 'Cotton Sarees', href: '/category/cotton' },
-      { label: 'Banarasi Sarees', href: '/category/banarasi' },
-      { label: 'Kanchipuram Sarees', href: '/category/kanchipuram' },
-      { label: 'All Sarees', href: '/category/all' },
-    ],
-  },
-  company: {
+const staticFooterLinks: FooterSection[] = [
+  {
     title: 'Shayga',
     links: [
       { label: 'About Us', href: '/about' },
@@ -26,7 +17,7 @@ const footerLinks = {
       { label: 'Careers', href: '/careers' },
     ],
   },
-  support: {
+  {
     title: 'Help',
     links: [
       { label: 'Shipping', href: '/shipping' },
@@ -36,9 +27,9 @@ const footerLinks = {
       { label: 'Privacy', href: '/privacy' },
     ],
   },
-}
+]
 
-const defaultSocialLinks: SocialLink[] = [
+const defaultSocialLinks: FooterLink[] = [
   { label: 'Instagram', href: 'https://instagram.com/shayga' },
   { label: 'Facebook', href: 'https://facebook.com/shayga' },
   { label: 'WhatsApp', href: 'https://wa.me/91906566511' },
@@ -46,36 +37,74 @@ const defaultSocialLinks: SocialLink[] = [
 
 const DEFAULT_WHATSAPP_URL = 'https://wa.me/91906566511'
 
-function socialLinksFromSettings(data: any): SocialLink[] {
-  const links: SocialLink[] = []
-  if (data?.instagramUrl)
-    links.push({ label: 'Instagram', href: data.instagramUrl })
-  if (data?.facebookUrl)
-    links.push({ label: 'Facebook', href: data.facebookUrl })
-  if (data?.youtubeUrl) links.push({ label: 'YouTube', href: data.youtubeUrl })
+function socialLinksFromSettings(settings: SiteSetting): FooterLink[] {
+  const links: FooterLink[] = []
+  if (settings.instagramUrl) {
+    links.push({ label: 'Instagram', href: settings.instagramUrl })
+  }
+  if (settings.facebookUrl) {
+    links.push({ label: 'Facebook', href: settings.facebookUrl })
+  }
+  if (settings.youtubeUrl) {
+    links.push({ label: 'YouTube', href: settings.youtubeUrl })
+  }
   links.push({
     label: 'WhatsApp',
-    href: data?.whatsappUrl || DEFAULT_WHATSAPP_URL,
+    href: settings.whatsappUrl || DEFAULT_WHATSAPP_URL,
   })
   return links
 }
 
-export function Footer() {
-  const [socialLinks, setSocialLinks] =
-    useState<SocialLink[]>(defaultSocialLinks)
+function shopLinksFromFabrics(fabrics: FabricType[]): FooterLink[] {
+  const fabricLinks = fabrics.flatMap((fabric) => {
+    if (!fabric.slug) return []
 
-  useEffect(() => {
-    fetch('/api/globals/site-settings')
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (data) setSocialLinks(socialLinksFromSettings(data))
-      })
-      .catch(() => {})
-  }, [])
+    return [
+      {
+        label: `${fabric.name} Sarees`,
+        href: `/category/all?fabric=${encodeURIComponent(fabric.slug)}`,
+      },
+    ]
+  })
 
-  const sections = [
-    ...Object.values(footerLinks),
-    { title: 'Connect', links: socialLinks },
+  return [...fabricLinks, { label: 'All Sarees', href: '/category/all' }]
+}
+
+export async function Footer() {
+  let fabrics: FabricType[] = []
+  let siteSettings: SiteSetting | null = null
+
+  try {
+    const payload = await getPayload({ config })
+    const [fabricResult, settingsResult] = await Promise.all([
+      payload.find({
+        collection: 'fabric-types',
+        depth: 0,
+        limit: 100,
+        pagination: false,
+        sort: 'name',
+      }),
+      payload.findGlobal({
+        slug: 'site-settings',
+        depth: 0,
+      }),
+    ])
+
+    fabrics = fabricResult.docs
+    siteSettings = settingsResult
+  } catch (error) {
+    console.error('Failed to load footer content', error)
+  }
+
+  const sections: FooterSection[] = [
+    { title: 'Shop', links: shopLinksFromFabrics(fabrics) },
+    ...staticFooterLinks,
+    {
+      title: 'Connect',
+      links: siteSettings
+        ? socialLinksFromSettings(siteSettings)
+        : defaultSocialLinks,
+    },
   ]
 
   return (
