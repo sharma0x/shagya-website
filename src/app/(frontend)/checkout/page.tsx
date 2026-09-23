@@ -1274,7 +1274,8 @@ export default function CheckoutPage() {
                           Standard Delivery
                         </p>
                         <p className="font-body mt-1 text-xs text-neutral-500">
-                          Verified, ironed, and packed in luxury storage box.
+                          Quality checked, neatly folded and ironed and securely
+                          packed for delivery
                         </p>
                         <p className="font-body text-brand-700 mt-2 text-xs font-medium">
                           Est. Delivery: 4–6 business days to{' '}
