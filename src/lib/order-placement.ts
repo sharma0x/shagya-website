@@ -32,14 +32,16 @@ export async function placeOrderAndConsumeCart(
     } as any)
 
     if (cart?.cartId != null) {
-      const where = cart.updatedAt
-        ? {
-            and: [
-              { id: { equals: cart.cartId } },
-              { updatedAt: { equals: cart.updatedAt } },
-            ],
-          }
-        : { id: { equals: cart.cartId } }
+      if (!cart.updatedAt) {
+        throw new Error('Cart changed while the order was being placed')
+      }
+
+      const where = {
+        and: [
+          { id: { equals: cart.cartId } },
+          { updatedAt: { equals: cart.updatedAt } },
+        ],
+      }
       const result = await payload.update({
         collection: 'carts',
         where,

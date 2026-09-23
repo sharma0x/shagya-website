@@ -102,6 +102,7 @@ export default function CheckoutPage() {
   const router = useRouter()
   const { data: sessionData, isPending } = useSession()
   const zCart = useCart()
+  const refreshPrices = useCart((state) => state.refreshPrices)
 
   // Guest cart derived from reactive Zustand hook — never stale
   const guestCart: Cart = {
@@ -205,13 +206,14 @@ export default function CheckoutPage() {
 
   // Load cart, addresses, and coupons — shows skeleton while session hydrates
   const didLoad = useRef(false)
+  const priceRefreshPromiseRef = useRef<Promise<void> | null>(null)
 
   // Refresh item prices from the current catalog whenever checkout loads, so
   // an admin price change is reflected in the summary (and not charged at the
   // old price).
   useEffect(() => {
-    void zCart.refreshPrices()
-  }, [zCart])
+    priceRefreshPromiseRef.current = refreshPrices()
+  }, [refreshPrices])
 
   useEffect(() => {
     if (didLoad.current) return
@@ -446,6 +448,7 @@ export default function CheckoutPage() {
   // this, two rapid edits can race and the last-resolved response (not the
   // last-sent edit) wins.
   const cartSyncSeq = useRef(0)
+  const cartSavePromiseRef = useRef<Promise<boolean> | null>(null)
   // Pre-edit snapshot used to roll back if both persist and refetch fail.
   const cartSnapshotRef = useRef<Cart | null>(null)
   const noticeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -488,20 +491,22 @@ export default function CheckoutPage() {
   // users. The server re-prices and clamps to stock, so its response is the
   // authoritative view; on failure we re-fetch (falling back to the pre-edit
   // snapshot) so totals stay consistent.
-  const persistCartItems = async (items: CartItem[]) => {
+  const persistCartItems = (items: CartItem[]) => {
     const seq = ++cartSyncSeq.current
-    setCartSaving(true)
-    try {
-      const res = await fetch('/api/cart', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          items,
-          couponId: appliedCoupon?.id || null,
-        }),
-      })
-      if (res.ok) {
-        if (seq !== cartSyncSeq.current) return
+    const savePromise = (async (): Promise<boolean> => {
+      setCartSaving(true)
+      try {
+        const res = await fetch('/api/cart', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            items,
+            couponId: appliedCoupon?.id || null,
+          }),
+        })
+        if (!res.ok) throw new Error('sync failed')
+        if (seq !== cartSyncSeq.current) return false
+
         const serverCart = (await res.json()) as Cart
         setCart(serverCart)
 
@@ -509,7 +514,7 @@ export default function CheckoutPage() {
         const clamped: { name: string; qty: number }[] = []
         for (const opt of items) {
           const serverItem = serverCart.items.find(
-            (s) => lineKey(s) === lineKey(opt),
+            (serverItem) => lineKey(serverItem) === lineKey(opt),
           )
           if (serverItem && serverItem.quantity !== opt.quantity) {
             clamped.push({ name: opt.product.name, qty: serverItem.quantity })
@@ -518,7 +523,7 @@ export default function CheckoutPage() {
         if (clamped.length > 0) {
           showCartNotice(
             clamped
-              .map((c) => `${c.name} — only ${c.qty} available`)
+              .map((clamp) => `${clamp.name} — only ${clamp.qty} available`)
               .join(' · '),
           )
         }
@@ -527,27 +532,30 @@ export default function CheckoutPage() {
           serverCart.subtotal ?? recomputeSubtotal(serverCart.items),
           serverCart.items,
         )
-      } else {
-        throw new Error('sync failed')
-      }
-    } catch {
-      if (seq !== cartSyncSeq.current) return
-      try {
-        const res = await fetch('/api/cart')
-        if (res.ok && seq === cartSyncSeq.current) {
-          setCart(await res.json())
-          return
-        }
-        throw new Error('refetch failed')
+        return true
       } catch {
-        if (seq === cartSyncSeq.current && cartSnapshotRef.current) {
-          setCart(cartSnapshotRef.current)
-          showCartNotice('Could not save cart changes. Please try again.')
+        if (seq !== cartSyncSeq.current) return false
+        try {
+          const res = await fetch('/api/cart')
+          if (res.ok && seq === cartSyncSeq.current) {
+            setCart(await res.json())
+            return true
+          }
+          throw new Error('refetch failed')
+        } catch {
+          if (seq === cartSyncSeq.current && cartSnapshotRef.current) {
+            setCart(cartSnapshotRef.current)
+            showCartNotice('Could not save cart changes. Please try again.')
+          }
+          return false
         }
+      } finally {
+        if (seq === cartSyncSeq.current) setCartSaving(false)
       }
-    } finally {
-      if (seq === cartSyncSeq.current) setCartSaving(false)
-    }
+    })()
+
+    cartSavePromiseRef.current = savePromise
+    return savePromise
   }
 
   // Guests live in the Zustand store (the derived `guestCart` recomputes
@@ -776,6 +784,15 @@ export default function CheckoutPage() {
     setActionLoading(true)
     setError('')
 
+    const pendingCartSave = cartSavePromiseRef.current
+    const pendingPriceRefresh = priceRefreshPromiseRef.current
+    if (pendingPriceRefresh) await pendingPriceRefresh
+    if (pendingCartSave && !(await pendingCartSave)) {
+      setError('Could not save cart changes. Please try again.')
+      setActionLoading(false)
+      return
+    }
+
     if (paymentMethod === 'cod' && !isCodAvailable) {
       setError(COD_LIMIT_ERROR)
       setActionLoading(false)
@@ -797,6 +814,7 @@ export default function CheckoutPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             isCod: true,
+            checkoutMode: isGuest ? 'guest' : 'account',
             shippingAddress: selectedAddress,
             phone: selectedAddress?.phone,
             notes: orderNotes,
@@ -842,6 +860,7 @@ export default function CheckoutPage() {
             shippingAddress: selectedAddress,
             phone: selectedAddress?.phone,
             isCod: false,
+            checkoutMode: isGuest ? 'guest' : 'account',
             guestEmail: guestData?.email || '',
             guestPhone: guestData?.phone || '',
             shippingType,
@@ -896,6 +915,7 @@ export default function CheckoutPage() {
                   shippingAddress: selectedAddress,
                   phone: selectedAddress.phone,
                   notes: orderNotes,
+                  checkoutMode: isGuest ? 'guest' : 'account',
                   guestEmail: guestData?.email || '',
                   guestPhone: guestData?.phone || '',
                   shippingType,
@@ -953,6 +973,7 @@ export default function CheckoutPage() {
               shippingAddress: selectedAddress,
               phone: selectedAddress.phone,
               notes: orderNotes,
+              checkoutMode: isGuest ? 'guest' : 'account',
               guestEmail: guestData?.email || '',
               guestPhone: guestData?.phone || '',
               shippingType,
@@ -1320,7 +1341,7 @@ export default function CheckoutPage() {
                           Priority dispatch with fastest available courier.
                         </p>
                         <p className="font-body text-brand-700 mt-2 text-xs font-medium">
-                          Est. Delivery: 1–2 business days to{' '}
+                          Est. Delivery: 2–3 business days to{' '}
                           {selectedAddress?.city || 'your city'} (
                           {selectedAddress?.pincode})
                         </p>
@@ -1434,7 +1455,7 @@ export default function CheckoutPage() {
                     Back
                   </button>
                   <button
-                    disabled={actionLoading}
+                    disabled={actionLoading || cartSaving}
                     onClick={handlePlaceOrder}
                     suppressHydrationWarning
                     className="font-display bg-brand-600 hover:bg-brand-700 inline-flex h-11 items-center gap-1.5 rounded-xl px-6 text-xs font-semibold text-white transition-all active:scale-95 disabled:opacity-50"

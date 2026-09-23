@@ -80,6 +80,7 @@ export async function POST(request: Request) {
       notes = '',
       guestEmail = '',
       guestPhone = '',
+      checkoutMode = 'account',
       shippingType = 'standard',
       cartItems: guestCartItems,
       appliedCouponCode,
@@ -92,7 +93,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const isGuest = !!guestEmail
+    const isGuest = checkoutMode === 'guest' || !!guestEmail
     let customerEmail = ''
     let customerPhone = phone || ''
     let customerId: string | number | null = null
@@ -167,7 +168,7 @@ export async function POST(request: Request) {
     const resolveOrderItemColor = makeColorResolver(payload)
     const checkoutCart = await resolveCheckoutCart(
       payload,
-      session?.user ? customerId : null,
+      session?.user && !isGuest ? customerId : null,
       guestCartItems,
     )
 
@@ -311,18 +312,6 @@ export async function POST(request: Request) {
       }
     }
 
-    if (usedCouponId && usedCoupon) {
-      try {
-        await payload.update({
-          collection: 'coupons',
-          id: usedCouponId as string,
-          data: { usedCount: (usedCoupon.usedCount || 0) + 1 },
-        } as any)
-      } catch {
-        // Non-critical — don't block order
-      }
-    }
-
     const order: any = await placeOrderAndConsumeCart(payload, {
       orderData: {
         customerEmail,
@@ -368,6 +357,18 @@ export async function POST(request: Request) {
         : null,
     })
 
+    if (usedCouponId && usedCoupon) {
+      try {
+        await payload.update({
+          collection: 'coupons',
+          id: usedCouponId as string,
+          data: { usedCount: (usedCoupon.usedCount || 0) + 1 },
+        } as any)
+      } catch {
+        // Non-critical — don't block order
+      }
+    }
+
     // Save shipping address to customer's saved addresses if not already saved
     if (customerId && shippingAddress) {
       try {
@@ -412,9 +413,15 @@ export async function POST(request: Request) {
     })
   } catch (error: any) {
     console.error('[Razorpay Verify API Error]:', error)
+    const cartConflict =
+      error?.message === 'Cart changed while the order was being placed'
     return NextResponse.json(
-      { error: toUserFacingError(error) },
-      { status: 500 },
+      {
+        error: cartConflict
+          ? 'Your cart changed while the order was being placed. Please refresh and try again.'
+          : toUserFacingError(error),
+      },
+      { status: cartConflict ? 409 : 500 },
     )
   }
 }

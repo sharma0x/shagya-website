@@ -5,6 +5,7 @@ const mockFind = vi.fn()
 const mockFindGlobal = vi.fn()
 const mockGetSession = vi.fn()
 let currentBasePrice = 2500
+let serverBasePrice = 2500
 
 vi.mock('@payload-config', () => ({ default: {} }))
 vi.mock('payload', () => ({
@@ -23,7 +24,13 @@ vi.mock('@/lib/cart-prices', () => ({
       new Map(
         items.map((item) => [
           String(item.product),
-          { basePrice: currentBasePrice, productCode: `SKU-${item.product}` },
+          {
+            basePrice:
+              String(item.product) === '101'
+                ? serverBasePrice
+                : currentBasePrice,
+            productCode: `SKU-${item.product}`,
+          },
         ]),
       ),
   ),
@@ -39,13 +46,21 @@ vi.mock('@/lib/coupons', () => ({
   validateCouponForCart: vi.fn(),
 }))
 
-function createRequest() {
+function createRequest(isGuest = false) {
   return new Request('http://localhost/api/razorpay/create-order', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       shippingAddress: { fullName: 'Test Customer' },
       isCod: true,
+      ...(isGuest
+        ? {
+            guestEmail: 'test@example.com',
+            cartItems: [
+              { product: 202, variant: null, quantity: 1, unitPrice: 9999 },
+            ],
+          }
+        : {}),
     }),
   })
 }
@@ -53,6 +68,7 @@ function createRequest() {
 beforeEach(() => {
   vi.clearAllMocks()
   currentBasePrice = 2500
+  serverBasePrice = 2500
   mockGetSession.mockResolvedValue({ user: { id: 'user-1' } })
   mockFind.mockImplementation(
     async ({ collection }: { collection: string }) => {
@@ -78,11 +94,22 @@ beforeEach(() => {
 })
 
 describe('POST /api/razorpay/create-order COD limit', () => {
+  it('uses the current guest cart instead of a stale server cart', async () => {
+    serverBasePrice = 3750.01
+    const { POST } = await import('../razorpay/create-order/route')
+
+    const response = await POST(createRequest(true))
+    const body = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(body.total).toBe(2750)
+  })
+
   it('allows a final total of exactly 4000', async () => {
     currentBasePrice = 3750
     const { POST } = await import('../razorpay/create-order/route')
 
-    const response = await POST(createRequest())
+    const response = await POST(createRequest(true))
     const body = await response.json()
 
     expect(response.status).toBe(200)
@@ -93,7 +120,7 @@ describe('POST /api/razorpay/create-order COD limit', () => {
     currentBasePrice = 3750.01
     const { POST } = await import('../razorpay/create-order/route')
 
-    const response = await POST(createRequest())
+    const response = await POST(createRequest(true))
     const body = await response.json()
 
     expect(response.status).toBe(400)

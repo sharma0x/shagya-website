@@ -281,7 +281,7 @@ export const useCart = create<CartState>()(
             }
           })
           set({ items: dedupeCartItems(updated) })
-          get().syncWithServer()
+          await get().syncWithServer()
         } catch (error) {
           console.warn('[Cart Store] refreshPrices failed:', error)
         }
