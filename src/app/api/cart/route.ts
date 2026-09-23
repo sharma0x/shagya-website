@@ -163,9 +163,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       lastActivity: new Date().toISOString(),
     }
 
-    if (couponId) {
-      data.coupon = couponId
-    }
+    data.coupon = couponId ?? null
 
     if (carts.docs.length > 0) {
       if (action === 'merge') {

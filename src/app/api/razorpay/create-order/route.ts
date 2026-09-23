@@ -7,6 +7,7 @@ import { validateCartStock, type CartStockItem } from '@/lib/stock'
 import { resolveCurrentPrices, applyCurrentPrice } from '@/lib/cart-prices'
 import { validateCouponForCart } from '@/lib/coupons'
 import { toUserFacingError } from '@/lib/api-error'
+import { resolveCheckoutCart } from '@/lib/checkout-cart'
 
 export async function POST(request: Request) {
   try {
@@ -23,31 +24,13 @@ export async function POST(request: Request) {
 
     const isGuest = !!guestEmail
 
-    let subtotal = 0
     let shipping = 0
     let discount = 0
-    let cartId: string | null = null
-    let cartItems: any[] = []
-
     const payload = await getPayload({ config })
+    const session = await auth.api.getSession({ headers: request.headers })
+    let customerId: string | number | null = null
 
-    if (isGuest && guestCartItems && guestCartItems.length > 0) {
-      // Guest — resolve CURRENT prices so a price change in the admin is
-      // reflected at checkout instead of trusting the stale client snapshot
-      const priceMap = await resolveCurrentPrices(payload, guestCartItems)
-      subtotal = guestCartItems.reduce(
-        (acc: number, item: any) =>
-          acc +
-          applyCurrentPrice(item, priceMap).unitPrice * (item.quantity || 1),
-        0,
-      )
-    } else {
-      // Logged in — get cart from DB
-      const session = await auth.api.getSession({ headers: request.headers })
-      if (!session?.user) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-      }
-
+    if (session?.user) {
       const customers = await payload.find({
         collection: 'customers',
         where: { betterAuthUserId: { equals: session.user.id } },
@@ -61,63 +44,39 @@ export async function POST(request: Request) {
         )
       }
 
-      const carts = await payload.find({
-        collection: 'carts',
-        where: { customer: { equals: customers.docs[0].id } },
-        limit: 1,
-      } as any)
-
-      if (
-        carts.docs.length === 0 ||
-        !(carts.docs[0] as any).items ||
-        (carts.docs[0] as any).items.length === 0
-      ) {
-        return NextResponse.json({ error: 'Cart is empty' }, { status: 400 })
-      }
-
-      const cart = carts.docs[0] as any
-      cartId = cart.id
-      cartItems = (cart.items || []) as any[]
-      // Resolve CURRENT prices from the DB (the stored unitPrice may be a
-
-      // stale add-time snapshot)
-      const priceMap = await resolveCurrentPrices(payload, cartItems)
-      subtotal = cartItems.reduce(
-        (acc: number, item: any) =>
-          acc +
-          applyCurrentPrice(item, priceMap).unitPrice * (item.quantity || 1),
-        0,
-      )
+      customerId = customers.docs[0].id as string | number
     }
 
-    // ── Server-side stock validation ──
-    const stockItems: CartStockItem[] = isGuest
-      ? (guestCartItems || []).map((item: any) => ({
-          product: item.product,
-          variant: item.variant,
-          quantity: item.quantity || 1,
-        }))
-      : [] // logged-in user: validate from DB cart below
+    const checkoutCart = await resolveCheckoutCart(
+      payload,
+      customerId,
+      guestCartItems,
+    )
 
-    if (!isGuest && cartId) {
-      // Fetch cart items from DB to validate against current stock
-      const cartDoc = await payload.findByID({
-        collection: 'carts',
-        id: cartId,
-      } as any)
-      const cartItems = (cartDoc as any)?.items || []
-      for (const item of cartItems) {
-        const productId =
-          typeof item.product === 'object' && item.product !== null
-            ? item.product.id
-            : item.product
-        stockItems.push({
-          product: productId,
-          variant: item.variant,
-          quantity: item.quantity || 1,
-        })
+    if (!checkoutCart) {
+      if (!session?.user && !isGuest) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
       }
+      return NextResponse.json({ error: 'Cart is empty' }, { status: 400 })
     }
+
+    const cartItems = checkoutCart.items as any[]
+    const priceMap = await resolveCurrentPrices(payload, cartItems)
+    const subtotal = cartItems.reduce(
+      (acc: number, item: any) =>
+        acc +
+        applyCurrentPrice(item, priceMap).unitPrice * (item.quantity || 1),
+      0,
+    )
+
+    const stockItems: CartStockItem[] = cartItems.map((item: any) => ({
+      product:
+        typeof item.product === 'object' && item.product !== null
+          ? item.product.id
+          : item.product,
+      variant: item.variant,
+      quantity: item.quantity || 1,
+    }))
 
     if (stockItems.length > 0) {
       const stockCheck = await validateCartStock(payload, stockItems)
@@ -160,19 +119,11 @@ export async function POST(request: Request) {
     let appliedCoupon: any = null
 
     if (appliedCouponCode) {
-      const cartProductIds = isGuest
-        ? (guestCartItems || []).map((item: any) =>
-            String(
-              typeof item.product === 'object' ? item.product.id : item.product,
-            ),
-          )
-        : (cartItems || []).map((item: any) =>
-            String(
-              typeof item.product === 'object' ? item.product.id : item.product,
-            ),
-          )
-
-      const session = await auth.api.getSession({ headers: request.headers })
+      const cartProductIds = cartItems.map((item: any) =>
+        String(
+          typeof item.product === 'object' ? item.product.id : item.product,
+        ),
+      )
 
       const validation = await validateCouponForCart(
         payload,

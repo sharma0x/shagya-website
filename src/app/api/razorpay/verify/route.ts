@@ -9,6 +9,8 @@ import { resolveCurrentPrices, applyCurrentPrice } from '@/lib/cart-prices'
 import { validateCouponForCart } from '@/lib/coupons'
 import { findOrRepairCustomer } from '@/lib/auth-sync'
 import { toUserFacingError } from '@/lib/api-error'
+import { resolveCheckoutCart } from '@/lib/checkout-cart'
+import { placeOrderAndConsumeCart } from '@/lib/order-placement'
 
 /**
  * Resolves the color identity from a cart item's variant JSON
@@ -161,108 +163,51 @@ export async function POST(request: Request) {
 
     let orderItems: any[]
     let subtotal = 0
-    let cartId: string | number | null = null
-    let cart: any = null
     const resolveOrderItemColor = makeColorResolver(payload)
+    const checkoutCart = await resolveCheckoutCart(
+      payload,
+      session?.user ? customerId : null,
+      guestCartItems,
+    )
 
-    if (isGuest && guestCartItems && guestCartItems.length > 0) {
-      // Guest — use cart items from request body but price them from the
-      // CURRENT product documents (never trust the stale client snapshot)
-      const priceMap = await resolveCurrentPrices(payload, guestCartItems)
-      orderItems = await Promise.all(
-        guestCartItems.map(async (item: any) => {
-          const { unitPrice } = applyCurrentPrice(item, priceMap)
-          const { colorId, colorName } = await resolveOrderItemColor(
-            item.variant,
-          )
-          // productCode snapshot from the price map (which fetched the product doc)
-          const productCode =
-            priceMap.get(String(item.product))?.productCode ?? null
-          return {
-            product: Number(item.product),
-            productCode,
-            color: colorId,
-            colorName,
-            quantity: item.quantity || 1,
-            unitPrice,
-            totalPrice: unitPrice * (item.quantity || 1),
-          }
-        }),
-      )
-      subtotal = orderItems.reduce((a: number, i: any) => a + i.totalPrice, 0)
-    } else {
-      // Logged in — get cart from DB
-      const carts = await payload.find({
-        collection: 'carts',
-        where: { customer: { equals: customerId } },
-        limit: 1,
-      } as any)
-
-      cart = carts.docs[0] as any
-
-      if (
-        carts.docs.length === 0 ||
-        !(cart as any).items ||
-        (cart as any).items.length === 0
-      ) {
-        return NextResponse.json({ error: 'Cart is empty' }, { status: 400 })
-      }
-
-      cartId = cart.id as string | number
-      const cartItems = (cart.items || []) as any[]
-      // Price the order from CURRENT product documents, not the stored
-      // add-time unitPrice snapshot
-      const priceMap = await resolveCurrentPrices(payload, cartItems)
-      orderItems = await Promise.all(
-        cartItems.map(async (item: any) => {
-          const productId =
-            typeof item.product === 'object' && item.product !== null
-              ? item.product.id
-              : item.product
-          const { unitPrice } = applyCurrentPrice(item, priceMap)
-          const { colorId, colorName } = await resolveOrderItemColor(
-            item.variant,
-          )
-          // productCode snapshot from the price map (which fetched the product doc)
-          const productCode =
-            priceMap.get(String(productId))?.productCode ?? null
-          return {
-            product: productId,
-            productCode,
-            color: colorId,
-            colorName,
-            quantity: item.quantity,
-            unitPrice,
-            totalPrice: unitPrice * item.quantity,
-          }
-        }),
-      )
-      subtotal = orderItems.reduce((a: number, i: any) => a + i.totalPrice, 0)
+    if (!checkoutCart) {
+      return NextResponse.json({ error: 'Cart is empty' }, { status: 400 })
     }
 
+    const sourceItems = checkoutCart.items as any[]
+    const priceMap = await resolveCurrentPrices(payload, sourceItems)
+    orderItems = await Promise.all(
+      sourceItems.map(async (item: any) => {
+        const productId =
+          typeof item.product === 'object' && item.product !== null
+            ? item.product.id
+            : item.product
+        const { unitPrice } = applyCurrentPrice(item, priceMap)
+        const { colorId, colorName } = await resolveOrderItemColor(item.variant)
+        const productCode = priceMap.get(String(productId))?.productCode ?? null
+        const quantity = item.quantity || 1
+        return {
+          product: productId,
+          productCode,
+          color: colorId,
+          colorName,
+          quantity,
+          unitPrice,
+          totalPrice: unitPrice * quantity,
+        }
+      }),
+    )
+    subtotal = orderItems.reduce((a: number, i: any) => a + i.totalPrice, 0)
+
     // ── Server-side stock validation before order creation ──
-    const stockItems: CartStockItem[] = orderItems.map((item: any) => ({
-      product: item.product,
-      variant: null, // order items use color ID, we need to check via product ID + quantity
+    const rawStockItems: CartStockItem[] = sourceItems.map((item: any) => ({
+      product:
+        typeof item.product === 'object' && item.product !== null
+          ? item.product.id
+          : item.product,
+      variant: item.variant,
       quantity: item.quantity || 1,
     }))
-
-    // For variant products, we need to check per-color stock.
-    // Build stock items from the original cart/guest items with variant info.
-    const rawStockItems: CartStockItem[] = isGuest
-      ? (guestCartItems || []).map((item: any) => ({
-          product: item.product,
-          variant: item.variant,
-          quantity: item.quantity || 1,
-        }))
-      : (cart?.items || []).map((item: any) => ({
-          product:
-            typeof item.product === 'object' && item.product !== null
-              ? item.product.id
-              : item.product,
-          variant: item.variant,
-          quantity: item.quantity || 1,
-        }))
 
     if (rawStockItems.length > 0) {
       const stockCheck = await validateCartStock(payload, rawStockItems)
@@ -370,9 +315,8 @@ export async function POST(request: Request) {
       }
     }
 
-    const order: any = await payload.create({
-      collection: 'orders',
-      data: {
+    const order: any = await placeOrderAndConsumeCart(payload, {
+      orderData: {
         customerEmail,
         phone: customerPhone,
         status: orderStatus,
@@ -408,16 +352,13 @@ export async function POST(request: Request) {
         items: orderItems,
         coupon: usedCouponId,
       },
-    } as any)
-
-    // Clear cart for logged-in users
-    if (cartId) {
-      await payload.update({
-        collection: 'carts',
-        id: cartId,
-        data: { items: [], subtotal: 0, coupon: null },
-      } as any)
-    }
+      cart: checkoutCart
+        ? {
+            cartId: checkoutCart.cartId,
+            updatedAt: checkoutCart.updatedAt,
+          }
+        : null,
+    })
 
     // Save shipping address to customer's saved addresses if not already saved
     if (customerId && shippingAddress) {
