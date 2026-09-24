@@ -91,38 +91,54 @@ export function computeCartLineDiff(
   return diff
 }
 
+let activeSubscriptions = 0
+let unsubscribe: (() => void) | null = null
+
 export function initCartAnalytics(): () => void {
-  return useCart.subscribe((state, prevState) => {
-    if (isCartAnalyticsSuppressed()) return
+  if (activeSubscriptions === 0) {
+    unsubscribe = useCart.subscribe((state, prevState) => {
+      if (isCartAnalyticsSuppressed()) return
 
-    const diff = computeCartLineDiff(prevState.items, state.items)
+      const diff = computeCartLineDiff(prevState.items, state.items)
 
-    for (const item of diff.added) {
-      trackAddToCart({
-        item: cartItemToGA4Item(item),
-        quantity: item.quantity,
-      })
+      for (const item of diff.added) {
+        trackAddToCart({
+          item: cartItemToGA4Item(item),
+          quantity: item.quantity,
+        })
+      }
+
+      for (const item of diff.removed) {
+        trackRemoveFromCart({
+          item: cartItemToGA4Item(item),
+          quantity: item.quantity,
+        })
+      }
+
+      for (const { item, delta } of diff.quantityIncreased) {
+        trackAddToCart({
+          item: cartItemToGA4Item(item),
+          quantity: delta,
+        })
+      }
+
+      for (const { item, delta } of diff.quantityDecreased) {
+        trackRemoveFromCart({
+          item: cartItemToGA4Item(item),
+          quantity: delta,
+        })
+      }
+    })
+  }
+
+  activeSubscriptions++
+
+  return () => {
+    activeSubscriptions--
+    if (activeSubscriptions <= 0) {
+      activeSubscriptions = 0
+      unsubscribe?.()
+      unsubscribe = null
     }
-
-    for (const item of diff.removed) {
-      trackRemoveFromCart({
-        item: cartItemToGA4Item(item),
-        quantity: item.quantity,
-      })
-    }
-
-    for (const { item, delta } of diff.quantityIncreased) {
-      trackAddToCart({
-        item: cartItemToGA4Item(item),
-        quantity: delta,
-      })
-    }
-
-    for (const { item, delta } of diff.quantityDecreased) {
-      trackRemoveFromCart({
-        item: cartItemToGA4Item(item),
-        quantity: delta,
-      })
-    }
-  })
+  }
 }

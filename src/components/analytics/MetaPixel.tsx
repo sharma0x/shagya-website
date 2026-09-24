@@ -30,7 +30,7 @@ function MetaPixelInner() {
   }, [])
 
   useEffect(() => {
-    if (!isMetaPixelEnabled && !isAnalyticsEnabled) return
+    if (!isMetaPixelEnabled) return
     return initCartAnalytics()
   }, [])
 
@@ -38,9 +38,9 @@ function MetaPixelInner() {
 
   useEffect(() => {
     if (!isMetaPixelEnabled) return
+    // Skip the initial PageView because layout.tsx base code snippet already sent it.
     if (previousRouteKey.current === null) {
       previousRouteKey.current = routeKey
-      if (!window.fbq?.loaded) trackMetaEvent(META_EVENTS.PAGE_VIEW)
       return
     }
     if (previousRouteKey.current === routeKey) return

@@ -65,9 +65,53 @@ export function loadMetaPixelScript(): void {
 export function initializeMetaPixel(): void {
   if (!isMetaPixelEnabled || pixelInitialized) return
   pixelInitialized = true
-  fbq('init', META_PIXEL_ID)
+
+  // Avoid duplicate fbq('init') if the canonical base script in <head> already initialized it.
+  const isAlreadyInitialized =
+    typeof window !== 'undefined' &&
+    Boolean(window.fbq) &&
+    (Boolean(window.fbq?.loaded) ||
+      Boolean(
+        window.fbq?.queue?.some(
+          (call) =>
+            Array.isArray(call) &&
+            call[0] === 'init' &&
+            call[1] === META_PIXEL_ID,
+        ),
+      ))
+
+  if (!isAlreadyInitialized) {
+    fbq('init', META_PIXEL_ID)
+  }
+
   loadMetaPixelScript()
 }
+
+export function resetMetaPixelState(): void {
+  pixelInitialized = false
+  queuedCalls = []
+}
+
+export const META_STANDARD_EVENTS = new Set<string>([
+  'AddPaymentInfo',
+  'AddToCart',
+  'AddToWishlist',
+  'CompleteRegistration',
+  'Contact',
+  'CustomizeProduct',
+  'Donate',
+  'FindLocation',
+  'InitiateCheckout',
+  'Lead',
+  'PageView',
+  'Purchase',
+  'Schedule',
+  'Search',
+  'StartTrial',
+  'SubmitApplication',
+  'Subscribe',
+  'ViewContent',
+])
 
 export const META_EVENTS = {
   PAGE_VIEW: 'PageView',
@@ -84,7 +128,9 @@ export const META_EVENTS = {
   SHARE: 'Share',
 } as const
 
-export type MetaEventName = (typeof META_EVENTS)[keyof typeof META_EVENTS]
+export type MetaEventName =
+  | (typeof META_EVENTS)[keyof typeof META_EVENTS]
+  | (string & {})
 
 export interface MetaContent {
   id: string
@@ -93,6 +139,11 @@ export interface MetaContent {
 }
 
 export interface MetaEventParams {
+  [key: string]: unknown
+}
+
+export interface MetaEventOptions {
+  eventID?: string
   [key: string]: unknown
 }
 
@@ -138,7 +189,30 @@ export function metaProductParams(
 export function trackMetaEvent(
   eventName: MetaEventName,
   params: MetaEventParams = {},
+  options?: MetaEventOptions,
 ): void {
   if (typeof window === 'undefined' || !isMetaPixelEnabled) return
-  fbq('track', eventName, compactParams(params))
+  const trackMethod = META_STANDARD_EVENTS.has(eventName)
+    ? 'track'
+    : 'trackCustom'
+  const cleanParams = compactParams(params)
+  if (options && Object.keys(options).length > 0) {
+    fbq(trackMethod, eventName, cleanParams, options)
+  } else {
+    fbq(trackMethod, eventName, cleanParams)
+  }
+}
+
+export function trackMetaCustomEvent(
+  eventName: string,
+  params: MetaEventParams = {},
+  options?: MetaEventOptions,
+): void {
+  if (typeof window === 'undefined' || !isMetaPixelEnabled) return
+  const cleanParams = compactParams(params)
+  if (options && Object.keys(options).length > 0) {
+    fbq('trackCustom', eventName, cleanParams, options)
+  } else {
+    fbq('trackCustom', eventName, cleanParams)
+  }
 }

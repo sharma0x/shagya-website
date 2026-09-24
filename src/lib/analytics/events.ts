@@ -122,10 +122,18 @@ export function trackViewItemList(params: {
       items,
     }),
   )
-  trackMetaEvent(
-    META_EVENTS.VIEW_CONTENT,
-    metaProductParams(items.map((item) => ({ ...item, quantity: 1 }))),
-  )
+  trackMetaEvent(META_EVENTS.VIEW_CONTENT, {
+    content_name: params.listName,
+    content_category: params.listName,
+    content_type: 'product_group',
+    content_ids: items.map((item) => item.item_id),
+    contents: items.map((item) => ({
+      id: item.item_id,
+      quantity: 1,
+      item_price: item.price ?? 0,
+    })),
+    currency: SHAYGA_CURRENCY,
+  })
 }
 
 export function trackSelectItem(params: {
@@ -164,6 +172,8 @@ export function trackAddToCart(params: {
   })
   trackMetaEvent(META_EVENTS.ADD_TO_CART, {
     ...metaProductParams([item]),
+    content_name: item.item_name,
+    content_category: item.item_category,
     contents: [
       mapProductToMetaContent(
         { id: item.item_id, name: item.item_name },
@@ -222,10 +232,14 @@ export function trackBeginCheckout(params: {
       items: params.items,
     }),
   )
-  trackMetaEvent(
-    META_EVENTS.INITIATE_CHECKOUT,
-    metaProductParams(params.items, params.value),
-  )
+  trackMetaEvent(META_EVENTS.INITIATE_CHECKOUT, {
+    ...metaProductParams(params.items, params.value),
+    num_items: params.items.reduce(
+      (total, item) => total + (item.quantity ?? 1),
+      0,
+    ),
+    coupon: params.coupon,
+  })
 }
 
 export function trackAddShippingInfo(params: {
@@ -296,11 +310,15 @@ export function trackPurchase(params: {
       items,
     }),
   )
-  trackMetaEvent(META_EVENTS.PURCHASE, {
-    ...metaProductParams(items, params.value),
-    order_id: params.transactionId,
-    num_items: items.reduce((total, item) => total + (item.quantity ?? 1), 0),
-  })
+  trackMetaEvent(
+    META_EVENTS.PURCHASE,
+    {
+      ...metaProductParams(items, params.value),
+      order_id: params.transactionId,
+      num_items: items.reduce((total, item) => total + (item.quantity ?? 1), 0),
+    },
+    { eventID: params.transactionId },
+  )
 }
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -402,8 +420,17 @@ export function trackAddToWishlist(product: AnalyticsProduct): void {
   })
   trackMetaEvent(META_EVENTS.ADD_TO_WISHLIST, {
     content_ids: [item.item_id],
+    content_name: item.item_name,
+    content_category: item.item_category,
     content_type: 'product',
-    contents: [mapProductToMetaContent(product, { quantity: 1 })],
+    currency: SHAYGA_CURRENCY,
+    value: item.price ?? 0,
+    contents: [
+      mapProductToMetaContent(product, {
+        price: item.price,
+        quantity: 1,
+      }),
+    ],
   })
 }
 
@@ -459,7 +486,10 @@ export function trackWhatsAppOrderClick(params: {
 export function trackSignUp(method: string): void {
   trackEvent(GA4_STANDARD_EVENTS.SIGN_UP, { method })
   trackMetaEvent(META_EVENTS.COMPLETE_REGISTRATION, {
+    content_name: method,
+    status: 'completed',
     registration_method: method,
+    currency: SHAYGA_CURRENCY,
   })
 }
 
@@ -471,7 +501,12 @@ export function trackGenerateLead(params: { formId: string }): void {
   trackEvent(GA4_STANDARD_EVENTS.GENERATE_LEAD, {
     form_id: params.formId,
   })
-  trackMetaEvent(META_EVENTS.LEAD, { form_id: params.formId })
+  trackMetaEvent(META_EVENTS.LEAD, {
+    content_name: params.formId,
+    content_category: 'Lead',
+    form_id: params.formId,
+    currency: SHAYGA_CURRENCY,
+  })
 }
 
 export function trackPincodeCheck(params: {
