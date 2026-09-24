@@ -18,7 +18,7 @@ export const Products: CollectionConfig = {
   },
   hooks: {
     beforeChange: [
-      async ({ data, req }) => {
+      async ({ data, req, operation, originalDoc }) => {
         if (data?.name) {
           data.slug = data.name
             .toLowerCase()
@@ -27,6 +27,59 @@ export const Products: CollectionConfig = {
             .replace(/-+/g, '-')
             .replace(/^-+|-+$/g, '')
         }
+
+        const hadExplicitEmptyCode =
+          typeof data?.productCode === 'string' &&
+          data.productCode.trim() === ''
+
+        // Clean up and normalize productCode if string provided
+        if (typeof data?.productCode === 'string') {
+          data.productCode = data.productCode.trim().toUpperCase()
+          if (!data.productCode) {
+            delete data.productCode
+          }
+        }
+
+        // Auto-generate productCode in format SHG-XXXXX if not already provided
+        const hasExistingCode = Boolean(
+          data?.productCode ||
+          (!hadExplicitEmptyCode && originalDoc?.productCode),
+        )
+        if (req?.payload && !hasExistingCode && data?.name) {
+          try {
+            const lastProducts = await req.payload.find({
+              collection: 'products',
+              where: {
+                productCode: {
+                  exists: true,
+                },
+              },
+              sort: '-createdAt',
+              limit: 50,
+              depth: 0,
+              pagination: false,
+            })
+
+            let maxNumber = 0
+            for (const doc of lastProducts.docs as any[]) {
+              const match = doc.productCode?.match(/^SHG-(\d+)$/)
+              if (match) {
+                const num = parseInt(match[1], 10)
+                if (num > maxNumber) maxNumber = num
+              }
+            }
+
+            if (maxNumber === 0) {
+              const count = await req.payload.count({ collection: 'products' })
+              maxNumber = count.totalDocs || 0
+            }
+
+            data.productCode = `SHG-${String(maxNumber + 1).padStart(5, '0')}`
+          } catch (error) {
+            console.error('Error auto-generating productCode:', error)
+          }
+        }
+
         if (
           data?.compareAtPrice != null &&
           data?.basePrice != null &&
@@ -168,9 +221,21 @@ export const Products: CollectionConfig = {
       unique: true,
       index: true,
       required: true,
+      validate: (value?: unknown): true | string => {
+        const val =
+          typeof value === 'string'
+            ? value
+            : Array.isArray(value)
+              ? value[0]
+              : null
+        // If empty, allow validation to pass because beforeChange hook auto-generates it
+        if (!val || val.trim().length === 0) return true
+        return true
+      },
       admin: {
+        placeholder: 'Auto-generated (e.g., SHG-00044) if left empty',
         description:
-          'Unique product identifier (e.g., SHG-00001). Used for inventory tracking and order identification.',
+          'Unique product identifier. Leave empty to auto-generate (SHG-XXXXX), or enter custom code.',
       },
     },
     {

@@ -109,6 +109,137 @@ describe('Products collection', () => {
       expect(result.slug).not.toContain('₹')
       expect(result.slug).not.toContain('!')
     })
+
+    it('auto-generates productCode in SHG-XXXXX format when omitted', async () => {
+      const hook = Products.hooks?.beforeChange?.[0]
+      expect(hook).toBeDefined()
+      if (!hook) return
+
+      const mockPayload = {
+        find: async () => ({
+          docs: [
+            { id: 1, productCode: 'SHG-00042' },
+            { id: 2, productCode: 'SHG-00043' },
+          ],
+        }),
+      }
+
+      const result = await hook({
+        data: { name: 'New Saree' },
+        req: { payload: mockPayload },
+        operation: 'create',
+      } as any)
+
+      expect(result.productCode).toBe('SHG-00044')
+    })
+
+    it('preserves existing productCode if already provided', async () => {
+      const hook = Products.hooks?.beforeChange?.[0]
+      expect(hook).toBeDefined()
+      if (!hook) return
+
+      const mockPayload = {
+        find: async () => ({
+          docs: [{ id: 1, productCode: 'SHG-00043' }],
+        }),
+      }
+
+      const result = await hook({
+        data: { name: 'Custom Code Saree', productCode: 'SHG-CUSTOM-01' },
+        req: { payload: mockPayload },
+        operation: 'create',
+      } as any)
+
+      expect(result.productCode).toBe('SHG-CUSTOM-01')
+    })
+
+    it('normalizes user-entered productCode to uppercase', async () => {
+      const hook = Products.hooks?.beforeChange?.[0]
+      expect(hook).toBeDefined()
+      if (!hook) return
+
+      const result = await hook({
+        data: { name: 'Custom Code Saree', productCode: 'shg-special-99' },
+        operation: 'update',
+      } as any)
+
+      expect(result.productCode).toBe('SHG-SPECIAL-99')
+    })
+
+    it('allows user to edit productCode on existing product', async () => {
+      const hook = Products.hooks?.beforeChange?.[0]
+      expect(hook).toBeDefined()
+      if (!hook) return
+
+      const result = await hook({
+        data: { productCode: 'my-custom-sku-123' },
+        originalDoc: { id: 1, name: 'Saree', productCode: 'SHG-00001' },
+        operation: 'update',
+      } as any)
+
+      expect(result.productCode).toBe('MY-CUSTOM-SKU-123')
+    })
+
+    it('does not overwrite existing productCode when updating other fields', async () => {
+      const hook = Products.hooks?.beforeChange?.[0]
+      expect(hook).toBeDefined()
+      if (!hook) return
+
+      const mockPayload = {
+        find: async () => ({
+          docs: [{ id: 1, productCode: 'SHG-00050' }],
+        }),
+      }
+
+      const result = await hook({
+        data: { name: 'Renamed Saree' },
+        originalDoc: { id: 1, name: 'Old Saree', productCode: 'SHG-00010' },
+        req: { payload: mockPayload },
+        operation: 'update',
+      } as any)
+
+      // Should not have auto-generated a new code
+      expect(result.productCode).toBeUndefined()
+    })
+
+    it('cleans up empty string productCode to allow auto-generation', async () => {
+      const hook = Products.hooks?.beforeChange?.[0]
+      expect(hook).toBeDefined()
+      if (!hook) return
+
+      const mockPayload = {
+        find: async () => ({
+          docs: [{ id: 1, productCode: 'SHG-00005' }],
+        }),
+      }
+
+      const result = await hook({
+        data: { name: 'Trim Saree', productCode: '   ' },
+        originalDoc: { id: 1, name: 'Trim Saree', productCode: 'SHG-00005' },
+        req: { payload: mockPayload },
+        operation: 'update',
+      } as any)
+
+      expect(result.productCode).toBe('SHG-00006')
+    })
+  })
+
+  describe('ProductCode validation', () => {
+    const field = Products.fields?.find(
+      (f: any) => f.name === 'productCode',
+    ) as any
+
+    it('allows empty or null value so hook can auto-generate', () => {
+      expect(field?.validate?.('')).toBe(true)
+      expect(field?.validate?.(null)).toBe(true)
+      expect(field?.validate?.(undefined)).toBe(true)
+      expect(field?.validate?.('   ')).toBe(true)
+    })
+
+    it('allows valid productCode strings', () => {
+      expect(field?.validate?.('SHG-00001')).toBe(true)
+      expect(field?.validate?.('CUSTOM-123')).toBe(true)
+    })
   })
 
   describe('Fabric field', () => {
