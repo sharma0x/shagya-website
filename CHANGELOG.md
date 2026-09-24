@@ -1,3 +1,12 @@
+## [1.24.4](https://github.com/sharma0x/shagya-website/compare/v1.24.3...v1.24.4) (2026-09-24)
+
+### Bug Fixes
+
+- **auth:** merge verification fixes into develop ([e9c9121](https://github.com/sharma0x/shagya-website/commit/e9c91217ea2ec12db61ebdc0ebd6ee560103bc77))
+- **auth:** merge verification fixes into main ([ec322f6](https://github.com/sharma0x/shagya-website/commit/ec322f6da45da4400274cb740465eac1f882a56b))
+- **orders:** preserve saved customer identity in emails ([386360a](https://github.com/sharma0x/shagya-website/commit/386360a2ac86e064037f67381b639638514f41a1))
+- **auth:** reconcile email and phone verification ([be84467](https://github.com/sharma0x/shagya-website/commit/be84467694597446eabe2a96d4ac27dec8dd151b))
+
 ## [1.24.3](https://github.com/sharma0x/shagya-website/compare/v1.24.2...v1.24.3) (2026-09-24)
 
 ### Bug Fixes
