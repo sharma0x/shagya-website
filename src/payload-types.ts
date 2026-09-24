@@ -667,11 +667,27 @@ export interface Order {
   tax?: number | null;
   discount?: number | null;
   /**
+   * Promotion eligibility and discount details for this order.
+   */
+  discountBreakdown?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
    * The coupon applied to this order
    */
   coupon?: (number | null) | Coupon;
   total: number;
   paymentId?: string | null;
+  /**
+   * Unique online payment reference used for idempotency.
+   */
+  paymentReference?: string | null;
   /**
    * Customer notes or delivery instructions
    */
@@ -801,6 +817,10 @@ export interface Coupon {
   id: number;
   code: string;
   /**
+   * Choose whether this is a regular coupon or a quantity offer.
+   */
+  promotionType: 'standard' | 'buy_quantity';
+  /**
    * e.g., Diwali Sale 2026, Welcome Offer, Influencer — Ananya
    */
   description?: string | null;
@@ -808,6 +828,10 @@ export interface Coupon {
    * Optional: unique identifier for influencer/collaborator tracking
    */
   influencerCode?: string | null;
+  /**
+   * Required total quantity across the selected collections.
+   */
+  minimumQuantity?: number | null;
   type: 'percentage' | 'fixed_amount' | 'free_shipping';
   value?: number | null;
   minCartValue?: number | null;
@@ -1786,9 +1810,11 @@ export interface OrdersSelect<T extends boolean = true> {
   codFee?: T;
   tax?: T;
   discount?: T;
+  discountBreakdown?: T;
   coupon?: T;
   total?: T;
   paymentId?: T;
+  paymentReference?: T;
   notes?: T;
   confirmedAt?: T;
   shippedAt?: T;
@@ -1905,8 +1931,10 @@ export interface CartsSelect<T extends boolean = true> {
  */
 export interface CouponsSelect<T extends boolean = true> {
   code?: T;
+  promotionType?: T;
   description?: T;
   influencerCode?: T;
+  minimumQuantity?: T;
   type?: T;
   value?: T;
   minCartValue?: T;
