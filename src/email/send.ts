@@ -15,11 +15,12 @@ import {
 
 // ─── Internal helpers ─────────────────────────────────────────────────────────
 
-async function getBaseURL(): Promise<string> {
-  // Emails must never point at localhost. getServerURL() resolves the real
-  // public URL from the runtime env (PAYLOAD_PUBLIC_SERVER_URL); the
-  // production domain is the last-resort fallback.
+function getBaseURL(): string {
   return getServerURL().replace(/\/+$/, '') || 'https://shayga.in'
+}
+
+export function buildOrderURL(storeUrl: string, orderNumber: string): string {
+  return `${storeUrl}/account/orders/${encodeURIComponent(orderNumber)}`
 }
 
 export async function getAdminEmails(payload: Payload): Promise<string[]> {
@@ -210,6 +211,7 @@ function buildOrderVars(
     pricingTable: buildPricingTable(totals),
     shippingAddressBlock: buildAddressBlock(order.shippingAddress),
     storeUrl,
+    orderUrl: buildOrderURL(storeUrl, order.orderNumber),
     adminOrderUrl,
   }
 }

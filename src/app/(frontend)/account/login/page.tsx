@@ -5,7 +5,7 @@ import { signIn } from '@/lib/auth-client'
 import { useOtpCooldown } from '@/lib/use-otp-cooldown'
 import { usePhoneAuth } from '@/hooks/use-phone-auth'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { getPostLoginRedirect } from '@/lib/auth-redirect'
 import {
   ArrowLeft,
   Mail,
@@ -23,8 +23,6 @@ import {
 type LoginMethod = 'email' | 'phone'
 
 export default function LoginPage() {
-  const router = useRouter()
-
   const [loginMethod, setLoginMethod] = useState<LoginMethod>('email')
   const [email, setEmail] = useState('')
   const [phoneNumber, setPhoneNumber] = useState('')
@@ -44,7 +42,7 @@ export default function LoginPage() {
   } = usePhoneAuth({
     onSuccess: () => {
       trackLogin('phone_otp')
-      window.location.href = '/account'
+      window.location.assign(getPostLoginRedirect(window.location.search))
     },
     onError: (err) => setError(err.message),
   })
@@ -93,7 +91,7 @@ export default function LoginPage() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.message || data.error || 'Invalid OTP')
       trackLogin('email_otp')
-      window.location.href = '/account'
+      window.location.assign(getPostLoginRedirect(window.location.search))
     } catch (err: any) {
       setError(err?.message || 'Verification failed')
     } finally {
@@ -146,7 +144,10 @@ export default function LoginPage() {
   const handleGoogleSignIn = async () => {
     try {
       trackLogin('google')
-      await signIn.social({ provider: 'google', callbackURL: '/account' })
+      await signIn.social({
+        provider: 'google',
+        callbackURL: getPostLoginRedirect(window.location.search),
+      })
     } catch {
       setError('Google sign in failed')
     }

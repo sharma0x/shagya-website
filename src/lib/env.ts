@@ -10,7 +10,10 @@ export const getServerURL = (): string => {
     return process.env.PAYLOAD_PUBLIC_SERVER_URL
   }
 
-  if (process.env.NEXT_PUBLIC_SERVER_URL) {
+  if (
+    process.env.NODE_ENV !== 'production' &&
+    process.env.NEXT_PUBLIC_SERVER_URL
+  ) {
     return process.env.NEXT_PUBLIC_SERVER_URL
   }
 
@@ -18,7 +21,9 @@ export const getServerURL = (): string => {
     return `https://${process.env.VERCEL_URL}`
   }
 
-  return 'http://localhost:3000'
+  return process.env.NODE_ENV === 'production'
+    ? 'https://shayga.in'
+    : 'http://localhost:3000'
 }
 
 export const getAllowedOrigins = (): string[] => {

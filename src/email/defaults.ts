@@ -98,7 +98,7 @@ ${sectionLabel('Order Summary')}
 ${sectionLabel('Delivery Address')}
 <p style="margin:0;font-size:14px;color:#2A1E24;line-height:1.75;">{{shippingAddressBlock}}</p>
 
-${btn('{{storeUrl}}/account/orders/{{orderNumber}}', 'Track Your Order')}
+${btn('{{orderUrl}}', 'Track Your Order')}
 `),
   },
 
@@ -143,7 +143,7 @@ ${btn('{{adminOrderUrl}}', 'View in Admin')}
 
 <p style="margin:28px 0 0;font-size:14px;color:#6B5E63;">You'll receive another email when your order is dispatched.</p>
 
-${btn('{{storeUrl}}/account/orders/{{orderNumber}}', 'View Order')}
+${btn('{{orderUrl}}', 'View Order')}
 `),
   },
 
@@ -156,7 +156,7 @@ ${btn('{{storeUrl}}/account/orders/{{orderNumber}}', 'View Order')}
 
 <p style="margin:0;font-size:14px;color:#6B5E63;">Our team is handpicking and quality-checking each item. You'll hear from us as soon as it is dispatched.</p>
 
-${btn('{{storeUrl}}/account/orders/{{orderNumber}}', 'View Order')}
+${btn('{{orderUrl}}', 'View Order')}
 `),
   },
 
@@ -169,7 +169,7 @@ ${btn('{{storeUrl}}/account/orders/{{orderNumber}}', 'View Order')}
 
 <p style="margin:0 0 20px;font-size:14px;color:#6B5E63;">Please allow 5–7 business days for delivery. For any questions write to <a href="mailto:care@shayga.in" style="color:#6B2448;text-decoration:none;">care@shayga.in</a>.</p>
 
-${btn('{{storeUrl}}/account/orders/{{orderNumber}}', 'View Order')}
+${btn('{{orderUrl}}', 'View Order')}
 `),
   },
 
@@ -184,7 +184,7 @@ ${btn('{{storeUrl}}/account/orders/{{orderNumber}}', 'View Order')}
 
 <p style="margin:0 0 0;font-size:14px;color:#6B5E63;">Your review also helps other customers — we'd love to hear your thoughts.</p>
 
-${btn('{{storeUrl}}/account/orders/{{orderNumber}}', 'Leave a Review')}
+${btn('{{orderUrl}}', 'Leave a Review')}
 `),
   },
 
