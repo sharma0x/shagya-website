@@ -51,8 +51,10 @@ export async function resolveCurrentPrices(
 
   const priceMap = new Map<string, ResolvedProductInfo>()
   for (const doc of products.docs) {
-    const price = Number((doc as any).basePrice)
-    if (Number.isFinite(price) && price > 0) {
+    const rawPrice = (doc as any).basePrice
+    if (rawPrice == null) continue
+    const price = Number(rawPrice)
+    if (Number.isFinite(price) && price >= 0) {
       priceMap.set(String((doc as any).id), {
         price,
         productCode: (doc as any).productCode ?? null,
@@ -73,4 +75,16 @@ export function applyCurrentPrice(
     productId: pid != null ? String(pid) : null,
     unitPrice: info?.price ?? item.unitPrice ?? 0,
   }
+}
+
+export function requireCurrentPrice(
+  item: PriceResolvableItem,
+  priceMap: Map<string, ResolvedProductInfo>,
+): number {
+  const productId = itemProductId(item)
+  const price = productId == null ? undefined : priceMap.get(String(productId))
+  if (!price) {
+    throw new Error('Cart contains a product with no current price')
+  }
+  return price.price
 }
