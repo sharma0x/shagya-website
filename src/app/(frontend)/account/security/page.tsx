@@ -48,7 +48,6 @@ export default function SecurityPage() {
 
   const loadSecurityStatus = useCallback(async () => {
     try {
-      setLoading(true)
       const response = await fetch('/api/email-identity')
 
       if (response.ok) {
@@ -83,7 +82,7 @@ export default function SecurityPage() {
       return
     }
 
-    loadSecurityStatus()
+    void Promise.resolve().then(() => loadSecurityStatus())
   }, [sessionData, isPending, router, loadSecurityStatus])
 
   const handleRemovePhone = async () => {
@@ -110,6 +109,7 @@ export default function SecurityPage() {
 
       setSuccessMessage('Phone login removed successfully.')
       setTimeout(() => setSuccessMessage(null), 4000)
+      setLoading(true)
       await loadSecurityStatus()
     } catch (err: any) {
       setError(err.message || 'Failed to remove phone login')
@@ -133,6 +133,7 @@ export default function SecurityPage() {
     } else {
       setSuccessMessage('Phone number linked and verified successfully!')
       setTimeout(() => setSuccessMessage(null), 4000)
+      setLoading(true)
       await loadSecurityStatus()
     }
   }
@@ -152,6 +153,7 @@ export default function SecurityPage() {
     } else {
       setSuccessMessage('Email verified and linked successfully!')
       setTimeout(() => setSuccessMessage(null), 4000)
+      setLoading(true)
       await loadSecurityStatus()
     }
   }
