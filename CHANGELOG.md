@@ -1,3 +1,16 @@
+## [1.26.0](https://github.com/sharma0x/shagya-website/compare/v1.25.0...v1.26.0) (2026-09-24)
+
+### Features
+
+- **api:** add email-identity endpoints and update phone-identity linking ([cd7b2cc](https://github.com/sharma0x/shagya-website/commit/cd7b2cc5cb67dce981179bf4d90de3d09f4832dd))
+- **account:** add email/phone linking components and elevate security page ui ([f214afd](https://github.com/sharma0x/shagya-website/commit/f214afd8ec8f8bdc898af95b51137f2d0d454e9d))
+- **analytics:** add Meta Pixel storefront tracking ([364217a](https://github.com/sharma0x/shagya-website/commit/364217a1631bb0e52ddbe6400219e4e7fab78ef6))
+- **auth:** implement account linking, email verification otp, and identity merge service ([bc01172](https://github.com/sharma0x/shagya-website/commit/bc01172c3a8fbd6bdc4b34ad2f08e00aeddc9555))
+
+### Bug Fixes
+
+- **auth:** satisfy security status effect lint ([3fc36ee](https://github.com/sharma0x/shagya-website/commit/3fc36ee6f1a7fc1923918619127eba6d6705ede7))
+
 ## [1.25.0](https://github.com/sharma0x/shagya-website/compare/v1.24.4...v1.25.0) (2026-09-24)
 
 ### Features
