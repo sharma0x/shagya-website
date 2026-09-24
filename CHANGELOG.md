@@ -1,3 +1,9 @@
+## [1.26.4](https://github.com/sharma0x/shagya-website/compare/v1.26.3...v1.26.4) (2026-09-24)
+
+### Bug Fixes
+
+- **analytics:** place Meta Pixel bootstrap in the document head ([8d1fd02](https://github.com/sharma0x/shagya-website/commit/8d1fd02344bb004de1d05776da9338de6dae64f6))
+
 ## [1.26.3](https://github.com/sharma0x/shagya-website/compare/v1.26.2...v1.26.3) (2026-09-24)
 
 ### Bug Fixes
