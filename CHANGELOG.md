@@ -1,3 +1,9 @@
+## [1.26.1](https://github.com/sharma0x/shagya-website/compare/v1.26.0...v1.26.1) (2026-09-24)
+
+### Bug Fixes
+
+- **analytics:** load Meta Pixel without blocking its runtime ([3b2c473](https://github.com/sharma0x/shagya-website/commit/3b2c473487e8e426b9451159772025fcf52b543a))
+
 ## [1.26.0](https://github.com/sharma0x/shagya-website/compare/v1.25.0...v1.26.0) (2026-09-24)
 
 ### Features
