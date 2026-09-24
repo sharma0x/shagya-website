@@ -1,3 +1,9 @@
+## [1.26.2](https://github.com/sharma0x/shagya-website/compare/v1.26.1...v1.26.2) (2026-09-24)
+
+### Bug Fixes
+
+- **analytics:** expose Meta Pixel base code to scanners ([8b8176f](https://github.com/sharma0x/shagya-website/commit/8b8176f3447c147354c025edda50c6eaa24debd3))
+
 ## [1.26.1](https://github.com/sharma0x/shagya-website/compare/v1.26.0...v1.26.1) (2026-09-24)
 
 ### Bug Fixes
