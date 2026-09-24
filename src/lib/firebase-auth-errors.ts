@@ -1,3 +1,5 @@
+import { PHONE_LINKED_TO_ANOTHER_ACCOUNT } from './phone-number'
+
 type PhoneAuthOperation = 'send' | 'verify'
 
 const PHONE_AUTH_ERROR_MESSAGES: Record<
@@ -45,10 +47,23 @@ function errorCode(error: unknown): string | undefined {
   return typeof error.code === 'string' ? error.code : undefined
 }
 
+function errorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message
+  if (typeof error !== 'object' || error === null || !('message' in error)) {
+    return ''
+  }
+  return typeof error.message === 'string' ? error.message : ''
+}
+
 export function phoneAuthErrorMessage(
   error: unknown,
   operation: PhoneAuthOperation,
 ): string {
+  const message = errorMessage(error)
+  if (message.includes(PHONE_LINKED_TO_ANOTHER_ACCOUNT)) {
+    return PHONE_LINKED_TO_ANOTHER_ACCOUNT
+  }
+
   const code = errorCode(error)
 
   return (

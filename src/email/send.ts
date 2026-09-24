@@ -84,6 +84,7 @@ async function safeSend(
   subject: string,
   html: string,
   label: string,
+  throwOnFailure = false,
 ): Promise<void> {
   try {
     await payload.sendEmail({ to, subject, html })
@@ -115,6 +116,10 @@ async function safeSend(
       },
       overrideAccess: true,
     })
+
+    if (throwOnFailure) {
+      throw err
+    }
   }
 }
 
@@ -459,24 +464,16 @@ export async function sendBackInStockEmail(
  * Used by the login and guest-checkout OTP flow.
  */
 export async function sendOTPEmail(to: string, otp: string): Promise<void> {
-  const subject = `${otp} is your Shayga verification code`
+  const { getPayload } = await import('payload')
+  const config = (await import('@payload-config')).default
+  const payload = await getPayload({ config })
+  const storeUrl = await getBaseURL()
+  const { renderEmail } = await import('./render')
 
-  try {
-    const { getPayload } = await import('payload')
-    const config = (await import('@payload-config')).default
-    const payload = await getPayload({ config })
-    const storeUrl = await getBaseURL()
-    const { renderEmail } = await import('./render')
-
-    const { subject: renderedSubject, html } = await renderEmail(
-      payload,
-      'otp-email',
-      { otp, storeUrl, storeName: 'Shayga' },
-    )
-    await safeSend(payload, to, renderedSubject, html, 'otp-email')
-  } catch {
-    console.warn(
-      '[sendOTPEmail] Could not send — email adapter may not be configured',
-    )
-  }
+  const { subject: renderedSubject, html } = await renderEmail(
+    payload,
+    'otp-email',
+    { otp, storeUrl, storeName: 'Shayga' },
+  )
+  await safeSend(payload, to, renderedSubject, html, 'otp-email', true)
 }

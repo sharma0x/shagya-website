@@ -23,6 +23,8 @@ import {
   Mail,
 } from 'lucide-react'
 import { PhoneInput } from '@/components/ui/phone-input'
+import { signOut as firebaseSignOut } from 'firebase/auth'
+import { getFirebaseAuth } from '@/lib/firebase-client'
 
 interface Order {
   id: string
@@ -118,6 +120,11 @@ export default function AccountDashboardPage() {
 
   const handleSignOut = async () => {
     await signOut()
+    try {
+      await firebaseSignOut(getFirebaseAuth())
+    } catch (error) {
+      void error
+    }
     router.push('/account/login')
   }
 

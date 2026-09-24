@@ -16,6 +16,19 @@ describe('phoneAuthErrorMessage', () => {
     )
   })
 
+  it('preserves the verified phone account conflict message', () => {
+    expect(
+      phoneAuthErrorMessage(
+        new Error(
+          'This phone number is already linked to another account. Please log in with that account or use a different number.',
+        ),
+        'verify',
+      ),
+    ).toBe(
+      'This phone number is already linked to another account. Please log in with that account or use a different number.',
+    )
+  })
+
   it('uses a safe fallback for unrecognized Firebase errors', () => {
     expect(phoneAuthErrorMessage(new Error('internal details'), 'verify')).toBe(
       "We couldn't verify that code. Please try again.",

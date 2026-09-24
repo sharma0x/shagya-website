@@ -3,7 +3,10 @@
 import { useState, useCallback, useRef } from 'react'
 import { useOtpCooldown } from '@/lib/use-otp-cooldown'
 import { usePhoneAuth } from '@/hooks/use-phone-auth'
-import { authClient } from '@/lib/auth-client'
+import {
+  isValidE164PhoneNumber,
+  normalizePhoneNumber,
+} from '@/lib/phone-number'
 import {
   Loader2,
   AlertCircle,
@@ -88,26 +91,28 @@ export function GuestCheckout({ onVerified }: GuestCheckoutProps) {
       return
     }
 
+    const normalizedEmail = email.trim().toLowerCase()
     setSendingOTP(true)
     try {
-      // Check account existence before the OTP screen flips, so we know
-      // whether to fetch saved addresses (existing) or prompt for a new one.
       const statusRes = await fetch(
-        `/api/auth/account-status?email=${encodeURIComponent(email)}`,
+        `/api/auth/account-status?email=${encodeURIComponent(normalizedEmail)}`,
       )
+      if (!statusRes.ok) {
+        throw new Error('Could not check this email. Please try again.')
+      }
       const statusData = await statusRes.json()
       setIsExisting(statusData.exists)
 
       const res = await fetch('/api/auth/email-otp/send-verification-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, type: 'sign-in' }),
+        body: JSON.stringify({ email: normalizedEmail, type: 'sign-in' }),
       })
       if (!res.ok) {
         const data = await res.json()
-        throw new Error(data.message || 'Failed to send OTP')
+        throw new Error(data.message || data.error || 'Failed to send OTP')
       }
-      setOtpDestination(email)
+      setOtpDestination(normalizedEmail)
       setOtpSent(true)
       startCooldown()
     } catch (err: any) {
@@ -129,7 +134,18 @@ export function GuestCheckout({ onVerified }: GuestCheckoutProps) {
       return
     }
 
-    const formatted = phone.startsWith('+') ? phone : `+91${digits}`
+    let formatted: string
+    try {
+      formatted = normalizePhoneNumber(
+        phone.startsWith('+') ? phone : `+91${digits}`,
+      )
+      if (!isValidE164PhoneNumber(formatted)) {
+        throw new Error('Enter a valid phone number')
+      }
+    } catch {
+      setError('Please enter a valid phone number')
+      return
+    }
     formattedPhoneRef.current = formatted
 
     setSendingOTP(true)
@@ -137,6 +153,9 @@ export function GuestCheckout({ onVerified }: GuestCheckoutProps) {
       const statusRes = await fetch(
         `/api/auth/account-status?phone=${encodeURIComponent(formatted)}`,
       )
+      if (!statusRes.ok) {
+        throw new Error('Could not check this phone number. Please try again.')
+      }
       const statusData = await statusRes.json()
       setIsExisting(statusData.exists)
 
@@ -160,14 +179,27 @@ export function GuestCheckout({ onVerified }: GuestCheckoutProps) {
 
     setVerifying(true)
     try {
+      const normalizedEmail = email.trim().toLowerCase()
       const res = await fetch('/api/auth/sign-in/email-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, otp, name }),
+        body: JSON.stringify({ email: normalizedEmail, otp, name }),
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.message || 'Invalid OTP')
-      onVerified({ name: name.trim(), email, isExisting })
+      if (!res.ok) throw new Error(data.message || data.error || 'Invalid OTP')
+
+      const customerRes = await fetch('/api/customers/me')
+      if (customerRes.ok) {
+        const customerData = await customerRes.json()
+        onVerified({
+          name: customerData.name || name.trim(),
+          email: customerData.email || normalizedEmail,
+          isExisting,
+        })
+        return
+      }
+
+      onVerified({ name: name.trim(), email: normalizedEmail, isExisting })
     } catch (err: any) {
       setError(err?.message || 'Invalid OTP')
     } finally {

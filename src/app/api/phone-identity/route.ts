@@ -2,10 +2,14 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import {
   getPhoneIdentityByUserId,
+  getPhoneIdentityByPhoneNumber,
   createPhoneIdentity,
   deletePhoneIdentity,
   updatePhoneIdentity,
-  isPhoneNumberTaken,
+  getFirebaseAccountOwner,
+  linkFirebaseAccountToUser,
+  normalizePhoneNumber,
+  PHONE_LINKED_TO_ANOTHER_ACCOUNT,
 } from '@/lib/phone-identity'
 import { rateLimiter, getClientIdentifier, RATE_LIMITS } from '@/lib/rate-limit'
 
@@ -145,22 +149,33 @@ export async function POST(request: Request) {
       )
     }
 
-    // Verify that the phone number in the token matches the provided phone number
     const tokenPhoneNumber = decodedToken.phone_number
-    if (!tokenPhoneNumber || tokenPhoneNumber !== phoneNumber) {
-      console.warn('[API] Phone number mismatch:', {
-        provided: phoneNumber,
-        inToken: tokenPhoneNumber,
-      })
+    let normalizedPhoneNumber: string
+    let normalizedTokenPhoneNumber: string
+    try {
+      normalizedPhoneNumber = normalizePhoneNumber(phoneNumber)
+      normalizedTokenPhoneNumber = normalizePhoneNumber(tokenPhoneNumber || '')
+    } catch {
+      return NextResponse.json(
+        { error: 'Enter a valid phone number.' },
+        { status: 400 },
+      )
+    }
+
+    if (normalizedPhoneNumber !== normalizedTokenPhoneNumber) {
       return NextResponse.json(
         { error: 'Phone number mismatch' },
         { status: 400 },
       )
     }
 
-    // Check if phone number is already taken
-    const isTaken = await isPhoneNumberTaken(phoneNumber)
-    if (isTaken) {
+    const existingPhoneIdentity = await getPhoneIdentityByPhoneNumber(
+      normalizedPhoneNumber,
+    )
+    if (
+      existingPhoneIdentity &&
+      existingPhoneIdentity.userId !== session.user.id
+    ) {
       return NextResponse.json(
         {
           error:
@@ -170,20 +185,77 @@ export async function POST(request: Request) {
       )
     }
 
-    // Create phone identity
-    const phoneIdentity = await createPhoneIdentity({
-      userId: session.user.id,
-      phoneNumber,
-      firebaseUid: decodedToken.uid,
-    })
+    const authContext = await auth.$context
+    let accountWasCreated = false
+    try {
+      const existingAccount = await getFirebaseAccountOwner(decodedToken.uid)
+      if (existingAccount && existingAccount.userId !== session.user.id) {
+        return NextResponse.json(
+          {
+            error:
+              'This phone number is already linked to another account. Please log in with that account or use a different number.',
+          },
+          { status: 409 },
+        )
+      }
+      const linkedAccount = await linkFirebaseAccountToUser(
+        authContext.internalAdapter,
+        {
+          userId: session.user.id,
+          firebaseUid: decodedToken.uid,
+          idToken: firebaseIdToken,
+        },
+      )
+      accountWasCreated = !existingAccount && linkedAccount !== null
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        error.message === PHONE_LINKED_TO_ANOTHER_ACCOUNT
+      ) {
+        return NextResponse.json(
+          { error: PHONE_LINKED_TO_ANOTHER_ACCOUNT },
+          { status: 409 },
+        )
+      }
+      return NextResponse.json(
+        { error: 'Failed to link phone number. Please try again.' },
+        { status: 500 },
+      )
+    }
 
-    return NextResponse.json({
-      success: true,
-      phoneIdentity: {
-        phoneNumber: phoneIdentity.phoneNumber,
-        verifiedAt: phoneIdentity.verifiedAt,
-      },
-    })
+    try {
+      const phoneIdentity =
+        existingPhoneIdentity?.userId === session.user.id
+          ? existingPhoneIdentity
+          : await createPhoneIdentity({
+              userId: session.user.id,
+              phoneNumber: normalizedPhoneNumber,
+              firebaseUid: decodedToken.uid,
+            })
+
+      return NextResponse.json({
+        success: true,
+        phoneIdentity: {
+          phoneNumber: phoneIdentity.phoneNumber,
+          verifiedAt: phoneIdentity.verifiedAt,
+        },
+      })
+    } catch (error: any) {
+      if (accountWasCreated) {
+        try {
+          const createdAccount = await getFirebaseAccountOwner(decodedToken.uid)
+          if (createdAccount) {
+            await authContext.internalAdapter.deleteAccount(createdAccount.id)
+          }
+        } catch (cleanupError) {
+          console.error(
+            '[API] Failed to roll back Firebase account link:',
+            cleanupError,
+          )
+        }
+      }
+      throw error
+    }
   } catch (error: any) {
     console.error('[API] POST /api/phone-identity error:', error)
 
@@ -278,24 +350,65 @@ export async function PUT(request: Request) {
       )
     }
 
-    // Verify that the phone number in the token matches the provided phone number
     const tokenPhoneNumber = decodedToken.phone_number
-    if (!tokenPhoneNumber || tokenPhoneNumber !== phoneNumber) {
-      console.warn('[API] Phone number mismatch:', {
-        provided: phoneNumber,
-        inToken: tokenPhoneNumber,
-      })
+    let normalizedPhoneNumber: string
+    let normalizedTokenPhoneNumber: string
+    try {
+      normalizedPhoneNumber = normalizePhoneNumber(phoneNumber)
+      normalizedTokenPhoneNumber = normalizePhoneNumber(tokenPhoneNumber || '')
+    } catch {
+      return NextResponse.json(
+        { error: 'Enter a valid phone number.' },
+        { status: 400 },
+      )
+    }
+
+    if (normalizedPhoneNumber !== normalizedTokenPhoneNumber) {
       return NextResponse.json(
         { error: 'Phone number mismatch' },
         { status: 400 },
       )
     }
 
-    // Update phone identity
+    const existingIdentity = await getPhoneIdentityByUserId(session.user.id)
+    if (!existingIdentity) {
+      return NextResponse.json(
+        { error: 'No phone identity found for this user' },
+        { status: 404 },
+      )
+    }
+
+    const existingAccount = await getFirebaseAccountOwner(decodedToken.uid)
+    if (existingAccount && existingAccount.userId !== session.user.id) {
+      return NextResponse.json(
+        {
+          error:
+            'This phone number is already linked to another account. Please log in with that account or use a different number.',
+        },
+        { status: 409 },
+      )
+    }
+
+    const authContext = await auth.$context
+    await linkFirebaseAccountToUser(authContext.internalAdapter, {
+      userId: session.user.id,
+      firebaseUid: decodedToken.uid,
+      idToken: firebaseIdToken,
+    })
+
     const phoneIdentity = await updatePhoneIdentity(session.user.id, {
-      phoneNumber,
+      phoneNumber: normalizedPhoneNumber,
       firebaseUid: decodedToken.uid,
     })
+
+    if (existingIdentity.firebaseUid !== decodedToken.uid) {
+      const previousAccount = await getFirebaseAccountOwner(
+        existingIdentity.firebaseUid,
+      )
+      if (previousAccount?.userId === session.user.id) {
+        await authContext.internalAdapter.deleteAccount(previousAccount.id)
+      }
+    }
 
     return NextResponse.json({
       success: true,
@@ -335,6 +448,15 @@ export async function DELETE(request: Request) {
     const session = await auth.api.getSession({ headers: request.headers })
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const phoneIdentity = await getPhoneIdentityByUserId(session.user.id)
+    if (phoneIdentity) {
+      const account = await getFirebaseAccountOwner(phoneIdentity.firebaseUid)
+      if (account?.userId === session.user.id) {
+        const authContext = await auth.$context
+        await authContext.internalAdapter.deleteAccount(account.id)
+      }
     }
 
     await deletePhoneIdentity(session.user.id)

@@ -185,18 +185,17 @@ export async function PATCH(request: Request) {
       const currentEmail = customer.email as string
       const isFallback =
         !currentEmail || currentEmail.includes('@phone.shayga.in')
-      if (isFallback) {
-        updateData.email = email
+      const normalizedEmail =
+        typeof email === 'string' ? email.trim().toLowerCase() : ''
+      if (isFallback && normalizedEmail.includes('@')) {
+        updateData.email = normalizedEmail
 
-        // Also sync to Better Auth user table so session reflects the real email
         const pool = getDbPool()
         await pool.query(
           `UPDATE "user" SET email = $1, "emailVerified" = false WHERE id = $2`,
-          [email, session.user.id],
+          [normalizedEmail, session.user.id],
         )
       }
-      // If user already has a real email, silently ignore the email update
-      // (they'd need to use the security flow to change their verified email)
     }
 
     await payload.update({
@@ -207,8 +206,14 @@ export async function PATCH(request: Request) {
     } as any)
 
     return NextResponse.json({ success: true })
-  } catch (err) {
+  } catch (err: any) {
     console.error('[customers/me] PATCH error:', err)
+    if (err?.code === '23505') {
+      return NextResponse.json(
+        { error: 'This email is already in use by another account.' },
+        { status: 409 },
+      )
+    }
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 },
