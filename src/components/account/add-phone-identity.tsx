@@ -9,16 +9,17 @@ import {
   isValidE164PhoneNumber,
   normalizePhoneNumber,
 } from '@/lib/phone-number'
-import { Loader2, Smartphone, CheckCircle2, X } from 'lucide-react'
+import { Loader2, Smartphone, CheckCircle2, ArrowLeft, X } from 'lucide-react'
 
 interface AddPhoneIdentityProps {
-  onSuccess?: () => void
+  onSuccess?: (result?: { merged?: boolean; phoneNumber?: string }) => void
   onCancel?: () => void
 }
 
 /**
- * Component for adding verified phone number as a login method
- * Uses Firebase OTP verification, then calls /api/phone-identity to link phone
+ * Component for adding verified phone number as a login method.
+ * Uses Firebase OTP verification, then calls /api/phone-identity to link phone.
+ * Supports auto-merging with pre-existing phone accounts.
  */
 export function AddPhoneIdentity({
   onSuccess,
@@ -49,8 +50,10 @@ export function AddPhoneIdentity({
         throw new Error(data.error || 'Failed to link phone number')
       }
 
-      // Success!
-      onSuccess?.()
+      onSuccess?.({
+        merged: Boolean(data.merged),
+        phoneNumber: normalizedPhoneNumber,
+      })
     } catch (err: any) {
       setLinkError(err.message || 'Failed to link phone number')
       throw err
@@ -60,8 +63,8 @@ export function AddPhoneIdentity({
   const { sendOTP, verifyOTP, isSendingOTP, isVerifyingOTP, error, reset } =
     usePhoneVerify({
       onSuccess: linkPhoneToAccount,
-      onError: (error) => {
-        console.error('Phone verification error:', error.message)
+      onError: (err) => {
+        console.error('Phone verification error:', err.message)
       },
     })
 
@@ -77,7 +80,7 @@ export function AddPhoneIdentity({
       }
     } catch {
       setLinkError(
-        'Phone number must include country code (e.g., +919876543210)',
+        'Phone number must include a valid country code (e.g. +91 98765 43210)',
       )
       return
     }
@@ -94,14 +97,14 @@ export function AddPhoneIdentity({
     e.preventDefault()
     setLinkError(null)
 
-    if (otpCode.length !== 6) {
-      setLinkError('Please enter a 6-digit code')
+    const cleanedOtp = otpCode.trim()
+    if (cleanedOtp.length !== 6) {
+      setLinkError('Please enter the 6-digit verification code')
       return
     }
 
     try {
-      await verifyOTP(otpCode)
-      // onSuccess callback will trigger linkPhoneToAccount
+      await verifyOTP(cleanedOtp)
     } catch (err) {
       console.error('Failed to verify OTP:', err)
     }
@@ -118,15 +121,17 @@ export function AddPhoneIdentity({
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
-          <Smartphone className="h-6 w-6 text-blue-600" />
+        <div className="bg-brand-50 text-brand-700 flex h-11 w-11 shrink-0 items-center justify-center rounded-full">
+          <Smartphone className="h-5 w-5" />
         </div>
         <div>
-          <h3 className="text-lg font-semibold">Add Phone Login</h3>
-          <p className="text-sm text-gray-600">
+          <h3 className="font-display text-base font-semibold text-neutral-900">
+            Add Phone Login
+          </h3>
+          <p className="font-body text-xs text-neutral-500">
             {!otpSent
-              ? 'Verify your phone number to enable phone-based login'
-              : 'Enter the 6-digit code sent to your phone'}
+              ? 'Verify your phone number to enable SMS OTP login and fast checkout'
+              : `Enter the 6-digit code sent to ${phoneNumber}`}
           </p>
         </div>
       </div>
@@ -140,22 +145,25 @@ export function AddPhoneIdentity({
       {!otpSent ? (
         <form onSubmit={handleSendOTP} className="space-y-4">
           <div>
-            <label htmlFor="phone" className="mb-2 block text-sm font-medium">
+            <label
+              htmlFor="phone-identity-input"
+              className="font-body mb-1.5 block text-xs font-medium text-neutral-700"
+            >
               Phone Number
             </label>
             <PhoneInput
-              id="phone"
+              id="phone-identity-input"
               value={phoneNumber}
               onChange={setPhoneNumber}
-              placeholder="+91 98765 43210"
+              placeholder="98765 43210"
               disabled={isSendingOTP}
             />
-            <p className="mt-1 text-xs text-gray-500">
-              Include country code (e.g., +91 for India, +1 for US)
+            <p className="font-body mt-1 text-xs text-neutral-500">
+              Select your country code and enter your mobile number.
             </p>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-2.5">
             {onCancel && (
               <Button
                 type="button"
@@ -164,13 +172,13 @@ export function AddPhoneIdentity({
                 disabled={isSendingOTP}
                 className="flex-1"
               >
-                <X className="mr-2 h-4 w-4" />
+                <X className="mr-1.5 h-4 w-4" />
                 Cancel
               </Button>
             )}
             <Button
               type="submit"
-              disabled={isSendingOTP || !phoneNumber}
+              disabled={isSendingOTP || !phoneNumber.trim()}
               className="flex-1"
             >
               {isSendingOTP ? (
@@ -187,27 +195,33 @@ export function AddPhoneIdentity({
       ) : (
         <form onSubmit={handleVerifyOTP} className="space-y-4">
           <div>
-            <label htmlFor="otp" className="mb-2 block text-sm font-medium">
-              Verification Code
+            <label
+              htmlFor="phone-otp-input"
+              className="font-body mb-1.5 block text-xs font-medium text-neutral-700"
+            >
+              6-Digit SMS Code
             </label>
             <input
-              id="otp"
+              id="phone-otp-input"
               type="text"
+              inputMode="numeric"
               placeholder="000000"
               value={otpCode}
-              onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+              onChange={(e) =>
+                setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))
+              }
               maxLength={6}
-              className="w-full rounded-md border border-gray-300 px-4 py-3 text-center text-2xl tracking-widest focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              className="focus:border-brand-500 focus:ring-brand-500/20 h-12 w-full rounded-lg border border-neutral-200 bg-white px-4 text-center font-mono text-2xl tracking-[0.35em] text-neutral-900 transition-colors outline-none placeholder:text-neutral-300 focus:ring-2"
               required
               disabled={isVerifyingOTP}
               autoFocus
             />
-            <p className="mt-2 text-center text-xs text-gray-500">
-              Code sent to {phoneNumber}
+            <p className="font-body mt-2 text-center text-xs text-neutral-500">
+              Code sent via SMS to {phoneNumber}
             </p>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-2.5">
             <Button
               type="button"
               variant="outline"
@@ -215,6 +229,7 @@ export function AddPhoneIdentity({
               disabled={isVerifyingOTP}
               className="flex-1"
             >
+              <ArrowLeft className="mr-1.5 h-4 w-4" />
               Change Number
             </Button>
             <Button
@@ -230,7 +245,7 @@ export function AddPhoneIdentity({
               ) : (
                 <>
                   <CheckCircle2 className="mr-2 h-4 w-4" />
-                  Verify & Link
+                  Verify & Save
                 </>
               )}
             </Button>
@@ -238,10 +253,10 @@ export function AddPhoneIdentity({
         </form>
       )}
 
-      <div className="border-t pt-4">
-        <p className="text-center text-xs text-gray-500">
-          By continuing, you agree to receive SMS messages for account
-          verification. Standard message rates may apply.
+      <div className="border-t border-neutral-100 pt-3">
+        <p className="font-body text-center text-[11px] text-neutral-500">
+          By continuing, you agree to receive an SMS code for account
+          verification. Standard carrier rates may apply.
         </p>
       </div>
     </div>
