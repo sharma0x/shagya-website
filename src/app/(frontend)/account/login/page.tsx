@@ -15,6 +15,10 @@ import {
   Loader2,
 } from 'lucide-react'
 import { trackLogin } from '@/lib/analytics'
+import {
+  isValidE164PhoneNumber,
+  normalizePhoneNumber,
+} from '@/lib/phone-number'
 
 type LoginMethod = 'email' | 'phone'
 
@@ -51,16 +55,17 @@ export default function LoginPage() {
       setError('Please enter a valid email address')
       return
     }
+    const normalizedEmail = email.trim().toLowerCase()
     setLoading(true)
     try {
       const res = await fetch('/api/auth/email-otp/send-verification-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, type: 'sign-in' }),
+        body: JSON.stringify({ email: normalizedEmail, type: 'sign-in' }),
       })
       if (!res.ok) {
         const data = await res.json()
-        throw new Error(data.message || 'Failed to send OTP')
+        throw new Error(data.message || data.error || 'Failed to send OTP')
       }
       setOtpSent(true)
       startCooldown()
@@ -77,15 +82,16 @@ export default function LoginPage() {
       setError('Please enter the 6-digit OTP')
       return
     }
+    const normalizedEmail = email.trim().toLowerCase()
     setLoading(true)
     try {
       const res = await fetch('/api/auth/sign-in/email-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, otp }),
+        body: JSON.stringify({ email: normalizedEmail, otp }),
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.message || 'Invalid OTP')
+      if (!res.ok) throw new Error(data.message || data.error || 'Invalid OTP')
       trackLogin('email_otp')
       window.location.href = '/account'
     } catch (err: any) {
@@ -102,10 +108,19 @@ export default function LoginPage() {
       setError('Please enter a valid phone number')
       return
     }
-    // Format phone number to E.164 format (+countrycode + number)
-    const formattedPhone = phoneNumber.startsWith('+')
-      ? phoneNumber
-      : `+91${phoneNumber}` // Default to India country code
+    let formattedPhone: string
+    try {
+      formattedPhone = normalizePhoneNumber(
+        phoneNumber.startsWith('+') ? phoneNumber : `+91${phoneNumber}`,
+      )
+      if (!isValidE164PhoneNumber(formattedPhone)) {
+        throw new Error('Enter a valid phone number')
+      }
+    } catch {
+      setError('Please enter a valid phone number')
+      return
+    }
+
     try {
       await sendPhoneOTP(formattedPhone)
       setOtpSent(true)

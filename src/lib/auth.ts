@@ -5,6 +5,7 @@ import { emailOTP } from 'better-auth/plugins/email-otp'
 import { firebaseAuthPlugin } from 'better-auth-firebase-auth/server'
 import { getServerURL, getAllowedOrigins } from './env'
 import { getDbPool } from './db-pool'
+import { phoneIdentityAuthPlugin } from './phone-identity-auth'
 
 // Conditionally import Firebase Admin Auth
 let firebaseAdminAuth:
@@ -215,6 +216,7 @@ export const auth = betterAuth({
               return `${uid}@phone.shayga.in`
             },
           }),
+          phoneIdentityAuthPlugin({ firebaseAdminAuth }),
         ]
       : []),
   ],

@@ -169,6 +169,29 @@ export async function syncCustomer(user: BetterAuthUser): Promise<void> {
     console.log('[Auth Sync] Performing atomic upsert')
     const result = await pool.query(
       `
+      WITH claimed_legacy_customer AS (
+        UPDATE customers
+        SET
+          better_auth_user_id = $1,
+          name = CASE
+            WHEN name = '' OR name IS NULL OR name = 'Customer' THEN $2
+            ELSE name
+          END,
+          phone = CASE
+            WHEN phone = '' OR phone IS NULL THEN $4
+            ELSE phone
+          END,
+          updated_at = NOW()
+        WHERE LOWER(email) = LOWER($3)
+          AND better_auth_user_id IS NULL
+        RETURNING id
+      ), insertable_customer AS (
+        SELECT $1 AS better_auth_user_id,
+               $2 AS name,
+               $3 AS email,
+               $4 AS phone
+        WHERE NOT EXISTS (SELECT 1 FROM claimed_legacy_customer)
+      )
       INSERT INTO customers (
         better_auth_user_id,
         name,
@@ -177,7 +200,8 @@ export async function syncCustomer(user: BetterAuthUser): Promise<void> {
         created_at,
         updated_at
       )
-      VALUES ($1, $2, $3, $4, NOW(), NOW())
+      SELECT better_auth_user_id, name, email, phone, NOW(), NOW()
+      FROM insertable_customer
       ON CONFLICT (better_auth_user_id)
       DO UPDATE SET
         name = CASE
@@ -201,7 +225,17 @@ export async function syncCustomer(user: BetterAuthUser): Promise<void> {
       [user.id, user.name || 'Customer', email, user.phoneNumber || ''],
     )
 
-    const customer = result.rows[0]
+    const customer =
+      result.rows[0] ||
+      (
+        await pool.query(
+          `SELECT id, name, email, phone
+           FROM customers
+           WHERE better_auth_user_id = $1
+           LIMIT 1`,
+          [user.id],
+        )
+      ).rows[0]
     console.log('[Auth Sync] Customer upserted successfully:', {
       id: customer.id,
       name: customer.name,

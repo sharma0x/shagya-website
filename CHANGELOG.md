@@ -1,3 +1,30 @@
+## [1.24.2](https://github.com/sharma0x/shagya-website/compare/v1.24.1...v1.24.2) (2026-09-23)
+
+### Bug Fixes
+
+- **checkout:** normalize COD product IDs ([87c6069](https://github.com/sharma0x/shagya-website/commit/87c606981f13581f04b503bb7ce7d4cea1ccdd5d))
+
+## [1.24.1](https://github.com/sharma0x/shagya-website/compare/v1.24.0...v1.24.1) (2026-09-23)
+
+### Bug Fixes
+
+- **homepage:** show more products on desktop ([22d941d](https://github.com/sharma0x/shagya-website/commit/22d941decfe23008294acd3e4b6162ffaed573fd))
+- **checkout:** synchronize cart before order placement ([846b1a4](https://github.com/sharma0x/shagya-website/commit/846b1a4d0d07f58f95765b62738877f0018f4f17))
+- **checkout:** update express delivery estimate ([efa96e5](https://github.com/sharma0x/shagya-website/commit/efa96e5c350a21f5774dfedac7564952a1c8a129))
+
+## [1.24.0](https://github.com/sharma0x/shagya-website/compare/v1.23.5...v1.24.0) (2026-09-23)
+
+### Features
+
+- **footer:** source fabric links from Payload ([13c980b](https://github.com/sharma0x/shagya-website/commit/13c980b2eab2e00b52e38447ba441d108f35c6b2))
+
+### Bug Fixes
+
+- **checkout:** clarify standard delivery packing ([069539f](https://github.com/sharma0x/shagya-website/commit/069539fb8c9b3c97409465f4c30137a0ae03f93f))
+- **checkout:** clear client cart after order success ([ccd3dd4](https://github.com/sharma0x/shagya-website/commit/ccd3dd4b6345e41aedad12ef64b8fd7466bac7a9))
+- **checkout:** consume cart atomically after ordering ([3aeba0f](https://github.com/sharma0x/shagya-website/commit/3aeba0f8c32fb6663d86691a6fddd73817060173))
+- **checkout:** limit COD orders to 4000 ([e9d0e8d](https://github.com/sharma0x/shagya-website/commit/e9d0e8d3c4ef75cee1a0fd0a2fbff966c1f33259))
+
 ## [1.23.5](https://github.com/sharma0x/shagya-website/compare/v1.23.4...v1.23.5) (2026-09-23)
 
 ### Bug Fixes

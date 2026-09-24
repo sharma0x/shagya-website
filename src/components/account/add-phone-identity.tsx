@@ -5,6 +5,10 @@ import { usePhoneVerify } from '@/hooks/use-phone-verify'
 import { PhoneInput } from '@/components/ui/phone-input'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import {
+  isValidE164PhoneNumber,
+  normalizePhoneNumber,
+} from '@/lib/phone-number'
 import { Loader2, Smartphone, CheckCircle2, X } from 'lucide-react'
 
 interface AddPhoneIdentityProps {
@@ -29,12 +33,12 @@ export function AddPhoneIdentity({
     try {
       setLinkError(null)
 
-      // Call API to link phone identity
+      const normalizedPhoneNumber = normalizePhoneNumber(phoneNumber)
       const response = await fetch('/api/phone-identity', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          phoneNumber,
+          phoneNumber: normalizedPhoneNumber,
           firebaseIdToken: idToken,
         }),
       })
@@ -65,7 +69,13 @@ export function AddPhoneIdentity({
     e.preventDefault()
     setLinkError(null)
 
-    if (!phoneNumber.startsWith('+')) {
+    let normalizedPhoneNumber: string
+    try {
+      normalizedPhoneNumber = normalizePhoneNumber(phoneNumber)
+      if (!isValidE164PhoneNumber(normalizedPhoneNumber)) {
+        throw new Error('Enter a valid phone number')
+      }
+    } catch {
       setLinkError(
         'Phone number must include country code (e.g., +919876543210)',
       )
@@ -73,7 +83,7 @@ export function AddPhoneIdentity({
     }
 
     try {
-      await sendOTP(phoneNumber)
+      await sendOTP(normalizedPhoneNumber)
       setOtpSent(true)
     } catch (err) {
       console.error('Failed to send OTP:', err)
@@ -123,7 +133,7 @@ export function AddPhoneIdentity({
 
       {(error || linkError) && (
         <Alert variant="destructive">
-          <AlertDescription>{error?.message || linkError}</AlertDescription>
+          <AlertDescription>{linkError || error?.message}</AlertDescription>
         </Alert>
       )}
 

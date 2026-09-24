@@ -10,7 +10,7 @@ export const { signIn, signUp, useSession, signOut, sendVerificationEmail } =
 
 // Manual Firebase auth methods (calling endpoints directly due to firebaseAuthClientPlugin type issues)
 export const signInWithPhone = async (data: { idToken: string }) => {
-  return authClient.$fetch('/firebase-auth/sign-in-with-phone', {
+  return authClient.$fetch('/phone-auth/sign-in', {
     method: 'POST',
     body: data,
   })

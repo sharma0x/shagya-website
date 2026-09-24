@@ -56,6 +56,13 @@ export function ProductCarousel({
         ))}
       </div>
 
+      {/* Tablet + Desktop: full grid, all products visible */}
+      <div className="hidden sm:grid sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
+        {products.map((p) => (
+          <ProductCard key={p.id} product={p} badge={badge} />
+        ))}
+      </div>
+
       {/* Show more button */}
       {hasMore && (
         <div className="mt-4 flex justify-center">
@@ -80,13 +87,6 @@ export function ProductCarousel({
           </button>
         </div>
       )}
-
-      {/* Tablet + Desktop: full grid, all products visible */}
-      <div className="hidden sm:grid sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
-        {products.map((p) => (
-          <ProductCard key={p.id} product={p} badge={badge} />
-        ))}
-      </div>
     </div>
   )
 }
