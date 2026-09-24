@@ -1,3 +1,9 @@
+## [1.26.3](https://github.com/sharma0x/shagya-website/compare/v1.26.2...v1.26.3) (2026-09-24)
+
+### Bug Fixes
+
+- **analytics:** send the standard initial PageView ([62c7728](https://github.com/sharma0x/shagya-website/commit/62c77289f9775fab5ff23023a0cb4b76820274e3))
+
 ## [1.26.2](https://github.com/sharma0x/shagya-website/compare/v1.26.1...v1.26.2) (2026-09-24)
 
 ### Bug Fixes
