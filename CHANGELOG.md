@@ -1,3 +1,9 @@
+## [1.26.5](https://github.com/sharma0x/shagya-website/compare/v1.26.4...v1.26.5) (2026-09-24)
+
+### Bug Fixes
+
+- **analytics:** add Meta Pixel noscript fallback ([f84adf7](https://github.com/sharma0x/shagya-website/commit/f84adf71d9d618be1f572d3f6417b15ab9ee5bfc))
+
 ## [1.26.4](https://github.com/sharma0x/shagya-website/compare/v1.26.3...v1.26.4) (2026-09-24)
 
 ### Bug Fixes
