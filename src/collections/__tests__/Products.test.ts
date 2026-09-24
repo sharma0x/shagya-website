@@ -153,6 +153,19 @@ describe('Products collection', () => {
       expect(result.productCode).toBe('SHG-CUSTOM-01')
     })
 
+    it('normalizes user-entered productCode to uppercase', async () => {
+      const hook = Products.hooks?.beforeChange?.[0]
+      expect(hook).toBeDefined()
+      if (!hook) return
+
+      const result = await hook({
+        data: { name: 'Custom Code Saree', productCode: 'shg-special-99' },
+        operation: 'update',
+      } as any)
+
+      expect(result.productCode).toBe('SHG-SPECIAL-99')
+    })
+
     it('cleans up empty string productCode to allow auto-generation', async () => {
       const hook = Products.hooks?.beforeChange?.[0]
       expect(hook).toBeDefined()

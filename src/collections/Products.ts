@@ -28,9 +28,9 @@ export const Products: CollectionConfig = {
             .replace(/^-+|-+$/g, '')
         }
 
-        // Clean up productCode if empty string
+        // Clean up and normalize productCode if string provided
         if (typeof data?.productCode === 'string') {
-          data.productCode = data.productCode.trim()
+          data.productCode = data.productCode.trim().toUpperCase()
           if (!data.productCode) {
             delete data.productCode
           }
