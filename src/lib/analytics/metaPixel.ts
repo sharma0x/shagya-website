@@ -23,35 +23,42 @@ export const isMetaPixelEnabled = META_PIXEL_ID.length > 0
 
 const META_SCRIPT_ID = 'meta-pixel-script'
 let pixelInitialized = false
+let queuedCalls: unknown[][] = []
 
-function createFbq(): Fbq {
-  const fbq = ((...args: unknown[]) => {
-    fbq.queue?.push(args)
-  }) as Fbq
-  fbq.queue = []
-  fbq.loaded = true
-  fbq.version = '2.0'
-  return fbq
-}
+function flushQueuedCalls(): void {
+  if (typeof window === 'undefined' || !window.fbq) return
 
-if (typeof window !== 'undefined' && !window.fbq) {
-  window.fbq = createFbq()
+  const pendingCalls = queuedCalls
+  queuedCalls = []
+  pendingCalls.forEach((args) => window.fbq?.(...args))
 }
 
 export function fbq(...args: unknown[]): void {
   if (typeof window === 'undefined') return
-  window.fbq?.(...args)
+
+  if (window.fbq) {
+    window.fbq(...args)
+    return
+  }
+
+  queuedCalls.push(args)
 }
 
 export function loadMetaPixelScript(): void {
   if (typeof document === 'undefined' || !isMetaPixelEnabled) return
-  if (document.getElementById(META_SCRIPT_ID)) return
+
+  const existingScript = document.getElementById(META_SCRIPT_ID)
+  if (existingScript) {
+    if (window.fbq?.loaded) flushQueuedCalls()
+    return
+  }
 
   const script = document.createElement('script')
   script.id = META_SCRIPT_ID
   script.async = true
   script.defer = true
   script.src = 'https://connect.facebook.net/en_US/fbevents.js'
+  script.addEventListener('load', flushQueuedCalls, { once: true })
   document.head.appendChild(script)
 }
 
