@@ -4,10 +4,13 @@ import type { BetterAuthPlugin } from 'better-auth'
 import type { Auth } from 'firebase-admin/auth'
 import {
   getPhoneIdentityByPhoneNumber,
+  getPhoneIdentityByUserId,
+  createPhoneIdentity,
   linkFirebaseAccountToUser,
   PHONE_LINKED_TO_ANOTHER_ACCOUNT,
   type FirebaseAccountLinker,
 } from './phone-identity'
+import { getDbPool } from './db-pool'
 import { isValidE164PhoneNumber, normalizePhoneNumber } from './phone-number'
 
 interface PhoneIdentityAuthPluginOptions {
@@ -105,15 +108,44 @@ export function phoneIdentityAuthPlugin({
             ? decodedToken
             : { ...decodedToken, email: `${decodedToken.uid}@phone.shayga.in` }
 
-          return ctx.json(
-            await createOrUpdateUser(
-              ctx,
-              resolvedToken,
-              idToken,
-              7,
-              decodedToken.email ? undefined : { firebaseAdminAuth },
-            ),
+          const userResult = await createOrUpdateUser(
+            ctx,
+            resolvedToken,
+            idToken,
+            7,
+            decodedToken.email ? undefined : { firebaseAdminAuth },
           )
+
+          if (userResult?.user?.id) {
+            try {
+              const pool = getDbPool()
+              const currentIdentity = await getPhoneIdentityByUserId(
+                userResult.user.id,
+              )
+              if (!currentIdentity) {
+                await pool.query(
+                  `DELETE FROM phone_identities WHERE (phone_number = $1 OR firebase_uid = $2) AND user_id != $3`,
+                  [phoneNumber, decodedToken.uid, userResult.user.id],
+                )
+                await createPhoneIdentity({
+                  userId: userResult.user.id,
+                  phoneNumber,
+                  firebaseUid: decodedToken.uid,
+                })
+              }
+              await pool.query(
+                `UPDATE "user" SET "phoneNumber" = $1 WHERE id = $2 AND ("phoneNumber" IS NULL OR "phoneNumber" = '')`,
+                [phoneNumber, userResult.user.id],
+              )
+            } catch (identityErr) {
+              console.error(
+                '[Phone Auth] Failed to ensure phone identity on sign-in:',
+                identityErr,
+              )
+            }
+          }
+
+          return ctx.json(userResult)
         },
       ),
     },
