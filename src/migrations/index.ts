@@ -38,6 +38,7 @@ import * as migration_20260920_000000_add_customer_unique_constraints from './20
 import * as migration_20260920_000001_fix_phone_identities_constraint from './20260920_000001_fix_phone_identities_constraint'
 import * as migration_20260920_120000_add_stock_movements_and_order_stock_flags from './20260920_120000_add_stock_movements_and_order_stock_flags'
 import * as migration_20260924_000000_add_collection_quantity_coupon from './20260924_000000_add_collection_quantity_coupon'
+import * as migration_20260925_000000_make_products_product_code_nullable from './20260925_000000_make_products_product_code_nullable'
 
 export const migrations = [
   {
@@ -239,5 +240,10 @@ export const migrations = [
     up: migration_20260924_000000_add_collection_quantity_coupon.up,
     down: migration_20260924_000000_add_collection_quantity_coupon.down,
     name: '20260924_000000_add_collection_quantity_coupon',
+  },
+  {
+    up: migration_20260925_000000_make_products_product_code_nullable.up,
+    down: migration_20260925_000000_make_products_product_code_nullable.down,
+    name: '20260925_000000_make_products_product_code_nullable',
   },
 ]
