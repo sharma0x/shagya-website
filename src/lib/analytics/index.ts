@@ -1,5 +1,6 @@
 export * from './types'
 export * from './gtag'
+export * from './metaPixel'
 export * from './mappers'
 export * from './events'
 export * from './flags'
