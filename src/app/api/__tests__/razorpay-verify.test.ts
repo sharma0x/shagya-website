@@ -52,6 +52,10 @@ vi.mock('@/lib/cart-prices', () => ({
     ...item,
     unitPrice: priceMap.get(String(item.product))?.basePrice ?? item.unitPrice,
   })),
+  requireCurrentPrice: vi.fn(
+    (item: any, priceMap: Map<string, any>) =>
+      priceMap.get(String(item.product))?.basePrice ?? item.unitPrice,
+  ),
 }))
 
 vi.mock('@/lib/stock', () => ({
