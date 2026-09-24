@@ -1,3 +1,9 @@
+## [1.24.3](https://github.com/sharma0x/shagya-website/compare/v1.24.2...v1.24.3) (2026-09-24)
+
+### Bug Fixes
+
+- **homepage:** place show more below products ([e2edfd7](https://github.com/sharma0x/shagya-website/commit/e2edfd74f09b470bba09d4336a0199743678cd1d))
+
 ## [1.24.2](https://github.com/sharma0x/shagya-website/compare/v1.24.1...v1.24.2) (2026-09-23)
 
 ### Bug Fixes
