@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useEffect } from 'react'
+import { Suspense, useEffect, useRef } from 'react'
 import { usePathname, useSearchParams } from 'next/navigation'
 import {
   initializeMetaPixel,
@@ -34,8 +34,17 @@ function MetaPixelInner() {
     return initCartAnalytics()
   }, [])
 
+  const previousRouteKey = useRef<string | null>(null)
+
   useEffect(() => {
     if (!isMetaPixelEnabled) return
+    if (previousRouteKey.current === null) {
+      previousRouteKey.current = routeKey
+      if (!window.fbq?.loaded) trackMetaEvent(META_EVENTS.PAGE_VIEW)
+      return
+    }
+    if (previousRouteKey.current === routeKey) return
+    previousRouteKey.current = routeKey
     trackMetaEvent(META_EVENTS.PAGE_VIEW)
   }, [routeKey])
 
