@@ -12,13 +12,11 @@ import {
   AlertCircle,
   Loader2,
 } from 'lucide-react'
-import { PhoneInput } from '@/components/ui/phone-input'
 import { trackSignUp } from '@/lib/analytics'
 
 export default function RegisterPage() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
-  const [phoneNumber, setPhoneNumber] = useState('')
   const [otp, setOtp] = useState('')
   const [otpSent, setOtpSent] = useState(false)
   const [error, setError] = useState('')
@@ -35,16 +33,29 @@ export default function RegisterPage() {
       setError('Please enter a valid email address')
       return
     }
+    const normalizedEmail = email.trim().toLowerCase()
     setLoading(true)
     try {
+      const statusRes = await fetch(
+        `/api/auth/account-status?email=${encodeURIComponent(normalizedEmail)}`,
+      )
+      if (!statusRes.ok) {
+        throw new Error('Could not check this email. Please try again.')
+      }
+      const statusData = await statusRes.json()
+      if (statusData.exists) {
+        setError('An account with this email already exists. Sign in instead.')
+        return
+      }
+
       const res = await fetch('/api/auth/email-otp/send-verification-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, type: 'sign-in' }),
+        body: JSON.stringify({ email: normalizedEmail, type: 'sign-in' }),
       })
       if (!res.ok) {
         const data = await res.json()
-        throw new Error(data.message || 'Failed to send OTP')
+        throw new Error(data.message || data.error || 'Failed to send OTP')
       }
       setOtpSent(true)
       startCooldown()
@@ -67,14 +78,13 @@ export default function RegisterPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email,
+          email: email.trim().toLowerCase(),
           otp,
           name,
-          ...(phoneNumber ? { phoneNumber } : {}),
         }),
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.message || 'Invalid OTP')
+      if (!res.ok) throw new Error(data.message || data.error || 'Invalid OTP')
       trackSignUp('email_otp')
       window.location.href = '/account'
     } catch (err: any) {
@@ -82,7 +92,7 @@ export default function RegisterPage() {
     } finally {
       setLoading(false)
     }
-  }, [email, otp, name, phoneNumber])
+  }, [email, otp, name])
 
   const handleGoogleSignIn = async () => {
     try {
@@ -140,21 +150,6 @@ export default function RegisterPage() {
                     disabled={otpSent}
                   />
                   <User className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-neutral-400" />
-                </div>
-              </div>
-
-              <div>
-                <label className="font-display block text-xs font-semibold tracking-wider text-neutral-500 uppercase">
-                  Phone Number (Optional)
-                </label>
-                <div className="mt-2">
-                  <PhoneInput
-                    value={phoneNumber}
-                    onChange={setPhoneNumber}
-                    placeholder="98765 43210"
-                    className="h-11"
-                    disabled={otpSent}
-                  />
                 </div>
               </div>
 

@@ -18,7 +18,11 @@ export async function GET(request: Request) {
     if (email) {
       const pool = getDbPool()
       const result = await pool.query(
-        'SELECT EXISTS(SELECT 1 FROM "user" WHERE LOWER(email) = LOWER($1)) AS exists',
+        `SELECT EXISTS(
+          SELECT 1 FROM "user" WHERE LOWER(email) = LOWER($1)
+          UNION ALL
+          SELECT 1 FROM customers WHERE LOWER(email) = LOWER($1)
+        ) AS exists`,
         [email],
       )
       return NextResponse.json({ exists: result.rows[0]?.exists ?? false })

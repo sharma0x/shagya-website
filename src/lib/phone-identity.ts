@@ -1,4 +1,9 @@
 import { getDbPool } from './db-pool'
+import {
+  isValidE164PhoneNumber,
+  normalizePhoneNumber,
+  PHONE_LINKED_TO_ANOTHER_ACCOUNT,
+} from './phone-number'
 
 /**
  * Phone Identity Management Service
@@ -29,31 +34,70 @@ export interface UpdatePhoneIdentityInput {
   firebaseUid: string
 }
 
-/**
- * Validates E.164 phone number format
- * E.164 format: +[country code][number] (e.g., +919876543210)
- */
-export function isValidE164PhoneNumber(phone: string): boolean {
-  // E.164 regex: + followed by 1-15 digits
-  const e164Regex = /^\+[1-9]\d{1,14}$/
-  return e164Regex.test(phone)
+export interface FirebaseAccountOwner {
+  id: string
+  userId: string
 }
 
-/**
- * Normalizes phone number to E.164 format (strips spaces, dashes, etc.)
- */
-export function normalizePhoneNumber(phone: string): string {
-  // Remove all non-digit characters except leading +
-  const normalized = phone.replace(/[^\d+]/g, '')
+export interface FirebaseAccountLinker {
+  linkAccount(input: {
+    providerId: string
+    accountId: string
+    userId: string
+    idToken?: string
+    accessTokenExpiresAt?: Date
+  }): Promise<{ id: string }>
+}
 
-  // Ensure it starts with +
-  if (!normalized.startsWith('+')) {
-    throw new Error('Phone number must start with + and country code')
+export { PHONE_LINKED_TO_ANOTHER_ACCOUNT } from './phone-number'
+export async function getFirebaseAccountOwner(
+  firebaseUid: string,
+): Promise<FirebaseAccountOwner | null> {
+  const result = await pool.query<FirebaseAccountOwner>(
+    `SELECT "id", "userId"
+     FROM "account"
+     WHERE "providerId" = 'firebase' AND "accountId" = $1
+     LIMIT 2`,
+    [firebaseUid],
+  )
+
+  if (result.rows.length > 1) {
+    throw new Error('Multiple Firebase accounts are linked to this identity')
   }
 
-  return normalized
+  return result.rows[0] ?? null
 }
 
+export async function linkFirebaseAccountToUser(
+  linker: FirebaseAccountLinker,
+  input: {
+    userId: string
+    firebaseUid: string
+    idToken?: string
+    accessTokenExpiresAt?: Date
+  },
+): Promise<FirebaseAccountOwner | null> {
+  const existing = await getFirebaseAccountOwner(input.firebaseUid)
+
+  if (existing) {
+    if (existing.userId !== input.userId) {
+      throw new Error(PHONE_LINKED_TO_ANOTHER_ACCOUNT)
+    }
+    return existing
+  }
+
+  const account = await linker.linkAccount({
+    providerId: 'firebase',
+    accountId: input.firebaseUid,
+    userId: input.userId,
+    idToken: input.idToken,
+    accessTokenExpiresAt: input.accessTokenExpiresAt,
+  })
+
+  return { id: account.id, userId: input.userId }
+}
+
+export { isValidE164PhoneNumber, normalizePhoneNumber } from './phone-number'
 /**
  * Check if a phone number is already linked to an account
  */
