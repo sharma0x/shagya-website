@@ -7,6 +7,7 @@ const mockBeginTransaction = vi.fn()
 const mockCommitTransaction = vi.fn()
 const mockRollbackTransaction = vi.fn()
 const mockGetSession = vi.fn()
+const mockFindOrRepairCustomer = vi.fn()
 let currentBasePrice = 2500
 let serverBasePrice = 2500
 
@@ -31,7 +32,7 @@ vi.mock('@/lib/auth', () => ({
 }))
 
 vi.mock('@/lib/auth-sync', () => ({
-  findOrRepairCustomer: vi.fn(async () => ({ id: 7 })),
+  findOrRepairCustomer: mockFindOrRepairCustomer,
 }))
 
 vi.mock('@/lib/cart-prices', () => ({
@@ -113,6 +114,12 @@ beforeEach(async () => {
   serverBasePrice = 2500
   mockGetSession.mockResolvedValue({
     user: { id: 'user-1', email: 'test@example.com' },
+  })
+  mockFindOrRepairCustomer.mockResolvedValue({
+    id: 7,
+    name: 'Prince Sharma',
+    email: 'prince@example.com',
+    phone: '+919999999999',
   })
   mockFind.mockImplementation(
     async ({ collection }: { collection: string }) => {
@@ -213,6 +220,36 @@ describe('POST /api/razorpay/verify', () => {
     expect(mockCreate).not.toHaveBeenCalled()
     expect(mockUpdate).not.toHaveBeenCalled()
     expect(mockBeginTransaction).not.toHaveBeenCalled()
+  })
+
+  it('uses the saved customer email for authenticated orders', async () => {
+    mockGetSession.mockResolvedValue({
+      user: {
+        id: 'phone-user-1',
+        email: 'rtp1haspgkdtdtlngcsfw5fyfse2@phone.shayga.in',
+        phoneNumber: '+919999999999',
+      },
+    })
+    mockFindOrRepairCustomer.mockResolvedValue({
+      id: 7,
+      name: 'Prince Sharma',
+      email: 'prince@example.com',
+      phone: '+919999999999',
+    })
+
+    const response = await POST(createRequest(false))
+    const body = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(body.success).toBe(true)
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        collection: 'orders',
+        data: expect.objectContaining({
+          customerEmail: 'prince@example.com',
+        }),
+      }),
+    )
   })
 
   it('rolls back the order when consuming the cart fails', async () => {

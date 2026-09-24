@@ -130,7 +130,10 @@ export async function POST(request: Request) {
 
     if (session?.user) {
       customer = await findOrRepairCustomer(session.user.id)
-      customerEmail = customerEmail || session.user.email || ''
+      const savedCustomerEmail =
+        typeof customer?.email === 'string' ? customer.email.trim() : ''
+      customerEmail =
+        customerEmail || savedCustomerEmail || session.user.email || ''
       customerPhone = customerPhone || (session.user as any).phoneNumber || ''
     }
 
