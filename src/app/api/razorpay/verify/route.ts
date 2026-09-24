@@ -360,6 +360,23 @@ export async function POST(request: Request) {
         ])
         const expectedAmount = Math.round(total * 100)
 
+        let paymentStatus = payment.status
+        if (paymentStatus === 'authorized') {
+          try {
+            const capturedPayment = await razorpay.payments.capture(
+              razorpay_payment_id,
+              expectedAmount,
+              'INR',
+            )
+            paymentStatus = capturedPayment.status
+          } catch (captureErr) {
+            console.error(
+              '[Razorpay Verify] Payment capture attempt failed:',
+              captureErr,
+            )
+          }
+        }
+
         if (
           remoteOrder.id !== razorpay_order_id ||
           remoteOrder.amount !== expectedAmount ||
@@ -367,7 +384,7 @@ export async function POST(request: Request) {
           payment.order_id !== razorpay_order_id ||
           payment.amount !== expectedAmount ||
           payment.currency !== 'INR' ||
-          payment.status !== 'captured'
+          (paymentStatus !== 'captured' && paymentStatus !== 'authorized')
         ) {
           return NextResponse.json(
             { error: 'Payment amount or status could not be verified' },
