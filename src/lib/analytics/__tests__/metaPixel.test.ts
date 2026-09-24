@@ -47,7 +47,7 @@ describe('Meta Pixel adapter', () => {
     })
   })
 
-  it('initializes once and queues events before the script loads', async () => {
+  it('initializes once and flushes events after the script loads', async () => {
     const { initializeMetaPixel, META_EVENTS, trackMetaEvent } =
       await import('../metaPixel')
 
@@ -55,16 +55,24 @@ describe('Meta Pixel adapter', () => {
     initializeMetaPixel()
     trackMetaEvent(META_EVENTS.PAGE_VIEW)
 
-    const queue = window.fbq?.queue ?? []
-    expect(queue[0]).toEqual(['init', 'test-pixel-id'])
-    expect(queue.filter((entry) => entry[0] === 'init')).toHaveLength(1)
-    expect(queue[1]).toEqual(['track', 'PageView', {}])
-    expect(document.getElementById('meta-pixel-script')).not.toBeNull()
+    expect(window.fbq).toBeUndefined()
+    const script = document.getElementById('meta-pixel-script')
+    expect(script).not.toBeNull()
+
+    const fbq = vi.fn()
+    window.fbq = fbq as typeof window.fbq
+    script?.dispatchEvent(new Event('load'))
+
+    expect(fbq).toHaveBeenNthCalledWith(1, 'init', 'test-pixel-id')
+    expect(fbq).toHaveBeenNthCalledWith(2, 'track', 'PageView', {})
+    expect(fbq.mock.calls.filter(([event]) => event === 'init')).toHaveLength(1)
   })
 
   it('routes shared storefront events to Meta payloads', async () => {
+    const { initializeMetaPixel } = await import('../metaPixel')
     const { trackPurchase, trackSearch } = await import('../events')
 
+    initializeMetaPixel()
     trackSearch('silk saree')
     trackPurchase({
       transactionId: 'ORD-30',
@@ -75,13 +83,18 @@ describe('Meta Pixel adapter', () => {
       ],
     })
 
-    const queue = window.fbq?.queue ?? []
-    expect(queue[0]).toEqual([
-      'track',
-      'Search',
-      { search_string: 'silk saree' },
-    ])
-    expect(queue[1]).toEqual([
+    const fbq = vi.fn()
+    window.fbq = fbq as typeof window.fbq
+    document
+      .getElementById('meta-pixel-script')
+      ?.dispatchEvent(new Event('load'))
+
+    expect(fbq).toHaveBeenNthCalledWith(1, 'init', 'test-pixel-id')
+    expect(fbq).toHaveBeenNthCalledWith(2, 'track', 'Search', {
+      search_string: 'silk saree',
+    })
+    expect(fbq).toHaveBeenNthCalledWith(
+      3,
       'track',
       'Purchase',
       expect.objectContaining({
@@ -89,7 +102,7 @@ describe('Meta Pixel adapter', () => {
         content_ids: ['42', '7'],
         value: 13500,
       }),
-    ])
+    )
   })
 
   it('does not load when the Pixel ID is absent', async () => {
@@ -101,6 +114,6 @@ describe('Meta Pixel adapter', () => {
 
     expect(isMetaPixelEnabled).toBe(false)
     expect(document.getElementById('meta-pixel-script')).toBeNull()
-    expect(window.fbq?.queue).toEqual([])
+    expect(window.fbq).toBeUndefined()
   })
 })
