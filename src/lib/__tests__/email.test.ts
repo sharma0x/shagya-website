@@ -1,5 +1,8 @@
-import { describe, it, expect, vi, afterEach } from 'vitest'
+import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
 import { sendEmail } from '../email'
+import { getServerURL } from '../env'
+import { buildOrderURL } from '../../email/send'
+import { renderEmail } from '../../email/render'
 
 describe('sendEmail', () => {
   const originalEnv = process.env
@@ -102,5 +105,60 @@ describe('sendEmail', () => {
       2,
       '[Email] Would send to second@example.com: Second',
     )
+  })
+})
+
+describe('email URLs', () => {
+  const originalEnv = process.env
+
+  beforeEach(() => {
+    vi.stubGlobal('window', undefined)
+  })
+
+  afterEach(() => {
+    process.env = { ...originalEnv }
+    vi.unstubAllGlobals()
+  })
+
+  it('uses the production domain when no runtime public URL is configured', () => {
+    process.env = { ...process.env, NODE_ENV: 'production' }
+    process.env.PAYLOAD_PUBLIC_SERVER_URL = ''
+    process.env.NEXT_PUBLIC_SERVER_URL = 'http://localhost:3000'
+    delete process.env.VERCEL_URL
+
+    expect(getServerURL()).toBe('https://shayga.in')
+  })
+
+  it('uses the runtime public URL before production defaults', () => {
+    process.env.PAYLOAD_PUBLIC_SERVER_URL = 'https://preview.shayga.in'
+
+    expect(getServerURL()).toBe('https://preview.shayga.in')
+  })
+
+  it('builds a URL-encoded customer order link', () => {
+    expect(buildOrderURL('https://shayga.in', 'ORD 42/ABC')).toBe(
+      'https://shayga.in/account/orders/ORD%2042%2FABC',
+    )
+  })
+
+  it('renders the customer order link in the default template', async () => {
+    const payload = {
+      find: vi.fn().mockResolvedValue({ docs: [] }),
+    }
+
+    const { html } = await renderEmail(
+      payload as never,
+      'order-confirmed-customer',
+      {
+        orderNumber: 'ORD-00001',
+        customerName: 'Client',
+        paymentId: 'payment-1',
+        total: '1000',
+        storeUrl: 'https://shayga.in',
+        orderUrl: 'https://shayga.in/account/orders/ORD-00001',
+      },
+    )
+
+    expect(html).toContain('href="https://shayga.in/account/orders/ORD-00001"')
   })
 })

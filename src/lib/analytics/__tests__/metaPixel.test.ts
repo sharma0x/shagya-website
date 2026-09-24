@@ -102,7 +102,115 @@ describe('Meta Pixel adapter', () => {
         content_ids: ['42', '7'],
         value: 13500,
       }),
+      { eventID: 'ORD-30' },
     )
+  })
+
+  it('routes custom events through trackCustom', async () => {
+    const { initializeMetaPixel } = await import('../metaPixel')
+    const { trackViewCart, trackShare } = await import('../events')
+
+    initializeMetaPixel()
+    trackViewCart({
+      items: [
+        { item_id: '10', item_name: 'Organza Saree', price: 8000, quantity: 1 },
+      ],
+      value: 8000,
+    })
+    trackShare({
+      method: 'whatsapp',
+      contentType: 'product',
+      itemId: '10',
+    })
+
+    const fbq = vi.fn()
+    window.fbq = fbq as typeof window.fbq
+    document
+      .getElementById('meta-pixel-script')
+      ?.dispatchEvent(new Event('load'))
+
+    expect(fbq).toHaveBeenNthCalledWith(1, 'init', 'test-pixel-id')
+    expect(fbq).toHaveBeenNthCalledWith(
+      2,
+      'trackCustom',
+      'ViewCart',
+      expect.objectContaining({
+        content_ids: ['10'],
+        value: 8000,
+      }),
+    )
+    expect(fbq).toHaveBeenNthCalledWith(
+      3,
+      'trackCustom',
+      'Share',
+      expect.objectContaining({
+        method: 'whatsapp',
+        content_type: 'product',
+        content_ids: ['10'],
+      }),
+    )
+  })
+
+  it('includes complete standard parameters for AddToWishlist and AddToCart', async () => {
+    const { initializeMetaPixel } = await import('../metaPixel')
+    const { trackAddToWishlist, trackAddToCart } = await import('../events')
+
+    initializeMetaPixel()
+    trackAddToWishlist({
+      id: 55,
+      name: 'Paithani Saree',
+      basePrice: 22000,
+      weave: 'paithani',
+    })
+    trackAddToCart({
+      item: {
+        item_id: '55',
+        item_name: 'Paithani Saree',
+        item_category: 'paithani',
+        price: 22000,
+        quantity: 1,
+      },
+    })
+
+    const fbq = vi.fn()
+    window.fbq = fbq as typeof window.fbq
+    document
+      .getElementById('meta-pixel-script')
+      ?.dispatchEvent(new Event('load'))
+
+    expect(fbq).toHaveBeenNthCalledWith(
+      2,
+      'track',
+      'AddToWishlist',
+      expect.objectContaining({
+        content_ids: ['55'],
+        content_name: 'Paithani Saree',
+        currency: 'INR',
+        value: 22000,
+      }),
+    )
+    expect(fbq).toHaveBeenNthCalledWith(
+      3,
+      'track',
+      'AddToCart',
+      expect.objectContaining({
+        content_ids: ['55'],
+        content_name: 'Paithani Saree',
+        content_category: 'paithani',
+        currency: 'INR',
+        value: 22000,
+      }),
+    )
+  })
+
+  it('does not send duplicate init when window.fbq was already initialized', async () => {
+    const existingFbq = Object.assign(vi.fn(), { loaded: true })
+    window.fbq = existingFbq as unknown as typeof window.fbq
+
+    const { initializeMetaPixel } = await import('../metaPixel')
+    initializeMetaPixel()
+
+    expect(existingFbq).not.toHaveBeenCalledWith('init', 'test-pixel-id')
   })
 
   it('does not load when the Pixel ID is absent', async () => {

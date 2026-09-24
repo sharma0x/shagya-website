@@ -101,7 +101,7 @@ rm -f "$WORK"/*.bak
 # Fail fast if a key we depend on is absent from the source env file (the sed
 # above is a no-op for missing keys, which would leave Caddy with an empty
 # {$PUBLIC_IP}/{$DOMAIN_NAME} and break the proxy).
-for key in PUBLIC_IP EXTRA_ALLOWED_ORIGINS DOMAIN_NAME NEXT_PUBLIC_SERVER_URL; do
+for key in PUBLIC_IP EXTRA_ALLOWED_ORIGINS DOMAIN_NAME PAYLOAD_PUBLIC_SERVER_URL; do
   if ! grep -q "^$key=" "$WORK/$ENV_NAME"; then
     echo "Error: '$key' is missing from $ENV_SRC — add it before deploying." >&2
     exit 1

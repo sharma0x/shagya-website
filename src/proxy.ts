@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSessionCookie } from 'better-auth/cookies'
+import { getPostLoginRedirect } from '@/lib/auth-redirect'
 
 export async function proxy(request: NextRequest) {
-  const { pathname, origin } = request.nextUrl
+  const { pathname } = request.nextUrl
   const cleanPath = pathname.replace(/\/$/, '')
 
   // 1. Better Auth session check for customers
@@ -14,14 +15,19 @@ export async function proxy(request: NextRequest) {
   if (isCustomerProtected && !sessionCookie) {
     const url = request.nextUrl.clone()
     url.pathname = '/account/login'
-    url.searchParams.set('redirect', pathname)
+    url.search = ''
+    url.searchParams.set('redirect', `${pathname}${request.nextUrl.search}`)
     return NextResponse.redirect(url)
   }
 
   // If logged in customer tries to access login/register, redirect to account
   if (isLoginPage && sessionCookie) {
     const url = request.nextUrl.clone()
-    url.pathname = '/account'
+    const redirectPath = getPostLoginRedirect(request.nextUrl.search)
+    const targetURL = new URL(redirectPath, request.url)
+    url.pathname = targetURL.pathname
+    url.search = targetURL.search
+    url.hash = targetURL.hash
     return NextResponse.redirect(url)
   }
 

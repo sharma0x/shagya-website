@@ -24,7 +24,7 @@ export type TemplateSlug = (typeof EMAIL_TEMPLATE_SLUGS)[number]
 const SLUG_META: Record<TemplateSlug, { label: string; hint: string }> = {
   'order-placed-customer': {
     label: 'Order Placed (Customer)',
-    hint: '{{orderNumber}} {{customerName}} {{orderDate}} {{itemsTable}} {{pricingTable}} {{shippingAddressBlock}} {{storeUrl}}',
+    hint: '{{orderNumber}} {{customerName}} {{orderDate}} {{itemsTable}} {{pricingTable}} {{shippingAddressBlock}} {{orderUrl}}',
   },
   'admin-new-order': {
     label: 'New Order (Admin)',
@@ -32,19 +32,19 @@ const SLUG_META: Record<TemplateSlug, { label: string; hint: string }> = {
   },
   'order-confirmed-customer': {
     label: 'Payment Confirmed (Customer)',
-    hint: '{{orderNumber}} {{customerName}} {{paymentId}} {{total}} {{storeUrl}}',
+    hint: '{{orderNumber}} {{customerName}} {{paymentId}} {{total}} {{orderUrl}}',
   },
   'order-processing-customer': {
     label: 'Order Processing (Customer)',
-    hint: '{{orderNumber}} {{customerName}} {{storeUrl}}',
+    hint: '{{orderNumber}} {{customerName}} {{orderUrl}}',
   },
   'order-shipped-customer': {
     label: 'Order Shipped (Customer)',
-    hint: '{{orderNumber}} {{customerName}} {{storeUrl}}',
+    hint: '{{orderNumber}} {{customerName}} {{orderUrl}}',
   },
   'order-delivered-customer': {
     label: 'Order Delivered (Customer)',
-    hint: '{{orderNumber}} {{customerName}} {{storeUrl}}',
+    hint: '{{orderNumber}} {{customerName}} {{orderUrl}}',
   },
   'order-cancelled-customer': {
     label: 'Order Cancelled (Customer)',
