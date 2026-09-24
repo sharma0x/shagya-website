@@ -18,7 +18,7 @@ export const Products: CollectionConfig = {
   },
   hooks: {
     beforeChange: [
-      async ({ data, req }) => {
+      async ({ data, req, operation, originalDoc }) => {
         if (data?.name) {
           data.slug = data.name
             .toLowerCase()
@@ -27,6 +27,10 @@ export const Products: CollectionConfig = {
             .replace(/-+/g, '-')
             .replace(/^-+|-+$/g, '')
         }
+
+        const hadExplicitEmptyCode =
+          typeof data?.productCode === 'string' &&
+          data.productCode.trim() === ''
 
         // Clean up and normalize productCode if string provided
         if (typeof data?.productCode === 'string') {
@@ -37,7 +41,11 @@ export const Products: CollectionConfig = {
         }
 
         // Auto-generate productCode in format SHG-XXXXX if not already provided
-        if (req?.payload && !data?.productCode && data?.name) {
+        const hasExistingCode = Boolean(
+          data?.productCode ||
+          (!hadExplicitEmptyCode && originalDoc?.productCode),
+        )
+        if (req?.payload && !hasExistingCode && data?.name) {
           try {
             const lastProducts = await req.payload.find({
               collection: 'products',

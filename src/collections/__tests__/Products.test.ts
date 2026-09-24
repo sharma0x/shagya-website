@@ -166,6 +166,42 @@ describe('Products collection', () => {
       expect(result.productCode).toBe('SHG-SPECIAL-99')
     })
 
+    it('allows user to edit productCode on existing product', async () => {
+      const hook = Products.hooks?.beforeChange?.[0]
+      expect(hook).toBeDefined()
+      if (!hook) return
+
+      const result = await hook({
+        data: { productCode: 'my-custom-sku-123' },
+        originalDoc: { id: 1, name: 'Saree', productCode: 'SHG-00001' },
+        operation: 'update',
+      } as any)
+
+      expect(result.productCode).toBe('MY-CUSTOM-SKU-123')
+    })
+
+    it('does not overwrite existing productCode when updating other fields', async () => {
+      const hook = Products.hooks?.beforeChange?.[0]
+      expect(hook).toBeDefined()
+      if (!hook) return
+
+      const mockPayload = {
+        find: async () => ({
+          docs: [{ id: 1, productCode: 'SHG-00050' }],
+        }),
+      }
+
+      const result = await hook({
+        data: { name: 'Renamed Saree' },
+        originalDoc: { id: 1, name: 'Old Saree', productCode: 'SHG-00010' },
+        req: { payload: mockPayload },
+        operation: 'update',
+      } as any)
+
+      // Should not have auto-generated a new code
+      expect(result.productCode).toBeUndefined()
+    })
+
     it('cleans up empty string productCode to allow auto-generation', async () => {
       const hook = Products.hooks?.beforeChange?.[0]
       expect(hook).toBeDefined()
@@ -179,8 +215,9 @@ describe('Products collection', () => {
 
       const result = await hook({
         data: { name: 'Trim Saree', productCode: '   ' },
+        originalDoc: { id: 1, name: 'Trim Saree', productCode: 'SHG-00005' },
         req: { payload: mockPayload },
-        operation: 'create',
+        operation: 'update',
       } as any)
 
       expect(result.productCode).toBe('SHG-00006')
