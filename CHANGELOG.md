@@ -1,3 +1,15 @@
+## [1.27.0](https://github.com/sharma0x/shagya-website/compare/v1.26.5...v1.27.0) (2026-09-24)
+
+### Features
+
+- **products:** normalize user-edited productCode to uppercase ([79794f6](https://github.com/sharma0x/shagya-website/commit/79794f6da2c7822c4f61eb61c6f0d063ab367724))
+
+### Bug Fixes
+
+- **products:** make product_code nullable in db and auto-generate code ([6ba335d](https://github.com/sharma0x/shagya-website/commit/6ba335d0d4dfdd12cbf8844561ec48e09b3c5556))
+- **analytics:** match Meta Pixel canonical snippet ([c878f1f](https://github.com/sharma0x/shagya-website/commit/c878f1fa305de955f0ec871878754bd9d98e91f8))
+- **products:** preserve existing product code and allow manual user edits ([1ea0d90](https://github.com/sharma0x/shagya-website/commit/1ea0d90b8e59d8fcf08be116250d5029f2fc3bba))
+
 ## [1.26.5](https://github.com/sharma0x/shagya-website/compare/v1.26.4...v1.26.5) (2026-09-24)
 
 ### Bug Fixes
