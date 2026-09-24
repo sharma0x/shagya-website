@@ -1,3 +1,17 @@
+## [1.25.0](https://github.com/sharma0x/shagya-website/compare/v1.24.4...v1.25.0) (2026-09-24)
+
+### Features
+
+- **coupons:** add collection quantity promotion schema ([afe5f5c](https://github.com/sharma0x/shagya-website/commit/afe5f5cfc2e73bb9fea4211912aadb21eb640d7f))
+- **coupons:** calculate collection quantity discounts ([656725f](https://github.com/sharma0x/shagya-website/commit/656725fd9d3548e648132eccc389698b4542a49c))
+- **coupons:** integrate collection offers into checkout ([c9ffa21](https://github.com/sharma0x/shagya-website/commit/c9ffa215c1b88bcbd89470f07b027e0eb6963932))
+- **coupons:** integrate collection quantity coupon into develop ([652bc3f](https://github.com/sharma0x/shagya-website/commit/652bc3fb88cfb9d3f5aa151364d9c7c57fadb124))
+- **coupons:** integrate collection quantity coupon into main ([c978215](https://github.com/sharma0x/shagya-website/commit/c97821555afaa11799dcc7f42f2b512e0b82cd79))
+
+### Bug Fixes
+
+- **payments:** capture authorized Razorpay payments ([1de3c43](https://github.com/sharma0x/shagya-website/commit/1de3c431fdc8ca2f83a0ec0419a9babf3b07818b))
+
 ## [1.24.4](https://github.com/sharma0x/shagya-website/compare/v1.24.3...v1.24.4) (2026-09-24)
 
 ### Bug Fixes
