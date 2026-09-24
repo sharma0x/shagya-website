@@ -18,6 +18,12 @@ function CouponGridCard({ coupon }: { coupon: any }) {
   }
 
   const formatDiscount = () => {
+    if (coupon.promotionType === 'buy_quantity') {
+      const collectionLabel = coupon.collectionNames?.length
+        ? ` from ${coupon.collectionNames.join(', ')}`
+        : ' from the selected collection'
+      return `BUY ${coupon.minimumQuantity || 2}${collectionLabel} · ${coupon.value}% OFF`
+    }
     if (coupon.type === 'percentage') return `${coupon.value}% OFF`
     if (coupon.type === 'fixed_amount') return `₹${coupon.value} OFF`
     return 'FREE SHIP'

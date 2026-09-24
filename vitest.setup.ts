@@ -3,6 +3,11 @@ import { afterEach, vi } from 'vitest'
 import { cleanup } from '@testing-library/react'
 import React from 'react'
 
+// Ensure required environment variables for test suites
+process.env.BETTER_AUTH_SECRET =
+  process.env.BETTER_AUTH_SECRET ||
+  'test-better-auth-secret-minimum-32-chars-long-for-testing!'
+
 afterEach(() => {
   cleanup()
 })

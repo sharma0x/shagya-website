@@ -205,6 +205,10 @@ export const enum_orders_shipping_type = pgEnum('enum_orders_shipping_type', [
   'standard',
   'express',
 ])
+export const enum_coupons_promotion_type = pgEnum(
+  'enum_coupons_promotion_type',
+  ['standard', 'buy_quantity'],
+)
 export const enum_coupons_type = pgEnum('enum_coupons_type', [
   'percentage',
   'fixed_amount',
@@ -1216,11 +1220,13 @@ export const orders = pgTable(
     codFee: numeric('cod_fee', { mode: 'number' }).default(0),
     tax: numeric('tax', { mode: 'number' }).default(0),
     discount: numeric('discount', { mode: 'number' }).default(0),
+    discountBreakdown: jsonb('discount_breakdown'),
     coupon: integer('coupon_id').references(() => coupons.id, {
       onDelete: 'set null',
     }),
     total: numeric('total', { mode: 'number' }).notNull(),
     paymentId: varchar('payment_id'),
+    paymentReference: varchar('payment_reference'),
     notes: varchar('notes'),
     confirmedAt: timestamp('confirmed_at', {
       mode: 'string',
@@ -1286,6 +1292,7 @@ export const orders = pgTable(
   (columns) => [
     uniqueIndex('orders_order_number_idx').on(columns.orderNumber),
     index('orders_coupon_idx').on(columns.coupon),
+    uniqueIndex('orders_payment_reference_idx').on(columns.paymentReference),
     index('orders_updated_at_idx').on(columns.updatedAt),
     index('orders_created_at_idx').on(columns.createdAt),
   ],
@@ -1437,8 +1444,12 @@ export const coupons = pgTable(
   {
     id: serial('id').primaryKey(),
     code: varchar('code').notNull(),
+    promotionType: enum_coupons_promotion_type('promotion_type')
+      .notNull()
+      .default('standard'),
     description: varchar('description'),
     influencerCode: varchar('influencer_code'),
+    minimumQuantity: numeric('minimum_quantity', { mode: 'number' }).default(2),
     type: enum_coupons_type('type').notNull().default('percentage'),
     value: numeric('value', { mode: 'number' }),
     minCartValue: numeric('min_cart_value', { mode: 'number' }).default(0),
@@ -5647,6 +5658,7 @@ type DatabaseSchema = {
   enum_variants_color: typeof enum_variants_color
   enum_orders_status: typeof enum_orders_status
   enum_orders_shipping_type: typeof enum_orders_shipping_type
+  enum_coupons_promotion_type: typeof enum_coupons_promotion_type
   enum_coupons_type: typeof enum_coupons_type
   enum_pages_blocks_text_image_image_position: typeof enum_pages_blocks_text_image_image_position
   enum_pages_status: typeof enum_pages_status

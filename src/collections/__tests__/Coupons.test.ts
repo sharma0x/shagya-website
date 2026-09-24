@@ -19,8 +19,8 @@ describe('Coupons collection', () => {
       expect(Coupons.timestamps).toBe(true)
     })
 
-    it('has exactly 16 fields', () => {
-      expect(Coupons.fields).toHaveLength(16)
+    it('has exactly 18 fields', () => {
+      expect(Coupons.fields).toHaveLength(18)
     })
   })
 
@@ -109,6 +109,27 @@ describe('Coupons collection', () => {
       expect(values).toContain('percentage')
       expect(values).toContain('fixed_amount')
       expect(values).toContain('free_shipping')
+    })
+
+    it('supports standard and buy quantity promotion modes', () => {
+      const promotionTypeField = Coupons.fields?.find(
+        (f: any) => f.name === 'promotionType',
+      ) as any
+      const values = promotionTypeField?.options?.map((o: any) => o.value)
+
+      expect(promotionTypeField?.type).toBe('select')
+      expect(values).toEqual(['standard', 'buy_quantity'])
+      expect(promotionTypeField?.defaultValue).toBe('standard')
+    })
+
+    it('has a quantity threshold for collection promotions', () => {
+      const field = Coupons.fields?.find(
+        (f: any) => f.name === 'minimumQuantity',
+      ) as any
+
+      expect(field?.type).toBe('number')
+      expect(field?.min).toBe(1)
+      expect(field?.defaultValue).toBe(2)
     })
   })
 
