@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Public_Sans, Sora, Noto_Sans_Devanagari } from 'next/font/google'
 import { GoogleAnalytics } from '@next/third-parties/google'
+import { MetaPixel } from '@/components/analytics/MetaPixel'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav'
@@ -49,6 +50,7 @@ export default async function RootLayout({
   children: React.ReactNode
 }>) {
   const gaId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID
+  const metaPixelId = process.env.NEXT_PUBLIC_FB_PIXEL_ID
 
   return (
     <html
@@ -67,6 +69,7 @@ export default async function RootLayout({
         />
       </body>
       {gaId && <GoogleAnalytics gaId={gaId} />}
+      {metaPixelId && <MetaPixel />}
     </html>
   )
 }

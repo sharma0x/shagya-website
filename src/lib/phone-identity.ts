@@ -81,7 +81,12 @@ export async function linkFirebaseAccountToUser(
 
   if (existing) {
     if (existing.userId !== input.userId) {
-      throw new Error(PHONE_LINKED_TO_ANOTHER_ACCOUNT)
+      const pool = getDbPool()
+      await pool.query(
+        `UPDATE "account" SET "userId" = $1, "idToken" = COALESCE($2, "idToken"), "updatedAt" = NOW() WHERE id = $3`,
+        [input.userId, input.idToken || null, existing.id],
+      )
+      return { id: existing.id, userId: input.userId }
     }
     return existing
   }

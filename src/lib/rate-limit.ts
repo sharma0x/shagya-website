@@ -134,6 +134,13 @@ export const RATE_LIMITS = {
     message: 'Too many phone verification attempts. Please try again later.',
   },
 
+  // Email verification endpoints
+  EMAIL_VERIFY: {
+    maxRequests: 5,
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    message: 'Too many email verification attempts. Please try again later.',
+  },
+
   // Firebase token verification
   FIREBASE_TOKEN: {
     maxRequests: 10,

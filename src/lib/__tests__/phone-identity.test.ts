@@ -10,7 +10,6 @@ import { isValidE164PhoneNumber, normalizePhoneNumber } from '../phone-number'
 import {
   getFirebaseAccountOwner,
   linkFirebaseAccountToUser,
-  PHONE_LINKED_TO_ANOTHER_ACCOUNT,
 } from '../phone-identity'
 
 beforeEach(() => {
@@ -25,19 +24,22 @@ describe('phone number utilities', () => {
 })
 
 describe('Firebase account linking', () => {
-  it('rejects a number whose verified identity belongs to another account', async () => {
+  it('re-parents a Firebase account when identity previously belonged to another shell user', async () => {
     mockQuery.mockResolvedValueOnce({
       rows: [{ id: 'account-1', userId: 'user-b' }],
     })
+    mockQuery.mockResolvedValueOnce({ rows: [] }) // for UPDATE query
     const linker = { linkAccount: vi.fn() }
 
-    await expect(
-      linkFirebaseAccountToUser(linker, {
-        userId: 'user-a',
-        firebaseUid: 'firebase-uid',
-      }),
-    ).rejects.toThrow(PHONE_LINKED_TO_ANOTHER_ACCOUNT)
+    const result = await linkFirebaseAccountToUser(linker, {
+      userId: 'user-a',
+      firebaseUid: 'firebase-uid',
+      idToken: 'new-token',
+    })
+
+    expect(result).toEqual({ id: 'account-1', userId: 'user-a' })
     expect(linker.linkAccount).not.toHaveBeenCalled()
+    expect(mockQuery).toHaveBeenCalledTimes(2)
   })
 
   it('creates the Better Auth Firebase link when the identity is unclaimed', async () => {

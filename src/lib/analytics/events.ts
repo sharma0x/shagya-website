@@ -9,6 +9,12 @@
 
 import { trackEvent } from './gtag'
 import {
+  META_EVENTS,
+  metaProductParams,
+  mapProductToMetaContent,
+  trackMetaEvent,
+} from './metaPixel'
+import {
   compactParams,
   mapProductToGA4Item,
   round,
@@ -79,6 +85,20 @@ export function trackViewItem(params: {
       items: [item],
     }),
   )
+  trackMetaEvent(META_EVENTS.VIEW_CONTENT, {
+    content_ids: [item.item_id],
+    content_name: item.item_name,
+    content_category: item.item_category,
+    content_type: 'product',
+    currency: SHAYGA_CURRENCY,
+    value: params.value ?? item.price ?? 0,
+    contents: [
+      mapProductToMetaContent(params.product, {
+        price: item.price,
+        quantity: 1,
+      }),
+    ],
+  })
 }
 
 export function trackViewItemList(params: {
@@ -101,6 +121,10 @@ export function trackViewItemList(params: {
       item_list_name: params.listName,
       items,
     }),
+  )
+  trackMetaEvent(
+    META_EVENTS.VIEW_CONTENT,
+    metaProductParams(items.map((item) => ({ ...item, quantity: 1 }))),
   )
 }
 
@@ -138,6 +162,15 @@ export function trackAddToCart(params: {
     value: round((item.price ?? 0) * (item.quantity ?? 1)),
     items: [item],
   })
+  trackMetaEvent(META_EVENTS.ADD_TO_CART, {
+    ...metaProductParams([item]),
+    contents: [
+      mapProductToMetaContent(
+        { id: item.item_id, name: item.item_name },
+        { price: item.price, quantity: item.quantity },
+      ),
+    ],
+  })
 }
 
 export function trackRemoveFromCart(params: {
@@ -165,6 +198,10 @@ export function trackViewCart(params: {
       items: params.items,
     }),
   )
+  trackMetaEvent(
+    META_EVENTS.VIEW_CART,
+    metaProductParams(params.items, params.value),
+  )
 }
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -184,6 +221,10 @@ export function trackBeginCheckout(params: {
       coupon: params.coupon ?? undefined,
       items: params.items,
     }),
+  )
+  trackMetaEvent(
+    META_EVENTS.INITIATE_CHECKOUT,
+    metaProductParams(params.items, params.value),
   )
 }
 
@@ -221,6 +262,10 @@ export function trackAddPaymentInfo(params: {
       items: params.items,
     }),
   )
+  trackMetaEvent(META_EVENTS.ADD_PAYMENT_INFO, {
+    ...metaProductParams(params.items, params.value),
+    payment_type: params.paymentType,
+  })
 }
 
 export function trackPurchase(params: {
@@ -251,6 +296,11 @@ export function trackPurchase(params: {
       items,
     }),
   )
+  trackMetaEvent(META_EVENTS.PURCHASE, {
+    ...metaProductParams(items, params.value),
+    order_id: params.transactionId,
+    num_items: items.reduce((total, item) => total + (item.quantity ?? 1), 0),
+  })
 }
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -259,6 +309,7 @@ export function trackPurchase(params: {
 
 export function trackSearch(searchTerm: string): void {
   trackEvent(GA4_STANDARD_EVENTS.SEARCH, { search_term: searchTerm })
+  trackMetaEvent(META_EVENTS.SEARCH, { search_string: searchTerm })
 }
 
 export function trackViewSearchResults(params: {
@@ -349,6 +400,11 @@ export function trackAddToWishlist(product: AnalyticsProduct): void {
     value: item.price,
     items: [item],
   })
+  trackMetaEvent(META_EVENTS.ADD_TO_WISHLIST, {
+    content_ids: [item.item_id],
+    content_type: 'product',
+    contents: [mapProductToMetaContent(product, { quantity: 1 })],
+  })
 }
 
 export function trackRemoveFromWishlist(product: AnalyticsProduct): void {
@@ -382,6 +438,11 @@ export function trackShare(params: {
       item_id: params.itemId ?? undefined,
     }),
   )
+  trackMetaEvent(META_EVENTS.SHARE, {
+    method: params.method,
+    content_type: params.contentType,
+    content_ids: params.itemId ? [params.itemId] : undefined,
+  })
 }
 
 export function trackWhatsAppOrderClick(params: {
@@ -397,6 +458,9 @@ export function trackWhatsAppOrderClick(params: {
 
 export function trackSignUp(method: string): void {
   trackEvent(GA4_STANDARD_EVENTS.SIGN_UP, { method })
+  trackMetaEvent(META_EVENTS.COMPLETE_REGISTRATION, {
+    registration_method: method,
+  })
 }
 
 export function trackLogin(method: string): void {
@@ -407,6 +471,7 @@ export function trackGenerateLead(params: { formId: string }): void {
   trackEvent(GA4_STANDARD_EVENTS.GENERATE_LEAD, {
     form_id: params.formId,
   })
+  trackMetaEvent(META_EVENTS.LEAD, { form_id: params.formId })
 }
 
 export function trackPincodeCheck(params: {
