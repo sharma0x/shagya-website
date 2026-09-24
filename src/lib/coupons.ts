@@ -6,11 +6,20 @@ export type ApplicableCoupon = {
   id: string | number
   code: string
   description: string
+  promotionType: 'standard' | 'buy_quantity'
   type: 'percentage' | 'fixed_amount' | 'free_shipping'
   value: number | null
+  minimumQuantity: number
+  collectionNames: string[]
   minCartValue: number
   maxDiscount: number | null
   endDate: string | null
+}
+
+export type CouponCartItem = {
+  product: string | number | { id: string | number }
+  quantity?: number | null
+  unitPrice: number
 }
 
 /**
@@ -115,21 +124,90 @@ export async function getApplicableCoupons(
     id: c.id,
     code: c.code,
     description: c.description || '',
+    promotionType: c.promotionType || 'standard',
     type: c.type,
     value: c.value,
+    minimumQuantity: c.minimumQuantity || 2,
+    collectionNames: (c.collectionsConditions || [])
+      .map((collection: any) =>
+        typeof collection === 'object' ? collection.name : '',
+      )
+      .filter(Boolean),
     minCartValue: c.minCartValue || 0,
     maxDiscount: c.maxDiscount || null,
     endDate: c.endDate || null,
   }))
 }
 
+function getRelationId(value: unknown): string {
+  return String(
+    value && typeof value === 'object' && 'id' in value
+      ? (value as { id: unknown }).id
+      : value,
+  )
+}
+
+function getCartProductId(item: CouponCartItem): string {
+  return getRelationId(item.product)
+}
+
+async function getProductCollectionMap(
+  payload: any,
+  productIds: string[],
+): Promise<Map<string, Set<string>>> {
+  const uniqueProductIds = [...new Set(productIds)]
+  const numericProductIds = uniqueProductIds
+    .map((id) => Number(id))
+    .filter((id) => Number.isInteger(id) && id > 0)
+
+  if (numericProductIds.length === 0) {
+    return new Map()
+  }
+
+  const result = await payload.find({
+    collection: 'products',
+    where: { id: { in: numericProductIds } },
+    depth: 0,
+    limit: numericProductIds.length,
+    pagination: false,
+  })
+
+  return new Map(
+    (result.docs as any[]).map((product) => [
+      getRelationId(product.id),
+      new Set((product.collections || []).map(getRelationId)),
+    ]),
+  )
+}
+
+function getCartItems(
+  cartItems: CouponCartItem[] | string[],
+): CouponCartItem[] {
+  return cartItems.map((item) =>
+    typeof item === 'object'
+      ? item
+      : { product: item, quantity: 1, unitPrice: 0 },
+  )
+}
+
+function calculatePercentageDiscount(
+  subtotal: number,
+  value: number | null,
+  maxDiscount: number | null,
+): number {
+  const discount = Math.round((subtotal * (value || 0)) / 100)
+  return maxDiscount ? Math.min(discount, maxDiscount) : discount
+}
+
 export async function validateCouponForCart(
   payload: any,
   code: string,
   subtotal: number,
-  productIds: string[],
+  cartItems: CouponCartItem[] | string[],
   user?: any,
 ): Promise<{ valid: boolean; error?: string; coupon?: any }> {
+  const normalizedCartItems = getCartItems(cartItems)
+  const productIds = normalizedCartItems.map(getCartProductId)
   const normalizedCode = code.trim().toUpperCase()
 
   const coupons = await payload.find({
@@ -223,6 +301,70 @@ export async function validateCouponForCart(
     }
   }
 
+  if (coupon.promotionType === 'buy_quantity') {
+    const collectionIds = (coupon.collectionsConditions || []).map(
+      getRelationId,
+    )
+
+    if (collectionIds.length === 0 || coupon.type !== 'percentage') {
+      return {
+        valid: false,
+        error: 'This quantity offer is not configured correctly',
+      }
+    }
+
+    const collectionMap = await getProductCollectionMap(payload, productIds)
+    const eligibleItems = normalizedCartItems.filter((item) => {
+      const productCollections = collectionMap.get(getCartProductId(item))
+      return collectionIds.some((collectionId: string) =>
+        productCollections?.has(collectionId),
+      )
+    })
+    const eligibleQuantity = eligibleItems.reduce(
+      (total, item) => total + Math.max(0, item.quantity ?? 1),
+      0,
+    )
+    const minimumQuantity = coupon.minimumQuantity || 2
+
+    if (eligibleQuantity < minimumQuantity) {
+      return {
+        valid: false,
+        error: `Add ${minimumQuantity - eligibleQuantity} more item${
+          minimumQuantity - eligibleQuantity === 1 ? '' : 's'
+        } from the selected collection`,
+      }
+    }
+
+    const eligibleSubtotal = eligibleItems.reduce(
+      (total, item) =>
+        total + (item.unitPrice || 0) * Math.max(0, item.quantity ?? 1),
+      0,
+    )
+
+    return {
+      valid: true,
+      coupon: {
+        id: coupon.id,
+        code: coupon.code,
+        promotionType: 'buy_quantity',
+        type: 'percentage',
+        value: coupon.value,
+        minimumQuantity,
+        eligibleQuantity,
+        eligibleSubtotal,
+        maxDiscount: coupon.maxDiscount,
+        usageLimit: coupon.usageLimit || null,
+        perUserUsageLimit: coupon.perUserUsageLimit || null,
+        discount: calculatePercentageDiscount(
+          eligibleSubtotal,
+          coupon.value,
+          coupon.maxDiscount,
+        ),
+        usedCount: coupon.usedCount || 0,
+      },
+    }
+  }
+
   const hasProductConditions = coupon.productsConditions?.length > 0
   const hasCollectionConditions = coupon.collectionsConditions?.length > 0
 
@@ -305,10 +447,11 @@ export async function validateCouponForCart(
 
   let discount = 0
   if (coupon.type === 'percentage') {
-    discount = Math.round((subtotal * coupon.value) / 100)
-    if (coupon.maxDiscount && discount > coupon.maxDiscount) {
-      discount = coupon.maxDiscount
-    }
+    discount = calculatePercentageDiscount(
+      subtotal,
+      coupon.value,
+      coupon.maxDiscount,
+    )
   } else if (coupon.type === 'fixed_amount') {
     discount = coupon.value
   } else if (coupon.type === 'free_shipping') {
@@ -320,9 +463,15 @@ export async function validateCouponForCart(
     coupon: {
       id: coupon.id,
       code: coupon.code,
+      promotionType: 'standard',
       type: coupon.type,
       value: coupon.value,
+      minimumQuantity: coupon.minimumQuantity || 2,
+      eligibleQuantity: 0,
+      eligibleSubtotal: subtotal,
       maxDiscount: coupon.maxDiscount,
+      usageLimit: coupon.usageLimit || null,
+      perUserUsageLimit: coupon.perUserUsageLimit || null,
       discount,
       usedCount: coupon.usedCount || 0,
     },

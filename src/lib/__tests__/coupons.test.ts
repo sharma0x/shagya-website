@@ -32,18 +32,22 @@ vi.mock('@/lib/auth', () => ({
   },
 }))
 
-import { getApplicableCoupons } from '@/lib/coupons'
+import { getApplicableCoupons, validateCouponForCart } from '@/lib/coupons'
 
 function mockCoupon(overrides: Partial<Record<string, unknown>> = {}) {
   return {
     id: 1,
     code: 'SAVE10',
     description: 'Save 10%',
+    promotionType: 'standard',
     type: 'percentage',
     value: 10,
+    minimumQuantity: 2,
+    collectionNames: [],
     minCartValue: 999,
     maxDiscount: 500,
     endDate: null,
+    isActive: true,
     productsConditions: [],
     collectionsConditions: [],
     customersConditions: [],
@@ -67,8 +71,11 @@ describe('getApplicableCoupons', () => {
         id: 1,
         code: 'SAVE10',
         description: 'Save 10%',
+        promotionType: 'standard',
         type: 'percentage',
         value: 10,
+        minimumQuantity: 2,
+        collectionNames: [],
         minCartValue: 999,
         maxDiscount: 500,
         endDate: null,
@@ -123,5 +130,97 @@ describe('getApplicableCoupons', () => {
     const result = await getApplicableCoupons()
 
     expect(result).toEqual([])
+  })
+})
+
+describe('validateCouponForCart', () => {
+  it('applies a buy quantity discount only to eligible collection items', async () => {
+    mocks.mockFind.mockResolvedValueOnce({
+      docs: [
+        mockCoupon({
+          promotionType: 'buy_quantity',
+          minimumQuantity: 2,
+          collectionsConditions: [5],
+          value: 10,
+          maxDiscount: null,
+        }),
+      ],
+    })
+    mocks.mockFind.mockResolvedValueOnce({
+      docs: [
+        { id: 21, collections: [5] },
+        { id: 22, collections: [6] },
+      ],
+    })
+
+    const result = await validateCouponForCart(
+      { find: mocks.mockFind },
+      'SAVE10',
+      4000,
+      [
+        { product: 21, quantity: 2, unitPrice: 1000 },
+        { product: 22, quantity: 1, unitPrice: 2000 },
+      ],
+    )
+
+    expect(result.valid).toBe(true)
+    expect(result.coupon).toMatchObject({
+      promotionType: 'buy_quantity',
+      eligibleQuantity: 2,
+      eligibleSubtotal: 2000,
+      discount: 200,
+    })
+  })
+
+  it('rejects a buy quantity coupon below its threshold', async () => {
+    mocks.mockFind.mockResolvedValueOnce({
+      docs: [
+        mockCoupon({
+          promotionType: 'buy_quantity',
+          minimumQuantity: 2,
+          collectionsConditions: [5],
+        }),
+      ],
+    })
+    mocks.mockFind.mockResolvedValueOnce({
+      docs: [{ id: 21, collections: [5] }],
+    })
+
+    const result = await validateCouponForCart(
+      { find: mocks.mockFind },
+      'SAVE10',
+      1000,
+      [{ product: 21, quantity: 1, unitPrice: 1000 }],
+    )
+
+    expect(result.valid).toBe(false)
+    expect(result.error).toContain('Add 1 more item')
+  })
+
+  it('validates free shipping coupon with zero discount', async () => {
+    mocks.mockFind.mockResolvedValueOnce({
+      docs: [
+        mockCoupon({
+          code: 'FREESHIP',
+          type: 'free_shipping',
+          value: null,
+          promotionType: 'standard',
+        }),
+      ],
+    })
+
+    const result = await validateCouponForCart(
+      { find: mocks.mockFind },
+      'FREESHIP',
+      1500,
+      [{ product: 10, quantity: 1, unitPrice: 1500 }],
+    )
+
+    expect(result.valid).toBe(true)
+    expect(result.coupon).toMatchObject({
+      code: 'FREESHIP',
+      type: 'free_shipping',
+      discount: 0,
+    })
   })
 })

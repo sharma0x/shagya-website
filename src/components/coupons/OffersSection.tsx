@@ -15,8 +15,11 @@ interface CouponData {
   id: string | number
   code: string
   description: string
+  promotionType?: 'standard' | 'buy_quantity'
   type: 'percentage' | 'fixed_amount' | 'free_shipping'
   value: number | null
+  minimumQuantity?: number
+  collectionNames?: string[]
   minCartValue: number
   maxDiscount?: number | null
   endDate?: string | null
@@ -30,6 +33,12 @@ interface OffersSectionProps {
 }
 
 function formatDiscount(c: CouponData): string {
+  if (c.promotionType === 'buy_quantity') {
+    const collectionLabel = c.collectionNames?.length
+      ? ` from ${c.collectionNames.join(', ')}`
+      : ' from the selected collection'
+    return `Buy ${c.minimumQuantity || 2}${collectionLabel} · ${c.value || 0}% off`
+  }
   if (c.type === 'percentage') return `${c.value || 0}% off`
   if (c.type === 'fixed_amount') return `₹${c.value || 0} off`
   return 'Free shipping'
@@ -158,11 +167,13 @@ export function OffersSection({
                   <div className="min-w-0">
                     <p className="font-body text-xs font-medium text-neutral-900">
                       Save{' '}
-                      {c.type === 'percentage'
-                        ? `${c.value || 0}%`
-                        : c.type === 'fixed_amount'
-                          ? `₹${c.value || 0}`
-                          : 'on shipping'}{' '}
+                      {c.promotionType === 'buy_quantity'
+                        ? `${c.value || 0}% on ${c.minimumQuantity || 2} items from the selected collection`
+                        : c.type === 'percentage'
+                          ? `${c.value || 0}%`
+                          : c.type === 'fixed_amount'
+                            ? `₹${c.value || 0}`
+                            : 'on shipping'}{' '}
                       with coupon
                     </p>
                     <p className="mt-0.5 font-mono text-[11px] tracking-wider text-neutral-500">

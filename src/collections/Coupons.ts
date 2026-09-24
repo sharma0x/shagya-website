@@ -14,6 +14,44 @@ export const Coupons: CollectionConfig = {
     update: ({ req: { user } }) => Boolean(user),
     delete: ({ req: { user } }) => Boolean(user),
   },
+  hooks: {
+    beforeChange: [
+      ({ data, originalDoc }) => {
+        const promotionType = data?.promotionType ?? originalDoc?.promotionType
+        if (promotionType === 'buy_quantity') {
+          if (data) {
+            data.type = 'percentage'
+          }
+          const collectionsConditions =
+            data?.collectionsConditions ?? originalDoc?.collectionsConditions
+          if (
+            !Array.isArray(collectionsConditions) ||
+            collectionsConditions.length === 0
+          ) {
+            throw new Error(
+              'Buy quantity coupons must target at least one collection',
+            )
+          }
+          const minimumQuantity =
+            data?.minimumQuantity ?? originalDoc?.minimumQuantity ?? 2
+          const minQtyNum = Number(minimumQuantity)
+          if (!Number.isInteger(minQtyNum) || minQtyNum < 1) {
+            throw new Error(
+              'Buy quantity coupons must have a minimum quantity of at least 1',
+            )
+          }
+          const value = data?.value ?? originalDoc?.value
+          const valNum = Number(value)
+          if (!Number.isFinite(valNum) || valNum <= 0 || valNum > 100) {
+            throw new Error(
+              'Buy quantity coupons must have a percentage between 1 and 100',
+            )
+          }
+        }
+        return data
+      },
+    ],
+  },
   fields: [
     {
       name: 'code',
@@ -21,6 +59,20 @@ export const Coupons: CollectionConfig = {
       required: true,
       unique: true,
       index: true,
+    },
+    {
+      name: 'promotionType',
+      type: 'select',
+      required: true,
+      defaultValue: 'standard',
+      options: [
+        { label: 'Standard coupon', value: 'standard' },
+        { label: 'Buy quantity from collection', value: 'buy_quantity' },
+      ],
+      admin: {
+        description:
+          'Choose whether this is a regular coupon or a quantity offer.',
+      },
     },
     {
       name: 'description',
@@ -38,6 +90,16 @@ export const Coupons: CollectionConfig = {
       admin: {
         description:
           'Optional: unique identifier for influencer/collaborator tracking',
+      },
+    },
+    {
+      name: 'minimumQuantity',
+      type: 'number',
+      min: 1,
+      defaultValue: 2,
+      admin: {
+        condition: (data) => data?.promotionType === 'buy_quantity',
+        description: 'Required total quantity across the selected collections.',
       },
     },
     {
@@ -62,6 +124,9 @@ export const Coupons: CollectionConfig = {
           (val == null || val <= 0)
         ) {
           return 'Discount value is required for percentage and fixed amount coupons'
+        }
+        if (data?.type === 'percentage' && val != null && val > 100) {
+          return 'Percentage discount cannot be greater than 100'
         }
         return true
       },

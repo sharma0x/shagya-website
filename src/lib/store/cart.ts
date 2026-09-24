@@ -53,8 +53,12 @@ interface CartState {
   coupon: {
     id: string
     code: string
+    promotionType?: 'standard' | 'buy_quantity'
     type: 'percentage' | 'fixed_amount' | 'free_shipping'
     value: number
+    minimumQuantity?: number
+    discount?: number
+    maxDiscount?: number | null
   } | null
   isLoading: boolean
   addItem: (
@@ -298,6 +302,10 @@ export const useCart = create<CartState>()(
         const subtotal = get().getSubtotal()
         const coupon = get().coupon
         if (!coupon) return subtotal
+
+        if (typeof coupon.discount === 'number') {
+          return Math.max(0, subtotal - coupon.discount)
+        }
 
         if (coupon.type === 'percentage') {
           return subtotal * (1 - coupon.value / 100)

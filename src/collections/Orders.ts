@@ -876,6 +876,14 @@ export const Orders: CollectionConfig = {
       defaultValue: 0,
     },
     {
+      name: 'discountBreakdown',
+      type: 'json',
+      admin: {
+        description:
+          'Promotion eligibility and discount details for this order.',
+      },
+    },
+    {
       name: 'coupon',
       type: 'relationship',
       relationTo: 'coupons',
@@ -894,6 +902,16 @@ export const Orders: CollectionConfig = {
       type: 'text',
       admin: {
         hidden: true,
+      },
+    },
+    {
+      name: 'paymentReference',
+      type: 'text',
+      unique: true,
+      index: true,
+      admin: {
+        hidden: true,
+        description: 'Unique online payment reference used for idempotency.',
       },
     },
     {

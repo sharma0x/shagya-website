@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import crypto from 'crypto'
 
 const mockFind = vi.fn()
 const mockCreate = vi.fn()
@@ -8,8 +9,20 @@ const mockCommitTransaction = vi.fn()
 const mockRollbackTransaction = vi.fn()
 const mockGetSession = vi.fn()
 const mockFindOrRepairCustomer = vi.fn()
+const mockOrdersFetch = vi.fn()
+const mockPaymentsFetch = vi.fn()
+const mockPaymentsCapture = vi.fn()
 let currentBasePrice = 2500
 let serverBasePrice = 2500
+
+vi.mock('razorpay', () => {
+  return {
+    default: class MockRazorpay {
+      orders = { fetch: mockOrdersFetch }
+      payments = { fetch: mockPaymentsFetch, capture: mockPaymentsCapture }
+    },
+  }
+})
 
 vi.mock('@payload-config', () => ({ default: {} }))
 
@@ -52,6 +65,10 @@ vi.mock('@/lib/cart-prices', () => ({
     ...item,
     unitPrice: priceMap.get(String(item.product))?.basePrice ?? item.unitPrice,
   })),
+  requireCurrentPrice: vi.fn(
+    (item: any, priceMap: Map<string, any>) =>
+      priceMap.get(String(item.product))?.basePrice ?? item.unitPrice,
+  ),
 }))
 
 vi.mock('@/lib/stock', () => ({
@@ -265,5 +282,178 @@ describe('POST /api/razorpay/verify', () => {
       'Your cart changed while the order was being placed. Please refresh and try again.',
     )
     expect(mockRollbackTransaction).toHaveBeenCalledWith('transaction-1')
+  })
+
+  it('verifies a valid online Razorpay payment with captured status', async () => {
+    const keySecret = 'test_secret'
+    process.env.RAZORPAY_KEY_ID = 'rzp_live_test'
+    process.env.RAZORPAY_KEY_SECRET = keySecret
+
+    const orderId = 'order_test_123'
+    const paymentId = 'pay_test_456'
+    const signature = crypto
+      .createHmac('sha256', keySecret)
+      .update(`${orderId}|${paymentId}`)
+      .digest('hex')
+
+    // Cart: 1 item at 2500 + standard shipping 150 = total 2650 -> 265000 paise
+    mockOrdersFetch.mockResolvedValueOnce({
+      id: orderId,
+      amount: 265000,
+      currency: 'INR',
+    })
+    mockPaymentsFetch.mockResolvedValueOnce({
+      id: paymentId,
+      order_id: orderId,
+      amount: 265000,
+      currency: 'INR',
+      status: 'captured',
+    })
+    mockCreate.mockResolvedValueOnce({ id: 101, orderNumber: 'SH-101' })
+
+    const req = new Request('http://localhost/api/razorpay/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        isCod: false,
+        razorpay_order_id: orderId,
+        razorpay_payment_id: paymentId,
+        razorpay_signature: signature,
+        shippingAddress,
+        guestEmail: 'online@example.com',
+        cartItems: [{ product: '202', quantity: 1, unitPrice: 2500 }],
+      }),
+    })
+
+    const response = await POST(req)
+    const body = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(body.success).toBe(true)
+    expect(body.orderNumber).toBe('SH-101')
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        collection: 'orders',
+        data: expect.objectContaining({
+          status: 'confirmed',
+          paymentId,
+          paymentReference: orderId,
+        }),
+      }),
+    )
+  })
+
+  it('captures authorized payments and creates order', async () => {
+    const keySecret = 'test_secret'
+    process.env.RAZORPAY_KEY_ID = 'rzp_live_test'
+    process.env.RAZORPAY_KEY_SECRET = keySecret
+
+    const orderId = 'order_auth_123'
+    const paymentId = 'pay_auth_456'
+    const signature = crypto
+      .createHmac('sha256', keySecret)
+      .update(`${orderId}|${paymentId}`)
+      .digest('hex')
+
+    mockOrdersFetch.mockResolvedValueOnce({
+      id: orderId,
+      amount: 265000,
+      currency: 'INR',
+    })
+    mockPaymentsFetch.mockResolvedValueOnce({
+      id: paymentId,
+      order_id: orderId,
+      amount: 265000,
+      currency: 'INR',
+      status: 'authorized',
+    })
+    mockPaymentsCapture.mockResolvedValueOnce({
+      id: paymentId,
+      status: 'captured',
+    })
+    mockCreate.mockResolvedValueOnce({ id: 102, orderNumber: 'SH-102' })
+
+    const req = new Request('http://localhost/api/razorpay/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        isCod: false,
+        razorpay_order_id: orderId,
+        razorpay_payment_id: paymentId,
+        razorpay_signature: signature,
+        shippingAddress,
+        guestEmail: 'online@example.com',
+        cartItems: [{ product: '202', quantity: 1, unitPrice: 2500 }],
+      }),
+    })
+
+    const response = await POST(req)
+    const body = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(body.success).toBe(true)
+    expect(mockPaymentsCapture).toHaveBeenCalledWith(paymentId, 265000, 'INR')
+  })
+
+  it('rejects an invalid Razorpay payment signature', async () => {
+    process.env.RAZORPAY_KEY_ID = 'rzp_live_test'
+    process.env.RAZORPAY_KEY_SECRET = 'test_secret'
+
+    const req = new Request('http://localhost/api/razorpay/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        isCod: false,
+        razorpay_order_id: 'order_123',
+        razorpay_payment_id: 'pay_123',
+        razorpay_signature: 'invalid_signature',
+        shippingAddress,
+        guestEmail: 'online@example.com',
+        cartItems: [{ product: '202', quantity: 1, unitPrice: 2500 }],
+      }),
+    })
+
+    const response = await POST(req)
+    const body = await response.json()
+
+    expect(response.status).toBe(400)
+    expect(body.error).toBe('Invalid payment signature')
+    expect(mockCreate).not.toHaveBeenCalled()
+  })
+
+  it('returns existing order without duplicate placement when paymentReference matches (idempotency)', async () => {
+    mockFind.mockImplementation(
+      async ({ collection, where }: { collection: string; where?: any }) => {
+        if (collection === 'orders' && where?.paymentReference) {
+          return {
+            docs: [{ id: 99, orderNumber: 'SH-EXISTING-99' }],
+          }
+        }
+        return { docs: [] }
+      },
+    )
+
+    const req = new Request('http://localhost/api/razorpay/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        isCod: false,
+        razorpay_order_id: 'order_duplicate_test',
+        razorpay_payment_id: 'pay_duplicate_test',
+        shippingAddress,
+        guestEmail: 'online@example.com',
+        cartItems: [{ product: '202', quantity: 1, unitPrice: 2500 }],
+      }),
+    })
+
+    const response = await POST(req)
+    const body = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(body.success).toBe(true)
+    expect(body.orderNumber).toBe('SH-EXISTING-99')
+    expect(body.orderId).toBe(99)
+    // Order creation must be bypassed completely
+    expect(mockCreate).not.toHaveBeenCalled()
   })
 })

@@ -4,10 +4,13 @@ import config from '@payload-config'
 import { auth } from '@/lib/auth'
 import Razorpay from 'razorpay'
 import { validateCartStock, type CartStockItem } from '@/lib/stock'
-import { resolveCurrentPrices, applyCurrentPrice } from '@/lib/cart-prices'
+import { resolveCurrentPrices, requireCurrentPrice } from '@/lib/cart-prices'
 import { validateCouponForCart } from '@/lib/coupons'
 import { toUserFacingError } from '@/lib/api-error'
-import { resolveCheckoutCart } from '@/lib/checkout-cart'
+import {
+  CheckoutCartValidationError,
+  resolveCheckoutCart,
+} from '@/lib/checkout-cart'
 import { COD_LIMIT_ERROR, isCodEligible } from '@/lib/cod-eligibility'
 
 export async function POST(request: Request) {
@@ -64,10 +67,13 @@ export async function POST(request: Request) {
 
     const cartItems = checkoutCart.items as any[]
     const priceMap = await resolveCurrentPrices(payload, cartItems)
-    const subtotal = cartItems.reduce(
+    const pricedCartItems = cartItems.map((item: any) => ({
+      ...item,
+      unitPrice: requireCurrentPrice(item, priceMap),
+    }))
+    const subtotal = pricedCartItems.reduce(
       (acc: number, item: any) =>
-        acc +
-        applyCurrentPrice(item, priceMap).unitPrice * (item.quantity || 1),
+        acc + (item.unitPrice || 0) * (item.quantity || 1),
       0,
     )
 
@@ -121,17 +127,11 @@ export async function POST(request: Request) {
     let appliedCoupon: any = null
 
     if (appliedCouponCode) {
-      const cartProductIds = cartItems.map((item: any) =>
-        String(
-          typeof item.product === 'object' ? item.product.id : item.product,
-        ),
-      )
-
       const validation = await validateCouponForCart(
         payload,
         appliedCouponCode,
         subtotal,
-        cartProductIds,
+        pricedCartItems,
         session?.user,
       )
 
@@ -161,7 +161,7 @@ export async function POST(request: Request) {
         razorpayOrder: {
           id: `cod_${Date.now()}`,
           isMock: true,
-          amount: total * 100,
+          amount: Math.round(total * 100),
           currency: 'INR',
         },
         subtotal,
@@ -183,7 +183,7 @@ export async function POST(request: Request) {
       const mockOrder = {
         id: `order_mock_${Math.random().toString(36).substring(2, 11)}`,
         entity: 'order',
-        amount: total * 100,
+        amount: Math.round(total * 100),
         amount_paid: 0,
         amount_due: total * 100,
         currency: 'INR',
@@ -211,7 +211,7 @@ export async function POST(request: Request) {
     })
 
     const order = await razorpay.orders.create({
-      amount: total * 100,
+      amount: Math.round(total * 100),
       currency: 'INR',
       receipt: `rcpt_${Date.now()}`,
     })
@@ -228,7 +228,7 @@ export async function POST(request: Request) {
     console.error('[Razorpay Create Order API Error]:', error)
     return NextResponse.json(
       { error: toUserFacingError(error) },
-      { status: 500 },
+      { status: error instanceof CheckoutCartValidationError ? 400 : 500 },
     )
   }
 }

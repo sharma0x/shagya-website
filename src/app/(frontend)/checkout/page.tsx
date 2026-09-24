@@ -160,6 +160,21 @@ export default function CheckoutPage() {
   // Effective cart: DB cart for logged-in, reactive hook cart for guests
   const effectiveCart = isGuest ? guestCart : cart
 
+  const persistCouponToServer = useCallback(
+    (coupon: any | null, items: any[] = effectiveCart?.items || []) => {
+      if (isGuest) return
+      void fetch('/api/cart', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items,
+          couponId: coupon?.id || null,
+        }),
+      }).catch(() => {})
+    },
+    [effectiveCart?.items, isGuest],
+  )
+
   // New address form state
   const [showNewAddressForm, setShowNewAddressForm] = useState(false)
 
@@ -265,6 +280,28 @@ export default function CheckoutPage() {
           }
 
           setCart(cartData)
+          if (cartData.coupon?.code && cartData.items?.length > 0) {
+            const couponRes = await fetch('/api/coupons/validate', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                code: cartData.coupon.code,
+                subtotal: cartData.subtotal,
+                items: cartData.items,
+                checkoutMode: isGuest ? 'guest' : 'account',
+                guestEmail: guestData?.email || '',
+              }),
+            })
+            const couponData = couponRes.ok ? await couponRes.json() : null
+            if (couponData?.valid) {
+              setAppliedCoupon(couponData.coupon)
+              zCart.setCoupon(couponData.coupon)
+            } else {
+              setAppliedCoupon(null)
+              zCart.setCoupon(null)
+              persistCouponToServer(null, cartData.items)
+            }
+          }
           if (!cartData.items || cartData.items.length === 0) {
             router.push('/')
             return
@@ -302,6 +339,10 @@ export default function CheckoutPage() {
     router,
     zCart.items,
     zCart.coupon?.id,
+    zCart,
+    persistCouponToServer,
+    isGuest,
+    guestData?.email,
   ])
 
   // After a guest verifies their email/phone OTP, the session is live. Route
@@ -364,12 +405,17 @@ export default function CheckoutPage() {
         body: JSON.stringify({
           code: code.trim(),
           subtotal,
+          items: effectiveCart?.items || [],
           productIds: cartProductIds,
+          checkoutMode: isGuest ? 'guest' : 'account',
+          guestEmail: guestData?.email || '',
         }),
       })
       const data = await res.json()
       if (data.valid) {
         setAppliedCoupon(data.coupon)
+        zCart.setCoupon(data.coupon)
+        persistCouponToServer(data.coupon)
         setCouponCode('')
         trackCoupon({ couponCode: data.coupon?.code ?? code, action: 'apply' })
         return true
@@ -404,12 +450,17 @@ export default function CheckoutPage() {
         body: JSON.stringify({
           code: couponCode.trim(),
           subtotal,
+          items: effectiveCart?.items || [],
           productIds: cartProductIds,
+          checkoutMode: isGuest ? 'guest' : 'account',
+          guestEmail: guestData?.email || '',
         }),
       })
       const data = await res.json()
       if (data.valid) {
         setAppliedCoupon(data.coupon)
+        zCart.setCoupon(data.coupon)
+        persistCouponToServer(data.coupon)
         setCouponCode('')
         trackCoupon({
           couponCode: data.coupon?.code ?? couponCode,
@@ -432,6 +483,8 @@ export default function CheckoutPage() {
       trackCoupon({ couponCode: appliedCoupon.code, action: 'remove' })
     }
     setAppliedCoupon(null)
+    zCart.setCoupon(null)
+    persistCouponToServer(null)
     setCouponError('')
   }
 
@@ -441,13 +494,15 @@ export default function CheckoutPage() {
     variant?: { color?: { slug?: string } | null } | null
   }) => cartMergeKey(item)
 
-  const recomputeSubtotal = (items: CartItem[]) =>
-    items.reduce((acc, i) => acc + i.unitPrice * i.quantity, 0)
+  const recomputeSubtotal = (
+    items: Array<{ unitPrice: number; quantity: number }>,
+  ) => items.reduce((acc, i) => acc + i.unitPrice * i.quantity, 0)
 
   // Sequencing: only the LATEST persist request may write state back. Without
   // this, two rapid edits can race and the last-resolved response (not the
   // last-sent edit) wins.
   const cartSyncSeq = useRef(0)
+  const couponValidationSeq = useRef(0)
   const cartSavePromiseRef = useRef<Promise<boolean> | null>(null)
   // Pre-edit snapshot used to roll back if both persist and refetch fail.
   const cartSnapshotRef = useRef<Cart | null>(null)
@@ -463,9 +518,14 @@ export default function CheckoutPage() {
   // edits, so the displayed discount stays honest (e.g. min-cart-value).
   const revalidateAppliedCoupon = async (
     subtotalValue: number,
-    items: CartItem[],
+    items: Array<{
+      product: { id: string | number }
+      quantity: number
+      unitPrice: number
+    }>,
   ) => {
     if (!appliedCoupon?.code) return
+    const validationSeq = ++couponValidationSeq.current
     try {
       const productIds = items.map((i) => String(i.product.id))
       const res = await fetch('/api/coupons/validate', {
@@ -474,12 +534,21 @@ export default function CheckoutPage() {
         body: JSON.stringify({
           code: appliedCoupon.code,
           subtotal: subtotalValue,
+          items,
           productIds,
+          checkoutMode: isGuest ? 'guest' : 'account',
+          guestEmail: guestData?.email || '',
         }),
       })
       const data = await res.json()
-      if (!data.valid) {
+      if (validationSeq !== couponValidationSeq.current) return
+      if (data.valid) {
+        setAppliedCoupon(data.coupon)
+        zCart.setCoupon(data.coupon)
+      } else {
         setAppliedCoupon(null)
+        zCart.setCoupon(null)
+        persistCouponToServer(null, items)
         showCartNotice(data.error || 'Coupon removed')
       }
     } catch {
@@ -564,6 +633,11 @@ export default function CheckoutPage() {
   const guestStoreItem = (item: CartItem) =>
     zCart.items.find((i) => lineKey(i) === lineKey(item))
 
+  const revalidateGuestItems = (items: typeof zCart.items) => {
+    if (!appliedCoupon?.code || items.length === 0) return
+    void revalidateAppliedCoupon(recomputeSubtotal(items), items)
+  }
+
   const handleUpdateQuantity = (item: CartItem, quantity: number) => {
     const capped = Math.max(1, Math.min(cartQtyCap(item), quantity))
     if (capped === item.quantity || cartSaving) return
@@ -575,6 +649,13 @@ export default function CheckoutPage() {
           storeItem.product.id,
           capped,
           storeItem.variant?.color?.slug,
+        )
+        revalidateGuestItems(
+          zCart.items.map((cartItem) =>
+            lineKey(cartItem) === lineKey(item)
+              ? { ...cartItem, quantity: capped }
+              : cartItem,
+          ),
         )
       }
       return
@@ -601,6 +682,9 @@ export default function CheckoutPage() {
       const storeItem = guestStoreItem(item)
       if (storeItem) {
         zCart.removeItem(storeItem.product.id, storeItem.variant?.color?.slug)
+        revalidateGuestItems(
+          zCart.items.filter((cartItem) => lineKey(cartItem) !== lineKey(item)),
+        )
       }
       if (remaining <= 0) router.push('/')
       return
@@ -691,15 +775,17 @@ export default function CheckoutPage() {
   let discount = 0
 
   if (appliedCoupon) {
-    if (appliedCoupon.type === 'percentage') {
+    if (appliedCoupon.type === 'free_shipping') {
+      shipping = 0
+    } else if (typeof appliedCoupon.discount === 'number') {
+      discount = appliedCoupon.discount
+    } else if (appliedCoupon.type === 'percentage') {
       discount = Math.round((subtotal * (appliedCoupon.value || 0)) / 100)
       if (appliedCoupon.maxDiscount && discount > appliedCoupon.maxDiscount) {
         discount = appliedCoupon.maxDiscount
       }
     } else if (appliedCoupon.type === 'fixed_amount') {
       discount = appliedCoupon.value || 0
-    } else if (appliedCoupon.type === 'free_shipping') {
-      shipping = 0
     }
   }
   const total = Math.max(0, subtotal + shipping - discount)
