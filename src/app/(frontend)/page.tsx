@@ -733,6 +733,16 @@ export default async function HomePage() {
   const displayTestimonials =
     testimonialItems.length > 0 ? testimonialItems : DEFAULT_TESTIMONIALS
 
+  const ctaBlock = contentBlocks.find((b: any) => b.blockType === 'cta') as
+    | {
+        heading?: string | null
+        body?: string | null
+        buttonText?: string | null
+        buttonLink?: string | null
+        blockType: 'cta'
+      }
+    | undefined
+
   const fallbackHeroUrl =
     typeof heroBlock?.backgroundImage === 'object' &&
     heroBlock.backgroundImage?.url
@@ -999,19 +1009,18 @@ export default async function HomePage() {
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2 md:gap-8">
             <div>
               <h2 className="font-display text-2xl font-semibold tracking-tight text-white sm:text-4xl">
-                Every saree is signed by its maker
+                {ctaBlock?.heading || 'Every saree is signed by its maker'}
               </h2>
               <p className="text-brand-200/70 mt-4 max-w-[50ch] text-base leading-relaxed sm:text-lg">
-                Handloom-verified. Maker-traced. No middleman markup, no
-                warehouse mystery stock — just the cloth, the cluster it came
-                from, and a fair price on both sides.
+                {ctaBlock?.body ||
+                  'Handloom-verified. Maker-traced. No middleman markup, no warehouse mystery stock — just the cloth, the cluster it came from, and a fair price on both sides.'}
               </p>
               <div className="mt-8 flex flex-col items-start gap-4 sm:flex-row">
                 <Link
-                  href="/category/all"
+                  href={ctaBlock?.buttonLink || '/category/all'}
                   className="text-brand-800 hover:bg-gold-100 inline-flex h-11 items-center gap-2 rounded-xl bg-white px-6 text-sm font-semibold transition-all active:scale-[0.97]"
                 >
-                  Begin browsing
+                  {ctaBlock?.buttonText || 'Begin browsing'}
                   <ArrowRight className="h-4 w-4" />
                 </Link>
                 {/* COMMENTED OUT (CLO-102):
