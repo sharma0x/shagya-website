@@ -39,6 +39,7 @@ import * as migration_20260920_000001_fix_phone_identities_constraint from './20
 import * as migration_20260920_120000_add_stock_movements_and_order_stock_flags from './20260920_120000_add_stock_movements_and_order_stock_flags'
 import * as migration_20260924_000000_add_collection_quantity_coupon from './20260924_000000_add_collection_quantity_coupon'
 import * as migration_20260925_000000_make_products_product_code_nullable from './20260925_000000_make_products_product_code_nullable'
+import * as migration_20260925_120000_add_weaves_featured_sort_order from './20260925_120000_add_weaves_featured_sort_order'
 
 export const migrations = [
   {
@@ -245,5 +246,10 @@ export const migrations = [
     up: migration_20260925_000000_make_products_product_code_nullable.up,
     down: migration_20260925_000000_make_products_product_code_nullable.down,
     name: '20260925_000000_make_products_product_code_nullable',
+  },
+  {
+    up: migration_20260925_120000_add_weaves_featured_sort_order.up,
+    down: migration_20260925_120000_add_weaves_featured_sort_order.down,
+    name: '20260925_120000_add_weaves_featured_sort_order',
   },
 ]

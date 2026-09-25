@@ -46,6 +46,27 @@ export const Weaves: CollectionConfig = {
       name: 'description',
       type: 'textarea',
     },
+    {
+      name: 'featured',
+      type: 'checkbox',
+      defaultValue: false,
+      index: true,
+      admin: {
+        description:
+          'Show this weave as a "Quick:" chip on category pages (up to 5 shown, ordered by sortOrder).',
+      },
+    },
+    {
+      name: 'sortOrder',
+      type: 'number',
+      defaultValue: 0,
+      index: true,
+      admin: {
+        description:
+          'Lower numbers appear first among featured weaves. Only used when featured is checked.',
+        step: 1,
+      },
+    },
   ],
   timestamps: true,
 }

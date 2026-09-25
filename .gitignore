@@ -104,3 +104,9 @@ infra/provision/allowed_ips.txt
 
 # strix_runs
 strix_runs
+
+# Security-scan proof-of-concept worktrees (strix agents, validation harnesses)
+.poc-*
+
+# Local agent/editor scratch
+.opencode/

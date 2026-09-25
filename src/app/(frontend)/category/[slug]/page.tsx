@@ -29,6 +29,23 @@ interface FilterParams {
   [key: string]: string | string[] | undefined
 }
 
+/**
+ * A chip in the category page's "Quick:" row. `kind` drives both the active
+ * check and the URL mutation, so adding a chip type means handling it in one
+ * place rather than extending a label-based switch.
+ */
+type QuickChip =
+  | { kind: 'all'; key: string; label: string }
+  | { kind: 'sale'; key: string; label: string }
+  | { kind: 'weave'; key: string; label: string; slug: string }
+
+/**
+ * URL params that describe *how* results are shown rather than *which*
+ * results. They never make a filter active, so the All chip ignores them
+ * when deciding whether it is highlighted.
+ */
+const NON_FILTER_PARAMS = new Set(['sort', 'page', 'limit'])
+
 // Products are rendered as 1 card per product with hover image flips across all color variants
 
 function buildWhere(sParams: FilterParams, slug: string) {
@@ -219,6 +236,57 @@ async function CategoryProductsStream({
         )
       : products
 
+  // Quick-filter chips. Weaves are admin-curated: the `featured` flag opts a
+  // weave in and `sortOrder` orders them, so merchandising changes need no
+  // deploy. Capped at MAX_QUICK_WEAVES to keep the row scannable.
+  const MAX_QUICK_WEAVES = 5
+  let featuredWeaves: { slug: string; name: string }[] = []
+  try {
+    const weavesRes = await payload.find({
+      collection: 'weaves',
+      where: { featured: { equals: true } },
+      // sortOrder alone is not a total order — weaves sharing a value (the
+      // default is 0, so any newly featured pair ties) would come back in
+      // whatever order the heap yields, which shifts after updates and
+      // vacuums. createdAt is a stable tiebreak so the curated order stays
+      // reproducible across requests.
+      sort: ['sortOrder', 'createdAt'],
+      limit: MAX_QUICK_WEAVES,
+      depth: 0,
+      pagination: false,
+      select: { name: true, slug: true, featured: true, sortOrder: true },
+    })
+    featuredWeaves = (weavesRes.docs as any[])
+      .filter((w) => w.slug)
+      .map((w) => ({ slug: w.slug, name: w.name }))
+  } catch (err) {
+    // Taxonomy query is non-critical — render the row without weave chips.
+    console.error('[category] featured weaves fetch failed:', err)
+  }
+
+  // Order is fixed: All, then the promotional On Sale shortcut, then the
+  // admin-curated weaves. A weave that is currently applied stays reachable
+  // even if it has since been un-featured, otherwise the active filter would
+  // have no chip to turn off.
+  const appliedWeave = getCommaParam(sParams, 'weave')[0]
+  const weaveChips = [
+    ...featuredWeaves.map((w) => ({ kind: 'weave' as const, ...w })),
+    ...(appliedWeave && !featuredWeaves.some((w) => w.slug === appliedWeave)
+      ? [{ kind: 'weave' as const, slug: appliedWeave, name: appliedWeave }]
+      : []),
+  ]
+
+  const quickChips: QuickChip[] = [
+    { kind: 'all', key: 'all', label: 'All' },
+    { kind: 'sale', key: 'sale', label: 'On Sale' },
+    ...weaveChips.map((w) => ({
+      kind: w.kind,
+      key: `weave-${w.slug}`,
+      label: w.name,
+      slug: w.slug,
+    })),
+  ]
+
   return (
     <div className="flex-1">
       <TrackViewItemList
@@ -245,49 +313,74 @@ async function CategoryProductsStream({
       <div className="mt-4 flex items-center gap-3">
         <span className="shrink-0 text-xs text-neutral-400">Quick:</span>
         <div className="scrollbar-hide flex gap-1.5 overflow-x-auto whitespace-nowrap">
-          {['All', 'Banarasi', 'Kanchipuram', 'Chanderi', 'On Sale'].map(
-            (label) => {
-              const params = new URLSearchParams(
-                sParams as Record<string, string>,
-              )
-              const isActive = (() => {
-                switch (label) {
-                  case 'All':
-                    return !params.get('weave') && !params.get('onSale')
-                  case 'Banarasi':
-                  case 'Kanchipuram':
-                  case 'Chanderi':
-                    return params.get('weave') === label.toLowerCase()
-                  case 'On Sale':
-                    return params.get('onSale') === 'true'
-                  default:
-                    return false
-                }
-              })()
-              if (label === 'All') {
-                params.delete('weave')
-                params.delete('onSale')
-              } else if (label === 'On Sale') {
-                params.set('onSale', isActive ? 'false' : 'true')
-              } else {
-                params.set('weave', isActive ? '' : label.toLowerCase())
+          {quickChips.map((chip) => {
+            const params = new URLSearchParams(
+              sParams as Record<string, string>,
+            )
+            let isActive = false
+
+            if (chip.kind === 'all') {
+              // Active only when no *filter* is applied. sort/page/limit are
+              // display and pagination state, not filters, so they must be
+              // skipped before testing — testing them inline would make All
+              // go dark the moment a sort is applied.
+              isActive = [...params.keys()]
+                .filter((key) => !NON_FILTER_PARAMS.has(key))
+                .every((key) => !params.get(key))
+              // "All" clears every filter param, not just weave/onSale —
+              // otherwise it silently keeps fabric/color/price applied.
+              // `sort` is a display preference rather than a filter, so it
+              // survives; `page` resets so we land on page 1 of the full set.
+              const sort = params.get('sort')
+              for (const key of [...params.keys()]) {
+                if (key !== 'sort') params.delete(key)
               }
-              const qs = params.toString()
-              return (
-                <Link
-                  key={label}
-                  href={qs ? `?${qs}` : '?'}
-                  className={`font-body rounded-lg px-3 py-1 text-xs font-medium transition-colors ${
-                    isActive
-                      ? 'bg-brand-600 text-white'
-                      : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
-                  }`}
-                >
-                  {label}
-                </Link>
-              )
-            },
-          )}
+              if (sort) params.set('sort', sort)
+            } else if (chip.kind === 'sale') {
+              isActive = params.get('onSale') === 'true'
+              // Delete rather than set 'false': a literal `onSale=false`
+              // satisfies neither the All chip nor the On Sale chip, which
+              // leaves no way back to an unfiltered state.
+              if (isActive) params.delete('onSale')
+              else params.set('onSale', 'true')
+              // A narrower result set can be shorter than the current page.
+              params.delete('page')
+            } else {
+              // Match on the facet's own slug rather than lowercasing the
+              // label — multi-word weave names don't slugify by lowercasing.
+              // The sidebar can put several slugs in one comma-joined param,
+              // so a chip is active when the param *contains* its slug.
+              const selected = getCommaParam(sParams, 'weave')
+              isActive = selected.includes(chip.slug)
+              // Toggling one chip rewrites the whole param, so preserve the
+              // other selected weaves instead of silently dropping them.
+              const next = isActive
+                ? selected.filter((s) => s !== chip.slug)
+                : [...selected, chip.slug]
+              if (next.length > 0) params.set('weave', next.join(','))
+              // Delete rather than set '': a present-but-empty `weave=` still
+              // counts as "weave param supplied" upstream, which would skip
+              // the category-slug fallback and unfilter the grid.
+              else params.delete('weave')
+              params.delete('page')
+            }
+
+            const qs = params.toString()
+            return (
+              <Link
+                key={chip.key}
+                href={qs ? `?${qs}` : '?'}
+                className={cn(
+                  'font-body rounded-lg px-3 py-1 text-xs font-medium transition-colors',
+                  isActive
+                    ? 'bg-brand-600 text-white'
+                    : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200',
+                )}
+              >
+                {chip.label}
+              </Link>
+            )
+          })}
         </div>
       </div>
 
