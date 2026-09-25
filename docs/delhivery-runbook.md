@@ -44,7 +44,7 @@ Environment variables (see `.env.example` placeholders — real values live only
 | `DELHIVERY_API_TOKEN`                              | One Panel API token                                                                      |
 | `DELHIVERY_MODE`                                   | `test` → `https://staging-express.delhivery.com`, `prod` → `https://track.delhivery.com` |
 | `DELHIVERY_PICKUP_PIN`                             | Pickup pincode (default `400068`, Mumbai)                                                |
-| `DELHIVERY_WEBHOOK_SECRET`                         | HMAC secret used to verify `x-delhivery-signature`                                       |
+| `DELHIVERY_WEBHOOK_SECRET`                         | Shared secret configured by Delhivery in the `x-delhivery-signature` header              |
 | `DELHIVERY_CLIENT_NAME` / `DELHIVERY_SELLER_EMAIL` | Consignee/seller identity in shipment JSON                                               |
 
 Pickup location name is `SHAYGA B2C` (configured in the One Panel under
@@ -68,22 +68,22 @@ All under `/api/orders/:id/delhivery/...` (collection endpoints — user session
 
 - URL to register with Delhivery (`lastmile-integration@delhivery.com`):
   `https://<host>/api/webhooks/delhivery` (production: Shayga domain).
-- Header `x-delhivery-signature` verified with `DELHIVERY_WEBHOOK_SECRET` via
-  `crypto.timingSafeEqual`. Missing/invalid signature → `401`.
+- Header `x-delhivery-signature` is the shared value configured with Delhivery
+  and is compared with `crypto.timingSafeEqual`. Missing/invalid header → `401`.
 - Unknown waybill → `200` + `delhivery.webhook_orphan` audit row (never a 404, so
   Delhivery stops retrying, and we keep a record to reconcile).
-- Updates are idempotent (`order.status !== mapped.status` guard) and use
+- Status updates are guarded against duplicate or regressing transitions and use
   `overrideAccess: true` (orders `update` access requires a session).
 
 ## Status mapping (`mapping.ts`)
 
-| `status_type` | `status`                                | Order status change          |
-| ------------- | --------------------------------------- | ---------------------------- |
-| `UD`          | `IN TRANSIT` / `PENDING` / `DISPATCHED` | → `shipped`                  |
-| `DL`          | `DELIVERED`                             | → `delivered`                |
-| `DL`          | `RTO`                                   | → `cancelled`                |
-| `CN`          | `CANCELED` / `CLOSED`                   | → `cancelled`                |
-| anything else | —                                       | audit only, no status change |
+| `status_type` | `status`                                | Order status change             |
+| ------------- | --------------------------------------- | ------------------------------- |
+| `UD`          | `IN TRANSIT` / `PENDING` / `DISPATCHED` | → `shipped`                     |
+| `DL`          | `DELIVERED`                             | → `delivered`                   |
+| `DL`          | `RTO`                                   | audit only, no automatic change |
+| `CN`          | `CANCELED` / `CLOSED`                   | → `cancelled`                   |
+| anything else | —                                       | audit only, no status change    |
 
 `s/RTO` updates are logged but do **not** change order status automatically
 (return handling requires manual refund action).
@@ -100,8 +100,9 @@ All under `/api/orders/:id/delhivery/...` (collection endpoints — user session
 
 ## Onboarding checklist (production go-live)
 
-- [ ] Add `x-delhivery-signature` secret + verify the `POST /api/webhooks/delhivery` route
-      responds `200` to a signed test request.
+- [ ] Add the `x-delhivery-signature` shared value to Delhivery's requirement
+      document + verify the `POST /api/webhooks/delhivery` route responds `200`
+      to a signed test request.
 - [ ] Register webhook URL with `lastmile-integration@delhivery.com`.
 - [ ] Register `SHAYGA B2C` pickup location (name + default pincode) in One Panel.
 - [ ] Set `DELHIVERY_CLIENT_NAME` / `DELHIVERY_SELLER_EMAIL` in production env.

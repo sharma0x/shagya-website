@@ -1,5 +1,9 @@
 import type { Payload } from 'payload'
-import { mapScanToOrderStatus, normaliseScan } from './mapping'
+import {
+  mapScanToOrderStatus,
+  normaliseScan,
+  shouldApplyOrderStatusUpdate,
+} from './mapping'
 import type { DelhiveryScan } from './types'
 
 export interface WebhookOutcome {
@@ -41,7 +45,10 @@ export async function processDelhiveryWebhook(
     return { action: 'orphan', message: 'no order matches waybill' }
   }
 
-  if (mapped.action === 'update' && order.status !== mapped.status) {
+  if (
+    mapped.action === 'update' &&
+    shouldApplyOrderStatusUpdate(order.status, mapped.status)
+  ) {
     await payload.update({
       collection: 'orders',
       id: String(order.id),

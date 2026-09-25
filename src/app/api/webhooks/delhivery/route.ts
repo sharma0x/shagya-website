@@ -28,6 +28,23 @@ export async function POST(request: Request) {
     return new Response('Invalid webhook signature', { status: 401 })
   }
 
+  let parsedBody: unknown
+  try {
+    parsedBody = JSON.parse(rawBody)
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON payload' }, { status: 400 })
+  }
+  if (
+    typeof parsedBody !== 'object' ||
+    parsedBody === null ||
+    Array.isArray(parsedBody)
+  ) {
+    return NextResponse.json(
+      { error: 'Invalid webhook payload' },
+      { status: 400 },
+    )
+  }
+
   try {
     const payload = await getPayload({ config })
     const outcome = await processDelhiveryWebhook(payload, rawBody)
@@ -35,7 +52,7 @@ export async function POST(request: Request) {
   } catch (error: any) {
     console.error('[Delhivery Webhook Error]:', error)
     return NextResponse.json(
-      { error: error.message || 'Internal Server Error' },
+      { error: 'Internal Server Error' },
       { status: 500 },
     )
   }
