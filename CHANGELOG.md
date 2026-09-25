@@ -1,3 +1,9 @@
+## [1.27.2](https://github.com/sharma0x/shagya-website/compare/v1.27.1...v1.27.2) (2026-09-25)
+
+### Bug Fixes
+
+- **auth:** fix customer_id column and foreign key re-parenting in account linking ([0702d9c](https://github.com/sharma0x/shagya-website/commit/0702d9cad45e87d339d9b3ba624f149a60104926))
+
 ## [1.27.1](https://github.com/sharma0x/shagya-website/compare/v1.27.0...v1.27.1) (2026-09-24)
 
 ### Bug Fixes
