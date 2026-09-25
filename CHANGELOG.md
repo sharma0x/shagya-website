@@ -1,3 +1,10 @@
+## [1.27.1](https://github.com/sharma0x/shagya-website/compare/v1.27.0...v1.27.1) (2026-09-24)
+
+### Bug Fixes
+
+- **analytics:** correct Meta Pixel custom event routing and deduplication ([3098c18](https://github.com/sharma0x/shagya-website/commit/3098c1821541ced2d0f9efc67db5be72c9fd4313))
+- **email:** make order links return customers to their order ([f033c63](https://github.com/sharma0x/shagya-website/commit/f033c639904667a2976063293003b139b89d1e1b))
+
 ## [1.27.0](https://github.com/sharma0x/shagya-website/compare/v1.26.5...v1.27.0) (2026-09-24)
 
 ### Features

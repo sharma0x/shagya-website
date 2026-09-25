@@ -30,6 +30,7 @@ import {
   unlinkPhoneFromUser,
   sendEmailVerificationOtp,
   verifyAndLinkEmailForUser,
+  linkPhoneToUser,
 } from '../account-linking'
 
 beforeEach(() => {
@@ -325,5 +326,174 @@ describe('verifyAndLinkEmailForUser', () => {
     expect(result.success).toBe(true)
     expect(result.linked).toBe(true)
     expect(result.newSession).toBeDefined()
+  })
+})
+
+describe('linkPhoneToUser', () => {
+  it('links a phone number when no previous account is associated', async () => {
+    mockQuery
+      // getPhoneIdentityByPhoneNumber -> null
+      .mockResolvedValueOnce({ rows: [] })
+      // getFirebaseAccountOwner -> null
+      .mockResolvedValueOnce({ rows: [] })
+
+    mockClientQuery
+      // BEGIN
+      .mockResolvedValueOnce({ rows: [] })
+      // DELETE old phone_identities for current user
+      .mockResolvedValueOnce({ rows: [] })
+      // INSERT phone_identities
+      .mockResolvedValueOnce({
+        rows: [
+          {
+            phone_number: '+919876543210',
+            verified_at: new Date('2026-09-25T00:00:00Z'),
+          },
+        ],
+      })
+      // DELETE old account
+      .mockResolvedValueOnce({ rows: [] })
+      // INSERT account
+      .mockResolvedValueOnce({ rows: [] })
+      // UPDATE user
+      .mockResolvedValueOnce({ rows: [] })
+      // UPDATE customers
+      .mockResolvedValueOnce({ rows: [] })
+      // COMMIT
+      .mockResolvedValueOnce({ rows: [] })
+
+    const result = await linkPhoneToUser({
+      currentUserId: 'user-email-1',
+      phoneNumber: '+919876543210',
+      firebaseUid: 'firebase-uid-new',
+      idToken: 'mock-token',
+    })
+
+    expect(result.success).toBe(true)
+    expect(result.phoneIdentity.phoneNumber).toBe('+919876543210')
+  })
+
+  it('merges previous phone shell account into current email user with correct database columns', async () => {
+    mockQuery
+      // getPhoneIdentityByPhoneNumber -> found existing identity on other user
+      .mockResolvedValueOnce({
+        rows: [
+          {
+            id: 1,
+            user_id: 'phone-shell-user',
+            phone_number: '+919876543210',
+            firebase_uid: 'firebase-uid-123',
+            verified_at: new Date('2026-09-20T00:00:00Z'),
+          },
+        ],
+      })
+      // getFirebaseAccountOwner
+      .mockResolvedValueOnce({ rows: [] })
+
+    mockClientQuery
+      // BEGIN
+      .mockResolvedValueOnce({ rows: [] })
+      // SELECT other customer
+      .mockResolvedValueOnce({
+        rows: [
+          {
+            id: 10,
+            email: 'firebase-uid-123@phone.shayga.in',
+            phone: '+919876543210',
+          },
+        ],
+      })
+      // SELECT current customer
+      .mockResolvedValueOnce({
+        rows: [
+          {
+            id: 20,
+            email: 'user@example.com',
+            phone: null,
+          },
+        ],
+      })
+      // UPDATE addresses (customer_id)
+      .mockResolvedValueOnce({ rows: [] })
+      // UPDATE reviews (customer_id)
+      .mockResolvedValueOnce({ rows: [] })
+      // UPDATE coupons_rels (customers_id)
+      .mockResolvedValueOnce({ rows: [] })
+      // SELECT carts for other customer
+      .mockResolvedValueOnce({ rows: [] })
+      // SELECT carts for current customer
+      .mockResolvedValueOnce({ rows: [] })
+      // SELECT wishlist for other customer
+      .mockResolvedValueOnce({ rows: [] })
+      // SELECT wishlist for current customer
+      .mockResolvedValueOnce({ rows: [] })
+      // UPDATE orders (customer_email)
+      .mockResolvedValueOnce({ rows: [] })
+      // DELETE from customers (other customer)
+      .mockResolvedValueOnce({ rows: [] })
+      // DELETE from session (other user)
+      .mockResolvedValueOnce({ rows: [] })
+      // DELETE from account (other user)
+      .mockResolvedValueOnce({ rows: [] })
+      // DELETE from phone_identities (other user)
+      .mockResolvedValueOnce({ rows: [] })
+      // SELECT other user to check if shell
+      .mockResolvedValueOnce({
+        rows: [
+          {
+            id: 'phone-shell-user',
+            email: 'firebase-uid-123@phone.shayga.in',
+          },
+        ],
+      })
+      // DELETE from user (other user shell)
+      .mockResolvedValueOnce({ rows: [] })
+      // DELETE from phone_identities (current user)
+      .mockResolvedValueOnce({ rows: [] })
+      // INSERT into phone_identities
+      .mockResolvedValueOnce({
+        rows: [
+          {
+            phone_number: '+919876543210',
+            verified_at: new Date('2026-09-25T00:00:00Z'),
+          },
+        ],
+      })
+      // DELETE from account (current user)
+      .mockResolvedValueOnce({ rows: [] })
+      // INSERT into account (current user)
+      .mockResolvedValueOnce({ rows: [] })
+      // UPDATE user (phoneNumber)
+      .mockResolvedValueOnce({ rows: [] })
+      // UPDATE customers (phone)
+      .mockResolvedValueOnce({ rows: [] })
+      // COMMIT
+      .mockResolvedValueOnce({ rows: [] })
+
+    const result = await linkPhoneToUser({
+      currentUserId: 'user-email-1',
+      phoneNumber: '+919876543210',
+      firebaseUid: 'firebase-uid-123',
+      idToken: 'mock-token',
+    })
+
+    expect(result.success).toBe(true)
+
+    // Inspect the SQL queries executed
+    const executedSql = mockClientQuery.mock.calls.map((call) => call[0])
+
+    // Verify correct column names are used in raw SQL
+    expect(executedSql).toContain(
+      'UPDATE addresses SET customer_id = $1 WHERE customer_id = $2',
+    )
+    expect(executedSql).toContain(
+      'UPDATE orders SET customer_email = $1 WHERE LOWER(customer_email) = LOWER($2)',
+    )
+
+    // Assert that incorrect column names are nowhere in the executed queries
+    for (const sql of executedSql) {
+      expect(sql).not.toMatch(/UPDATE addresses SET customer\s+=/)
+      expect(sql).not.toMatch(/"customerEmail"/)
+    }
   })
 })

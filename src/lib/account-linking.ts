@@ -113,14 +113,79 @@ export async function linkPhoneToUser(input: {
         if (currentCust) {
           // Re-point addresses from other customer to current customer
           await client.query(
-            `UPDATE addresses SET customer = $1 WHERE customer = $2`,
+            `UPDATE addresses SET customer_id = $1 WHERE customer_id = $2`,
             [currentCust.id, otherCust.id],
           )
+
+          // Re-point reviews
+          await client.query(
+            `UPDATE reviews SET customer_id = $1 WHERE customer_id = $2`,
+            [currentCust.id, otherCust.id],
+          )
+
+          // Re-point coupon assignments
+          await client.query(
+            `UPDATE coupons_rels SET customers_id = $1 WHERE customers_id = $2`,
+            [currentCust.id, otherCust.id],
+          )
+
+          // Handle cart
+          const otherCartRes = await client.query(
+            `SELECT id FROM carts WHERE customer_id = $1`,
+            [otherCust.id],
+          )
+          const currentCartRes = await client.query(
+            `SELECT id FROM carts WHERE customer_id = $1`,
+            [currentCust.id],
+          )
+          if (otherCartRes.rows.length > 0) {
+            if (currentCartRes.rows.length > 0) {
+              await client.query(`DELETE FROM carts WHERE id = $1`, [
+                otherCartRes.rows[0].id,
+              ])
+            } else {
+              await client.query(
+                `UPDATE carts SET customer_id = $1 WHERE id = $2`,
+                [currentCust.id, otherCartRes.rows[0].id],
+              )
+            }
+          }
+
+          // Handle wishlist
+          const otherWishlistRes = await client.query(
+            `SELECT id FROM wishlist WHERE customer_id = $1`,
+            [otherCust.id],
+          )
+          const currentWishlistRes = await client.query(
+            `SELECT id FROM wishlist WHERE customer_id = $1`,
+            [currentCust.id],
+          )
+          if (otherWishlistRes.rows.length > 0) {
+            if (currentWishlistRes.rows.length > 0) {
+              await client.query(
+                `UPDATE wishlist_items SET _parent_id = $1
+                 WHERE _parent_id = $2
+                   AND NOT EXISTS (
+                     SELECT 1 FROM wishlist_items wi2
+                     WHERE wi2._parent_id = $1 AND wi2.product_id = wishlist_items.product_id
+                   )`,
+                [currentWishlistRes.rows[0].id, otherWishlistRes.rows[0].id],
+              )
+              await client.query(`DELETE FROM wishlist WHERE id = $1`, [
+                otherWishlistRes.rows[0].id,
+              ])
+            } else {
+              await client.query(
+                `UPDATE wishlist SET customer_id = $1 WHERE id = $2`,
+                [currentCust.id, otherWishlistRes.rows[0].id],
+              )
+            }
+          }
 
           // Re-point orders from other customer's email to current customer's email
           if (otherCust.email && currentCust.email) {
             await client.query(
-              `UPDATE orders SET "customerEmail" = $1 WHERE LOWER("customerEmail") = LOWER($2)`,
+              `UPDATE orders SET customer_email = $1 WHERE LOWER(customer_email) = LOWER($2)`,
               [currentCust.email, otherCust.email],
             )
           }
@@ -221,6 +286,12 @@ export async function linkPhoneToUser(input: {
     // Update user.phoneNumber on user table
     await client.query(
       `UPDATE "user" SET "phoneNumber" = $1, "updatedAt" = $2 WHERE id = $3`,
+      [normalizedPhoneNumber, now, input.currentUserId],
+    )
+
+    // Update phone on customers table
+    await client.query(
+      `UPDATE customers SET phone = $1, updated_at = $2 WHERE better_auth_user_id = $3`,
       [normalizedPhoneNumber, now, input.currentUserId],
     )
 
@@ -432,13 +503,79 @@ export async function verifyAndLinkEmailForUser(input: {
         if (emailCust) {
           // Re-parent addresses
           await client.query(
-            `UPDATE addresses SET customer = $1 WHERE customer = $2`,
+            `UPDATE addresses SET customer_id = $1 WHERE customer_id = $2`,
             [emailCust.id, phoneCust.id],
           )
+
+          // Re-point reviews
+          await client.query(
+            `UPDATE reviews SET customer_id = $1 WHERE customer_id = $2`,
+            [emailCust.id, phoneCust.id],
+          )
+
+          // Re-point coupon assignments
+          await client.query(
+            `UPDATE coupons_rels SET customers_id = $1 WHERE customers_id = $2`,
+            [emailCust.id, phoneCust.id],
+          )
+
+          // Handle cart
+          const phoneCartRes = await client.query(
+            `SELECT id FROM carts WHERE customer_id = $1`,
+            [phoneCust.id],
+          )
+          const emailCartRes = await client.query(
+            `SELECT id FROM carts WHERE customer_id = $1`,
+            [emailCust.id],
+          )
+          if (phoneCartRes.rows.length > 0) {
+            if (emailCartRes.rows.length > 0) {
+              await client.query(`DELETE FROM carts WHERE id = $1`, [
+                phoneCartRes.rows[0].id,
+              ])
+            } else {
+              await client.query(
+                `UPDATE carts SET customer_id = $1 WHERE id = $2`,
+                [emailCust.id, phoneCartRes.rows[0].id],
+              )
+            }
+          }
+
+          // Handle wishlist
+          const phoneWishlistRes = await client.query(
+            `SELECT id FROM wishlist WHERE customer_id = $1`,
+            [phoneCust.id],
+          )
+          const emailWishlistRes = await client.query(
+            `SELECT id FROM wishlist WHERE customer_id = $1`,
+            [emailCust.id],
+          )
+          if (phoneWishlistRes.rows.length > 0) {
+            if (emailWishlistRes.rows.length > 0) {
+              await client.query(
+                `UPDATE wishlist_items SET _parent_id = $1
+                 WHERE _parent_id = $2
+                   AND NOT EXISTS (
+                     SELECT 1 FROM wishlist_items wi2
+                     WHERE wi2._parent_id = $1 AND wi2.product_id = wishlist_items.product_id
+                   )`,
+                [emailWishlistRes.rows[0].id, phoneWishlistRes.rows[0].id],
+              )
+              await client.query(`DELETE FROM wishlist WHERE id = $1`, [
+                phoneWishlistRes.rows[0].id,
+              ])
+            } else {
+              await client.query(
+                `UPDATE wishlist SET customer_id = $1 WHERE id = $2`,
+                [emailCust.id, phoneWishlistRes.rows[0].id],
+              )
+            }
+          }
+
           // Re-parent orders
           if (phoneCust.email && emailCust.email) {
             await client.query(
-              `UPDATE orders SET "customerEmail" = $1 WHERE LOWER("customerEmail") = LOWER($2)`,
+              `UPDATE orders SET customer_email = $1 WHERE LOWER(customer_email) = LOWER($2)`,
               [emailCust.email, phoneCust.email],
             )
           }
