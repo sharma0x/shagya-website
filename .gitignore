@@ -100,3 +100,7 @@ infra/provision/allowed_ips.txt
 
 # MCP config (contains API keys)
 .mcp.json
+
+
+# strix_runs
+strix_runs

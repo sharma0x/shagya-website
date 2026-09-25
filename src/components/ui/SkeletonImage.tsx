@@ -38,7 +38,7 @@ export function SkeletonImage({
     if (imgRef.current?.complete) {
       setLoaded(true)
     }
-  }, [])
+  }, [src])
 
   return (
     <>
@@ -73,6 +73,7 @@ export function SkeletonImage({
           className,
         )}
         onLoad={() => setLoaded(true)}
+        onError={() => setLoaded(true)}
       />
     </>
   )
