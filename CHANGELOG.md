@@ -1,3 +1,9 @@
+## [1.28.0](https://github.com/sharma0x/shagya-website/compare/v1.27.3...v1.28.0) (2026-09-25)
+
+### Features
+
+- **home:** make promise content CMS-managed ([04bf940](https://github.com/sharma0x/shagya-website/commit/04bf940ddedb26ceba38f35fd4238868a5ad7ba3))
+
 ## [1.27.3](https://github.com/sharma0x/shagya-website/compare/v1.27.2...v1.27.3) (2026-09-25)
 
 ### Bug Fixes
