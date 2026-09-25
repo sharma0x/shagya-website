@@ -109,8 +109,24 @@ describe('GET /api/search', () => {
     expect(body.docs[1]).toHaveProperty('title', 'Saree Care Guide')
   })
 
-  it('returns empty array when no FTS match found', async () => {
+  it('falls back to published products when the search index has no match', async () => {
     mockFind.mockResolvedValueOnce({ docs: [], totalDocs: 0 })
+    mockFind.mockResolvedValueOnce({ docs: [sampleProduct], totalDocs: 1 })
+    mockFind.mockResolvedValueOnce({ docs: [], totalDocs: 0 })
+
+    const response = await GET_search(
+      new Request('http://localhost/api/search?q=Silk'),
+    )
+    const body = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(body.docs).toHaveLength(1)
+    expect(body.docs[0]).toHaveProperty('name', 'Banarasi Silk Saree')
+    expect(mockFind).toHaveBeenCalledTimes(3)
+  })
+
+  it('returns empty array when no indexed or source match is found', async () => {
+    mockFind.mockResolvedValue({ docs: [], totalDocs: 0 })
 
     const response = await GET_search(
       new Request('http://localhost/api/search?q=xyznonexistent'),
@@ -127,7 +143,7 @@ describe('GET /api/search', () => {
 
     await GET_search(new Request('http://localhost/api/search?q=test&limit=5'))
 
-    expect(mockFind).toHaveBeenCalledTimes(1)
+    expect(mockFind).toHaveBeenCalledTimes(3)
     expect(mockFind).toHaveBeenCalledWith(expect.objectContaining({ limit: 5 }))
   })
 

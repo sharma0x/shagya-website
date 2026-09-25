@@ -9,30 +9,11 @@ import { cn } from '@/lib/utils'
 import { getProductUrl } from '@/lib/product-url'
 import { weaveLabel } from '@/lib/weaves'
 import { isUnoptimizedImage } from '@/lib/image-url'
-
-interface FTSProductResult {
-  id: number
-  type: 'product'
-  name: string
-  slug: string
-  basePrice: number | null
-  compareAtPrice: number | null
-  image: string | null
-  fabric: string | null
-  weave: string | null
-  rank: number
-}
-
-interface FTSPostResult {
-  id: number
-  type: 'post'
-  title: string
-  slug: string
-  excerpt: string | null
-  rank: number
-}
-
-type SearchResult = FTSProductResult | FTSPostResult
+import type {
+  SearchPostResult,
+  SearchProductResult,
+  SearchResult,
+} from '@/lib/search'
 
 interface SearchResponse {
   docs: SearchResult[]
@@ -53,7 +34,7 @@ function getResultUrl(doc: SearchResult): string {
   return `/blog/${doc.slug}`
 }
 
-function ProductThumbnail({ doc }: { doc: FTSProductResult }) {
+function ProductThumbnail({ doc }: { doc: SearchProductResult }) {
   return (
     <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-neutral-100">
       <Image
@@ -131,9 +112,9 @@ function SearchPanel({ onClose }: { onClose: () => void }) {
   }, [query, performSearch])
 
   const products = results.filter(
-    (r): r is FTSProductResult => r.type === 'product',
+    (r): r is SearchProductResult => r.type === 'product',
   )
-  const posts = results.filter((r): r is FTSPostResult => r.type === 'post')
+  const posts = results.filter((r): r is SearchPostResult => r.type === 'post')
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'ArrowDown') {

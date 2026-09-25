@@ -11,9 +11,14 @@ import { ActiveFilterChips } from '@/components/filters/ActiveFilterChips'
 import { buildWhereClause } from '@/lib/filters/build-where-clause'
 import { getProductUrl } from '@/lib/product-url'
 import { isUnoptimizedImage } from '@/lib/image-url'
-import { resolveWeaveIds, weaveLabel } from '@/lib/weaves'
+import { resolveFabricIds, resolveWeaveIds, weaveLabel } from '@/lib/weaves'
 import { getProductImageUrl } from '@/lib/product-utils'
 import { TrackSearchResults } from '@/components/analytics/TrackSearchResults'
+import {
+  searchContent,
+  type SearchPostResult,
+  type SearchProductResult,
+} from '@/lib/search'
 
 // No DB access at build time — must render dynamically
 export const dynamic = 'force-dynamic'
@@ -45,28 +50,6 @@ function ImagePanel({
   )
 }
 
-interface FTSProductResult {
-  id: number
-  type: 'product'
-  name: string
-  slug: string
-  basePrice: number | null
-  compareAtPrice: number | null
-  image: string | null
-  fabric: string | null
-  weave: string | null
-  rank: number
-}
-
-interface FTSPostResult {
-  id: number
-  type: 'post'
-  title: string
-  slug: string
-  excerpt: string | null
-  rank: number
-}
-
 export default async function SearchPage({
   searchParams,
 }: {
@@ -80,8 +63,8 @@ export default async function SearchPage({
   const sortParam = (restParams.sort as string) || 'newest'
 
   const payload = await getPayload({ config })
-  let products: FTSProductResult[] = []
-  let posts: FTSPostResult[] = []
+  let products: SearchProductResult[] = []
+  let posts: SearchPostResult[] = []
 
   // Determine if any filter params are active (besides sort and q)
   const filterParams = new URLSearchParams()
@@ -118,6 +101,21 @@ export default async function SearchPage({
           where.weave = { equals: weaveIds[0] }
         } else if (weaveIds.length > 1) {
           where.weave = { in: weaveIds }
+        } else {
+          where.weave = { in: [] }
+        }
+      }
+
+      const fabricParam = filterParams.get('fabric')
+      if (fabricParam) {
+        const fabricSlugs = fabricParam.split(',').filter(Boolean)
+        const fabricIds = await resolveFabricIds(payload, fabricSlugs)
+        if (fabricIds.length === 1) {
+          where.fabric = { equals: fabricIds[0] }
+        } else if (fabricIds.length > 1) {
+          where.fabric = { in: fabricIds }
+        } else {
+          where.fabric = { in: [] }
         }
       }
 
@@ -142,58 +140,13 @@ export default async function SearchPage({
         rank: 50 - index,
       }))
     } else {
-      // Use existing FTS behavior
-      const limit = 50
-      const ftsResult = await payload.find({
-        collection: 'search',
-        where: {
-          title: {
-            like: q,
-          },
-        },
-        limit,
-        depth: 2,
-      })
-
-      const docs = ftsResult.docs
-        .filter(
-          (d: any) =>
-            d.doc &&
-            typeof d.doc.value === 'object' &&
-            ['products', 'posts'].includes(d.doc.relationTo),
-        )
-        .map((d: any, index: number) => {
-          const type = d.doc.relationTo === 'products' ? 'product' : 'post'
-          const docValue = d.doc.value
-
-          if (type === 'product') {
-            return {
-              id: docValue.id,
-              type: 'product' as const,
-              name: docValue.name,
-              slug: docValue.slug,
-              basePrice: docValue.basePrice || null,
-              compareAtPrice: docValue.compareAtPrice || null,
-              image: getProductImageUrl(docValue),
-              fabric: weaveLabel(docValue.fabric) || null,
-              weave: weaveLabel(docValue.weave) || null,
-              rank: d.priority || limit - index,
-            } as FTSProductResult
-          }
-
-          return {
-            id: docValue.id,
-            type: 'post' as const,
-            title: docValue.title,
-            slug: docValue.slug,
-            excerpt: docValue.excerpt,
-            rank: d.priority || limit - index,
-          } as FTSPostResult
-        })
-        .sort((a, b) => b.rank - a.rank)
-
-      products = docs.filter((d): d is FTSProductResult => d.type === 'product')
-      posts = docs.filter((d): d is FTSPostResult => d.type === 'post')
+      const result = await searchContent(payload, q, 50)
+      products = result.docs.filter(
+        (doc): doc is SearchProductResult => doc.type === 'product',
+      )
+      posts = result.docs.filter(
+        (doc): doc is SearchPostResult => doc.type === 'post',
+      )
     }
   }
 
