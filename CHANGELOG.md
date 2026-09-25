@@ -1,3 +1,10 @@
+## [1.27.3](https://github.com/sharma0x/shagya-website/compare/v1.27.2...v1.27.3) (2026-09-25)
+
+### Bug Fixes
+
+- **delhivery:** align webhook auth and payload parsing ([da15720](https://github.com/sharma0x/shagya-website/commit/da1572098a11461fd43aadb1de550f198448b44d))
+- **search:** fall back to source collections ([c9cacad](https://github.com/sharma0x/shagya-website/commit/c9cacadbedc1bda0cb21866dd74e79aaf2fe2118))
+
 ## [1.27.2](https://github.com/sharma0x/shagya-website/compare/v1.27.1...v1.27.2) (2026-09-25)
 
 ### Bug Fixes
