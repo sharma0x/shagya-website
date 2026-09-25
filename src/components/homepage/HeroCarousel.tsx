@@ -93,30 +93,36 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
               tabIndex={i === current ? 0 : -1}
             >
               {slide.mobileImageUrl && (
+                <div className="absolute inset-0 md:hidden">
+                  <SkeletonImage
+                    src={slide.mobileImageUrl}
+                    alt=""
+                    fill
+                    sizes="100vw"
+                    className="object-cover"
+                    unoptimized={isUnoptimizedImage(slide.mobileImageUrl)}
+                    loading={i === 0 ? 'eager' : 'lazy'}
+                    priority={i === 0}
+                  />
+                </div>
+              )}
+              <div
+                className={cn(
+                  'absolute inset-0',
+                  slide.mobileImageUrl && 'hidden md:block',
+                )}
+              >
                 <SkeletonImage
-                  src={slide.mobileImageUrl}
+                  src={slide.imageUrl}
                   alt=""
                   fill
                   sizes="100vw"
-                  className="object-cover md:hidden"
-                  unoptimized={isUnoptimizedImage(slide.mobileImageUrl)}
+                  className="object-cover"
+                  unoptimized={isUnoptimizedImage(slide.imageUrl)}
                   loading={i === 0 ? 'eager' : 'lazy'}
                   priority={i === 0}
                 />
-              )}
-              <SkeletonImage
-                src={slide.imageUrl}
-                alt=""
-                fill
-                sizes="100vw"
-                className={cn(
-                  'object-cover',
-                  slide.mobileImageUrl && 'hidden md:block',
-                )}
-                unoptimized={isUnoptimizedImage(slide.imageUrl)}
-                loading={i === 0 ? 'eager' : 'lazy'}
-                priority={i === 0}
-              />
+              </div>
             </Link>
           ))}
         </div>
