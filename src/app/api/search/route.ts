@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import config from '@payload-config'
-import { weaveLabel } from '@/lib/weaves'
-import { getProductImageUrl } from '@/lib/product-utils'
+import { searchContent } from '@/lib/search'
 
 /**
  * GET /api/search
@@ -35,83 +34,11 @@ export async function GET(request: Request): Promise<NextResponse> {
     )
 
     const payload = await getPayload({ config })
-
-    const result = await payload.find({
-      collection: 'search',
-      where: {
-        title: {
-          like: q,
-        },
-      },
-      limit,
-    })
-
-    const populatedDocs = await Promise.all(
-      result.docs.map(async (d: any) => {
-        if (!d.doc || !['products', 'posts'].includes(d.doc.relationTo)) {
-          return null
-        }
-
-        let docValue = d.doc.value
-
-        if (typeof docValue !== 'object') {
-          try {
-            docValue = await payload.findByID({
-              collection: d.doc.relationTo,
-              id: docValue,
-            })
-          } catch (e) {
-            return null
-          }
-        }
-
-        return {
-          ...d,
-          doc: {
-            ...d.doc,
-            value: docValue,
-          },
-        }
-      }),
-    )
-
-    const docs = populatedDocs
-      .filter(
-        (d: any) => d !== null && d.doc && typeof d.doc.value === 'object',
-      )
-      .map((d: any, index: number) => {
-        const type = d.doc.relationTo === 'products' ? 'product' : 'post'
-        const docValue = d.doc.value
-
-        if (type === 'product') {
-          return {
-            id: docValue.id,
-            type: 'product',
-            name: docValue.name,
-            slug: docValue.slug,
-            basePrice: docValue.basePrice || null,
-            compareAtPrice: docValue.compareAtPrice || null,
-            image: getProductImageUrl(docValue),
-            fabric: weaveLabel(docValue.fabric) || null,
-            weave: weaveLabel(docValue.weave) || null,
-            rank: d.priority || limit - index,
-          }
-        }
-
-        return {
-          id: docValue.id,
-          type: 'post',
-          title: docValue.title,
-          slug: docValue.slug,
-          excerpt: docValue.excerpt,
-          rank: d.priority || limit - index,
-        }
-      })
-      .sort((a: any, b: any) => b.rank - a.rank)
+    const result = await searchContent(payload, q, limit)
 
     return NextResponse.json(
       {
-        docs,
+        docs: result.docs,
         totalDocs: result.totalDocs,
         limit,
         query: q,
