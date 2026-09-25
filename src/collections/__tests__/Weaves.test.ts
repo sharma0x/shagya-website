@@ -94,8 +94,28 @@ describe('Weaves collection', () => {
       expect(field?.type).toBe('textarea')
     })
 
-    it('has exactly 3 fields', () => {
-      expect(Weaves.fields).toHaveLength(3)
+    it('has featured field (checkbox, indexed, defaults false)', () => {
+      const field = Weaves.fields?.find(
+        (f: any) => f.name === 'featured',
+      ) as any
+      expect(field).toBeDefined()
+      expect(field?.type).toBe('checkbox')
+      expect(field?.defaultValue).toBe(false)
+      expect(field?.index).toBe(true)
+    })
+
+    it('has sortOrder field (number, indexed, defaults 0)', () => {
+      const field = Weaves.fields?.find(
+        (f: any) => f.name === 'sortOrder',
+      ) as any
+      expect(field).toBeDefined()
+      expect(field?.type).toBe('number')
+      expect(field?.defaultValue).toBe(0)
+      expect(field?.index).toBe(true)
+    })
+
+    it('has exactly 5 fields', () => {
+      expect(Weaves.fields).toHaveLength(5)
     })
   })
 
