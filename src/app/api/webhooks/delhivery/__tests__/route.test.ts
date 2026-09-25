@@ -55,6 +55,22 @@ describe('POST /api/webhooks/delhivery', () => {
     expect(mockProcess).not.toHaveBeenCalled()
   })
 
+  it('accepts the documented Delhivery payload with the configured header', async () => {
+    const response = await POST(
+      signedRequest(
+        {
+          Shipment: {
+            Status: { StatusType: 'UD', Status: 'In Transit' },
+            AWB: 'AWB-1',
+          },
+        },
+        'webhook-secret',
+      ),
+    )
+    expect(response.status).toBe(200)
+    expect(mockProcess).toHaveBeenCalledTimes(1)
+  })
+
   it('rejects requests with an invalid signature', async () => {
     const response = await POST(
       signedRequest({ status_type: 'UD' }, 'wrong-signature'),
@@ -82,6 +98,23 @@ describe('POST /api/webhooks/delhivery', () => {
     expect(mockProcess).toHaveBeenCalledTimes(1)
     const body = await response.json()
     expect(body.ok).toBe(true)
+  })
+
+  it('returns 400 for malformed JSON', async () => {
+    const request = new Request('http://localhost/api/webhooks/delhivery', {
+      method: 'POST',
+      headers: { 'x-delhivery-signature': 'webhook-secret' },
+      body: '{',
+    })
+    const response = await POST(request)
+    expect(response.status).toBe(400)
+    expect(mockProcess).not.toHaveBeenCalled()
+  })
+
+  it.each([null, []])('returns 400 for a non-object payload', async (body) => {
+    const response = await POST(signedRequest(body, 'webhook-secret'))
+    expect(response.status).toBe(400)
+    expect(mockProcess).not.toHaveBeenCalled()
   })
 
   it('returns 500 when the processor throws', async () => {

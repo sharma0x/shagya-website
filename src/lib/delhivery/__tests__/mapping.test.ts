@@ -2,7 +2,11 @@ import { describe, it, expect } from 'vitest'
 
 // @vitest-environment node
 
-import { mapScanToOrderStatus, normaliseScan } from '../mapping'
+import {
+  mapScanToOrderStatus,
+  normaliseScan,
+  shouldApplyOrderStatusUpdate,
+} from '../mapping'
 
 describe('mapScanToOrderStatus', () => {
   it.each([
@@ -12,7 +16,7 @@ describe('mapScanToOrderStatus', () => {
     ['UD', 'PENDING', 'shipped'],
     ['UD', 'DISPATCHED', 'shipped'],
     ['DL', 'DELIVERED', 'delivered'],
-    ['DL', 'RTO', 'cancelled'],
+    ['DL', 'RTO', 'none'],
     ['CN', 'CANCELED', 'cancelled'],
     ['CN', 'CLOSED', 'cancelled'],
     ['RT', 'IN TRANSIT', 'none'],
@@ -23,6 +27,17 @@ describe('mapScanToOrderStatus', () => {
       return
     }
     expect(result).toEqual({ action: 'update', status: expected })
+  })
+
+  it('does not regress terminal order statuses', () => {
+    expect(shouldApplyOrderStatusUpdate('delivered', 'shipped')).toBe(false)
+    expect(shouldApplyOrderStatusUpdate('cancelled', 'delivered')).toBe(false)
+    expect(shouldApplyOrderStatusUpdate('refunded', 'cancelled')).toBe(false)
+  })
+
+  it('allows a new status transition', () => {
+    expect(shouldApplyOrderStatusUpdate('shipped', 'delivered')).toBe(true)
+    expect(shouldApplyOrderStatusUpdate('delivered', 'delivered')).toBe(false)
   })
 
   it('is case-insensitive', () => {
@@ -62,6 +77,60 @@ describe('normaliseScan', () => {
     expect(scan.status).toBe('Delivered')
   })
 
+  it('normalises Delhivery Shipment.Status payloads', () => {
+    const scan = normaliseScan({
+      Shipment: {
+        Status: {
+          Status: 'Delivered',
+          StatusType: 'DL',
+          StatusDateTime: '2019-01-09T17:10:42.767',
+          Instructions: 'Delivered to consignee',
+        },
+        AWB: 'AWB-3',
+        ReferenceNo: 'order-3',
+      },
+    })
+
+    expect(scan).toEqual({
+      status_type: 'DL',
+      status: 'Delivered',
+      description: 'Delivered to consignee',
+      scanned_date: '2019-01-09T17:10:42.767',
+      waybill: 'AWB-3',
+      order_id: 'order-3',
+    })
+  })
+
+  it('normalises ShipmentData and ScanDetail payloads', () => {
+    const scan = normaliseScan({
+      ShipmentData: [
+        {
+          Shipment: {
+            AWB: 'AWB-4',
+            Scans: [
+              {
+                ScanDetail: {
+                  ScanType: 'DL',
+                  Scan: 'Delivered',
+                  ScanDateTime: '2026-09-25T10:00:00.000',
+                },
+              },
+            ],
+          },
+        },
+      ],
+    })
+
+    expect(scan).toEqual(
+      expect.objectContaining({
+        waybill: 'AWB-4',
+        status_type: 'DL',
+        status: 'Delivered',
+        scanned_date: '2026-09-25T10:00:00.000',
+      }),
+    )
+  })
+
   it('prefers AWB key when waybill is missing', () => {
     const scan = normaliseScan({ AWB: 'AWB-2' })
     expect(scan.waybill).toBe('AWB-2')
@@ -72,5 +141,6 @@ describe('normaliseScan', () => {
       'Invalid webhook payload',
     )
     expect(() => normaliseScan(null)).toThrow('Invalid webhook payload')
+    expect(() => normaliseScan([])).toThrow('Invalid webhook payload')
   })
 })
