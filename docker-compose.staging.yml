@@ -12,7 +12,7 @@
 
 services:
   app:
-    image: ${DOCKER_IMAGE:-ghcr.io/sharma0x/shagya-website}:${IMAGE_TAG:-develop}
+    image: ${DOCKER_IMAGE:-ghcr.io/sharma0x/shagya-website}:${STAGING_IMAGE_TAG:-develop}
     platform: linux/amd64
     restart: unless-stopped
     ports:
