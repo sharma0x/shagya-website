@@ -204,8 +204,18 @@ const FROM_NAME = process.env.EMAIL_FROM_NAME || 'Shayga'
 const FROM_ADDRESS = process.env.EMAIL_FROM_ADDRESS || 'noreply@shayga.in'
 
 const isProduction = process.env.NODE_ENV === 'production'
+
+// Staging runs with NODE_ENV=production, so gating on `!isProduction` alone sent
+// every transactional email — including the auth OTP — through Resend, where it
+// failed with "401 API key is invalid" because staging holds only a dummy key.
+// EMAIL_TRANSPORT=mailpit forces SMTP regardless, matching src/lib/email.ts.
+// Unset in production, so main keeps using Resend.
+const useMailpit =
+  process.env.EMAIL_TRANSPORT === 'mailpit' ||
+  (!isProduction && !!process.env.MAILPIT_SMTP_HOST)
+
 const emailAdapter =
-  !isProduction && process.env.MAILPIT_SMTP_HOST
+  useMailpit && process.env.MAILPIT_SMTP_HOST
     ? nodemailerAdapter({
         defaultFromName: FROM_NAME,
         defaultFromAddress: FROM_ADDRESS,
