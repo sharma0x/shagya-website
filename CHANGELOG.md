@@ -1,3 +1,33 @@
+## [1.29.3](https://github.com/sharma0x/shagya-website/compare/v1.29.2...v1.29.3) (2026-09-26)
+
+### Bug Fixes
+
+- **coupons:** stop listing customer-targeted coupons to everyone ([2bd3065](https://github.com/sharma0x/shagya-website/commit/2bd30652e7a43e3398bcffb4098f4cc0dd170b06))
+
+## [1.29.2](https://github.com/sharma0x/shagya-website/compare/v1.29.1...v1.29.2) (2026-09-26)
+
+### Bug Fixes
+
+- **filters:** adopt external URL navigation instead of reverting it ([4b3046d](https://github.com/sharma0x/shagya-website/commit/4b3046d1475997a69906c773e04bebb9c9cf1215))
+
+## [1.29.1](https://github.com/sharma0x/shagya-website/compare/v1.29.0...v1.29.1) (2026-09-26)
+
+### Bug Fixes
+
+- **cart:** close the drawer when a cart item is tapped ([7197212](https://github.com/sharma0x/shagya-website/commit/7197212f6e37e23835b6534d6268beec4570cb70))
+
+## [1.29.0](https://github.com/sharma0x/shagya-website/compare/v1.28.1...v1.29.0) (2026-09-25)
+
+### Features
+
+- **home:** make promise content CMS-managed ([fc1bac6](https://github.com/sharma0x/shagya-website/commit/fc1bac690c2f720e02397a7533e0af7155320909))
+- **category:** make Quick filter chips admin-curated and dynamic ([0e7ab20](https://github.com/sharma0x/shagya-website/commit/0e7ab200b411c531cc5d4a9d9827f553f736cb36))
+
+### Bug Fixes
+
+- **delhivery:** align webhook auth and payload parsing ([6049f10](https://github.com/sharma0x/shagya-website/commit/6049f10a1fdfe77f800f9787134e9a85af1e2a49))
+- **search:** fall back to source collections ([a98b2d1](https://github.com/sharma0x/shagya-website/commit/a98b2d17303ad806bd387bd15b3f1df2aa6fa522))
+
 ## [1.28.1](https://github.com/sharma0x/shagya-website/compare/v1.28.0...v1.28.1) (2026-09-25)
 
 ### Bug Fixes
