@@ -29,6 +29,15 @@ const staticFooterLinks: FooterSection[] = [
   },
 ]
 
+/**
+ * CMS-backed footer links. These resolve through the `[slug]` catch-all, so a
+ * link here 404s whenever the corresponding Pages document is missing or
+ * unpublished — which is exactly how `/careers` ended up as a dead footer link
+ * in production. `publishedSlugs` is the set of slugs that actually exist, so
+ * we can drop the link rather than ship a 404.
+ */
+const CMS_BACKED_FOOTER_LINKS: FooterSection[] = staticFooterLinks
+
 const defaultSocialLinks: FooterLink[] = [
   { label: 'Instagram', href: 'https://instagram.com/shayga' },
   { label: 'Facebook', href: 'https://facebook.com/shayga' },
@@ -73,10 +82,11 @@ function shopLinksFromFabrics(fabrics: FabricType[]): FooterLink[] {
 export async function Footer() {
   let fabrics: FabricType[] = []
   let siteSettings: SiteSetting | null = null
+  let publishedPageSlugs: Set<string> | null = null
 
   try {
     const payload = await getPayload({ config })
-    const [fabricResult, settingsResult] = await Promise.all([
+    const [fabricResult, settingsResult, pagesResult] = await Promise.all([
       payload.find({
         collection: 'fabric-types',
         depth: 0,
@@ -88,17 +98,45 @@ export async function Footer() {
         slug: 'site-settings',
         depth: 0,
       }),
+      // Only published pages resolve through the [slug] catch-all, so this is
+      // exactly the set of footer hrefs that will render instead of 404.
+      payload.find({
+        collection: 'pages',
+        where: { status: { equals: 'published' } },
+        depth: 0,
+        limit: 200,
+        pagination: false,
+      }),
     ])
 
     fabrics = fabricResult.docs
     siteSettings = settingsResult
+    publishedPageSlugs = new Set(
+      (pagesResult.docs as any[])
+        .map((p) => p.slug)
+        .filter((slug): slug is string => typeof slug === 'string'),
+    )
   } catch (error) {
     console.error('Failed to load footer content', error)
   }
 
+  // When the page list is unavailable, keep every link (fail open — a transient
+  // DB error must not silently strip the footer).
+  const resolvedLinks: FooterSection[] =
+    publishedPageSlugs === null
+      ? CMS_BACKED_FOOTER_LINKS
+      : CMS_BACKED_FOOTER_LINKS.map((section) => ({
+          ...section,
+          links: section.links.filter(
+            (link) =>
+              !link.href.startsWith('/') ||
+              publishedPageSlugs.has(link.href.slice(1)),
+          ),
+        })).filter((section) => section.links.length > 0)
+
   const sections: FooterSection[] = [
     { title: 'Shop', links: shopLinksFromFabrics(fabrics) },
-    ...staticFooterLinks,
+    ...resolvedLinks,
     {
       title: 'Connect',
       links: siteSettings

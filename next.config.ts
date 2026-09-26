@@ -6,6 +6,18 @@ const nextConfig: NextConfig = {
     root: __dirname,
   },
 
+  async redirects() {
+    return [
+      // The cart is a drawer, not a standalone page — /cart is a plausible
+      // typed/shared URL that would otherwise 404. Send it to the real flow.
+      {
+        source: '/cart',
+        destination: '/checkout',
+        permanent: false,
+      },
+    ]
+  },
+
   experimental: {
     staleTimes: {
       dynamic: 0,
