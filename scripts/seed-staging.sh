@@ -67,10 +67,12 @@ if [ ! -d node_modules ] || [ ! -f .env ]; then
   [ -f .env ] || : > .env
 fi
 
-# The dummy images under public/images/ are gitignored, so a bare checkout has
-# none of them and every product would seed without an image. Download them
-# first — the same script `make seed-local` uses. Existing files are skipped, so
-# a developer checkout with real photography is left alone.
+# Seed images are gitignored and downloaded at seed time rather than committed.
+# A bare CI checkout therefore has none of them, and every product would seed
+# without an image — which is exactly how staging once ended up with 5 media
+# records and 213 "image file not found" warnings. Download them first, using
+# the same script `make seed-local` uses. Existing files are skipped, so a
+# developer checkout with real photography is left alone.
 #
 # This scrapes Pinterest and is not guaranteed to succeed on a CI runner, so a
 # failure here must not fail the deploy: the seeder skips missing images and
