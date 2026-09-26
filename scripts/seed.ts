@@ -305,6 +305,43 @@ function getMimeType(filename: string): string {
   return map[ext] || 'image/jpeg'
 }
 
+/**
+ * Check whether an object actually exists in the S3-compatible bucket.
+ *
+ * The media collection's rows and the objects in the bucket have independent
+ * lifetimes, so a media row is not evidence that its file is still there.
+ *
+ * Only an explicit "not found" counts as absent. Any other failure (network,
+ * credentials, permissions) reports present, so a transient problem can never
+ * trigger a mass re-upload.
+ */
+async function storageObjectExists(filename: string): Promise<boolean> {
+  try {
+    const { S3Client, HeadObjectCommand } = await import('@aws-sdk/client-s3')
+    const client = new S3Client({
+      region: process.env.R2_REGION || 'us-east-1',
+      endpoint: process.env.R2_ENDPOINT,
+      credentials: {
+        accessKeyId: process.env.R2_ACCESS_KEY_ID || '',
+        secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || '',
+      },
+    })
+    await client.send(
+      new HeadObjectCommand({
+        Bucket: process.env.R2_BUCKET || 'shayga-media',
+        Key: filename,
+      }),
+    )
+    return true
+  } catch (err: any) {
+    const status = err?.$metadata?.httpStatusCode
+    const code = err?.name || err?.Code
+    const missing = status === 404 || code === 'NotFound' || code === 'NoSuchKey'
+    // Anything else is inconclusive — assume present rather than re-upload.
+    return !missing
+  }
+}
+
 async function uploadMedia(
   payload: Payload,
   imagePath: string,
@@ -344,7 +381,30 @@ async function uploadMedia(
         // ignore delete errors
       }
     } else {
-      return existingDoc.id as number
+      // Same size — normally the upload can be skipped and the existing record
+      // reused. But a media row and its object in the bucket are separate
+      // lifetimes: wiping the storage volume (or restoring a database dump)
+      // leaves rows pointing at objects that no longer exist. Trusting the row
+      // alone then returns a media id whose file 404s, and the products that
+      // reference it seed with broken images.
+      //
+      // Only reuse the record once the object is actually confirmed present.
+      const objectPresent = await storageObjectExists(filename)
+      if (objectPresent) {
+        return existingDoc.id as number
+      }
+      console.log(
+        `    🔄 ${filename} matches in the database but is missing from storage, re-uploading...`,
+      )
+      try {
+        await payload.delete({
+          collection: 'media',
+          id: existingDoc.id,
+          overrideAccess: true,
+        })
+      } catch {
+        // ignore delete errors
+      }
     }
   }
 

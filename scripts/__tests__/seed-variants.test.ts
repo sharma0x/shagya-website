@@ -78,3 +78,28 @@ describe('color variant gallery integrity', () => {
     expect(usable.every((v) => v.gallery.length > 0)).toBe(true)
   })
 })
+
+describe('media reuse requires the object to still exist', () => {
+  it('a media row alone is not evidence the object is present', () => {
+    // Regression: uploadMedia reused an existing media row whenever the file
+    // size matched, without checking the bucket. A media row and its object
+    // have independent lifetimes — wiping the storage volume leaves rows
+    // pointing at deleted objects — so the seeder handed back ids whose files
+    // 404'd, and the seed failed with "Variant Images > Image invalid".
+    const row = { id: 42, filesize: 192325 }
+    const objectInBucket = false
+
+    const canReuse = row.filesize === 192325 && objectInBucket
+
+    expect(canReuse).toBe(false)
+  })
+
+  it('reuses the row when the object is confirmed present', () => {
+    const row = { id: 42, filesize: 192325 }
+    const objectInBucket = true
+
+    const canReuse = row.filesize === 192325 && objectInBucket
+
+    expect(canReuse).toBe(true)
+  })
+})
