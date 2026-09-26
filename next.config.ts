@@ -40,11 +40,11 @@ const nextConfig: NextConfig = {
       // Staging-only: the media host must be allowlisted by hostname AND port,
       // since Next matches the port separately. Unset on main/production, so
       // the production allowlist stays exactly as it was.
-      ...(process.env.STAGING_MEDIA_HOST
+      ...(process.env.STAGING_S3_HOST
         ? [
             {
               protocol: 'http' as const,
-              hostname: process.env.STAGING_MEDIA_HOST,
+              hostname: process.env.STAGING_S3_HOST,
               port: process.env.STAGING_MEDIA_PORT ?? '9000',
               pathname: '/**',
             },

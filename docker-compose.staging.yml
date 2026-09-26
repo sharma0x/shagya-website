@@ -40,14 +40,15 @@ services:
       # browser-facing base is the host-published port instead. Without this
       # every <img> on staging points at an unroutable hostname and renders
       # broken while the pages themselves still return 200.
-      MEDIA_PUBLIC_BASE: http://host.docker.internal:19000/shayga-media
+      MEDIA_PUBLIC_BASE: http://${STAGING_MEDIA_HOST:-192.168.1.4}:19000/shayga-media
       # next/image only proxies upstreams listed in images.remotePatterns, and
       # that allowlist is baked in at build time — so the deploy workflow must
       # pass these as build args as well as runtime env.
-      STAGING_MEDIA_HOST: storage
+      # Container-internal hostname for uploads (the app reaches RustFS directly).
+      STAGING_S3_HOST: storage
       STAGING_MEDIA_PORT: '9000'
       STAGING_MEDIA_PUBLIC_PORT: '19000'
-      STAGING_MEDIA_HOSTNAME: host.docker.internal
+      STAGING_MEDIA_HOSTNAME: 192.168.1.4
       # Bypass Next's image optimizer: it refuses upstream images resolving to a
       # private IP, which is exactly what the in-stack RustFS is.
       NEXT_UNOPTIMIZED_IMAGES: 'true'
