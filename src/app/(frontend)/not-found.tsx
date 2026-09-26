@@ -75,7 +75,10 @@ export default function NotFound() {
   )
 }
 
+// No '— Shayga' suffix here: the (frontend) layout already applies a
+// '%s — Shayga' template, so including it produced
+// "Page Not Found — Shayga — Shayga".
 export const metadata = {
-  title: 'Page Not Found — Shayga',
+  title: 'Page Not Found',
   description: 'The page you are looking for does not exist.',
 }
