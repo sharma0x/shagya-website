@@ -1,3 +1,9 @@
+## [1.29.2](https://github.com/sharma0x/shagya-website/compare/v1.29.1...v1.29.2) (2026-09-26)
+
+### Bug Fixes
+
+- **filters:** adopt external URL navigation instead of reverting it ([4b3046d](https://github.com/sharma0x/shagya-website/commit/4b3046d1475997a69906c773e04bebb9c9cf1215))
+
 ## [1.29.1](https://github.com/sharma0x/shagya-website/compare/v1.29.0...v1.29.1) (2026-09-26)
 
 ### Bug Fixes
