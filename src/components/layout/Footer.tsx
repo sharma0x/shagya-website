@@ -15,7 +15,6 @@ const staticFooterLinks: FooterSection[] = [
       { label: 'About Us', href: '/about' },
       { label: 'Journal', href: '/blog' },
       { label: 'Contact', href: '/contact' },
-      { label: 'Careers', href: '/careers' },
     ],
   },
   {
@@ -33,9 +32,9 @@ const staticFooterLinks: FooterSection[] = [
 /**
  * CMS-backed footer links. These resolve through the `[slug]` catch-all, so a
  * link here 404s whenever the corresponding Pages document is missing or
- * unpublished — which is exactly how `/careers` ended up as a dead footer link
- * in production. `publishedSlugs` is the set of slugs that actually exist, so
- * we can drop the link rather than ship a 404.
+ * unpublished — which is how a page link once ended up dead in production.
+ * `publishedSlugs` is the set of slugs that actually exist, so we can drop the
+ * link rather than ship a 404.
  */
 const CMS_BACKED_FOOTER_LINKS: FooterSection[] = staticFooterLinks
 

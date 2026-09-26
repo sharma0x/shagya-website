@@ -38,18 +38,28 @@ export async function getPublishedPageSlugs(): Promise<Set<string> | null> {
 export type NavLink = { label: string; href: string }
 
 /**
- * Drop internal links whose target page is not published. `null` slugs (lookup
- * failed) keep everything.
+ * Drop links whose target is a CMS-backed page that is missing or draft.
+ *
+ * Only links listed in `cmsBacked` are candidates — `/collections` and
+ * `/blog` are real App Router routes and must never be filtered against the
+ * `pages` collection, or valid navigation silently disappears.
+ *
+ * `null` slugs (lookup failed) keep everything, so a transient DB error cannot
+ * empty the nav.
  */
 export function filterCmsLinks<T extends NavLink>(
   links: T[],
   publishedSlugs: Set<string> | null,
+  cmsBacked: readonly string[] = [],
 ): T[] {
   if (publishedSlugs === null) return links
-  return links.filter(
-    (link) =>
-      !link.href.startsWith('/') ||
-      link.href === '/' ||
-      publishedSlugs.has(link.href.replace(/^\//, '').split('?')[0]),
-  )
+
+  const managed = new Set(cmsBacked.map((href) => href.replace(/^\//, '')))
+  return links.filter((link) => {
+    if (!link.href.startsWith('/') || link.href === '/') return true
+    const slug = link.href.replace(/^\//, '').split('?')[0]
+    // Not a CMS page — a real route, so it is always kept.
+    if (!managed.has(slug)) return true
+    return publishedSlugs.has(slug)
+  })
 }

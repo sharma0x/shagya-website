@@ -208,8 +208,8 @@ describe('Seed data', () => {
   // ---------------------------------------------------------------------------
 
   describe('Pages', () => {
-    it('has exactly 8 pages', () => {
-      expect(pages).toHaveLength(8)
+    it('has exactly 7 pages', () => {
+      expect(pages).toHaveLength(7)
     })
 
     it('each page has a title, slug, template, and bodyContent', () => {

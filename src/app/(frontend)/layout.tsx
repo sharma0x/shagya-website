@@ -14,12 +14,17 @@ import {
 } from '@/lib/page-links'
 import './globals.css'
 
-/** Primary nav. `/about` is CMS-backed and is filtered per-request. */
+/**
+ * Primary nav. Only `/about` is CMS-backed — `/collections` and `/blog` are
+ * real App Router routes and must never be filtered against the `pages`
+ * collection, or they disappear from the nav.
+ */
 const HEADER_NAV_LINKS: NavLink[] = [
   { label: 'Collections', href: '/collections' },
   { label: 'Journal', href: '/blog' },
   { label: 'About', href: '/about' },
 ]
+const HEADER_CMS_LINKS = ['/about'] as const
 
 const sora = Sora({
   subsets: ['latin'],
@@ -79,7 +84,11 @@ export default async function RootLayout({
   // document is missing or draft. Resolved once here (they can't each query
   // the DB — Header is a client component) and passed down as filtered nav.
   const publishedPageSlugs = await getPublishedPageSlugs()
-  const headerNav = filterCmsLinks(HEADER_NAV_LINKS, publishedPageSlugs)
+  const headerNav = filterCmsLinks(
+    HEADER_NAV_LINKS,
+    publishedPageSlugs,
+    HEADER_CMS_LINKS,
+  )
 
   return (
     <html
