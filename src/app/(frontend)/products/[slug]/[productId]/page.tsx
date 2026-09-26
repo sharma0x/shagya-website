@@ -1,4 +1,5 @@
 import { Suspense } from 'react'
+import type { Metadata } from 'next'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import { notFound, permanentRedirect } from 'next/navigation'
@@ -38,6 +39,12 @@ import {
   ProductSectionSkeleton,
 } from '@/components/ui/Skeleton'
 import type { SiteSetting } from '@/payload-types'
+import {
+  openGraph,
+  productJsonLd,
+  imageUrl as resolveImageUrl,
+  excerpt,
+} from '@/lib/seo'
 
 // ISR cache for 5 minutes
 export const revalidate = 300
@@ -637,6 +644,89 @@ export default async function ProductDetailPage({
             : undefined)
         }
       />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: productJsonLd({
+            name: product.name,
+            description: productMetaDescription(product),
+            image: productOgImage(product),
+            url: getProductUrl(product.slug || slug, product.id, color),
+            sku: (product as any).productCode || String(product.id),
+            price:
+              typeof product.basePrice === 'number' ? product.basePrice : null,
+            availability: isProductOutOfStock(product as any)
+              ? 'OutOfStock'
+              : 'InStock',
+          }).replace(/</g, '\\u003c'),
+        }}
+      />
     </>
   )
+}
+
+/** Primary gallery image for a product, used for OG cards and Product JSON-LD. */
+function productOgImage(product: any): string | undefined {
+  const first = product?.colorVariants?.[0]
+  return resolveImageUrl(first?.gallery?.[0]?.image)
+}
+
+/** Meta description: CMS description if present, else a price+weave summary. */
+function productMetaDescription(product: any): string {
+  const fromCms = excerpt(product.description)
+  if (fromCms) return fromCms
+  const weave = weaveLabel(weaveIdOf(product.weave))
+  const price =
+    typeof product.basePrice === 'number'
+      ? `₹${product.basePrice.toLocaleString('en-IN')}`
+      : null
+  return [
+    product.name,
+    weave,
+    price && `from ${price}`,
+    'Free shipping across India.',
+  ]
+    .filter(Boolean)
+    .join(' — ')
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string; productId: string }>
+}): Promise<Metadata> {
+  const { slug, productId } = await params
+  const payload = await getPayload({ config })
+
+  const res = await payload.find({
+    collection: 'products',
+    where: {
+      and: [
+        { _status: { equals: 'published' } },
+        { id: { equals: Number(productId) } },
+        { status: { equals: 'published' } },
+      ],
+    },
+    limit: 1,
+    depth: 2,
+  })
+
+  const product = res.docs[0] as any
+  if (!product) return {}
+
+  const title = product.name
+  const description = productMetaDescription(product)
+  const url = getProductUrl(product.slug || slug, product.id)
+
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    ...openGraph({
+      title,
+      description,
+      image: productOgImage(product),
+      url,
+    }),
+  }
 }

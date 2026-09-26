@@ -399,6 +399,66 @@ export async function seedColors(payload: Payload): Promise<Map<string, any>> {
   return createdColors
 }
 
+/**
+ * Fabric types and weaves are relationship targets on Products, but the seed
+ * data only carries their slugs. Without these documents existing, every
+ * product create fails with "The following fields are invalid: Fabric, Weave".
+ * Creates any that are missing and returns slug -> doc maps for the product
+ * seeder to resolve against.
+ */
+export async function seedFabricsAndWeaves(payload: Payload): Promise<{
+  fabrics: Map<string, any>
+  weaves: Map<string, any>
+}> {
+  const wantedFabrics = [
+    ...new Set(products.map((p) => p.fabric).filter(Boolean)),
+  ] as string[]
+  const wantedWeaves = [
+    ...new Set(products.map((p) => p.weave).filter(Boolean)),
+  ] as string[]
+
+  console.log(
+    `\n🧵 Seeding ${wantedFabrics.length} fabric types, ${wantedWeaves.length} weaves...`,
+  )
+
+  const ensure = async (
+    collection: 'fabric-types' | 'weaves',
+    slugs: string[],
+  ): Promise<Map<string, any>> => {
+    const map = new Map<string, any>()
+    for (const slug of slugs) {
+      const existing = await payload.find({
+        collection: collection as any,
+        where: { slug: { equals: slug } },
+        limit: 1,
+        overrideAccess: true,
+      })
+      if (existing.docs.length > 0) {
+        map.set(slug, existing.docs[0])
+        continue
+      }
+      const created = await payload.create({
+        collection: collection as any,
+        data: {
+          name: slug
+            .split('-')
+            .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+            .join(' '),
+          slug,
+        },
+        overrideAccess: true,
+      })
+      map.set(slug, created)
+      console.log(`  ✅ Created ${collection}: ${slug}`)
+    }
+    return map
+  }
+
+  const fabrics = await ensure('fabric-types', wantedFabrics)
+  const weaves = await ensure('weaves', wantedWeaves)
+  return { fabrics, weaves }
+}
+
 export async function seedOccasions(
   payload: Payload,
 ): Promise<Map<string, any>> {
@@ -438,6 +498,8 @@ export async function seedProducts(
   payload: Payload,
   createdColors: Map<string, any>,
   createdOccasions: Map<string, any>,
+  fabricMap: Map<string, any>,
+  weaveMap: Map<string, any>,
 ): Promise<void> {
   console.log(`\n👗 Seeding ${products.length} products...`)
 
@@ -550,10 +612,15 @@ export async function seedProducts(
       prod.status === 'published' ? 'published' : 'draft'
 
     if (existing.totalDocs === 0) {
+      // `rest` still carries the raw fabric/weave slugs; the collection fields
+      // are relationships, so swap them for the created document IDs.
+      const { fabric: fabricSlug, weave: weaveSlug, ...restWithoutRefs } = rest
       await (payload.create as any)({
         collection: 'products',
         data: {
-          ...rest,
+          ...restWithoutRefs,
+          fabric: fabricMap.get(fabricSlug)?.id,
+          weave: weaveMap.get(weaveSlug)?.id,
           _status: intendedStatus,
           colorVariants: variantData,
           collections: collectionIds,
@@ -769,10 +836,13 @@ export async function seedBlogPosts(payload: Payload): Promise<void> {
         ? await uploadMedia(payload, post.imagePath, post.title)
         : null
       if (featuredImageId) {
+        // `typeof null === 'object'`, so an explicit null check is required
+        // here — the original ternary read `.id` off null and crashed the seed.
+        const oldFeatured = doc.featuredImage
         const oldImageId =
-          typeof doc.featuredImage === 'object'
-            ? (doc.featuredImage as any).id
-            : doc.featuredImage
+          oldFeatured && typeof oldFeatured === 'object'
+            ? (oldFeatured as any).id
+            : oldFeatured
         if (oldImageId !== featuredImageId) {
           await (payload.update as any)({
             collection: 'posts',
@@ -898,7 +968,16 @@ async function main(): Promise<void> {
     await seedBrands(payload)
     const createdColors = await seedColors(payload)
     const createdOccasions = await seedOccasions(payload)
-    await seedProducts(payload, createdColors, createdOccasions)
+    // Products relate to fabric-types/weaves, so those must exist first.
+    const { fabrics: fabricMap, weaves: weaveMap } =
+      await seedFabricsAndWeaves(payload)
+    await seedProducts(
+      payload,
+      createdColors,
+      createdOccasions,
+      fabricMap,
+      weaveMap,
+    )
     await seedPages(payload)
     await seedBlogPosts(payload)
     await seedNavigation(payload)
