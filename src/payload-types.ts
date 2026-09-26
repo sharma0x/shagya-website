@@ -273,7 +273,7 @@ export interface Product {
   id: number;
   name: string;
   /**
-   * Unique product identifier (e.g., SHG-00001). Used for inventory tracking and order identification.
+   * Unique product identifier. Leave empty to auto-generate (SHG-XXXXX), or enter custom code.
    */
   productCode: string;
   slug?: string | null;
@@ -417,6 +417,14 @@ export interface Weaf {
   name: string;
   slug?: string | null;
   description?: string | null;
+  /**
+   * Show this weave as a "Quick:" chip on category pages (up to 5 shown, ordered by sortOrder).
+   */
+  featured?: boolean | null;
+  /**
+   * Lower numbers appear first among featured weaves. Only used when featured is checked.
+   */
+  sortOrder?: number | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -2235,6 +2243,8 @@ export interface WeavesSelect<T extends boolean = true> {
   name?: T;
   slug?: T;
   description?: T;
+  featured?: T;
+  sortOrder?: T;
   updatedAt?: T;
   createdAt?: T;
 }

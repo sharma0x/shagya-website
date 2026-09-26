@@ -99,6 +99,14 @@ export async function getApplicableCoupons(
 
   if (headers) {
     const session = await auth.api.getSession({ headers })
+    // Resolve the customer once, then apply customer targeting on every path.
+    //
+    // This used to filter only when a `customers` record was found, so a
+    // targeted coupon was listed to *everyone* whose account had no customer
+    // record yet (a newly registered user, or a guest) — which is how an
+    // exclusive coupon ended up visible site-wide. Validation already rejected
+    // it at checkout, so the coupon appeared applicable and then failed.
+    let customerId: string | null = null
     if (session?.user) {
       const customers = await payload.find({
         collection: 'customers',
@@ -107,17 +115,22 @@ export async function getApplicableCoupons(
         overrideAccess: true,
       })
       if (customers.docs.length > 0) {
-        const customerId = String(customers.docs[0].id)
-        filtered = filtered.filter((c: any) => {
-          const customerConditions = c.customersConditions || []
-          if (customerConditions.length === 0) return true
-          return customerConditions.some(
-            (cust: any) =>
-              String(typeof cust === 'object' ? cust.id : cust) === customerId,
-          )
-        })
+        customerId = String(customers.docs[0].id)
       }
     }
+
+    filtered = filtered.filter((c: any) => {
+      const customerConditions = c.customersConditions || []
+      // Untargeted coupon: available to everyone.
+      if (customerConditions.length === 0) return true
+      // Targeted coupon, but we cannot prove this viewer is the target
+      // (not logged in, or no customer record). Do not list it.
+      if (!customerId) return false
+      return customerConditions.some(
+        (cust: any) =>
+          String(typeof cust === 'object' ? cust.id : cust) === customerId,
+      )
+    })
   }
 
   return filtered.map((c: any) => ({
