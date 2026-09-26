@@ -608,6 +608,23 @@ export async function seedProducts(
       }),
     )
 
+    // A color variant whose gallery is empty is rejected by Payload
+    // ("Variant Images > Image is invalid"): the gallery rows exist, but the
+    // image is required and uploadMedia returns null when the file is missing.
+    // That happens on a clean checkout, where the images are downloaded at seed
+    // time and any file that fails to download leaves its variant image-less.
+    //
+    // Previously every such variant was still submitted and failed the whole
+    // seed. Dropping the variant keeps the product (and the rest of the seed)
+    // intact instead of failing the deploy over a missing image.
+    const usableVariants = variantData.filter((v) => v.gallery.length > 0)
+    const droppedVariants = variantData.length - usableVariants.length
+    if (droppedVariants > 0) {
+      console.log(
+        `    ⚠️️  ${prod.name}: skipped ${droppedVariants} color variant(s) with no image`,
+      )
+    }
+
     const intendedStatus: 'published' | 'draft' =
       prod.status === 'published' ? 'published' : 'draft'
 
@@ -622,7 +639,7 @@ export async function seedProducts(
           fabric: fabricMap.get(fabricSlug)?.id,
           weave: weaveMap.get(weaveSlug)?.id,
           _status: intendedStatus,
-          colorVariants: variantData,
+          colorVariants: usableVariants,
           collections: collectionIds,
           occasions: occasionIds,
           description: lexicalRichText(description),
@@ -648,7 +665,7 @@ export async function seedProducts(
         !(doc as any).colorVariants ||
         (doc as any).colorVariants.length === 0
       ) {
-        updateData.colorVariants = variantData
+        updateData.colorVariants = usableVariants
       }
 
       // Update collections if missing or empty
