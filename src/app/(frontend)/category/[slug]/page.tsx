@@ -1,10 +1,12 @@
 import Link from 'next/link'
 import { Suspense } from 'react'
+import type { Metadata } from 'next'
 import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import { cn } from '@/lib/utils'
 import { resolveWeaveIds } from '@/lib/weaves'
+import { openGraph } from '@/lib/seo'
 import { SortSelect } from '@/components/ui/sort-select'
 import { ProductFilters } from '@/components/product/ProductFilters'
 import { ProductCard } from '@/components/product/ProductCard'
@@ -479,6 +481,88 @@ async function CategoryProductsStream({
   )
 }
 
+type CategoryMeta = { title: string; description: string }
+
+/**
+ * Resolve the human title/description for a category slug. Shared by the page
+ * (for its <h1>) and generateMetadata (for the title/description/OG tags) so
+ * the two can never drift apart.
+ */
+async function resolveCategoryMeta(slug: string): Promise<CategoryMeta> {
+  const payload = await getPayload({ config })
+  const lower = slug.toLowerCase()
+
+  if (lower === 'all') {
+    return {
+      title: 'All Sarees',
+      description:
+        'Browse our complete collection of handcrafted Indian sarees.',
+    }
+  }
+
+  const [weavesRes, fabricsRes] = await Promise.all([
+    payload.find({
+      collection: 'weaves',
+      limit: 500,
+      pagination: false,
+      depth: 0,
+    }),
+    payload.find({
+      collection: 'fabric-types',
+      limit: 500,
+      pagination: false,
+      depth: 0,
+    }),
+  ])
+
+  const cap = slug.charAt(0).toUpperCase() + slug.slice(1)
+  const fabricHit = (fabricsRes.docs as any[]).find(
+    (f) => f.slug?.toLowerCase() === lower,
+  )
+  const weaveHit = (weavesRes.docs as any[]).find(
+    (w) => w.slug?.toLowerCase() === lower,
+  )
+
+  // Prefer the CMS-provided name when the collection has one, so metadata
+  // matches what the grid heading shows.
+  if (fabricHit) {
+    const name = fabricHit.name || cap
+    return {
+      title: `${name} Sarees`,
+      description: `Premium handwoven pure ${name.toLowerCase()} sarees, sourced directly from weaver clusters across India.`,
+    }
+  }
+  if (weaveHit) {
+    const name = weaveHit.name || cap
+    return {
+      title: `${name} Weave`,
+      description: `Authentic, heritage ${name.toLowerCase()} sarees featuring signature regional patterns and pure zari borders.`,
+    }
+  }
+
+  return {
+    title: cap,
+    description: `Discover our curated selection of ${slug} sarees.`,
+  }
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>
+}): Promise<Metadata> {
+  const { slug } = await params
+  const { title, description } = await resolveCategoryMeta(slug)
+  const url = `/category/${slug}`
+  return {
+    // The layout appends " — Shayga", so don't repeat the noun in the tail.
+    title: `${title} — Handcrafted Indian Sarees`,
+    description,
+    alternates: { canonical: url },
+    ...openGraph({ title, description, url }),
+  }
+}
+
 export default async function CategoryPage({
   params,
   searchParams,
@@ -518,19 +602,7 @@ export default async function CategoryPage({
     contextFilter.weave = slug.toLowerCase()
   }
 
-  let title = slug.charAt(0).toUpperCase() + slug.slice(1)
-  let description = `Discover our curated selection of ${slug} sarees.`
-
-  if (fabricSlugSet.has(slug.toLowerCase())) {
-    title = `${title} Sarees`
-    description = `Premium handwoven pure ${slug} sarees, sourced directly from weaver clusters across India.`
-  } else if (weaveSlugSet.has(slug.toLowerCase())) {
-    title = `${title} Weave`
-    description = `Authentic, heritage ${slug} sarees featuring signature regional patterns and pure zari borders.`
-  } else if (slug.toLowerCase() === 'all') {
-    title = 'All Sarees'
-    description = 'Browse our complete collection of handcrafted Indian sarees.'
-  }
+  const { title, description } = await resolveCategoryMeta(slug)
 
   return (
     <div className="bg-surface min-h-screen py-10">

@@ -1,11 +1,13 @@
 import Link from 'next/link'
 import { Suspense } from 'react'
+import type { Metadata } from 'next'
 import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import { notFound } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { resolveWeaveIds, resolveFabricIds } from '@/lib/weaves'
+import { openGraph } from '@/lib/seo'
 import { SortSelect } from '@/components/ui/sort-select'
 import { ProductFilters } from '@/components/product/ProductFilters'
 import { ProductCard } from '@/components/product/ProductCard'
@@ -280,6 +282,37 @@ async function CollectionProductsStream({
       )}
     </div>
   )
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>
+}): Promise<Metadata> {
+  const { slug } = await params
+  const payload = await getPayload({ config })
+
+  const colRes = await payload.find({
+    collection: 'collections',
+    where: { slug: { equals: slug } },
+    limit: 1,
+  })
+  const collection = colRes.docs[0] as any
+  if (!collection) return {}
+
+  const title = collection.name
+  const description =
+    collection.description ||
+    `Shop the ${collection.name} collection — handcrafted Indian sarees from Shayga.`
+  const url = `/collections/${slug}`
+
+  return {
+    // The layout appends " — Shayga", so don't repeat the noun in the tail.
+    title: `${title} — Handcrafted Indian Sarees`,
+    description,
+    alternates: { canonical: url },
+    ...openGraph({ title, description, url }),
+  }
 }
 
 export default async function CollectionDetailPage({

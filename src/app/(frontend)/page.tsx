@@ -782,6 +782,12 @@ export default async function HomePage() {
       <RefreshRouteOnSave />
 
       {/* ─── SECTION 1: HERO (Renders instantly) ─── */}
+      {/* The hero is an image carousel with no text, so the page's single <h1>
+          lives here as a visually-hidden keyword-bearing heading. Without it
+          the homepage shipped no <h1> at all. */}
+      <h1 className="sr-only">
+        Handcrafted Indian Sarees — Silk, Cotton &amp; Designer Weaves | Shayga
+      </h1>
       <HeroCarousel slides={heroSlides} />
 
       {/* ─── SECTION 2: SHOP BY CATEGORY (Progressive Stream) ─── */}

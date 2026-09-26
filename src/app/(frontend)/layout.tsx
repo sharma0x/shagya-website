@@ -6,6 +6,7 @@ import { MetaPixel } from '@/components/analytics/MetaPixel'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav'
+import { openGraph } from '@/lib/seo'
 import './globals.css'
 
 const sora = Sora({
@@ -43,6 +44,15 @@ export const metadata: Metadata = {
     'buy sarees online',
     'Shayga',
   ],
+  // Site-wide OpenGraph/Twitter fallback. Individual routes (product, category,
+  // collection) override these via generateMetadata; this guarantees no page
+  // ever renders an imageless share card.
+  ...openGraph({
+    title: 'Shayga — Handcrafted Indian Sarees',
+    description:
+      'Shop handcrafted Indian sarees at Shayga. Premium silk, cotton, and designer sarees with free shipping in India.',
+    image: '/images/hero/hero-main.png',
+  }),
 }
 
 export default async function RootLayout({
