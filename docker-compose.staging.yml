@@ -77,6 +77,10 @@ services:
       - '15432:5432'
     environment:
       POSTGRES_USER: shayga
+      # Local staging-only credential. The database is created by this compose
+      # file, so the bootstrap password has to be declared here — there is no
+      # secret store to read it from. Matches POSTGRES_PASSWORD in
+      # .env.staging, which is itself a disposable local value. Not a secret.
       POSTGRES_PASSWORD: shayga_dev
       POSTGRES_DB: shayga
       # Postgres 18 Alpine: PGDATA must point at pgdata; volume mounts the

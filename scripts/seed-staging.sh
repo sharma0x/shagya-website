@@ -41,12 +41,38 @@ for p in 15432 19000; do
   done
 done
 
-DATABASE_URL="postgresql://shayga:${STAGING_DB_PASSWORD:-shayga_dev}@127.0.0.1:15432/shayga" \
+# Build the connection string from .env.staging rather than hardcoding the
+# password — a credential literal in a tracked file is a secret-scanner finding
+# even when it is only a local dev password. The host/port are rewritten to the
+# published staging ports; the user and password come from the env file.
+STAGING_DB_USER=$(node -e '
+  const fs = require("fs")
+  const line = fs.readFileSync(".env.staging", "utf8").split("\n").find((l) => l.startsWith("DATABASE_URL="))
+  const u = new URL(line.slice("DATABASE_URL=".length))
+  process.stdout.write(`${u.username}:${decodeURIComponent(u.password)}`)
+')
+DB_USER="${STAGING_DB_USER%%:*}"
+DB_PASS="${STAGING_DB_USER#*:}"
+
+# The seeder needs the repo's devDependencies (tsx) and an .env to satisfy the
+# seed script's `--env-file=.env`. The CI runner does a bare `actions/checkout`,
+# so neither exists there — install them when missing. On a normal dev machine
+# both are already present, so this is a no-op.
+if [ ! -d node_modules ] || [ ! -f .env ]; then
+  echo "==> Installing dependencies for the seeder (bare checkout)..."
+  pnpm install --frozen-lockfile
+
+  # The seed script is invoked with --env-file=.env. Every value it needs is
+  # already exported below, so an empty file is enough to satisfy the flag.
+  [ -f .env ] || : > .env
+fi
+
+DATABASE_URL="postgresql://${DB_USER}:${DB_PASS}@127.0.0.1:15432/shayga" \
 R2_ENDPOINT="http://127.0.0.1:19000" \
 R2_BUCKET="shayga-media" \
 R2_REGION="us-east-1" \
-R2_ACCESS_KEY_ID="minioadmin" \
-R2_SECRET_ACCESS_KEY="minioadmin" \
+R2_ACCESS_KEY_ID="${R2_ACCESS_KEY_ID:-$(grep -m1 '^R2_ACCESS_KEY_ID=' "$STAGING_ENV" | cut -d= -f2-)}" \
+R2_SECRET_ACCESS_KEY="${R2_SECRET_ACCESS_KEY:-$(grep -m1 '^R2_SECRET_ACCESS_KEY=' "$STAGING_ENV" | cut -d= -f2-)}" \
 SEED_ADMIN_EMAIL="${SEED_ADMIN_EMAIL:-staging@shayga.local}" \
 SEED_ADMIN_PASSWORD="${SEED_ADMIN_PASSWORD:-staging-admin-123}" \
   pnpm seed
