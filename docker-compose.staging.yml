@@ -20,8 +20,40 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      storage:
+        condition: service_healthy
+      mailpit:
+        condition: service_healthy
     env_file:
       - .env.staging
+    # Staging uses the in-stack RustFS rather than the real Cloudflare R2 dev
+    # bucket, so seeding and upload testing here cannot touch remote data.
+    # Every R2_* is overridden, including the credentials: .env.staging holds
+    # real Cloudflare keys that would be rejected by the local RustFS.
+    environment:
+      R2_ENDPOINT: http://storage:9000
+      R2_BUCKET: shayga-media
+      R2_REGION: us-east-1
+      R2_ACCESS_KEY_ID: minioadmin
+      R2_SECRET_ACCESS_KEY: minioadmin
+      # storage:9000 is only resolvable inside the compose network, so the
+      # browser-facing base is the host-published port instead. Without this
+      # every <img> on staging points at an unroutable hostname and renders
+      # broken while the pages themselves still return 200.
+      MEDIA_PUBLIC_BASE: http://localhost:19000/shayga-media
+      # next/image only proxies upstreams listed in images.remotePatterns, and
+      # that allowlist is baked in at build time — so the deploy workflow must
+      # pass these as build args as well as runtime env.
+      STAGING_MEDIA_HOST: storage
+      STAGING_MEDIA_PORT: '9000'
+      STAGING_MEDIA_PUBLIC_PORT: '19000'
+      # Deliver all staging mail to the in-stack Mailpit instead of Resend.
+      # Staging has NODE_ENV=production, so the code's usual non-production
+      # branch never applies — EMAIL_TRANSPORT=mailpit is what actually forces
+      # SMTP here. Unset on main, so production keeps using Resend.
+      EMAIL_TRANSPORT: mailpit
+      MAILPIT_SMTP_HOST: mailpit
+      MAILPIT_SMTP_PORT: '1025'
     healthcheck:
       test: ['CMD-SHELL', 'curl -f http://localhost:3000/api/users || exit 0']
       interval: 15s
@@ -37,6 +69,12 @@ services:
   postgres:
     image: postgres:18-alpine
     restart: unless-stopped
+    # Published (not just exposed) so the host-side seeder in
+    # scripts/seed-staging.sh can reach it. The runner image is built with
+    # `pnpm install --prod`, so the seeder cannot run inside the app container —
+    # it needs the devDependencies that only exist in the repo checkout.
+    ports:
+      - '15432:5432'
     environment:
       POSTGRES_USER: shayga
       POSTGRES_PASSWORD: shayga_dev
@@ -60,6 +98,78 @@ services:
         max-size: '10m'
         max-file: '3'
 
+  # ---------------------------------------------------------------------------
+  # Object storage for staging (local, disposable)
+  # ---------------------------------------------------------------------------
+  # Staging previously pointed R2_* at the real Cloudflare R2 dev bucket, which
+  # made staging unable to exercise uploads safely — a bad seed or a broken
+  # image URL wrote into a shared remote bucket. A local RustFS keeps staging
+  # self-contained and throwaway, matching how the Postgres data is handled.
+  # Image rationale (MinIO is gone from Docker Hub) is in docs/local-storage.md.
+  # The bucket itself is created by scripts/ensure-storage-bucket.mjs, which
+  # the deploy workflow runs after this stack is up.
+  # ===========================================================================
+  storage:
+    image: rustfs/rustfs:latest
+    restart: unless-stopped
+    # Published on the host so the deploy workflow can run
+    # scripts/ensure-storage-bucket.mjs against it, and so the host-side
+    # seeder in scripts/seed-staging.sh can upload. 19000 rather than 9000 to
+    # avoid colliding with the dev stack (infra/dev-services.yml).
+    ports:
+      - '19000:9000'
+    environment:
+      RUSTFS_ACCESS_KEY: minioadmin
+      RUSTFS_SECRET_KEY: minioadmin
+      RUSTFS_ROOT_USER: minioadmin
+      RUSTFS_ROOT_PASSWORD: minioadmin
+    command: /data
+    volumes:
+      - shayga_staging_storagedata:/data
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:9000/health']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '10m'
+        max-file: '3'
+
+  # ---------------------------------------------------------------------------
+  # Mailpit — staging mail sink
+  # ---------------------------------------------------------------------------
+  # Staging must never send real email, so it delivers over SMTP to Mailpit
+  # instead of Resend (EMAIL_TRANSPORT=mailpit on the app service). Everything
+  # the app would have emailed is captured and readable in the web UI, which
+  # makes the mail flow testable instead of invisible.
+  # ===========================================================================
+  mailpit:
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: '1'
+      MP_SMTP_AUTH_ALLOW_INSECURE: '1'
+    ports:
+      # 8025 is the web UI. 1025 is SMTP but is deliberately not published —
+      # only the app container needs it, over the compose network.
+      - '8025:8025'
+    healthcheck:
+      test: ['CMD', '/mailpit', 'readyz']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '10m'
+        max-file: '3'
+
 volumes:
   shayga_staging_pgdata:
     name: shayga-staging-pgdata
+  shayga_staging_storagedata:
+    name: shayga-staging-storagedata

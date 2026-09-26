@@ -14,6 +14,15 @@ function createMailpitTransport() {
 
 const isProduction = process.env.NODE_ENV === 'production'
 
+// Staging runs with NODE_ENV=production, so the `!isProduction` check alone
+// would send real mail through Resend. EMAIL_TRANSPORT=mailpit forces SMTP
+// delivery regardless, which keeps staging from emailing real customers and
+// makes the mail flow inspectable in the Mailpit UI. Unset in production, so
+// main is unaffected.
+const useMailpit =
+  process.env.EMAIL_TRANSPORT === 'mailpit' ||
+  (!isProduction && !!process.env.MAILPIT_SMTP_HOST)
+
 export async function sendEmail({
   to,
   subject,
@@ -27,7 +36,7 @@ export async function sendEmail({
   const fromAddress = process.env.EMAIL_FROM_ADDRESS || 'noreply@shayga.in'
   const from = `${fromName} <${fromAddress}>`
 
-  if (!isProduction && process.env.MAILPIT_SMTP_HOST) {
+  if (useMailpit && process.env.MAILPIT_SMTP_HOST) {
     const transport = createMailpitTransport()
     const info = await transport.sendMail({
       from,
