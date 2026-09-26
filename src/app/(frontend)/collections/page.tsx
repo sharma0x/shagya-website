@@ -57,7 +57,7 @@ async function CollectionsList() {
   const dbCollections = result.docs as any[]
 
   const collectionsWithCovers = dbCollections.map((col) => {
-    let coverImage = '/images/products/saree-01.jpg'
+    let coverImage = '/images/placeholder.svg'
     if (col.image && typeof col.image === 'object') {
       coverImage = col.image.sizes?.card?.url || col.image.url || coverImage
     }

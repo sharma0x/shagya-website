@@ -44,11 +44,18 @@ const nextConfig: NextConfig = {
             },
           ]
         : []),
+      // The image optimizer fetches upstream SERVER-SIDE, from inside the app
+      // container. `localhost` there means the container itself, not the
+      // machine hosting the published port, so every optimized image failed
+      // with a 400 even though the browser could reach the same URL fine.
+      // `host.docker.internal` resolves to the Docker host from a container and
+      // is also valid in a browser on macOS/Windows, so one value serves both.
       ...(process.env.MEDIA_PUBLIC_BASE
         ? [
             {
               protocol: 'http' as const,
-              hostname: 'localhost',
+              hostname:
+                process.env.STAGING_MEDIA_HOSTNAME ?? 'host.docker.internal',
               port: process.env.STAGING_MEDIA_PUBLIC_PORT ?? '19000',
               pathname: '/**',
             },

@@ -65,10 +65,11 @@ jobs:
             --build-arg NEXT_PUBLIC_FIREBASE_API_KEY="${{ vars.NEXT_PUBLIC_FIREBASE_API_KEY }}" \
             --build-arg NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="${{ vars.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}" \
             --build-arg NEXT_PUBLIC_FIREBASE_PROJECT_ID="${{ vars.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}" \
-            --build-arg MEDIA_PUBLIC_BASE="http://localhost:19000/shayga-media" \
+            --build-arg MEDIA_PUBLIC_BASE="http://host.docker.internal:19000/shayga-media" \
             --build-arg STAGING_MEDIA_HOST="storage" \
             --build-arg STAGING_MEDIA_PORT="9000" \
             --build-arg STAGING_MEDIA_PUBLIC_PORT="19000" \
+            --build-arg STAGING_MEDIA_HOSTNAME="host.docker.internal" \
             --build-arg APP_VERSION="sha-${{ github.sha }}" \
             --tag "$IMAGE:develop" \
             --tag "$IMAGE:sha-${{ github.sha }}" \

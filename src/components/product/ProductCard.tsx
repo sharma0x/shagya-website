@@ -94,7 +94,7 @@ function getMultiColorGallery(product: any): GalleryItem[] {
   // Final placeholder fallback if completely empty
   if (items.length === 0) {
     items.push({
-      url: '/images/products/saree-01.jpg',
+      url: '/images/placeholder.svg',
       colorName: product.color?.name,
     })
   }

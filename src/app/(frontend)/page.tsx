@@ -747,7 +747,7 @@ export default async function HomePage() {
     typeof heroBlock?.backgroundImage === 'object' &&
     heroBlock.backgroundImage?.url
       ? heroBlock.backgroundImage.url
-      : '/images/hero/hero-main.jpg'
+      : '/images/placeholder.svg'
 
   // Hero v2 (CLO-103): text-free linked slides — image + CMS-managed link
   const heroSlides: HeroSlide[] = (() => {
@@ -954,7 +954,7 @@ export default async function HomePage() {
           const imgSrc =
             block.image && typeof block.image === 'object'
               ? block.image.sizes?.card?.url || block.image.url
-              : '/images/blogs/blog-1.jpg'
+              : '/images/placeholder.svg'
 
           return (
             <section

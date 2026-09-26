@@ -18,7 +18,10 @@ export function CategoryCard({
   productCount,
   className,
 }: CategoryCardProps) {
-  const imgSrc = imageUrl || '/images/products/saree-01.jpg'
+  // Falls back to a tracked placeholder rather than a product photo: a missing
+  // CMS image should look intentional, and a hardcoded /images/products/... path
+  // 404s in deployed builds because those dummy files are gitignored.
+  const imgSrc = imageUrl || '/images/placeholder.svg'
 
   return (
     <Link

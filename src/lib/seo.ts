@@ -10,7 +10,7 @@ import type { Metadata } from 'next'
  */
 
 const SITE_NAME = 'Shayga'
-const DEFAULT_OG_IMAGE = '/images/hero/hero-main.jpg'
+const DEFAULT_OG_IMAGE = '/images/placeholder.svg'
 
 /**
  * Canonical origin for absolute URLs in metadata. Deliberately NOT

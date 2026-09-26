@@ -115,7 +115,7 @@ function HomepageCard({ product, badge }: HomepageCardProps) {
     product.gallery?.[0]?.image && typeof product.gallery[0].image === 'object'
       ? product.gallery[0].image.sizes?.card?.url ||
         product.gallery[0].image.url
-      : '/images/products/saree-01.jpg'
+      : '/images/placeholder.svg'
 
   const discount =
     product.compareAtPrice && product.compareAtPrice > product.basePrice

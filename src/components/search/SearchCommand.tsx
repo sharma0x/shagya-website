@@ -38,7 +38,7 @@ function ProductThumbnail({ doc }: { doc: SearchProductResult }) {
   return (
     <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-neutral-100">
       <Image
-        src={doc.image || '/images/products/saree-01.jpg'}
+        src={doc.image || '/images/placeholder.svg'}
         alt={doc.name}
         fill
         sizes="56px"

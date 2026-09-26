@@ -263,9 +263,7 @@ export default async function SearchPage({
                               >
                                 <div className="relative overflow-hidden rounded-xl transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-md">
                                   <ImagePanel
-                                    src={
-                                      p.image || '/images/products/saree-01.jpg'
-                                    }
+                                    src={p.image || '/images/placeholder.svg'}
                                     alt={p.name}
                                     className="aspect-[3/4] w-full"
                                     rounded="none"
