@@ -129,6 +129,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                     {/* Image */}
                     <Link
                       href={productUrl}
+                      onClick={onClose}
                       className="relative aspect-[3/4] w-20 shrink-0 overflow-hidden rounded-lg bg-neutral-50 transition-opacity hover:opacity-75"
                     >
                       <Image
@@ -143,7 +144,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
 
                     {/* Meta */}
                     <div className="min-w-0 flex-1">
-                      <Link href={productUrl}>
+                      <Link href={productUrl} onClick={onClose}>
                         <h4 className="font-display hover:text-brand-700 truncate text-sm font-semibold text-neutral-900 transition-colors">
                           {item.product.name}
                         </h4>
