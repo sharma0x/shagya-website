@@ -124,11 +124,60 @@ describe('getApplicableCoupons', () => {
     expect(mocks.mockGetSession).toHaveBeenCalledWith({ headers })
   })
 
+  it('does not list a targeted coupon to a user with no customer record', async () => {
+    // Regression: the customer filter used to run only when a `customers` doc
+    // was found, so a user without one saw every targeted coupon.
+    mocks.mockFind.mockResolvedValueOnce({
+      docs: [mockCoupon({ customersConditions: [7] })],
+    })
+    mocks.mockGetSession.mockResolvedValueOnce({ user: { id: 'user-1' } })
+    mocks.mockFind.mockResolvedValueOnce({ docs: [] }) // no customer record
+
+    const result = await getApplicableCoupons(undefined, new Headers())
+
+    expect(result).toEqual([])
+  })
+
+  it('does not list a targeted coupon to an anonymous visitor', async () => {
+    mocks.mockFind.mockResolvedValueOnce({
+      docs: [mockCoupon({ customersConditions: [7] })],
+    })
+    mocks.mockGetSession.mockResolvedValueOnce(null)
+
+    const result = await getApplicableCoupons(undefined, new Headers())
+
+    expect(result).toEqual([])
+  })
+
+  it('still lists a targeted coupon to its target customer', async () => {
+    mocks.mockFind.mockResolvedValueOnce({
+      docs: [mockCoupon({ customersConditions: [7] })],
+    })
+    mocks.mockGetSession.mockResolvedValueOnce({ user: { id: 'user-1' } })
+    mocks.mockFind.mockResolvedValueOnce({ docs: [{ id: 7 }] })
+
+    const result = await getApplicableCoupons(undefined, new Headers())
+
+    expect(result).toHaveLength(1)
+    expect(result[0].code).toBe('SAVE10')
+  })
+
+  it('keeps an untargeted coupon visible to a user with no customer record', async () => {
+    mocks.mockFind.mockResolvedValueOnce({
+      docs: [mockCoupon({ customersConditions: [] })],
+    })
+    mocks.mockGetSession.mockResolvedValueOnce({ user: { id: 'user-1' } })
+    mocks.mockFind.mockResolvedValueOnce({ docs: [] })
+
+    const result = await getApplicableCoupons(undefined, new Headers())
+
+    expect(result).toHaveLength(1)
+  })
+
   it('returns an empty array when no coupons exist', async () => {
     mocks.mockFind.mockResolvedValueOnce({ docs: [] })
 
     const result = await getApplicableCoupons()
-
     expect(result).toEqual([])
   })
 })
