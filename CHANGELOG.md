@@ -1,3 +1,9 @@
+## [1.29.3](https://github.com/sharma0x/shagya-website/compare/v1.29.2...v1.29.3) (2026-09-26)
+
+### Bug Fixes
+
+- **coupons:** stop listing customer-targeted coupons to everyone ([2bd3065](https://github.com/sharma0x/shagya-website/commit/2bd30652e7a43e3398bcffb4098f4cc0dd170b06))
+
 ## [1.29.2](https://github.com/sharma0x/shagya-website/compare/v1.29.1...v1.29.2) (2026-09-26)
 
 ### Bug Fixes
