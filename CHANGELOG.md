@@ -1,3 +1,9 @@
+## [1.29.1](https://github.com/sharma0x/shagya-website/compare/v1.29.0...v1.29.1) (2026-09-26)
+
+### Bug Fixes
+
+- **cart:** close the drawer when a cart item is tapped ([7197212](https://github.com/sharma0x/shagya-website/commit/7197212f6e37e23835b6534d6268beec4570cb70))
+
 ## [1.29.0](https://github.com/sharma0x/shagya-website/compare/v1.28.1...v1.29.0) (2026-09-25)
 
 ### Features
