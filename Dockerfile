@@ -36,6 +36,10 @@ ARG STAGING_MEDIA_PORT
 ENV STAGING_MEDIA_PORT=$STAGING_MEDIA_PORT
 ARG STAGING_MEDIA_PUBLIC_PORT
 ENV STAGING_MEDIA_PUBLIC_PORT=$STAGING_MEDIA_PUBLIC_PORT
+# Staging-only: the image optimizer refuses upstream hosts that resolve to a
+# private IP, which the in-stack RustFS does. Unset on main/production.
+ARG NEXT_UNOPTIMIZED_IMAGES
+ENV NEXT_UNOPTIMIZED_IMAGES=$NEXT_UNOPTIMIZED_IMAGES
 # Staging-only. Forces all outbound mail to the in-stack Mailpit rather than
 # Resend, so staging cannot email real customers. Unset on main.
 ARG EMAIL_TRANSPORT

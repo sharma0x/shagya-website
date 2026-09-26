@@ -70,6 +70,7 @@ jobs:
             --build-arg STAGING_MEDIA_PORT="9000" \
             --build-arg STAGING_MEDIA_PUBLIC_PORT="19000" \
             --build-arg STAGING_MEDIA_HOSTNAME="host.docker.internal" \
+            --build-arg NEXT_UNOPTIMIZED_IMAGES="true" \
             --build-arg APP_VERSION="sha-${{ github.sha }}" \
             --tag "$IMAGE:develop" \
             --tag "$IMAGE:sha-${{ github.sha }}" \

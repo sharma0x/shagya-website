@@ -30,6 +30,12 @@ const nextConfig: NextConfig = {
     minimumCacheTTL: 2592000,
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    // Staging serves media from the in-stack RustFS on a private address. The
+    // optimizer refuses upstream images that resolve to a private IP (an SSRF
+    // guard), so every staged image 400'd with a misleading "url parameter is
+    // not allowed". Bypassing the optimizer lets the browser fetch the file
+    // directly. Production is unaffected: this is off unless explicitly set.
+    unoptimized: process.env.NEXT_UNOPTIMIZED_IMAGES === 'true',
     remotePatterns: [
       // Staging-only: the media host must be allowlisted by hostname AND port,
       // since Next matches the port separately. Unset on main/production, so

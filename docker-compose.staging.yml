@@ -48,6 +48,9 @@ services:
       STAGING_MEDIA_PORT: '9000'
       STAGING_MEDIA_PUBLIC_PORT: '19000'
       STAGING_MEDIA_HOSTNAME: host.docker.internal
+      # Bypass Next's image optimizer: it refuses upstream images resolving to a
+      # private IP, which is exactly what the in-stack RustFS is.
+      NEXT_UNOPTIMIZED_IMAGES: 'true'
       # Deliver all staging mail to the in-stack Mailpit instead of Resend.
       # Staging has NODE_ENV=production, so the code's usual non-production
       # branch never applies — EMAIL_TRANSPORT=mailpit is what actually forces
