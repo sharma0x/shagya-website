@@ -399,14 +399,23 @@ export default buildConfig({
           // Serve media through a CDN custom domain (e.g. cdn.shayga.in) when
           // R2_CDN is set; otherwise fall back to the raw R2 endpoint. The CDN
           // domain maps directly to the bucket, so the bucket name is omitted.
+          //
+          // MEDIA_PUBLIC_BASE is the browser-facing base URL. It is needed
+          // whenever R2_ENDPOINT is only reachable inside the Docker network
+          // (staging points at the in-stack RustFS as http://storage:9000, a
+          // hostname no browser can resolve) — without it every image on the
+          // page points at an unroutable host and renders broken. Uploads still
+          // use R2_ENDPOINT; only the emitted URLs change.
           generateFileURL: ({ filename, prefix }) => {
             const dir = prefix ? `${prefix}`.replace(/^\/+|\/+$/g, '') : ''
             const key = dir
               ? `${dir}/${encodeURIComponent(filename)}`
               : encodeURIComponent(filename)
-            const base = process.env.R2_CDN
-              ? `https://${process.env.R2_CDN}`
-              : `${process.env.R2_ENDPOINT}/${process.env.R2_BUCKET}`
+            const base = process.env.MEDIA_PUBLIC_BASE
+              ? process.env.MEDIA_PUBLIC_BASE.replace(/\/+$/, '')
+              : process.env.R2_CDN
+                ? `https://${process.env.R2_CDN}`
+                : `${process.env.R2_ENDPOINT}/${process.env.R2_BUCKET}`
             return `${base}/${key}`
           },
         },

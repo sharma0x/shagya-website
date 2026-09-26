@@ -65,6 +65,10 @@ jobs:
             --build-arg NEXT_PUBLIC_FIREBASE_API_KEY="${{ vars.NEXT_PUBLIC_FIREBASE_API_KEY }}" \
             --build-arg NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="${{ vars.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}" \
             --build-arg NEXT_PUBLIC_FIREBASE_PROJECT_ID="${{ vars.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}" \
+            --build-arg MEDIA_PUBLIC_BASE="http://localhost:19000/shayga-media" \
+            --build-arg STAGING_MEDIA_HOST="storage" \
+            --build-arg STAGING_MEDIA_PORT="9000" \
+            --build-arg STAGING_MEDIA_PUBLIC_PORT="19000" \
             --build-arg APP_VERSION="sha-${{ github.sha }}" \
             --tag "$IMAGE:develop" \
             --tag "$IMAGE:sha-${{ github.sha }}" \
@@ -119,6 +123,9 @@ jobs:
       - name: Start Postgres
         run: docker compose -f docker-compose.staging.yml up -d postgres
 
+      - name: Start storage
+        run: docker compose -f docker-compose.staging.yml up -d storage
+
       - name: Wait for Postgres
         run: |
           for i in $(seq 1 30); do
@@ -131,8 +138,27 @@ jobs:
           echo "postgres not ready"
           exit 1
 
+      - name: Ensure storage bucket
+        run: |
+          for i in $(seq 1 30); do
+            if docker compose -f docker-compose.staging.yml exec -T storage curl -sf http://localhost:9000/health >/dev/null 2>&1; then
+              echo "storage ready"
+              break
+            fi
+            sleep 2
+          done
+          # Creates the bucket and applies the public-read policy. Staging runs
+          # on the in-stack RustFS, not the real R2 bucket, so this only ever
+          # touches local disposable storage.
+          R2_ENDPOINT=http://localhost:19000 R2_BUCKET=shayga-media \
+            R2_ACCESS_KEY_ID=minioadmin R2_SECRET_ACCESS_KEY=minioadmin \
+            node scripts/ensure-storage-bucket.mjs
+
       - name: Run migrations
         run: docker compose -f docker-compose.staging.yml run --rm --no-deps app sh -c "npx better-auth migrate --config src/lib/auth.ts -y && npx payload migrate"
+
+      - name: Seed data
+        run: bash scripts/seed-staging.sh
 
       - name: Start app
         run: docker compose -f docker-compose.staging.yml up -d --remove-orphans

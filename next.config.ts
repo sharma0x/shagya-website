@@ -31,6 +31,29 @@ const nextConfig: NextConfig = {
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     remotePatterns: [
+      // Staging-only: the media host must be allowlisted by hostname AND port,
+      // since Next matches the port separately. Unset on main/production, so
+      // the production allowlist stays exactly as it was.
+      ...(process.env.STAGING_MEDIA_HOST
+        ? [
+            {
+              protocol: 'http' as const,
+              hostname: process.env.STAGING_MEDIA_HOST,
+              port: process.env.STAGING_MEDIA_PORT ?? '9000',
+              pathname: '/**',
+            },
+          ]
+        : []),
+      ...(process.env.MEDIA_PUBLIC_BASE
+        ? [
+            {
+              protocol: 'http' as const,
+              hostname: 'localhost',
+              port: process.env.STAGING_MEDIA_PUBLIC_PORT ?? '19000',
+              pathname: '/**',
+            },
+          ]
+        : []),
       {
         protocol: 'http',
         hostname: 'localhost',

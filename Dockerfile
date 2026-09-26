@@ -23,6 +23,27 @@ ARG NEXT_PUBLIC_GA_MEASUREMENT_ID
 ENV NEXT_PUBLIC_GA_MEASUREMENT_ID=$NEXT_PUBLIC_GA_MEASUREMENT_ID
 ARG NEXT_PUBLIC_FB_PIXEL_ID
 ENV NEXT_PUBLIC_FB_PIXEL_ID=$NEXT_PUBLIC_FB_PIXEL_ID
+# Staging-only media wiring. images.remotePatterns in next.config.ts is
+# evaluated at build time, so these must be present while `next build` runs or
+# the optimizer rejects every media URL with "url parameter is not allowed".
+# Unset on main/production builds, which keeps the production allowlist at
+# exactly its existing https/Cloudflare entries.
+ARG MEDIA_PUBLIC_BASE
+ENV MEDIA_PUBLIC_BASE=$MEDIA_PUBLIC_BASE
+ARG STAGING_MEDIA_HOST
+ENV STAGING_MEDIA_HOST=$STAGING_MEDIA_HOST
+ARG STAGING_MEDIA_PORT
+ENV STAGING_MEDIA_PORT=$STAGING_MEDIA_PORT
+ARG STAGING_MEDIA_PUBLIC_PORT
+ENV STAGING_MEDIA_PUBLIC_PORT=$STAGING_MEDIA_PUBLIC_PORT
+# Staging-only. Forces all outbound mail to the in-stack Mailpit rather than
+# Resend, so staging cannot email real customers. Unset on main.
+ARG EMAIL_TRANSPORT
+ENV EMAIL_TRANSPORT=$EMAIL_TRANSPORT
+ARG MAILPIT_SMTP_HOST
+ENV MAILPIT_SMTP_HOST=$MAILPIT_SMTP_HOST
+ARG MAILPIT_SMTP_PORT
+ENV MAILPIT_SMTP_PORT=$MAILPIT_SMTP_PORT
 # Build-only database connection (a throwaway Postgres is started by the
 # workflow and exposed on 127.0.0.1 via `docker build --network=host`).
 # `next build` prerenders pages that query Payload, so a reachable DB is

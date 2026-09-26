@@ -47,7 +47,12 @@ const topNav = [
   { label: 'About', href: '/about' },
 ]
 
-export function Header() {
+export function Header({
+  topNavLinks = topNav,
+}: {
+  topNavLinks?: typeof topNav
+}) {
+  const navLinks = topNavLinks
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [mobileSareesOpen, setMobileSareesOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
@@ -451,7 +456,7 @@ export function Header() {
                     </NavigationMenuContent>
                   </NavigationMenuItem>
 
-                  {topNav.map((link) => (
+                  {navLinks.map((link) => (
                     <NavigationMenuItem key={link.href}>
                       <NavigationMenuLink
                         render={<Link href={link.href} />}
@@ -680,7 +685,7 @@ export function Header() {
                 </Link>
               </div>
             )}
-            {topNav.map((link, i) => (
+            {navLinks.map((link, i) => (
               <Link
                 key={link.href}
                 href={link.href}
@@ -705,7 +710,7 @@ export function Header() {
                 ? 'translate-y-0 opacity-100'
                 : 'translate-y-4 opacity-0',
             )}
-            style={{ transitionDelay: `${(topNav.length + 1) * 50 + 100}ms` }}
+            style={{ transitionDelay: `${(navLinks.length + 1) * 50 + 100}ms` }}
           >
             <Link
               href="/account"
