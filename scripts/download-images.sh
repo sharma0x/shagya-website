@@ -80,7 +80,11 @@ download_batch() {
   uv run scripts/pinterest-dl.py "handloom cotton saree models" "$TMP_DIR" --num 30 --delay 0.5
   uv run scripts/pinterest-dl.py "indian bridal wedding saree models" "$TMP_DIR" --num 30 --delay 0.5
 
-  local i=1
+  # Not inside a function, so `local` is invalid here and — with `set -e` —
+  # aborted the script before any file was copied into public/. That is why the
+  # staging seed produced almost no media: images were downloaded to the temp
+  # dir and then silently discarded.
+  i=1
   while IFS= read -r -d '' f; do
     dest=$(printf "%s/%s-%02d.jpg" "$PROD" saree "$i")
     if [[ "$f" != *.jpg && "$f" != *.jpeg ]]; then
