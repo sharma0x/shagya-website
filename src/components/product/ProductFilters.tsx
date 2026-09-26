@@ -206,6 +206,59 @@ export function ProductFilters({
   /** Last filter snapshot emitted to GA4 — used to detect changed dimensions. */
   const prevFilterSnapshotRef = useRef<Record<string, string>>({})
 
+  // --- External URL sync ---
+  /**
+   * URL-derived state, adjusted during render.
+   *
+   * Filter state is seeded from the URL, but this component is not remounted
+   * when navigation happens from outside it (the "Quick:" chip row, a sidebar
+   * link, browser back/forward). Left unsynced, the local state would disagree
+   * with the URL and the debounced auto-apply effect would push the stale state
+   * back, silently undoing the navigation — e.g. tapping a Quick chip would
+   * light up briefly and then snap back to "All".
+   *
+   * Adjusting during render (rather than in an effect) is React's documented
+   * pattern for deriving state from a prop: React re-runs the component
+   * immediately with the new value and discards the stale render, so no
+   * cascading render or effect pass is needed.
+   */
+  const currentUrl = searchParams.toString()
+  const [syncedUrl, setSyncedUrl] = useState(currentUrl)
+  // Adopt the URL as the source of truth whenever it diverges from what this
+  // component last synced, which is how a navigation from outside is detected.
+  if (syncedUrl !== currentUrl) {
+    setSyncedUrl(currentUrl)
+
+    const adoptArray = (
+      setter: (v: string[]) => void,
+      current: string[],
+      key: string,
+    ) => {
+      const next = getParamArray(key)
+      if (next.join(',') !== current.join(',')) setter(next)
+    }
+    adoptArray(setFabric, fabric, 'fabric')
+    adoptArray(setWeave, weave, 'weave')
+    adoptArray(setPattern, pattern, 'pattern')
+    adoptArray(setColor, color, 'color')
+
+    const nextMinPrice = searchParams.get('minPrice') || ''
+    if (minPrice !== nextMinPrice) setMinPrice(nextMinPrice)
+    const nextMaxPrice = searchParams.get('maxPrice') || ''
+    if (maxPrice !== nextMaxPrice) setMaxPrice(nextMaxPrice)
+    const nextOnSale = searchParams.get('onSale') === 'true'
+    if (onSale !== nextOnSale) setOnSale(nextOnSale)
+    const nextExcludeOOS = searchParams.get('excludeOOS') === 'true'
+    if (excludeOOS !== nextExcludeOOS) setExcludeOOS(nextExcludeOOS)
+    const nextMinDiscount = searchParams.get('minDiscount') || ''
+    if (minDiscount !== nextMinDiscount) setMinDiscount(nextMinDiscount)
+    const nextCity = searchParams.get('city') || ''
+    if (city !== nextCity) setCity(nextCity)
+    // The price slider is uncontrolled from the outside, so it needs a new
+    // key to pick up the synced range.
+    setSliderResetKey((k) => k + 1)
+  }
+
   // --- Facet fetching ---
   const fetchFacets = useCallback(async () => {
     try {
@@ -342,6 +395,7 @@ export function ProductFilters({
     city,
     color,
     contextFilter,
+    currentUrl,
     /* size, */ searchParams,
   ])
 
@@ -376,6 +430,12 @@ export function ProductFilters({
       prevFilterSnapshotRef.current = current
 
       const query = buildQuery()
+      // If the URL in the address bar already matches what this state
+      // produces, there is nothing to navigate to. This is the case right
+      // after a navigation from outside (Quick chip, back/forward): the state
+      // has been adopted from the URL, so pushing would either be a no-op or
+      // would revert the navigation to a stale value.
+      if (query === currentUrl) return
       router.push(query ? `${pathname}?${query}` : pathname)
     }, 300)
     return () => {
