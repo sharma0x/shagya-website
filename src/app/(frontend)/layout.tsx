@@ -68,7 +68,7 @@ export const metadata: Metadata = {
     title: 'Shayga — Handcrafted Indian Sarees',
     description:
       'Shop handcrafted Indian sarees at Shayga. Premium silk, cotton, and designer sarees with free shipping in India.',
-    image: '/images/hero/hero-main.png',
+    image: '/images/hero/hero-main.jpg',
   }),
 }
 

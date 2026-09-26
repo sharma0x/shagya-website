@@ -67,6 +67,17 @@ if [ ! -d node_modules ] || [ ! -f .env ]; then
   [ -f .env ] || : > .env
 fi
 
+# The dummy images under public/images/ are gitignored, so a bare checkout has
+# none of them and every product would seed without an image. Download them
+# first — the same script `make seed-local` uses. Existing files are skipped, so
+# a developer checkout with real photography is left alone.
+#
+# This scrapes Pinterest and is not guaranteed to succeed on a CI runner, so a
+# failure here must not fail the deploy: the seeder skips missing images and
+# logs a warning, and a partial image set is better than no deploy at all.
+echo "==> Ensuring seed images..."
+bash scripts/download-images.sh || echo "  ⚠️  image download incomplete; seeding without some images"
+
 DATABASE_URL="postgresql://${DB_USER}:${DB_PASS}@127.0.0.1:15432/shayga" \
 R2_ENDPOINT="http://127.0.0.1:19000" \
 R2_BUCKET="shayga-media" \

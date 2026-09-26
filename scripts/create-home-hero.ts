@@ -21,7 +21,7 @@ const HERO_SLIDES = [
   { path: 'images/hero/hero-2.jpg', alt: 'Shayga hero slide two' },
 ]
 const HERO_BACKGROUND = {
-  path: 'images/hero/hero-main.png',
+  path: 'images/hero/hero-main.jpg',
   alt: 'Shayga hero background',
 }
 

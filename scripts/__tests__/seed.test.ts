@@ -257,7 +257,7 @@ describe('Seed data', () => {
         (b): b is SeedHeroBlock => b.blockType === 'hero',
       )
       expect(heroBlock).toBeDefined()
-      expect(heroBlock?.imagePath).toBe('/images/hero/hero-main.png')
+      expect(heroBlock?.imagePath).toBe('/images/hero/hero-main.jpg')
     })
   })
 

@@ -1671,7 +1671,7 @@ export const pages: SeedPage[] = [
         subheading:
           'Discover the heritage of Indian handloom. Each saree is a testament to centuries of artisanal weaving, bringing the rich history of Varanasi to your wardrobe.',
         imagePaths: [heroImagePath(1), heroImagePath(2)],
-        imagePath: '/images/hero/hero-main.png',
+        imagePath: '/images/hero/hero-main.jpg',
         ctaText: 'Shop the collection',
         ctaLink: '/category/all',
       } as SeedHeroBlock,
