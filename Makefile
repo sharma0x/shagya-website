@@ -321,10 +321,13 @@ seed-local: ## Seed local database: download images → seed data
 	@echo "  Shayga — Seed Local Database"
 	@echo "========================================"
 	@echo ""
-	@echo "Step 1/2  Downloading seed images (skips existing)..."
+	@echo "Step 0/3  Ensuring storage bucket exists and is public..."
+	@node --env-file=.env scripts/ensure-storage-bucket.mjs
+	@echo ""
+	@echo "Step 1/3  Downloading seed images (skips existing)..."
 	@bash scripts/download-images.sh
 	@echo ""
-	@echo "Step 2/2  Seeding database with dummy data..."
+	@echo "Step 2/3  Seeding database with dummy data..."
 	@pnpm seed
 
 seed-preview: ## Seed preview database: download images → seed data

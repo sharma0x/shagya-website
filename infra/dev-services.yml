@@ -36,27 +36,36 @@ services:
         max-file: '3'
 
   # ---------------------------------------------------------------------------
-  # MinIO — S3-compatible storage (local replacement for Cloudflare R2)
+  # Object storage (local replacement for Cloudflare R2)
   # ---------------------------------------------------------------------------
   # API:          http://localhost:9000  (S3 endpoint)
   # Console:      http://localhost:9001  (web UI — login with minioadmin/minioadmin)
-  # Bucket:       shayga-media (auto-created on first start)
+  # Bucket:       shayga-media
+  #
+  # Was MinIO until Sept 2026. MinIO's community edition is source-only now: the
+  # Docker Hub `minio/minio` and `minio/mc` repos were deleted outright and
+  # quay.io rejects anonymous pulls, so the old image cannot be fetched at all
+  # and `make infra-up` fails. RustFS is a maintained, S3-API-compatible
+  # drop-in that is still published. The app needs no change — Payload reaches
+  # storage purely through the R2_* vars in .env, not via the image name.
   # ===========================================================================
   minio:
-    image: minio/minio:latest
+    image: rustfs/rustfs:latest
     container_name: shayga-minio
     restart: unless-stopped
     ports:
       - '9000:9000' # S3 API
       - '9001:9001' # Web console
     environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
-    command: server /data --console-address ":9001"
+      RUSTFS_ACCESS_KEY: minioadmin
+      RUSTFS_SECRET_KEY: minioadmin
+      RUSTFS_ROOT_USER: minioadmin
+      RUSTFS_ROOT_PASSWORD: minioadmin
+    command: /data
     volumes:
       - miniodata:/data
     healthcheck:
-      test: ['CMD', 'mc', 'ready', 'local']
+      test: ['CMD', 'curl', '-f', 'http://localhost:9000/health']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -68,21 +77,11 @@ services:
         max-file: '3'
 
   # ---------------------------------------------------------------------------
-  # MinIO bucket creator — creates the shayga-media bucket on startup
+  # The shayga-media bucket creator was a minio/mc sidecar. minio/mc no longer
+  # exists on Docker Hub. RustFS does NOT auto-create buckets on first write
+  # (verified — writes fail with NoSuchBucket), so the bucket must be created
+  # once against the S3 API before seeding. See docs/local-storage.md.
   # ---------------------------------------------------------------------------
-  minio-create-bucket:
-    image: minio/mc:latest
-    container_name: shayga-minio-setup
-    depends_on:
-      minio:
-        condition: service_healthy
-    entrypoint: >
-      /bin/sh -c "
-      until (/usr/bin/mc alias set local http://minio:9000 minioadmin minioadmin) do echo '...waiting...' && sleep 1; done;
-      /usr/bin/mc mb local/shayga-media --ignore-existing;
-      echo '✓ MinIO bucket shayga-media ready';
-      exit 0;
-      "
 
   # ---------------------------------------------------------------------------
   # Mailpit — SMTP test server (local replacement for Resend)
